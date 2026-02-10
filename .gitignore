@@ -1,0 +1,46 @@
+# Binaries and archives
+*.exe
+*.dll
+*.pyd
+*.zip
+*.tar.gz
+*.iso
+*.bin
+
+# Extracted content
+*_extracted/
+dump/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Logs and databases
+*.log
+*.sqlite
+*.db
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Project specific
+.claude/
+node_modules/
+dist/
+build/
