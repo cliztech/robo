@@ -1,0 +1,11 @@
+{
+  "custom_variables": {},
+  "variable_settings": {
+    "custom_variables_override_builtin": true,
+    "missing_variable_behavior": "empty_string",
+    "filter_artist_parentheses": false,
+    "filter_title_parentheses": false
+  },
+  "time_variable_configs": {},
+  "version": "1.0"
+}

@@ -1,0 +1,7 @@
+services:
+  mcp-server:
+    image: your-mcp-image:latest
+    container_name: mcp-server
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
