@@ -6,10 +6,20 @@ services:
       - --servers=time
       - --transport=streaming
       - --port=8811
-    environment:
-      - DOCKER_MCP_IN_CONTAINER=1
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+    # The current "time" MCP server does not require Docker daemon access.
+    # Keep the Docker socket unmounted by default to reduce host compromise risk.
+    # volumes:
+    #   # WARNING: Mounting /var/run/docker.sock grants root-equivalent control
+    #   # of the host Docker daemon and all containers/images managed by it.
+    #   # Only enable on a trusted single-user development machine.
+    #   - /var/run/docker.sock:/var/run/docker.sock:ro
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     ports:
-      - "8811:8811"
+      - "127.0.0.1:8811:8811"
     restart: unless-stopped
