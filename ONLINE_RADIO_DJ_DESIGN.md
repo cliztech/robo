@@ -54,10 +54,34 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 
 ## 4. Data Model (Draft Schema)
 
+### Multi-tenant baseline
+All **station-owned entities** must include a tenant field:
+
+- `station_id: uuid` (required, indexed, immutable after create)
+
+Station-owned entities include:
+
+- `Track`
+- `BroadcastQueueItem`
+- `ClockWheel`
+- `Schedule`
+- `Prompt`
+- `PromoSpot`
+- `HostPersona`
+- `VoiceLinkTemplate`
+- `ListenerRequest`
+- `AutomationRule`
+- `NowPlayingEvent`
+- `Asset` (audio files, jingles, beds)
+- `IntegrationCredential` (scoped to one station; encrypted at rest)
+
+Global entities (no `station_id`) are limited to platform-level references such as provider catalogs, runtime health metrics, and feature flags.
+
 ### Tracks
 ```json
 {
   "id": "uuid",
+  "station_id": "uuid",
   "title": "Neon Nights",
   "artist": "AI Synthwave Collective",
   "duration": 245,
@@ -73,6 +97,7 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 ```json
 {
   "id": "uuid",
+  "station_id": "uuid",
   "scheduled_time": "2023-10-27T14:00:00Z",
   "item_type": "track | voice_link | jingle",
   "item_id": "uuid",
@@ -80,7 +105,114 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 }
 ```
 
-## 5. Implementation Plan
+### Identity and authorization model
+
+#### User
+```json
+{
+  "id": "uuid",
+  "email": "ops@station.com",
+  "display_name": "Alex Producer",
+  "is_active": true,
+  "memberships": [
+    {
+      "station_id": "uuid",
+      "role_id": "uuid"
+    }
+  ]
+}
+```
+
+#### Role
+```json
+{
+  "id": "uuid",
+  "station_id": "uuid",
+  "name": "Program Director",
+  "description": "Can manage content and publish schedules",
+  "scopes": ["read", "write", "publish"]
+}
+```
+
+#### Permission scopes
+- `read`: view station resources and analytics.
+- `write`: create/update/delete station resources (tracks, prompts, schedules, queue adjustments).
+- `publish`: execute state changes that affect live output (publish schedule, trigger go-live, force queue play, approve generated links).
+- `admin`: station governance (user invites, role management, credentials/integrations, destructive station settings).
+
+Scope hierarchy: `admin` implies `publish`, `write`, and `read`; `publish` implies `write` + `read`; `write` implies `read`.
+
+Enforcement rule: API authorization is always evaluated against both `(user_id, station_id)` membership and required scope.
+
+## 5. API station-context requirements
+
+### Required station context in payloads
+For all station-owned resources, API requests must include station context by one of these mechanisms:
+
+1. Path scoping (preferred): `/api/stations/{station_id}/...`
+2. Body field (required for create/upsert if not path-scoped): `station_id`
+3. Event envelope metadata (async workers/webhooks): `{"station_id":"..."}`
+
+If station context is missing or does not match authenticated membership, return `403` for unauthorized station access or `400` for malformed payload.
+
+### Endpoint patterns that must carry station context
+- Authenticated list/query: tracks, prompts, schedules, clock wheels, queue items, promo spots, host personas, listener requests.
+- Mutations: create/update/delete for all station-owned resources.
+- Live actions: publish schedule, regenerate segment, trigger voice link, enqueue/dequeue, force-skip.
+- Analytics: dashboard metrics, now-playing history, performance reports.
+
+### Example payloads
+```http
+POST /api/stations/{station_id}/tracks
+{
+  "title": "Neon Nights",
+  "artist": "AI Synthwave Collective",
+  "duration": 245
+}
+```
+
+```http
+POST /api/queue/enqueue
+{
+  "station_id": "uuid",
+  "item_type": "track",
+  "item_id": "uuid"
+}
+```
+
+## 6. Frontend data filtering requirements
+
+- Resolve active station at login/session restore (station switcher or last-used station).
+- Persist active station in app state and include it in every API call.
+- Filter all client caches by `station_id` key to prevent cross-station leakage.
+- Hide/disable UI actions if user lacks required role scope for the active station.
+- On station switch, clear station-scoped stores (queue, tracks, prompts, dashboard metrics) before refetching.
+- Never render mixed-station lists in shared components; enforce query-level filtering first, then defensive client-side filtering.
+
+Recommended cache keys:
+- `['station', station_id, 'tracks']`
+- `['station', station_id, 'queue']`
+- `['station', station_id, 'schedule', date]`
+- `['station', station_id, 'prompts']`
+
+## 7. Dashboard action-to-permission matrix
+
+| Dashboard Action | Required Scope | Notes |
+|---|---|---|
+| View dashboard KPIs and now-playing | `read` | Station-scoped metrics only |
+| View track library and metadata | `read` | No mutation controls |
+| Upload/edit/delete tracks | `write` | Includes artwork and tags |
+| Create/edit prompts and host persona settings | `write` | Content authoring actions |
+| Build/edit clock wheels and schedules | `write` | Draft changes allowed |
+| Publish schedule to live playout | `publish` | Affects on-air output |
+| Force queue reorder/skip/play-next | `publish` | Real-time broadcast control |
+| Approve generated AI link for air | `publish` | Treated as live editorial action |
+| View user roster and role assignments | `admin` | Station membership management |
+| Invite/remove users | `admin` | Station boundary enforced |
+| Create/update roles and scopes | `admin` | Cannot exceed caller's own max scope |
+| Configure integration credentials and secrets | `admin` | Sensitive operations, audited |
+
+## 8. Implementation Plan
 
 ### Phase 1: Core Engine (MVP)
 -   [ ] Python script to generate a single "Show" (MP3 file) from a list of songs.
@@ -96,7 +228,7 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 -   [ ] Admin Dashboard for uploading tracks and configuring DJ.
 -   [ ] Public Player with "Now Playing" data.
 
-## 6. Technology Stack Recommendations
+## 9. Technology Stack Recommendations
 -   **Language**: Python 3.11+ (Backend), TypeScript (Frontend).
 -   **Audio Processing**: `pydub` (simple) or `ffmpeg-python` (complex).
 -   **Streaming**: `Liquidsoap` (industry standard for radio automation) or custom FFmpeg stream.
