@@ -44,3 +44,10 @@ desktop.ini
 node_modules/
 dist/
 build/
+
+# RoboDJ machine/runtime-local files (explicitly untracked)
+config/secret.key
+config/secret_v2.key
+config/robodj.lock
+config/scheduler.signal
+config/.robodj_trial
