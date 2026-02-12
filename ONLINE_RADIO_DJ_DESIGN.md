@@ -76,9 +76,56 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
   "scheduled_time": "2023-10-27T14:00:00Z",
   "item_type": "track | voice_link | jingle",
   "item_id": "uuid",
-  "status": "pending | playing | played"
+  "status": "pending | ready | starting | playing | completed | failed | retry_scheduled | skipped | cancelled",
+  "error_code": "optional_machine_readable_code",
+  "error_message": "optional_human_readable_message",
+  "retry_count": 0,
+  "last_attempt_at": "2023-10-27T13:59:58Z",
+  "created_at": "2023-10-27T13:30:00Z",
+  "updated_at": "2023-10-27T14:00:05Z",
+  "started_at": "2023-10-27T14:00:00Z",
+  "finished_at": "2023-10-27T14:03:40Z"
 }
 ```
+
+#### `broadcast_queue_item` field notes
+- `status` is a full lifecycle enum and must always be present.
+- `error_code`, `error_message`, `retry_count`, and `last_attempt_at` are structured error metadata:
+  - `error_code`: stable backend string for programmatic handling (for example, `tts_timeout`, `asset_missing`, `stream_unavailable`).
+  - `error_message`: human-readable diagnostic text for operators.
+  - `retry_count`: non-negative integer incremented on each execution attempt.
+  - `last_attempt_at`: ISO 8601 UTC timestamp for the latest attempt.
+- `created_at`, `updated_at`, `started_at`, `finished_at` are optional audit timestamps and must use ISO 8601 UTC format when present (`YYYY-MM-DDTHH:MM:SSZ`).
+
+#### Lifecycle transition rules (deterministic)
+Allowed status transitions for `broadcast_queue_item`:
+
+- `pending -> ready | cancelled`
+- `ready -> starting | skipped | cancelled`
+- `starting -> playing | failed | retry_scheduled`
+- `playing -> completed | failed`
+- `failed -> retry_scheduled | cancelled`
+- `retry_scheduled -> ready | cancelled`
+
+Terminal states (no further transitions):
+- `completed`
+- `skipped`
+- `cancelled`
+
+Validation rules:
+- `started_at` is set when entering `starting` (or backfilled when directly entering `playing`).
+- `finished_at` is set when entering terminal states (`completed`, `skipped`, `cancelled`) and SHOULD be set for unrecoverable `failed` items.
+- `error_code` and `error_message` SHOULD be set whenever `status = failed`.
+- `retry_count` MUST increase monotonically across `retry_scheduled -> ready -> starting` cycles.
+
+#### Backend-to-UI status category mapping
+Expose the following stable mapping so frontend badges and available actions are deterministic:
+
+| Backend status | UI category | Suggested badge/action behavior |
+| --- | --- | --- |
+| `pending`, `ready`, `starting`, `playing`, `completed` | `ok` | Normal flow (show queue/progress controls). |
+| `retry_scheduled`, `skipped` | `warn` | Attention needed but non-fatal (show retry/reschedule context). |
+| `failed`, `cancelled` | `error` | Error/blocked state (show details from `error_code`/`error_message`). |
 
 ## 5. Implementation Plan
 
