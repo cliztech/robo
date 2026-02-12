@@ -102,3 +102,11 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 -   **Streaming**: `Liquidsoap` (industry standard for radio automation) or custom FFmpeg stream.
 -   **Database**: PostgreSQL (robustness) or SQLite (simplicity).
 -   **AI**: LangChain (orchestration), OpenAI/Anthropic (LLM), ElevenLabs (TTS).
+
+
+## 7. Secrets Handling
+- Runtime secrets (including key files equivalent to `config/secret.key` and `config/secret_v2.key`) must be provisioned out-of-band and never committed to source control.
+- New environments should receive keys from a secret manager or secure deployment/bootstrap process.
+- Any key that was previously committed must be rotated/regenerated before promoting changes.
+- Template/example files may be committed for instructions, but they must not include real secret values.
+

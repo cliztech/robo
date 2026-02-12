@@ -44,3 +44,7 @@ desktop.ini
 node_modules/
 dist/
 build/
+
+# Secrets (local runtime only)
+config/secret.key
+config/secret_v2.key
