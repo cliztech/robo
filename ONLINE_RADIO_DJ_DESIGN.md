@@ -74,11 +74,56 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 {
   "id": "uuid",
   "scheduled_time": "2023-10-27T14:00:00Z",
-  "item_type": "track | voice_link | jingle",
-  "item_id": "uuid",
+  "item_type": "track | voice_link | jingle | ad_spot | station_id",
+  "item_ref": {
+    "track": { "track_id": "uuid" },
+    "voice_link": { "voice_link_id": "uuid" },
+    "jingle": { "jingle_id": "uuid" },
+    "ad_spot": { "ad_spot_id": "uuid" },
+    "station_id": { "station_id_id": "uuid" }
+  },
+  "resolved_title": "Neon Nights",
+  "resolved_duration": 245,
+  "origin": "scheduler | manual | auto",
   "status": "pending | playing | played"
 }
 ```
+
+#### Typed Queue Reference Model (replace legacy `item_id`)
+- `item_type` is the discriminator enum for the queue row and determines the expected shape of `item_ref`.
+- `item_ref` is a typed object that stores the entity-specific foreign key. The backend should validate that only one branch is populated and that it matches `item_type`.
+- `resolved_title` and `resolved_duration` are denormalized snapshots captured when a row is queued or refreshed. They are used for stable rendering even if the linked entity changes later.
+- `origin` records how the row entered the queue:
+  - `scheduler`: inserted by the clock wheel/rules engine.
+  - `manual`: inserted by an operator in Studio/Dashboard.
+  - `auto`: inserted by runtime automation (e.g., fallback fill, emergency ID, auto-DJ).
+
+#### Frontend Resolution Rules by `item_type`
+- `track`:
+  - Resolve `item_ref.track.track_id` against the Tracks API/detail cache.
+  - Primary view: full track card (title, artist, artwork, duration, metadata).
+- `voice_link`:
+  - Resolve `item_ref.voice_link.voice_link_id` against generated script/TTS assets.
+  - Primary view: script preview + selected voice/persona + estimated duration.
+- `jingle`:
+  - Resolve `item_ref.jingle.jingle_id` against station imaging library.
+  - Primary view: jingle name, category (TOH, sweep, branding), duration.
+- `ad_spot`:
+  - Resolve `item_ref.ad_spot.ad_spot_id` against ad inventory/campaign service.
+  - Primary view: advertiser, campaign/flight, compliance tags, duration.
+- `station_id`:
+  - Resolve `item_ref.station_id.station_id_id` against station ID registry.
+  - Primary view: ID variant/voice, legal ID marker, duration.
+
+#### Missing/Deleted Linked Entity Behavior
+- Queue rows are immutable for playout; missing linked entities must **not** remove or renumber existing rows.
+- If live lookup fails (deleted, permission denied, stale cache, or API timeout):
+  1. Render row using `resolved_title` and `resolved_duration`.
+  2. Show degraded-state badge (`Missing source`) and disable deep-link navigation for that row.
+  3. Keep playout policy configurable:
+     - Default: skip item at playout and log `queue_item_unresolvable` event.
+     - Optional fallback mode: play a configured emergency asset (e.g., station ID bed) and continue.
+- Backend should emit a reconciliation event so operators can repair queue references without losing playout history.
 
 ## 5. Implementation Plan
 
