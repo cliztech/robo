@@ -80,6 +80,197 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 }
 ```
 
+## 4.1 API Response & Query Contract
+
+To keep frontend state management predictable across resources, all collection endpoints use a common envelope and query semantics.
+
+### List response envelope
+
+All `GET` list endpoints return:
+
+```json
+{
+  "items": [],
+  "page": 1,
+  "page_size": 25,
+  "total": 0
+}
+```
+
+- `items`: Array of resource objects for the current slice.
+- `page`: 1-based page index returned when using offset pagination.
+- `page_size`: Number of items requested/returned per page.
+- `total`: Total number of matching records after filtering (before paging).
+
+### Error format
+
+All non-2xx responses return a normalized error body:
+
+```json
+{
+  "code": "VALIDATION_ERROR",
+  "message": "One or more query parameters are invalid.",
+  "details": {
+    "field": "sort",
+    "reason": "Unknown sort field: popularity"
+  },
+  "trace_id": "req_7f4db6c4aa3b4e57"
+}
+```
+
+- `code`: Stable machine-readable error code.
+- `message`: Human-readable summary safe for UI display.
+- `details`: Structured context (optional but recommended).
+- `trace_id`: Request correlation ID for logs/support.
+
+### Sorting, filtering, and query syntax
+
+- `sort`: Comma-separated fields; prefix with `-` for descending.
+  - Example: `sort=-scheduled_time,title`
+- `filter[field]`: Exact match by default.
+  - Example: `filter[status]=pending`
+- `filter[field][op]`: Operator-based filters when needed.
+  - Supported ops: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`, `in`, `contains`.
+  - Example: `filter[energy][gte]=0.7`
+- `q`: Full-text search against endpoint-defined searchable fields.
+  - Example: `q=neon`
+
+### Include/expand conventions
+
+- `include`: Side-load related entities in top-level maps keyed by type.
+  - Example: `include=artist,album`
+  - Response extension pattern:
+    ```json
+    {
+      "items": [],
+      "included": {
+        "artist": [],
+        "album": []
+      },
+      "page": 1,
+      "page_size": 25,
+      "total": 0
+    }
+    ```
+- `expand`: Inline embed related entities inside each item.
+  - Example: `expand=track`
+  - Use when the UI needs object traversal in a single normalized payload.
+- Clients should not send both `include` and `expand` for the same relation in one request.
+
+### Pagination policy (offset + cursor)
+
+- **Default**: Offset pagination using `page` and `page_size`.
+  - Recommended for admin grids and deterministic back-office lists.
+- **Cursor mode**: Use `cursor` and `limit` for live/append-only feeds.
+  - If `cursor` is provided, server ignores `page` and `page_size`.
+  - Cursor response shape:
+    ```json
+    {
+      "items": [],
+      "page": null,
+      "page_size": 50,
+      "total": null,
+      "next_cursor": "eyJzY2hlZHVsZWRfdGltZSI6IjIwMjYtMDUtMTVUMTg6MzA6MDBaIiwiaWQiOiIuLi4ifQ=="
+    }
+    ```
+- Contract rule: offset responses must always include `total`; cursor responses may set `total` to `null`.
+
+### Concrete examples
+
+#### `GET /tracks`
+
+Request:
+
+```http
+GET /tracks?page=1&page_size=20&sort=-energy,title&filter[genre]=synthwave&filter[duration][lte]=300&q=neon&include=artist
+```
+
+Response:
+
+```json
+{
+  "items": [
+    {
+      "id": "trk_01HZX8P6Y8K57W3Q6M5T3Y4C2F",
+      "title": "Neon Nights",
+      "artist_id": "art_01HZX7QJ2A4W8F9X0M3Z5K1R7N",
+      "genre": "synthwave",
+      "duration": 245,
+      "energy": 0.8
+    }
+  ],
+  "included": {
+    "artist": [
+      {
+        "id": "art_01HZX7QJ2A4W8F9X0M3Z5K1R7N",
+        "name": "AI Synthwave Collective"
+      }
+    ]
+  },
+  "page": 1,
+  "page_size": 20,
+  "total": 134
+}
+```
+
+#### `GET /broadcast-queue`
+
+Request (offset mode):
+
+```http
+GET /broadcast-queue?page=2&page_size=25&sort=scheduled_time&filter[status]=pending&expand=track
+```
+
+Response (offset mode):
+
+```json
+{
+  "items": [
+    {
+      "id": "bq_01HZXB7EYPPRMYW65AM7Q2CC3P",
+      "scheduled_time": "2026-05-15T18:00:00Z",
+      "item_type": "track",
+      "item_id": "trk_01HZX8P6Y8K57W3Q6M5T3Y4C2F",
+      "status": "pending",
+      "track": {
+        "id": "trk_01HZX8P6Y8K57W3Q6M5T3Y4C2F",
+        "title": "Neon Nights",
+        "duration": 245
+      }
+    }
+  ],
+  "page": 2,
+  "page_size": 25,
+  "total": 412
+}
+```
+
+Request (cursor mode for live studio queue):
+
+```http
+GET /broadcast-queue?cursor=eyJzY2hlZHVsZWRfdGltZSI6IjIwMjYtMDUtMTVUMTg6MDA6MDBaIiwiaWQiOiJi..."&limit=50&sort=scheduled_time
+```
+
+Response (cursor mode):
+
+```json
+{
+  "items": [
+    {
+      "id": "bq_01HZXB85QXW7R4T4K2VTW7M1YM",
+      "scheduled_time": "2026-05-15T18:03:30Z",
+      "item_type": "voice_link",
+      "item_id": "vl_01HZXB81A95Q5SNYR6A6VWPJ3C",
+      "status": "pending"
+    }
+  ],
+  "page": null,
+  "page_size": 50,
+  "total": null,
+  "next_cursor": "eyJzY2hlZHVsZWRfdGltZSI6IjIwMjYtMDUtMTVUMTg6MDM6MzBaIiwiaWQiOiJi..."
+}
+```
+
 ## 5. Implementation Plan
 
 ### Phase 1: Core Engine (MVP)
