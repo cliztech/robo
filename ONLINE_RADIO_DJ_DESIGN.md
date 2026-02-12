@@ -80,6 +80,33 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 }
 ```
 
+### Schema Governance
+- **Global `schema_version`**:
+  - Every API payload and event contract MUST include a top-level `schema_version` string (for example, `"1.0"`) to identify the expected contract.
+  - The backend owns version issuance, and the Next.js frontend must assert compatibility before consuming payloads.
+- **Backward compatibility policy**:
+  - Minor and patch updates must remain backward compatible within the same major schema version.
+  - Additive changes are preferred (new optional fields, new enum values guarded by defaults) and should not break existing frontend behavior.
+- **Breaking change process**:
+  - Any removal, rename, type mutation, or semantic redefinition of an existing field is a breaking change and requires a major schema version bump.
+  - Breaking changes require a migration plan, release note entry, and coordinated backend/frontend rollout plan before merge.
+  - During rollout, old and new major versions should be served in parallel when operationally feasible.
+- **Deprecation window**:
+  - Deprecated fields/endpoints must remain available for at least one full minor release cycle (or 30 days minimum, whichever is longer) before removal.
+  - Deprecations must be documented with replacement fields and target removal dates.
+
+#### Shared Contract Validation for Next.js
+- API payloads consumed by the Next.js frontend must be validated against shared contracts.
+- Preferred approaches are either:
+  - JSON Schema artifacts generated from OpenAPI, or
+  - TypeScript/Zod models generated from OpenAPI and reused in both API client and UI state boundaries.
+- Runtime validation must occur at API ingress boundaries in the frontend to prevent silent schema drift.
+
+#### First Payloads to Formalize
+1. `Track`
+2. `BroadcastQueueItem`
+3. `NowPlaying`
+
 ## 5. Implementation Plan
 
 ### Phase 1: Core Engine (MVP)
