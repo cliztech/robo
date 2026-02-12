@@ -54,31 +54,280 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 
 ## 4. Data Model (Draft Schema)
 
-### Tracks
+### 4.1 Validation Conventions
+- **UUID format**: canonical lowercase `8-4-4-4-12` hex format (`^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`).
+- **date-time format**: RFC3339 UTC (`YYYY-MM-DDTHH:MM:SSZ`).
+- **uri format**: absolute URI (examples: `s3://bucket/key.mp3`, `https://cdn.example.com/audio.mp3`).
+- **Allowed charset (most text fields)**: printable UTF-8, trimmed, no control characters.
+- **Uniqueness**:
+  - Primary keys are globally unique UUIDs.
+  - `Tracks` should enforce unique `(title, artist, duration)` to reduce duplicate ingests.
+  - `BroadcastQueue` should enforce unique `(scheduled_time, item_type, item_id)` to prevent accidental duplicate scheduling.
+
+---
+
+### 4.2 Tracks
+
+#### Example schema object
 ```json
 {
-  "id": "uuid",
+  "id": "6fcb4a66-d65d-4be9-84f4-f74631f31d63",
   "title": "Neon Nights",
   "artist": "AI Synthwave Collective",
   "duration": 245,
   "intro_duration": 12,
   "outro_duration": 15,
-  "file_path": "s3://...",
+  "file_path": "s3://radio-assets/tracks/neon_nights.mp3",
+  "bpm": 128,
+  "energy": 0.8,
+  "mood": "uplifting",
+  "key": "C#m",
+  "created_at": "2023-10-27T14:00:00Z",
+  "updated_at": "2023-10-27T14:00:00Z"
+}
+```
+
+| Field | Required | Nullable | Type / Format | Default | Constraints |
+|---|---|---|---|---|---|
+| `id` | response-only | non-null | `string` (`uuid`) | server-generated | unique primary key |
+| `title` | required | non-null | `string` | none | min 1, max 200, trimmed |
+| `artist` | required | non-null | `string` | none | min 1, max 160, trimmed |
+| `duration` | required | non-null | `integer` (seconds) | none | min 1, max 7200 |
+| `intro_duration` | optional | non-null | `integer` (seconds) | `0` | min 0, max `duration` |
+| `outro_duration` | optional | non-null | `integer` (seconds) | `0` | min 0, max `duration` |
+| `file_path` | required | non-null | `string` (`uri`) | none | must end with supported audio extension (`.mp3`, `.wav`, `.flac`, `.m4a`, `.aac`) |
+| `bpm` | optional | nullable | `integer` | `null` | min 40, max 240 |
+| `energy` | optional | nullable | `number` (float) | `null` | min 0.0, max 1.0 |
+| `mood` | optional | nullable | `string` | `null` | max 80 |
+| `key` | optional | nullable | `string` | `null` | musical key pattern (`A-G` + optional `#`/`b` + optional `m`) |
+| `created_at` | response-only | non-null | `string` (`date-time`) | server-generated | immutable |
+| `updated_at` | response-only | non-null | `string` (`date-time`) | server-generated | updated on write |
+
+#### Validation examples
+
+**Create (valid)**
+```json
+{
+  "title": "Neon Nights",
+  "artist": "AI Synthwave Collective",
+  "duration": 245,
+  "intro_duration": 12,
+  "outro_duration": 15,
+  "file_path": "s3://radio-assets/tracks/neon_nights.mp3",
   "bpm": 128,
   "energy": 0.8
 }
 ```
 
-### BroadcastQueue
+**Create (invalid)**
 ```json
 {
-  "id": "uuid",
-  "scheduled_time": "2023-10-27T14:00:00Z",
-  "item_type": "track | voice_link | jingle",
-  "item_id": "uuid",
-  "status": "pending | playing | played"
+  "title": "",
+  "artist": "AI Synthwave Collective",
+  "duration": -5,
+  "file_path": "neon_nights.mp3",
+  "bpm": 500,
+  "energy": 1.4
 }
 ```
+- Expected errors: `title` blank, `duration` below minimum, `file_path` not absolute URI, `bpm` above max, `energy` above max.
+
+**Update (valid PATCH)**
+```json
+{
+  "energy": 0.67,
+  "mood": "night-drive"
+}
+```
+
+**Update (invalid PATCH)**
+```json
+{
+  "intro_duration": 300,
+  "outro_duration": 300
+}
+```
+- Expected error: intro/outro cannot individually exceed total `duration` and should be checked against current stored value.
+
+---
+
+### 4.3 BroadcastQueue
+
+#### Example schema object
+```json
+{
+  "id": "4c14f0b6-696d-4966-89f8-af6f0674eb9b",
+  "scheduled_time": "2023-10-27T14:00:00Z",
+  "item_type": "track",
+  "item_id": "6fcb4a66-d65d-4be9-84f4-f74631f31d63",
+  "status": "pending",
+  "priority": 50,
+  "started_at": null,
+  "ended_at": null,
+  "created_at": "2023-10-27T13:30:00Z",
+  "updated_at": "2023-10-27T13:30:00Z"
+}
+```
+
+| Field | Required | Nullable | Type / Format | Default | Constraints |
+|---|---|---|---|---|---|
+| `id` | response-only | non-null | `string` (`uuid`) | server-generated | unique primary key |
+| `scheduled_time` | required | non-null | `string` (`date-time`) | none | cannot be older than retention window for new items |
+| `item_type` | required | non-null | `string` enum | none | one of `track`, `voice_link`, `jingle`, `ad_spot` |
+| `item_id` | required | non-null | `string` (`uuid`) | none | must exist in table matching `item_type` |
+| `status` | optional | non-null | `string` enum | `pending` | one of `pending`, `queued`, `playing`, `played`, `skipped`, `failed` |
+| `priority` | optional | non-null | `integer` | `50` | min 0, max 100 |
+| `started_at` | response-only | nullable | `string` (`date-time`) | `null` | set when status enters `playing` |
+| `ended_at` | response-only | nullable | `string` (`date-time`) | `null` | set when status enters terminal state |
+| `created_at` | response-only | non-null | `string` (`date-time`) | server-generated | immutable |
+| `updated_at` | response-only | non-null | `string` (`date-time`) | server-generated | updated on write |
+
+#### Validation examples
+
+**Create (valid)**
+```json
+{
+  "scheduled_time": "2026-01-15T20:00:00Z",
+  "item_type": "track",
+  "item_id": "6fcb4a66-d65d-4be9-84f4-f74631f31d63",
+  "priority": 70
+}
+```
+
+**Create (invalid)**
+```json
+{
+  "scheduled_time": "15-01-2026 20:00",
+  "item_type": "song",
+  "item_id": "not-a-uuid",
+  "status": "done"
+}
+```
+- Expected errors: invalid `date-time`, unsupported `item_type`, invalid UUID format, unsupported `status`.
+
+**Update (valid PATCH)**
+```json
+{
+  "status": "queued",
+  "priority": 80
+}
+```
+
+**Update (invalid PATCH)**
+```json
+{
+  "status": "played",
+  "started_at": "2026-01-15T20:01:00Z"
+}
+```
+- Expected errors: `started_at` is response-only; status transitions must follow server state machine.
+
+---
+
+### 4.4 Additional entities introduced by the model
+
+#### VoiceLinks
+Speech segments generated by the DJ agent between tracks.
+
+| Field | Required | Nullable | Type / Format | Default | Constraints |
+|---|---|---|---|---|---|
+| `id` | response-only | non-null | `string` (`uuid`) | server-generated | unique primary key |
+| `persona_id` | required | non-null | `string` (`uuid`) | none | must reference a `HostPersonas.id` |
+| `script_text` | required | non-null | `string` | none | min 1, max 4000 |
+| `ssml` | optional | nullable | `string` | `null` | max 8000, valid SSML subset |
+| `audio_uri` | optional | nullable | `string` (`uri`) | `null` | required once rendered |
+| `duration` | optional | nullable | `integer` (seconds) | `null` | min 1, max 900 |
+| `status` | optional | non-null | enum | `draft` | `draft`, `rendering`, `ready`, `failed` |
+
+#### Jingles
+Short station branding clips.
+
+| Field | Required | Nullable | Type / Format | Default | Constraints |
+|---|---|---|---|---|---|
+| `id` | response-only | non-null | `string` (`uuid`) | server-generated | unique primary key |
+| `name` | required | non-null | `string` | none | min 1, max 120 |
+| `audio_uri` | required | non-null | `string` (`uri`) | none | supported audio extension |
+| `duration` | required | non-null | `integer` | none | min 1, max 120 |
+| `category` | optional | non-null | enum | `station_id` | `station_id`, `sweeper`, `top_of_hour` |
+| `active` | optional | non-null | `boolean` | `true` | |
+
+#### AdSpots
+Paid or promotional inserts.
+
+| Field | Required | Nullable | Type / Format | Default | Constraints |
+|---|---|---|---|---|---|
+| `id` | response-only | non-null | `string` (`uuid`) | server-generated | unique primary key |
+| `advertiser` | required | non-null | `string` | none | min 1, max 120 |
+| `title` | required | non-null | `string` | none | min 1, max 160 |
+| `audio_uri` | required | non-null | `string` (`uri`) | none | supported audio extension |
+| `duration` | required | non-null | `integer` | none | min 5, max 180 |
+| `start_date` | optional | nullable | `string` (`date-time`) | `null` | must be before `end_date` if both present |
+| `end_date` | optional | nullable | `string` (`date-time`) | `null` | must be after `start_date` if both present |
+| `max_plays_per_day` | optional | non-null | `integer` | `0` | min 0, max 500 (`0` = unlimited) |
+| `active` | optional | non-null | `boolean` | `true` | |
+
+#### HostPersonas
+Configuration for AI host behavior and voice.
+
+| Field | Required | Nullable | Type / Format | Default | Constraints |
+|---|---|---|---|---|---|
+| `id` | response-only | non-null | `string` (`uuid`) | server-generated | unique primary key |
+| `name` | required | non-null | `string` | none | min 1, max 80 |
+| `backstory` | optional | nullable | `string` | `null` | max 4000 |
+| `voice_id` | required | non-null | `string` | none | min 1, max 120 |
+| `tone` | optional | non-null | enum | `chill` | `hype`, `chill`, `npr_style`, `late_night`, `custom` |
+| `knowledge_base_uri` | optional | nullable | `string` (`uri`) | `null` | must be reachable by backend worker |
+| `is_default` | optional | non-null | `boolean` | `false` | only one persona may be `true` |
+
+#### ClockWheels
+Hourly scheduling templates.
+
+| Field | Required | Nullable | Type / Format | Default | Constraints |
+|---|---|---|---|---|---|
+| `id` | response-only | non-null | `string` (`uuid`) | server-generated | unique primary key |
+| `name` | required | non-null | `string` | none | min 1, max 120, unique |
+| `description` | optional | nullable | `string` | `null` | max 500 |
+| `hour_mask` | required | non-null | `array[integer]` | none | each entry 0-23, unique values |
+| `timezone` | optional | non-null | `string` | `UTC` | valid IANA TZ identifier |
+| `active` | optional | non-null | `boolean` | `true` | |
+
+#### ClockWheelSlots
+Ordered items inside a clock wheel.
+
+| Field | Required | Nullable | Type / Format | Default | Constraints |
+|---|---|---|---|---|---|
+| `id` | response-only | non-null | `string` (`uuid`) | server-generated | unique primary key |
+| `clock_wheel_id` | required | non-null | `string` (`uuid`) | none | FK to `ClockWheels.id` |
+| `position` | required | non-null | `integer` | none | min 1, unique per `clock_wheel_id` |
+| `slot_type` | required | non-null | enum | none | `track`, `voice_link`, `jingle`, `ad_spot`, `news_break` |
+| `rule_ref` | optional | nullable | `string` | `null` | max 120; scheduler rule identifier |
+| `hard_start` | optional | non-null | `boolean` | `false` | when true, scheduler cannot drift |
+
+#### Create/Update validation alignment for new entities
+- **Create endpoints** should reject unknown fields (`additionalProperties: false`) to match frontend forms.
+- **Update endpoints (`PATCH`)** should:
+  - allow partial objects,
+  - validate each provided field exactly as create,
+  - reject response-only fields (`id`, timestamps, derived runtime metrics),
+  - enforce cross-field rules (e.g., `start_date < end_date`, only one default persona).
+
+**Generic valid PATCH example (HostPersonas)**
+```json
+{
+  "tone": "late_night",
+  "backstory": "Warm voice, conversational style, album trivia focus."
+}
+```
+
+**Generic invalid PATCH example (AdSpots)**
+```json
+{
+  "start_date": "2026-08-01T00:00:00Z",
+  "end_date": "2026-07-01T00:00:00Z",
+  "created_at": "2026-01-01T00:00:00Z"
+}
+```
+- Expected errors: `end_date` before `start_date`; `created_at` is response-only.
 
 ## 5. Implementation Plan
 
