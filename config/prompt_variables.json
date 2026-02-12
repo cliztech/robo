@@ -1,11 +1,18 @@
 {
   "custom_variables": {},
   "variable_settings": {
+    "override_precedence": "custom_over_builtin",
     "custom_variables_override_builtin": true,
     "missing_variable_behavior": "empty_string",
     "filter_artist_parentheses": false,
     "filter_title_parentheses": false
   },
   "time_variable_configs": {},
-  "version": "1.0"
+  "validation_state": {
+    "status": "ok",
+    "warnings": [],
+    "errors": [],
+    "unresolved_tokens": []
+  },
+  "version": "1.1"
 }
