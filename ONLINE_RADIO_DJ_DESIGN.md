@@ -54,18 +54,123 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 
 ## 4. Data Model (Draft Schema)
 
-### Tracks
+### Tracks (Contract v2)
+
+**Purpose**: canonical payload exchanged between ingestion, scheduling, and frontend clients.
+
+#### Required fields
+- `id` (string, UUID v4)
+- `title` (string, 1-200 chars)
+- `artist` (string, 1-200 chars)
+- `duration` (integer, seconds, `> 0`)
+- `file_path` (string, required path/URI)
+- `publish_status` (enum: `draft | review | published | archived`)
+- `availability` (enum: `private | geo_limited | public`)
+
+#### Nullable (optional) fields
+- `intro_duration`, `outro_duration` (integer seconds, `>= 0`, nullable)
+- `bpm` (number, `> 0`, nullable)
+- `energy` (number, range `0.0-1.0`, nullable)
+- `artwork_url` (string URL, nullable)
+- `is_explicit` (boolean, nullable)
+- `genre_tags`, `mood_tags` (string array, nullable)
+- `language` (string, BCP-47 style like `en`, `en-US`, nullable)
+- `lufs` (number, recommended range `-40` to `0`, nullable)
+- `peak_db` (number, typically `-12` to `+3`, nullable)
+- `sample_rate` (integer Hz, e.g. `44100`, `48000`, nullable)
+- `codec` (string enum: `mp3 | aac | flac | wav | opus`, nullable)
+- `has_intro_marker`, `has_outro_marker` (boolean, nullable)
+- `analytics` (object, nullable)
+  - `play_count` (integer `>= 0`)
+  - `like_count` (integer `>= 0`)
+  - `skip_count` (integer `>= 0`)
+  - `completion_rate` (number `0.0-1.0`)
+
+#### Validation rules
+- `id` must match UUID format: `^[0-9a-fA-F-]{36}$`
+- `file_path` must match one of:
+  - local/relative path: `^(?:[A-Za-z]:\\|/|\./|\../).+`
+  - object/blob URI: `^(?:s3|gs|azure|https?)://.+`
+- `artwork_url` (if present) must be HTTP(S): `^https?://[^\s]+$`
+- `genre_tags`/`mood_tags` values should be lowercase snake_case tokens (ex: `synthwave`, `late_night`)
+
 ```json
 {
   "id": "uuid",
   "title": "Neon Nights",
   "artist": "AI Synthwave Collective",
   "duration": 245,
+  "file_path": "s3://station-assets/tracks/neon_nights_v1.mp3",
+  "publish_status": "published",
+  "availability": "public",
   "intro_duration": 12,
   "outro_duration": 15,
-  "file_path": "s3://...",
   "bpm": 128,
-  "energy": 0.8
+  "energy": 0.8,
+  "artwork_url": "https://cdn.station.fm/artwork/neon_nights.jpg",
+  "is_explicit": false,
+  "genre_tags": ["synthwave", "electronic"],
+  "mood_tags": ["night_drive", "uplifting"],
+  "language": "en",
+  "lufs": -13.5,
+  "peak_db": -1.0,
+  "sample_rate": 44100,
+  "codec": "mp3",
+  "has_intro_marker": true,
+  "has_outro_marker": true,
+  "analytics": {
+    "play_count": 1284,
+    "like_count": 342,
+    "skip_count": 57,
+    "completion_rate": 0.91
+  }
+}
+```
+
+#### Example A: Minimal ingest record
+```json
+{
+  "id": "5d2a0b1d-54f0-4974-85c4-57e7cd2f0ca7",
+  "title": "Sunrise Loop",
+  "artist": "LoFi Unit",
+  "duration": 186,
+  "file_path": "s3://ingest-bucket/tracks/2026/02/sunrise_loop.wav",
+  "publish_status": "draft",
+  "availability": "private"
+}
+```
+
+#### Example B: Fully enriched published track
+```json
+{
+  "id": "2f9c93e2-f131-41f3-8fc8-84d9f2c8f6d1",
+  "title": "Neon Nights",
+  "artist": "AI Synthwave Collective",
+  "duration": 245,
+  "file_path": "https://cdn.station.fm/audio/neon_nights_master.mp3",
+  "publish_status": "published",
+  "availability": "public",
+  "intro_duration": 12,
+  "outro_duration": 15,
+  "bpm": 128,
+  "energy": 0.8,
+  "artwork_url": "https://cdn.station.fm/artwork/neon_nights.jpg",
+  "is_explicit": false,
+  "genre_tags": ["synthwave", "electronic", "retrowave"],
+  "mood_tags": ["night_drive", "energetic", "futuristic"],
+  "language": "en-US",
+  "lufs": -13.7,
+  "peak_db": -0.8,
+  "sample_rate": 48000,
+  "codec": "mp3",
+  "has_intro_marker": true,
+  "has_outro_marker": true,
+  "analytics": {
+    "play_count": 34981,
+    "like_count": 9123,
+    "skip_count": 1302,
+    "completion_rate": 0.89
+  }
 }
 ```
 
