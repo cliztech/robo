@@ -1,0 +1,29 @@
+{
+  "channels": {
+    "web_form": true,
+    "chat": true,
+    "messaging_bridge": false,
+    "synthetic_generator": true
+  },
+  "moderation": {
+    "spam_detection": true,
+    "abuse_detection": true,
+    "pii_redaction": true
+  },
+  "eligibility": {
+    "library_match_required": true,
+    "repetition_limit_per_listener": 3,
+    "duplicate_request_blocking": true
+  },
+  "host_acknowledgement": {
+    "personalization": true
+  },
+  "off_peak_synthetic_calls": {
+    "enabled": true,
+    "internal_flag": "synthetic"
+  },
+  "live_human_takeover": {
+    "opt_in_only": true,
+    "staffed_hours_only": true
+  }
+}

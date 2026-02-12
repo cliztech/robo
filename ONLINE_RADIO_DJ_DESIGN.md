@@ -102,3 +102,53 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 -   **Streaming**: `Liquidsoap` (industry standard for radio automation) or custom FFmpeg stream.
 -   **Database**: PostgreSQL (robustness) or SQLite (simplicity).
 -   **AI**: LangChain (orchestration), OpenAI/Anthropic (LLM), ElevenLabs (TTS).
+
+## 7. Controlled Interactivity Channels (Segment Engine Feed)
+
+### 7.1 Intake Channels
+- **Web Form Intake**: Structured listener request form with track/title intent extraction.
+- **Chat Intake**: Real-time conversational capture from station web/app chat.
+- **Messaging App Bridge (Optional)**: Feature-flagged adapter for WhatsApp/Telegram/SMS style sources.
+
+All channels normalize into a shared `Request` envelope for downstream moderation and eligibility.
+
+### 7.2 Moderation Pipeline
+Requests are moderated before entering the segment queue:
+1. **Spam detection** (URLs, promo spam phrases, bot signatures).
+2. **Abuse detection** (brand-safety and host-safety filtering).
+3. **PII stripping** (email/phone redaction before LLM/host exposure).
+
+Moderation outcomes are attached as flags and can hard-reject unsafe requests.
+
+### 7.3 Eligibility Queue Gate
+Post-moderation requests pass through policy checks:
+- **Library match** (must map to catalog unless freeform-talk request mode is allowed).
+- **Policy compliance** (inherits moderation hard-fail conditions).
+- **Repetition limits** (per-listener caps and duplicate text checks).
+
+Only approved items enter the segment request queue.
+
+### 7.4 Host Acknowledgement Agent
+Approved requests can trigger natural, personalized acknowledgements based on:
+- Listener name
+- Requested track/topic
+- Current show context
+
+Acknowledgements are generated for on-air or chat feedback without exposing redacted PII.
+
+### 7.5 Synthetic Off-Peak Queue Generation
+When off-peak traffic is low, the system can inject synthetic request seeds for realism:
+- Marked internally as `synthetic=true`
+- Kept auditable and excluded from listener analytics
+- Routed through the same moderation + eligibility pipeline for consistency
+
+### 7.6 Opt-In Live Human Takeover
+If a listener opts in to real-call handling and staff are present:
+- Request is routed to a **live-human takeover queue**
+- Only active during configured staffed windows
+- Falls back to normal AI-host flow outside staffed hours
+
+### 7.7 Reference Implementation Artifact
+A lightweight prototype is included at:
+- `config/interactive_request_pipeline.py`
+- Config surface: `config/interactivity_channels.json`
