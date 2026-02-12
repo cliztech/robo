@@ -28,6 +28,14 @@ venv.bak/
 *.sqlite
 *.db
 
+# Runtime state (local-only)
+runtime/
+config/secret.key
+config/secret_v2.key
+config/*.lock
+config/*.signal
+config/.robodj_trial
+
 # OS files
 .DS_Store
 Thumbs.db
