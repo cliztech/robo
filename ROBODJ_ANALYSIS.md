@@ -47,3 +47,11 @@ RoboDJ is a Windows desktop automation tool designed to generate AI-hosted voice
 -   **Freshness**: "Script Freshness" settings to prevent repetitive content.
 -   **Banned Words**: Filter to ensure FCC compliance or brand safety.
 -   **Scheduling**: Time-based logic for different prompts (Morning Show vs. Late Night).
+
+## 5. Configuration Hygiene
+- Validate JSON config before deployment: `python config/validate_config.py`
+- Schemas live in `config/schemas/` and currently cover:
+  - `schedules.json`
+  - `prompt_variables.json`
+- CI gate: `.github/workflows/config-validation.yml`
+- Manual gate: `PRE_RELEASE_CHECKLIST.md`
