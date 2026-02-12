@@ -52,31 +52,205 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 -   **Transcoding**: Real-time encoding to AAC/MP3.
 -   **Metadata Push**: Updates "Now Playing" info on the frontend.
 
-## 4. Data Model (Draft Schema)
+## 4. Domain Model (Canonical)
 
-### Tracks
+This section defines all user-facing domain objects and their relationships so backend and frontend implementations can share one consistent contract.
+
+### 4.1 Entity Definitions
+
+#### Station
+- **Primary key format**: `stn_<ULID>` (example: `stn_01J9W8M5YB3K8Q7Q5S5K8D9V3N`)
+- **Foreign keys**: none
+- **Relations**:
+  - One-to-many: `Station -> User` (users assigned to station)
+  - One-to-many: `Station -> HostPersona`
+  - One-to-many: `Station -> PromptTemplate`
+  - One-to-many: `Station -> Playlist`
+  - One-to-many: `Station -> ClockWheel`
+  - One-to-many: `Station -> QueueItem`
+  - One-to-many: `Station -> Track`
+  - One-to-many: `Station -> VoiceLink`
+  - One-to-many: `Station -> Jingle`
+  - One-to-many: `Station -> AdSpot`
+  - One-to-many: `Station -> Request`
+- **Ownership boundary**: `station-scoped` root aggregate
+
+#### User
+- **Primary key format**: `usr_<ULID>`
+- **Foreign keys**:
+  - `station_id -> Station.id` (nullable only for global platform admins)
+- **Relations**:
+  - Many-to-many: `User <-> Role` via `user_roles`
+  - One-to-many: `User -> Request` (`requested_by_user_id`)
+  - Many-to-one: `User -> Station`
+- **Ownership boundary**: `station-scoped` (with optional global admin exception)
+
+#### Role
+- **Primary key format**: `rol_<slug>` (example: `rol_program_director`)
+- **Foreign keys**: none
+- **Relations**:
+  - Many-to-many: `Role <-> User` via `user_roles`
+- **Ownership boundary**: `global`
+
+#### HostPersona
+- **Primary key format**: `hpr_<ULID>`
+- **Foreign keys**:
+  - `station_id -> Station.id`
+  - `voice_link_id -> VoiceLink.id` (default voice profile, nullable)
+- **Relations**:
+  - Many-to-one: `HostPersona -> Station`
+  - One-to-many: `HostPersona -> VoiceLink` (`generated_by_persona_id`)
+  - One-to-many: `HostPersona -> PromptTemplate` (persona-targeted prompts)
+- **Ownership boundary**: `station-scoped`
+
+#### PromptTemplate
+- **Primary key format**: `prm_<ULID>`
+- **Foreign keys**:
+  - `station_id -> Station.id`
+  - `host_persona_id -> HostPersona.id` (nullable)
+- **Relations**:
+  - Many-to-one: `PromptTemplate -> Station`
+  - Many-to-one: `PromptTemplate -> HostPersona` (optional specialization)
+  - One-to-many: `PromptTemplate -> VoiceLink` (`prompt_template_id`)
+- **Ownership boundary**: `station-scoped`
+
+#### Playlist
+- **Primary key format**: `ply_<ULID>`
+- **Foreign keys**:
+  - `station_id -> Station.id`
+  - `created_by_user_id -> User.id`
+- **Relations**:
+  - Many-to-one: `Playlist -> Station`
+  - Many-to-many: `Playlist <-> Track` via `playlist_tracks`
+  - One-to-many: `Playlist -> ClockWheel` (wheel may reference source playlist)
+- **Ownership boundary**: `station-scoped`
+
+#### ClockWheel
+- **Primary key format**: `clk_<ULID>`
+- **Foreign keys**:
+  - `station_id -> Station.id`
+  - `playlist_id -> Playlist.id` (nullable fallback source)
+- **Relations**:
+  - Many-to-one: `ClockWheel -> Station`
+  - Many-to-one: `ClockWheel -> Playlist` (optional)
+  - One-to-many: `ClockWheel -> QueueItem` (`origin_clock_wheel_id`)
+  - Many-to-many: `ClockWheel <-> Jingle` via `clock_wheel_jingles` (template-level inserts)
+  - Many-to-many: `ClockWheel <-> AdSpot` via `clock_wheel_ad_spots` (commercial slots)
+- **Ownership boundary**: `station-scoped`
+
+#### QueueItem
+- **Primary key format**: `que_<ULID>`
+- **Foreign keys**:
+  - `station_id -> Station.id`
+  - `clock_wheel_id -> ClockWheel.id` (nullable)
+  - `track_id -> Track.id` (nullable; set when `item_type=track`)
+  - `voice_link_id -> VoiceLink.id` (nullable; set when `item_type=voice_link`)
+  - `jingle_id -> Jingle.id` (nullable; set when `item_type=jingle`)
+  - `ad_spot_id -> AdSpot.id` (nullable; set when `item_type=ad_spot`)
+  - `request_id -> Request.id` (nullable if generated from listener request)
+- **Relations**:
+  - Many-to-one: `QueueItem -> Station`
+  - Many-to-one: `QueueItem -> ClockWheel` (optional)
+  - Polymorphic many-to-one: points to exactly one of `Track | VoiceLink | Jingle | AdSpot`
+  - Many-to-one: `QueueItem -> Request` (optional lineage)
+- **Ownership boundary**: `station-scoped`
+
+#### Track
+- **Primary key format**: `trk_<ULID>`
+- **Foreign keys**:
+  - `station_id -> Station.id`
+  - `uploaded_by_user_id -> User.id` (nullable for ingested catalog content)
+- **Relations**:
+  - Many-to-one: `Track -> Station`
+  - Many-to-many: `Track <-> Playlist` via `playlist_tracks`
+  - One-to-many: `Track -> QueueItem`
+  - One-to-many: `Track -> Request` (requested track)
+- **Ownership boundary**: `station-scoped`
+
+#### VoiceLink
+- **Primary key format**: `vln_<ULID>`
+- **Foreign keys**:
+  - `station_id -> Station.id`
+  - `host_persona_id -> HostPersona.id`
+  - `prompt_template_id -> PromptTemplate.id` (nullable)
+- **Relations**:
+  - Many-to-one: `VoiceLink -> Station`
+  - Many-to-one: `VoiceLink -> HostPersona`
+  - Many-to-one: `VoiceLink -> PromptTemplate` (optional)
+  - One-to-many: `VoiceLink -> QueueItem`
+- **Ownership boundary**: `station-scoped`
+
+#### Jingle
+- **Primary key format**: `jng_<ULID>`
+- **Foreign keys**:
+  - `station_id -> Station.id`
+- **Relations**:
+  - Many-to-one: `Jingle -> Station`
+  - One-to-many: `Jingle -> QueueItem`
+  - Many-to-many: `Jingle <-> ClockWheel` via `clock_wheel_jingles`
+- **Ownership boundary**: `station-scoped`
+
+#### AdSpot
+- **Primary key format**: `ads_<ULID>`
+- **Foreign keys**:
+  - `station_id -> Station.id`
+- **Relations**:
+  - Many-to-one: `AdSpot -> Station`
+  - One-to-many: `AdSpot -> QueueItem`
+  - Many-to-many: `AdSpot <-> ClockWheel` via `clock_wheel_ad_spots`
+- **Ownership boundary**: `station-scoped`
+
+#### Request
+- **Primary key format**: `req_<ULID>`
+- **Foreign keys**:
+  - `station_id -> Station.id`
+  - `requested_by_user_id -> User.id` (nullable for anonymous listener submissions)
+  - `track_id -> Track.id`
+  - `queue_item_id -> QueueItem.id` (nullable until scheduled)
+- **Relations**:
+  - Many-to-one: `Request -> Station`
+  - Many-to-one: `Request -> User` (optional)
+  - Many-to-one: `Request -> Track`
+  - One-to-one (eventual): `Request -> QueueItem` once accepted/scheduled
+- **Ownership boundary**: `station-scoped`
+
+### 4.2 Relationship Map (Frontend Fetch Planning)
+
+| Source Entity | Relation | Target Entity | Cardinality | Join Path / Junction | Typical Fetch Pattern |
+|---|---|---|---|---|---|
+| Station | has many | User | 1:N | `users.station_id = station.id` | Station settings page loads users list with role badges |
+| User | has many through | Role | M:N | `user_roles.user_id -> user_roles.role_id` | Auth bootstrap loads user + roles in one request |
+| Station | has many | HostPersona | 1:N | `host_personas.station_id = station.id` | Persona management screen |
+| HostPersona | has many | PromptTemplate | 1:N | `prompt_templates.host_persona_id = host_persona.id` | Persona detail expands prompt templates |
+| Station | has many | PromptTemplate | 1:N | `prompt_templates.station_id = station.id` | Prompt library listing |
+| Station | has many | Playlist | 1:N | `playlists.station_id = station.id` | Playlist browser |
+| Playlist | has many through | Track | M:N | `playlist_tracks.playlist_id -> playlist_tracks.track_id` | Playlist detail includes track rows |
+| Station | has many | ClockWheel | 1:N | `clock_wheels.station_id = station.id` | Scheduler editor loads active wheels |
+| ClockWheel | has many | QueueItem | 1:N | `queue_items.clock_wheel_id = clock_wheel.id` | Hour preview and drag/drop sequencing |
+| ClockWheel | has many through | Jingle | M:N | `clock_wheel_jingles` | Template insert points in scheduler UI |
+| ClockWheel | has many through | AdSpot | M:N | `clock_wheel_ad_spots` | Commercial block planner |
+| Station | has many | Track | 1:N | `tracks.station_id = station.id` | Music library browsing and filtering |
+| Station | has many | VoiceLink | 1:N | `voice_links.station_id = station.id` | AI link history tab |
+| HostPersona | has many | VoiceLink | 1:N | `voice_links.host_persona_id = host_persona.id` | Persona activity timeline |
+| PromptTemplate | has many | VoiceLink | 1:N | `voice_links.prompt_template_id = prompt_template.id` | Prompt effectiveness analytics |
+| Station | has many | Jingle | 1:N | `jingles.station_id = station.id` | Imaging library |
+| Station | has many | AdSpot | 1:N | `ad_spots.station_id = station.id` | Ad inventory management |
+| Station | has many | Request | 1:N | `requests.station_id = station.id` | Listener request inbox |
+| Track | has many | Request | 1:N | `requests.track_id = track.id` | Track demand signals |
+| Request | may map to | QueueItem | 1:0..1 | `requests.queue_item_id = queue_items.id` | Moderation view shows scheduling outcome |
+| Station | has many | QueueItem | 1:N | `queue_items.station_id = station.id` | Studio now/next queue stream |
+| QueueItem | polymorphic reference | Track/VoiceLink/Jingle/AdSpot | N:1 | one FK based on `item_type` | Queue renderer resolves union payload by item type |
+
+### 4.3 Example QueueItem Payload
 ```json
 {
-  "id": "uuid",
-  "title": "Neon Nights",
-  "artist": "AI Synthwave Collective",
-  "duration": 245,
-  "intro_duration": 12,
-  "outro_duration": 15,
-  "file_path": "s3://...",
-  "bpm": 128,
-  "energy": 0.8
-}
-```
-
-### BroadcastQueue
-```json
-{
-  "id": "uuid",
-  "scheduled_time": "2023-10-27T14:00:00Z",
-  "item_type": "track | voice_link | jingle",
-  "item_id": "uuid",
-  "status": "pending | playing | played"
+  "id": "que_01J9W9PN1V9F2GT7S9T4F36R0R",
+  "station_id": "stn_01J9W8M5YB3K8Q7Q5S5K8D9V3N",
+  "clock_wheel_id": "clk_01J9W9H0ZQ0E8W0D8W6BCR2NT0",
+  "item_type": "voice_link",
+  "voice_link_id": "vln_01J9W9N9AHXK0WTS80S95G1Y1P",
+  "scheduled_time": "2026-03-01T14:20:00Z",
+  "status": "pending"
 }
 ```
 
