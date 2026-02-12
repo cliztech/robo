@@ -73,12 +73,32 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 ```json
 {
   "id": "uuid",
-  "scheduled_time": "2023-10-27T14:00:00Z",
   "item_type": "track | voice_link | jingle",
   "item_id": "uuid",
-  "status": "pending | playing | played"
+  "status": "pending | queued | locked | playing | completed | interrupted | failed | cancelled",
+  "scheduled_time": "2023-10-27T14:00:00Z",
+  "started_at": "2023-10-27T14:00:05Z",
+  "ended_at": "2023-10-27T14:04:10Z",
+  "failed_at": null,
+  "failure_reason": null,
+  "retry_count": 0,
+  "locked_by": "worker-queue-consumer-01",
+  "processing_node": "stream-cluster-a-node-3"
 }
 ```
+
+#### BroadcastQueue Status Transition Guide
+
+| Current Status | Next Status | Trigger/Event | Frontend Badge/Control Hint |
+| --- | --- | --- | --- |
+| `pending` | `queued` | Scheduler confirms run slot (`scheduled_time`) | Show **Scheduled** badge + allow manual reorder/cancel |
+| `queued` | `locked` | Worker claims job (`locked_by`, `processing_node`) | Show **Claimed** badge + disable duplicate start |
+| `locked` | `playing` | Audio pipeline starts (`started_at`) | Show **On Air** badge + expose interrupt control |
+| `playing` | `completed` | Playback finishes (`ended_at`) | Show **Completed** badge + lock destructive edits |
+| `playing` / `locked` | `interrupted` | Operator stop, stream disconnect, or preemption (`ended_at`) | Show **Interrupted** badge + allow resume/requeue |
+| `locked` / `playing` | `failed` | Runtime error (`failed_at`, `failure_reason`) | Show **Failed** badge + surface retry action |
+| `failed` / `interrupted` | `queued` | Retry requested (`retry_count` incremented) | Show **Retrying** badge until lock acquired |
+| `pending` / `queued` | `cancelled` | Item removed before play | Show **Cancelled** badge + keep audit timeline visible |
 
 ## 5. Implementation Plan
 
