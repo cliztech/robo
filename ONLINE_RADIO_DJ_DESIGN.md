@@ -102,3 +102,10 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 -   **Streaming**: `Liquidsoap` (industry standard for radio automation) or custom FFmpeg stream.
 -   **Database**: PostgreSQL (robustness) or SQLite (simplicity).
 -   **AI**: LangChain (orchestration), OpenAI/Anthropic (LLM), ElevenLabs (TTS).
+
+
+## Trust Boundaries for Configuration
+- **Runtime/desktop boundary (private):** Local runtime configuration, key material, and backend integration credentials remain server-side only.
+- **Web frontend boundary (public):** Frontend responses must use sanitized, explicit contracts with no secret-bearing fields or internal file paths.
+- **Schema policy:** `contracts/internal_config.schema.json` is never exposed to browser clients; only `contracts/public_frontend_config.schema.json` and frontend response contracts are allowed over web APIs.
+

@@ -47,3 +47,17 @@ RoboDJ is a Windows desktop automation tool designed to generate AI-hosted voice
 -   **Freshness**: "Script Freshness" settings to prevent repetitive content.
 -   **Banned Words**: Filter to ensure FCC compliance or brand safety.
 -   **Scheduling**: Time-based logic for different prompts (Morning Show vs. Late Night).
+
+## 5. Configuration Trust Boundaries
+
+RoboDJ has a strict trust boundary between desktop/runtime configuration and web frontend payloads.
+
+- **Desktop/runtime zone (trusted, private):** SQLite files, local key files (`config/secret.key`, `config/secret_v2.key`), provider API keys, and absolute/host-local file paths.
+- **Frontend zone (untrusted/public):** Browser-delivered config and status payloads that may be inspected by end users.
+
+### Boundary Rules
+1. Runtime config is treated as private by default.
+2. Only fields explicitly modeled in `contracts/public_frontend_config.schema.json` may be serialized for frontend responses.
+3. Internal key paths and secret-bearing values must remain in `contracts/internal_config.schema.json` only.
+4. Frontend response schemas in `contracts/frontend_responses/` are checked against denylisted key/path patterns before release.
+
