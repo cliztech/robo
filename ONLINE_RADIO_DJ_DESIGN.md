@@ -76,9 +76,64 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
   "scheduled_time": "2023-10-27T14:00:00Z",
   "item_type": "track | voice_link | jingle",
   "item_id": "uuid",
-  "status": "pending | playing | played"
+  "status": "draft | scheduled | preloading | ready | playing | played | skipped | failed | canceled | retrying",
+  "failure_code": "string | null",
+  "failure_message": "string | null",
+  "retry_count": 0,
+  "last_attempt_at": "2023-10-27T13:59:41Z | null"
 }
 ```
+
+### BroadcastQueue State Machine
+
+#### State definitions
+- **draft**: Item exists but is not yet eligible for playout.
+- **scheduled**: Item is accepted for a future slot and waiting for the scheduler.
+- **preloading**: System is resolving media, TTS, metadata, and dependencies.
+- **ready**: Item is fully prepared and can start as soon as it reaches the head of queue.
+- **playing**: Item is currently on-air.
+- **played**: Item completed successfully.
+- **skipped**: Item was intentionally bypassed (e.g., replaced by operator or rule engine).
+- **failed**: Item could not be played after retry policy was exhausted or error was non-recoverable.
+- **canceled**: Item was canceled before playback.
+- **retrying**: A recoverable failure occurred and system is waiting to retry.
+
+#### Transition rules
+- `draft -> scheduled` when a user saves and activates the item.
+- `draft -> canceled` when user discards before scheduling.
+- `scheduled -> preloading` when scheduler begins asset preparation window.
+- `scheduled -> canceled` when removed by user action or scheduler invalidation.
+- `preloading -> ready` when all validations and asset downloads/rendering succeed.
+- `preloading -> retrying` on transient errors (network timeout, temporary TTS/provider issue).
+- `preloading -> failed` on permanent errors (missing file, unsupported codec, policy block).
+- `ready -> playing` when playout engine starts the item.
+- `ready -> skipped` when rules/operator bypasses the item.
+- `ready -> canceled` when user/system cancels before playout starts.
+- `playing -> played` when audio finishes normally.
+- `playing -> failed` on runtime playout failure.
+- `playing -> skipped` only when hard-cut by operator or emergency content insertion.
+- `retrying -> preloading` when next retry attempt starts.
+- `retrying -> failed` when `retry_count` exceeds policy threshold.
+- Terminal states: `played`, `skipped`, `failed`, and `canceled` do not transition further.
+
+#### Failure metadata behavior
+- `failure_code`: Stable machine-readable code (examples: `asset_not_found`, `tts_timeout`, `playout_device_error`).
+- `failure_message`: Human-readable diagnostic detail safe for operator UI.
+- `retry_count`: Incremented each time an item enters `retrying`.
+- `last_attempt_at`: Updated whenever preloading/playback attempt starts (`preloading` or `playing`).
+- On successful path (`played`), `failure_code` and `failure_message` should be cleared.
+- On terminal error (`failed`), `failure_code`, `failure_message`, `retry_count`, and `last_attempt_at` must remain for auditability.
+
+#### Frontend editability policy
+- **User-editable states (dashboard actions allowed)**:
+  - `draft`: full edit of time/content.
+  - `scheduled`: edit time/content and cancel.
+  - `ready`: cancel or skip.
+- **Conditionally user-triggered system transition**:
+  - `skipped`, `canceled`: user can request action, but backend performs transition and records actor/reason.
+- **System-controlled only (read-only in dashboards)**:
+  - `preloading`, `playing`, `played`, `failed`, `retrying`.
+- Dashboards should show read-only state badges and failure metadata for system-controlled states, with no direct status dropdown override.
 
 ## 5. Implementation Plan
 
