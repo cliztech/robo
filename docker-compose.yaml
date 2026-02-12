@@ -6,10 +6,26 @@ services:
       - --servers=time
       - --transport=streaming
       - --port=8811
-    environment:
-      - DOCKER_MCP_IN_CONTAINER=1
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+
+    # SECURITY NOTE:
+    # Mounting /var/run/docker.sock effectively grants root-equivalent control
+    # of the Docker host to processes inside this container.
+    # The default compose file intentionally does NOT mount the Docker socket.
+    # If you require container-control features, opt in with:
+    #   docker compose -f docker-compose.yaml -f docker-compose.docker-control.yaml up -d
+
+    # Bind only to localhost by default to avoid exposing the gateway externally.
     ports:
-      - "8811:8811"
+      - "127.0.0.1:8811:8811"
+
+    # Least-privilege runtime defaults.
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 256
+
     restart: unless-stopped
