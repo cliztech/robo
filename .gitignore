@@ -43,4 +43,8 @@ desktop.ini
 .claude/
 node_modules/
 dist/
+!dist/
+dist/*
+!dist/README.md
+!dist/RoboDJ_Launcher.bat
 build/
