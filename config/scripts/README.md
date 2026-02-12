@@ -1,24 +1,21 @@
-# Script Utilities
+# Scheduler Scripts
 
-## `reliability_controls.py`
-Prototype reliability guardrails for radio automation pipelines that use LLM + TTS providers.
-
-### What it demonstrates
-- Confidence scoring for generated scripts and synthesized transcript output.
-- Profanity/compliance filtering at script and transcript stages.
-- Retry strategy across multiple providers with per-provider circuit breakers.
-- Timeout and dead-air watchdog with strict filler insertion.
-- Fallback behavior:
-  - Insert pre-rendered liner/sweeper text.
-  - Switch to music-only emergency mode.
-- Operator alerts and JSONL postmortem event logging.
+## `clockwheel_scheduler.py`
+Implements a radio-style clockwheel scheduler with:
+- `ClockTemplate` slot entities
+- Rule constraints (artist/title separation, tempo curve, explicit windows, daypart persona)
+- Fallback defaults when category inventory is empty
+- Human-lock support for manual placement protection during replanning
+- 24h simulation mode and HTTP endpoints
+- Validation report before activation
 
 ### Usage
-From repository root:
-
 ```bash
-python config/scripts/reliability_controls.py
+cd config/scripts
+python clockwheel_scheduler.py --simulate
+python clockwheel_scheduler.py --serve --port 8080
 ```
 
-Postmortem events are written to:
-- `config/logs/reliability_postmortem.jsonl`
+### HTTP Endpoints
+- `GET /simulate` → returns a 24h predicted log (`audio_emitted: false`)
+- `GET /validate` → returns schedule validation report

@@ -16,7 +16,7 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
     -   **Agent Orchestrator**: Manages the "DJ Agent" lifecycle.
 3.  **Audio Pipeline (Python/FFmpeg/Liquidsoap)**:
     -   **Streamer**: Generates the continuous audio stream (Icecast/HLS).
-    -   **Mixer**: Handles crossfades, ducking (lowering music volume during speech), and FX.
+    -   **Mixer**: Handles hit-point-aware transitions, beat-aware crossfades, hard cuts, ducking, and segment-level mastering.
     -   **Synthesizer**: Interfacing with TTS providers (ElevenLabs, OpenAI).
 
 ### B. Integration with AI Music Agents
@@ -103,38 +103,168 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 -   **Database**: PostgreSQL (robustness) or SQLite (simplicity).
 -   **AI**: LangChain (orchestration), OpenAI/Anthropic (LLM), ElevenLabs (TTS).
 
+## 7. Audio Pipeline Upgrade Specification
 
-## 7. Reliability & Safety Control Plane
+### 7.1 Processing Chain (per rendered segment)
 
-To make autonomous broadcasting resilient, add a dedicated **Reliability Controller** in the orchestration path (`Scheduler -> LLM Scripting -> TTS -> Mixer -> Streamer`).
+All output segments (music sweeps, voice links, promos, two-voice conversations) follow a deterministic mastering chain:
 
-### 7.1 Confidence Scoring Gates
-- **Script confidence score** after LLM generation (fluency/compliance/structure checks).
-- **Synthesis confidence score** after TTS (transcript-to-script semantic overlap, pronunciation QA, timing checks).
-- Any item below threshold is blocked from air and triggers fallback paths.
+1. **Loudness normalization (LUFS)**
+   - Analyze integrated loudness and true peak.
+   - Normalize to preset target (format-dependent, see 7.2).
+2. **Multiband compression**
+   - 3- or 4-band split to stabilize tonal balance and perceived loudness.
+   - Independent thresholds/ratios for low, mid, high bands.
+3. **Limiter (true-peak safety)**
+   - Final brickwall limiter to prevent clipping after codec conversion.
+4. **Stereo enhancement (optional)**
+   - Enabled per format/preset.
+   - Apply mid/side widening with mono compatibility guardrails.
+5. **De-esser for voice content**
+   - Voice-only or voice-dominant segments.
+   - Frequency-focused reduction of sibilance before final limiting.
 
-### 7.2 Failure Fallbacks
-When confidence is low or provider calls timeout/fail:
-1. Inject **pre-rendered liners/sweepers** (safe station IDs, legal IDs, neutral transitions).
-2. If instability persists, activate **music-only emergency mode** with curated safe rotation and periodic legal IDs.
+> Implementation note: chain modules should be idempotent and configurable with profile-level overrides.
 
-### 7.3 Dead-Air Watchdog
-- Enforce a hard timeout budget between queue handoff and playout.
-- If no approved spoken/audio asset is available before deadline, auto-insert safe filler and record incident.
+### 7.2 Per-Format Processing Presets
 
-### 7.4 Compliance Filtering
-Apply compliance checks at two checkpoints:
-- **Pre-TTS script filter**: profanity, banned phrases, policy disallow lists.
-- **Post-TTS transcript filter**: ASR transcript verification against compliance and intent.
+Define station-format defaults, then allow show-level overrides.
 
-### 7.5 Multi-Provider Resilience
-- Use ordered provider pools (primary/secondary/tertiary) for both LLM and TTS.
-- Retry with bounded attempts and exponential backoff.
-- Protect each provider with a **circuit breaker** (open after consecutive failures, half-open probe recovery).
+| Format | Target LUFS | Limiter Ceiling | Compression Character | Stereo Enhance | De-esser Intensity |
+|---|---:|---:|---|---|---|
+| **CHR** | -9 LUFS | -1.0 dBTP | Aggressive/punchy | On (moderate) | Medium |
+| **Talk** | -16 LUFS | -2.0 dBTP | Speech-first, transparent | Off | High |
+| **Chill** | -14 LUFS | -1.5 dBTP | Gentle/glue | On (light) | Low-Medium |
+| **Classic Hits** | -12 LUFS | -1.2 dBTP | Medium density, warm | On (light-moderate) | Medium |
 
-### 7.6 Alerting & Postmortems
-For every fallback event, emit:
-- **Operator alert** (dashboard + webhook/pager).
-- **Postmortem log** event with: timestamp, stage, provider, latency, reason, confidence scores, and recovery action.
+Preset object shape (example):
 
-These events feed reliability SLOs such as fallback rate, dead-air avoided count, and mean recovery time.
+```json
+{
+  "format": "chr",
+  "loudness": { "target_lufs": -9, "max_true_peak_dbtp": -1.0 },
+  "multiband": {
+    "bands": [
+      { "name": "low", "threshold_db": -24, "ratio": 3.0 },
+      { "name": "mid", "threshold_db": -20, "ratio": 2.5 },
+      { "name": "high", "threshold_db": -18, "ratio": 2.0 }
+    ]
+  },
+  "limiter": { "ceiling_dbtp": -1.0, "lookahead_ms": 3 },
+  "stereo_enhancement": { "enabled": true, "width_percent": 115 },
+  "de_esser": { "enabled": true, "freq_hz": 6500, "max_reduction_db": 4 }
+}
+```
+
+### 7.3 Transition Intelligence
+
+Upgrade transitions from timeline-only crossfades to analysis-driven decisions:
+
+1. **Intro/outro hit-point awareness**
+   - Detect/ingest markers (`intro_start`, `vocal_start`, `outro_start`, `cold_end`).
+   - Schedule voice links into intro windows where available.
+2. **Beat-aware crossfades (BPM-compatible)**
+   - If BPM delta and phase confidence are within tolerance, align phrase boundaries.
+   - Use bar-length fade curves (e.g., 4-beat or 8-beat) instead of fixed seconds.
+3. **Hard cut fallback (incompatible tracks)**
+   - Trigger when tempo/key/energy mismatch exceeds configured bounds.
+   - Cut at transient-safe boundaries to avoid clicks.
+
+Transition decision policy (high-level):
+
+```text
+if intro/outro windows overlap with safe margin:
+    if bpm_compatible && beat_confidence >= threshold:
+        use beat-aware crossfade
+    else:
+        use timed hit-point crossfade
+else:
+    use hard cut fallback
+```
+
+### 7.4 Auto-Duck Profiles
+
+Add explicit ducking profiles selected by segment type:
+
+1. **Speech-over-bed**
+   - Fast attack, medium release.
+   - Typical gain reduction: -8 to -12 dB.
+   - Keep bed presence while maximizing intelligibility.
+2. **Two-voice conversation**
+   - Deeper bed reduction during overlaps.
+   - Optional speaker-priority sidechain (active speaker gets less masking).
+   - Typical gain reduction: -10 to -16 dB during dual speech.
+
+Profile fields:
+- `attack_ms`, `release_ms`, `hold_ms`
+- `min_duck_db`, `max_duck_db`
+- `noise_gate_threshold_db` (to avoid pumping)
+- `dual_voice_extra_duck_db`
+
+### 7.5 QA Analyzer (Automated Audio Validation)
+
+Run QA checks post-render and before playout handoff.
+
+Detection goals:
+- **Clipping**: true-peak overs above threshold.
+- **Over-compression**: low crest factor / low short-term loudness variance.
+- **Silence anomalies**: unexpected long silence blocks.
+- **Abrupt cuts**: discontinuity spikes at segment boundaries.
+
+Output:
+- `pass | warn | fail` status per check.
+- Severity score and human-readable diagnostics.
+- Suggested remediation (e.g., "increase fade length", "lower limiter drive").
+
+### 7.6 Segment Technical Metadata for Diagnostics
+
+Persist technical metadata for every rendered segment to support QA, debugging, and model tuning.
+
+Recommended fields:
+
+```json
+{
+  "segment_id": "uuid",
+  "segment_type": "voice_link | track_transition | promo | conversation",
+  "preset": "talk",
+  "input": {
+    "track_a_id": "uuid",
+    "track_b_id": "uuid",
+    "voice_asset_ids": ["uuid"]
+  },
+  "analysis": {
+    "integrated_lufs": -14.2,
+    "short_term_lufs_max": -10.1,
+    "true_peak_dbtp": -1.1,
+    "crest_factor_db": 7.4,
+    "dynamic_range_lu": 5.8,
+    "detected_bpm_a": 124,
+    "detected_bpm_b": 126,
+    "transition_type": "beat_crossfade",
+    "duck_profile": "two_voice_conversation"
+  },
+  "qa": {
+    "status": "warn",
+    "checks": [
+      { "name": "abrupt_cuts", "status": "pass" },
+      { "name": "over_compression", "status": "warn", "score": 0.72 }
+    ]
+  },
+  "render": {
+    "engine_version": "audio-pipeline-2.0.0",
+    "rendered_at": "2026-02-12T20:15:00Z",
+    "duration_ms": 42150
+  }
+}
+```
+
+Storage options:
+- `segment_audio_diagnostics` table in PostgreSQL for queryable history.
+- Optional JSON sidecar file for each exported asset in object storage.
+
+### 7.7 Rollout Approach
+
+1. Ship new pipeline behind a feature flag (`audio_pipeline_v2_enabled`).
+2. Run A/B renders (v1 vs v2) for selected hours.
+3. Compare QA analyzer outputs and human producer feedback.
+4. Promote per-format presets incrementally (Talk first, then music formats).
