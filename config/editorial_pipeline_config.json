@@ -1,0 +1,45 @@
+{
+  "sources": {
+    "weather": {
+      "enabled": true,
+      "endpoint": "",
+      "headers": {}
+    },
+    "news": {
+      "enabled": true,
+      "endpoint": "",
+      "headers": {}
+    },
+    "trends": {
+      "enabled": false,
+      "endpoint": "",
+      "headers": {}
+    }
+  },
+  "ranking": {
+    "weights": {
+      "relevance": 0.45,
+      "freshness": 0.35,
+      "safety": 0.2
+    }
+  },
+  "insertion_rules": {
+    "thresholds": {
+      "emergency_min_rank": 0.55,
+      "top_of_hour_min_rank": 0.45,
+      "mid_break_min_rank": 0.35
+    }
+  },
+  "attribution": {
+    "require_source_attribution": true,
+    "confidence_disclaimers": {
+      "low": "This is an early report and details are still being confirmed.",
+      "medium": "Information is developing and may update.",
+      "high": "Information is based on currently trusted sources."
+    }
+  },
+  "format": {
+    "quiet_mode": false,
+    "quiet_mode_description": "Use quiet mode for music-heavy formats to suppress non-critical mid-break mentions."
+  }
+}
