@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json.schemastore.org/pyrightconfig.json",
+  "workspace": "dgn-dj",
+  "language_servers": {
+    "pyright": {
+      "include": [
+        "config",
+        "scripts"
+      ],
+      "exclude": [
+        "**/__pycache__",
+        "make-4.3"
+      ],
+      "typeCheckingMode": "basic"
+    },
+    "clangd": {
+      "rootPatterns": [
+        "make-4.3/Makefile.am",
+        "make-4.3/configure.ac"
+      ],
+      "compileCommandsDir": "make-4.3"
+    },
+    "yamlls": {
+      "files": [
+        ".github/workflows/*.yml"
+      ]
+    },
+    "jsonls": {
+      "schemas": [
+        {
+          "fileMatch": [
+            "infra/mcp/servers.json"
+          ],
+          "url": "infra/mcp/schemas/mcp-servers.schema.json"
+        }
+      ]
+    }
+  }
+}
