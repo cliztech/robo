@@ -41,6 +41,23 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 *The "Brain" that decides the programming.*
 
 -   **Clock Wheels**: Define templates for an hour (e.g., "Top of Hour ID" -> "Power Hit" -> "DJ Link" -> "New Release").
+-   **Station Timezone**:
+    -   Every station must define a canonical IANA timezone string (e.g., `America/New_York`, `Europe/Berlin`).
+    -   All recurrence calculations are evaluated in station local time, then expanded into UTC for storage/playout.
+-   **Recurrence Rules**:
+    -   Clock wheels and shows support deterministic recurrence using RFC 5545 style rules (`RRULE`) plus optional include/exclude dates.
+    -   Minimum support: `FREQ`, `INTERVAL`, `BYDAY`, `BYHOUR`, `BYMINUTE`, `UNTIL`, `COUNT`, `WKST`, `RDATE`, `EXDATE`.
+    -   For overlapping recurring blocks, scheduler resolves by explicit `priority` (higher wins), then by most-specific rule (single date > recurring rule), then by earliest creation timestamp.
+-   **DST Handling Policy**:
+    -   `wall_clock_strict`: keep local wall-clock intent stable (e.g., "08:00 local" stays 08:00 across DST boundaries).
+    -   `utc_strict`: keep UTC instant cadence stable (may shift displayed local hour at DST transitions).
+    -   Default for radio scheduling is `wall_clock_strict`.
+    -   Non-existent local times (spring-forward gap) are shifted forward to the next valid local minute.
+    -   Ambiguous local times (fall-back overlap) choose the first occurrence unless `dst_instance=second` is explicitly requested.
+-   **Canonical Storage + Display Rules**:
+    -   Canonical event instances in queue tables are always UTC timestamps.
+    -   Source schedule definitions persist local intent (`local_start_time`, timezone, RRULE) for deterministic regeneration.
+    -   UI always displays both local station time and UTC, with local station time as the primary presentation.
 -   **Rules Engine**:
     -   *Artist Separation*: "Don't play the same artist within 60 minutes."
     -   *Tempo Flow*: "Gradually increase BPM from 6 PM to 9 PM."
@@ -53,6 +70,40 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 -   **Metadata Push**: Updates "Now Playing" info on the frontend.
 
 ## 4. Data Model (Draft Schema)
+
+### StationSchedule
+```json
+{
+  "id": "uuid",
+  "station_id": "uuid",
+  "timezone": "America/New_York",
+  "dst_policy": "wall_clock_strict",
+  "week_start": "MO",
+  "display_time_mode": "local_primary",
+  "version": 3,
+  "effective_from_utc": "2026-01-01T00:00:00Z",
+  "effective_to_utc": null
+}
+```
+
+### ScheduleBlock (Clock Wheel / Show Definition)
+```json
+{
+  "id": "uuid",
+  "station_schedule_id": "uuid",
+  "name": "Drive Time Show",
+  "type": "show | clock_wheel",
+  "priority": 100,
+  "timezone": "America/New_York",
+  "local_start_time": "17:00:00",
+  "duration_minutes": 180,
+  "recurrence_rule": "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR;BYHOUR=17;BYMINUTE=0",
+  "rdate": ["2026-07-03T17:00:00"],
+  "exdate": ["2026-12-25T17:00:00"],
+  "dst_instance": "first",
+  "content_template_id": "uuid"
+}
+```
 
 ### Tracks
 ```json
@@ -74,9 +125,97 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 {
   "id": "uuid",
   "scheduled_time": "2023-10-27T14:00:00Z",
+  "scheduled_time_local": "2023-10-27T10:00:00-04:00",
+  "station_timezone": "America/New_York",
   "item_type": "track | voice_link | jingle",
   "item_id": "uuid",
-  "status": "pending | playing | played"
+  "status": "pending | playing | played",
+  "source_block_id": "uuid"
+}
+```
+
+### Sample Deterministic Schedule Object (Recurring + Exceptions)
+```json
+{
+  "station_id": "stn_001",
+  "timezone": "America/New_York",
+  "dst_policy": "wall_clock_strict",
+  "generated_window": {
+    "start_utc": "2026-11-23T00:00:00Z",
+    "end_utc": "2026-12-01T00:00:00Z"
+  },
+  "blocks": [
+    {
+      "id": "blk_morning",
+      "name": "Morning Clock Wheel",
+      "type": "clock_wheel",
+      "priority": 50,
+      "local_start_time": "06:00:00",
+      "duration_minutes": 240,
+      "rrule": "FREQ=DAILY;BYHOUR=6;BYMINUTE=0",
+      "template": ["top_id", "power", "dj_link", "recurrent_news"]
+    },
+    {
+      "id": "blk_drive",
+      "name": "Drive Time Live",
+      "type": "show",
+      "priority": 100,
+      "local_start_time": "17:00:00",
+      "duration_minutes": 180,
+      "rrule": "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR;BYHOUR=17;BYMINUTE=0",
+      "template": ["show_open", "music_rotation_a", "talk_break", "ads_local", "show_close"]
+    }
+  ],
+  "exceptions": [
+    {
+      "id": "ex_thanksgiving",
+      "date_local": "2026-11-26",
+      "action": "replace_block",
+      "target_block_id": "blk_drive",
+      "replacement": {
+        "id": "blk_holiday_special",
+        "name": "Thanksgiving Special",
+        "type": "show",
+        "priority": 200,
+        "local_start_time": "17:00:00",
+        "duration_minutes": 240,
+        "rrule": "FREQ=DAILY;COUNT=1",
+        "template": ["holiday_open", "listener_dedications", "holiday_mix"]
+      }
+    },
+    {
+      "id": "ex_charity_remote",
+      "date_local": "2026-11-28",
+      "action": "insert_one_off",
+      "one_off_block": {
+        "id": "blk_charity_remote",
+        "name": "Charity Remote Broadcast",
+        "type": "show",
+        "priority": 220,
+        "local_start_time": "12:00:00",
+        "duration_minutes": 120,
+        "rrule": "FREQ=DAILY;COUNT=1",
+        "template": ["remote_open", "live_interviews", "sponsor_mentions"]
+      }
+    }
+  ],
+  "resolved_instances": [
+    {
+      "block_id": "blk_drive",
+      "start_local": "2026-11-25T17:00:00-05:00",
+      "start_utc": "2026-11-25T22:00:00Z"
+    },
+    {
+      "block_id": "blk_holiday_special",
+      "start_local": "2026-11-26T17:00:00-05:00",
+      "start_utc": "2026-11-26T22:00:00Z"
+    },
+    {
+      "block_id": "blk_charity_remote",
+      "start_local": "2026-11-28T12:00:00-05:00",
+      "start_utc": "2026-11-28T17:00:00Z"
+    }
+  ]
 }
 ```
 
