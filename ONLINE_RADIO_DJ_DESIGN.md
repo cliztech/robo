@@ -80,6 +80,81 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 }
 ```
 
+### User
+```json
+{
+  "id": "uuid",
+  "email": "producer@station.fm",
+  "display_name": "Night Shift Producer",
+  "is_active": true,
+  "role_ids": ["role_producer"],
+  "last_login_at": "2026-02-12T09:15:00Z",
+  "created_at": "2026-01-20T10:30:00Z",
+  "updated_at": "2026-02-12T09:15:00Z"
+}
+```
+
+### Role
+```json
+{
+  "id": "role_operator",
+  "name": "operator",
+  "description": "Runs day-to-day playout operations",
+  "permission_ids": [
+    "queue.view",
+    "queue.edit",
+    "queue.reorder",
+    "schedule.view",
+    "host_persona.view"
+  ],
+  "created_at": "2026-01-20T10:30:00Z",
+  "updated_at": "2026-02-12T09:15:00Z"
+}
+```
+
+### Permission
+```json
+{
+  "id": "schedule.publish",
+  "resource": "schedule",
+  "action": "publish",
+  "description": "Publish a drafted schedule to the live programming timeline"
+}
+```
+
+### Permission-Gated Actions (for API enforcement + frontend control states)
+The backend MUST enforce permissions server-side and also return the current user's effective permission identifiers so the frontend can enable/disable controls deterministically.
+
+| Action | Permission ID | Typical UI Controls |
+|---|---|---|
+| View broadcast queue | `queue.view` | Queue tab visibility |
+| Edit queue entries (insert/remove/swap tracks) | `queue.edit` | Edit buttons, track replace modal |
+| Reorder queue | `queue.reorder` | Drag-and-drop handle |
+| View schedule drafts/live grid | `schedule.view` | Schedule page and timeline |
+| Edit schedule drafts | `schedule.edit` | Save draft button, slot editor |
+| Publish schedule to live | `schedule.publish` | Publish button + confirmation dialog |
+| View host persona settings | `host_persona.view` | Persona panel visibility |
+| Modify host persona (name/tone/voice/profile) | `host_persona.edit` | Persona form fields + save action |
+| View API key metadata | `api_keys.view` | Integrations/settings page |
+| Rotate API keys | `api_keys.rotate` | Rotate key button |
+| Manage users and role assignments | `users.manage` | User admin section |
+| View observability logs/audit trail | `audit_logs.view` | Logs dashboard |
+
+### Minimal Role Set and Effective Permissions
+
+| Role | Effective Permissions |
+|---|---|
+| `admin` | `queue.view`, `queue.edit`, `queue.reorder`, `schedule.view`, `schedule.edit`, `schedule.publish`, `host_persona.view`, `host_persona.edit`, `api_keys.view`, `api_keys.rotate`, `users.manage`, `audit_logs.view` |
+| `producer` | `queue.view`, `queue.edit`, `queue.reorder`, `schedule.view`, `schedule.edit`, `schedule.publish`, `host_persona.view`, `host_persona.edit` |
+| `operator` | `queue.view`, `queue.edit`, `queue.reorder`, `schedule.view`, `host_persona.view` |
+| `viewer` | `queue.view`, `schedule.view`, `host_persona.view`, `api_keys.view` |
+
+**Notes:**
+- `admin` is the only minimal role that can rotate API keys and manage user-role assignments.
+- `producer` can prepare and publish content but cannot manage users or secrets.
+- `operator` can run live operations but cannot publish schedules or change host persona.
+- `viewer` is read-only and intended for stakeholders/monitoring users.
+
 ## 5. Implementation Plan
 
 ### Phase 1: Core Engine (MVP)
