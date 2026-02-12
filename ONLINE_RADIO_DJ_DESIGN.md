@@ -80,6 +80,95 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 }
 ```
 
+### PublicPlayerState
+```json
+{
+  "stream_urls": {
+    "aac_64": "https://radio.example.com/live/aac-64.m3u8",
+    "aac_128": "https://radio.example.com/live/aac-128.m3u8",
+    "mp3_128": "https://radio.example.com/live/mp3-128.mp3"
+  },
+  "live_status": "live | reconnecting | offline",
+  "now_playing": {
+    "id": "uuid",
+    "title": "Neon Nights",
+    "artist": "AI Synthwave Collective",
+    "started_at": "2023-10-27T14:00:00Z",
+    "ends_at": "2023-10-27T14:04:05Z"
+  },
+  "up_next": [
+    {
+      "id": "uuid",
+      "title": "City Lights",
+      "artist": "Nova Circuit"
+    }
+  ],
+  "artwork_url": "https://cdn.example.com/artwork/neon-nights.jpg",
+  "fallback_artwork_url": "https://cdn.example.com/artwork/station-default.jpg",
+  "artwork_alt_text": "Cover art for Neon Nights",
+  "last_updated_at": "2023-10-27T14:00:05Z"
+}
+```
+
+**Frontend stale-data guidance (polling):**
+- Poll every 5-10 seconds under normal operation.
+- Treat payloads as stale when `now - last_updated_at > 30 seconds`.
+- If stale, keep audio playback controls visible but downgrade UI state to `reconnecting` and display fallback artwork/text until fresh data is received.
+- If stale for more than 2 minutes, transition UI to `offline` and prompt listeners to retry stream selection.
+
+**Example payload (normal/live):**
+```json
+{
+  "stream_urls": {
+    "aac_64": "https://radio.example.com/live/aac-64.m3u8",
+    "aac_128": "https://radio.example.com/live/aac-128.m3u8",
+    "mp3_128": "https://radio.example.com/live/mp3-128.mp3"
+  },
+  "live_status": "live",
+  "now_playing": {
+    "id": "trk_7e2b1",
+    "title": "Neon Nights",
+    "artist": "AI Synthwave Collective",
+    "started_at": "2023-10-27T14:00:00Z",
+    "ends_at": "2023-10-27T14:04:05Z"
+  },
+  "up_next": [
+    {
+      "id": "trk_9a4d2",
+      "title": "City Lights",
+      "artist": "Nova Circuit"
+    },
+    {
+      "id": "trk_0f1c8",
+      "title": "Midnight Skyline",
+      "artist": "Pulse Harbor"
+    }
+  ],
+  "artwork_url": "https://cdn.example.com/artwork/neon-nights.jpg",
+  "fallback_artwork_url": "https://cdn.example.com/artwork/station-default.jpg",
+  "artwork_alt_text": "Cover art for Neon Nights",
+  "last_updated_at": "2023-10-27T14:00:05Z"
+}
+```
+
+**Example payload (degraded/offline):**
+```json
+{
+  "stream_urls": {
+    "aac_64": "https://radio.example.com/live/aac-64.m3u8",
+    "aac_128": "https://radio.example.com/live/aac-128.m3u8",
+    "mp3_128": "https://radio.example.com/live/mp3-128.mp3"
+  },
+  "live_status": "offline",
+  "now_playing": null,
+  "up_next": [],
+  "artwork_url": null,
+  "fallback_artwork_url": "https://cdn.example.com/artwork/station-offline.jpg",
+  "artwork_alt_text": "Station offline placeholder artwork",
+  "last_updated_at": "2023-10-27T14:07:30Z"
+}
+```
+
 ## 5. Implementation Plan
 
 ### Phase 1: Core Engine (MVP)
