@@ -54,6 +54,30 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 
 ## 4. Data Model (Draft Schema)
 
+### Standard Mutable Entity Metadata
+All mutable entities (e.g., `Tracks`, `BroadcastQueue`, Schedules, Prompts, Personas) must include the following fields:
+
+-   `created_at` (ISO-8601 UTC timestamp)
+-   `updated_at` (ISO-8601 UTC timestamp)
+-   `created_by` (user/service identifier)
+-   `updated_by` (user/service identifier)
+-   `version` (integer, monotonically increasing; starts at `1`)
+
+#### Update Behavior (Optimistic Concurrency)
+-   Every write operation must include the caller's expected `version`.
+-   The backend applies the update only if `expected_version == current_version`.
+-   On success:
+    -   persist changes,
+    -   increment `version` by `1`,
+    -   set `updated_at` to current UTC timestamp,
+    -   set `updated_by` to the authenticated actor.
+-   On mismatch, reject with `409 Conflict` and return:
+    -   current persisted entity,
+    -   current `version`,
+    -   optional diff metadata for UI rendering.
+
+This prevents stale overwrites when multiple users/systems edit the same entity concurrently.
+
 ### Tracks
 ```json
 {
@@ -65,7 +89,12 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
   "outro_duration": 15,
   "file_path": "s3://...",
   "bpm": 128,
-  "energy": 0.8
+  "energy": 0.8,
+  "created_at": "2023-10-27T13:40:00Z",
+  "updated_at": "2023-10-27T13:40:00Z",
+  "created_by": "user_123",
+  "updated_by": "user_123",
+  "version": 1
 }
 ```
 
@@ -76,9 +105,31 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
   "scheduled_time": "2023-10-27T14:00:00Z",
   "item_type": "track | voice_link | jingle",
   "item_id": "uuid",
-  "status": "pending | playing | played"
+  "status": "pending | playing | played",
+  "created_at": "2023-10-27T13:30:00Z",
+  "updated_at": "2023-10-27T13:35:00Z",
+  "created_by": "scheduler_service",
+  "updated_by": "scheduler_service",
+  "version": 3
 }
 ```
+
+### Frontend Conflict-Handling UX
+When a write returns `409 Conflict`, the frontend should present a conflict resolution modal with three options:
+
+1.  **Reload latest**
+    -   Discard local edits and load server version.
+2.  **Review diff**
+    -   Show field-level differences between local draft and current server state.
+    -   Allow users to selectively re-apply local changes.
+3.  **Force overwrite**
+    -   Available only to authorized roles.
+    -   Resubmit with explicit force flag (audited), creating a new incremented version.
+
+UX notes:
+-   Preserve unsaved local draft in memory/session storage while conflict is unresolved.
+-   Clearly display "Last updated by" and "Last updated at" in editor side panels.
+-   Use non-blocking toasts for successful conflict resolution actions.
 
 ## 5. Implementation Plan
 
