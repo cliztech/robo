@@ -102,3 +102,39 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 -   **Streaming**: `Liquidsoap` (industry standard for radio automation) or custom FFmpeg stream.
 -   **Database**: PostgreSQL (robustness) or SQLite (simplicity).
 -   **AI**: LangChain (orchestration), OpenAI/Anthropic (LLM), ElevenLabs (TTS).
+
+
+## 7. Reliability & Safety Control Plane
+
+To make autonomous broadcasting resilient, add a dedicated **Reliability Controller** in the orchestration path (`Scheduler -> LLM Scripting -> TTS -> Mixer -> Streamer`).
+
+### 7.1 Confidence Scoring Gates
+- **Script confidence score** after LLM generation (fluency/compliance/structure checks).
+- **Synthesis confidence score** after TTS (transcript-to-script semantic overlap, pronunciation QA, timing checks).
+- Any item below threshold is blocked from air and triggers fallback paths.
+
+### 7.2 Failure Fallbacks
+When confidence is low or provider calls timeout/fail:
+1. Inject **pre-rendered liners/sweepers** (safe station IDs, legal IDs, neutral transitions).
+2. If instability persists, activate **music-only emergency mode** with curated safe rotation and periodic legal IDs.
+
+### 7.3 Dead-Air Watchdog
+- Enforce a hard timeout budget between queue handoff and playout.
+- If no approved spoken/audio asset is available before deadline, auto-insert safe filler and record incident.
+
+### 7.4 Compliance Filtering
+Apply compliance checks at two checkpoints:
+- **Pre-TTS script filter**: profanity, banned phrases, policy disallow lists.
+- **Post-TTS transcript filter**: ASR transcript verification against compliance and intent.
+
+### 7.5 Multi-Provider Resilience
+- Use ordered provider pools (primary/secondary/tertiary) for both LLM and TTS.
+- Retry with bounded attempts and exponential backoff.
+- Protect each provider with a **circuit breaker** (open after consecutive failures, half-open probe recovery).
+
+### 7.6 Alerting & Postmortems
+For every fallback event, emit:
+- **Operator alert** (dashboard + webhook/pager).
+- **Postmortem log** event with: timestamp, stage, provider, latency, reason, confidence scores, and recovery action.
+
+These events feed reliability SLOs such as fallback rate, dead-air avoided count, and mean recovery time.
