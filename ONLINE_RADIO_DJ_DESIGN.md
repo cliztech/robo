@@ -849,6 +849,27 @@ Recommended cache keys:
 - `['station', station_id, 'schedule', date]`
 - `['station', station_id, 'prompts']`
 
+### 6.1 Frontend status UX display rules
+
+Use `frontend_status_response` as the only source for operational status shown to dashboard users.
+
+- **Banner severity mapping**
+  - `service_status = healthy` -> no persistent outage banner; allow subtle success styling only.
+  - `service_status = degraded` -> warning banner (`amber`) with `status_message` if present.
+  - `service_status = offline` -> critical banner (`red`) with fallback copy when `status_message` is absent.
+- **Inline badge behavior**
+  - Show a compact status badge in queue/now-playing panels using `service_status` color semantics.
+  - Append a humanized staleness suffix when `data_freshness_seconds` is present (for example, `updated 45s ago`).
+  - If `degraded_reason_code` is present, show a tooltip/secondary label from a frontend-owned lookup table (never raw internal error text).
+- **Retry CTA visibility**
+  - Show `Retry now` CTA for `degraded` and `offline` states.
+  - If `next_retry_at` is present and in the future, disable CTA and show countdown/next-at helper text.
+  - Keep CTA hidden for `healthy` unless manual refresh is enabled globally.
+- **Frontend safety requirements**
+  - Treat `status_message` and `degraded_reason_code` as pre-sanitized, user-visible fields only; they must not include stack traces, hostnames, credential fragments, or provider-specific incident IDs.
+  - Do not infer internal system topology from status responses; only render explicitly provided fields.
+  - Unknown `degraded_reason_code` values should degrade gracefully to generic copy (no debug fallback text).
+
 ## 7. Dashboard action-to-permission matrix
 
 | Dashboard Action | Required Scope | Notes |
