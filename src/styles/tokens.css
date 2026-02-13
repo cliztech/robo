@@ -1,0 +1,77 @@
+:root {
+  color-scheme: dark;
+
+  /* Design Tokens: dark baseline from blueprint */
+  --bg: 224 24% 7%;
+  --surface: 224 20% 11%;
+  --surface-2: 224 18% 14%;
+  --text: 220 20% 96%;
+  --text-muted: 220 12% 70%;
+  --accent: 199 98% 58%;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+
+  --shadow-soft: 0 6px 20px hsl(0 0% 0% / 0.25);
+
+  /* Semantic aliases for component-level usage */
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-accent: var(--accent);
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: 224 24% 7%;
+  --surface: 224 20% 11%;
+  --surface-2: 224 18% 14%;
+  --text: 220 20% 96%;
+  --text-muted: 220 12% 70%;
+  --accent: 199 98% 58%;
+}
+
+[data-theme='light'] {
+  color-scheme: light;
+  --bg: 220 22% 97%;
+  --surface: 0 0% 100%;
+  --surface-2: 220 18% 94%;
+  --text: 224 24% 7%;
+  --text-muted: 224 10% 42%;
+  --accent: 199 90% 45%;
+}
+
+[data-theme='auto'] {
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: light) {
+  [data-theme='auto'] {
+    --bg: 220 22% 97%;
+    --surface: 0 0% 100%;
+    --surface-2: 220 18% 94%;
+    --text: 224 24% 7%;
+    --text-muted: 224 10% 42%;
+    --accent: 199 90% 45%;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-theme='auto'] {
+    --bg: 224 24% 7%;
+    --surface: 224 20% 11%;
+    --surface-2: 224 18% 14%;
+    --text: 220 20% 96%;
+    --text-muted: 220 12% 70%;
+    --accent: 199 98% 58%;
+  }
+}
