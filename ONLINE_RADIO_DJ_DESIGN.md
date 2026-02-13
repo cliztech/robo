@@ -99,7 +99,7 @@ This section defines all user-facing domain objects and their relationships so b
   - `voice_link_id -> VoiceLink.id` (default voice profile, nullable)
 - **Relations**:
   - Many-to-one: `HostPersona -> Station`
-  - One-to-many: `HostPersona -> VoiceLink` (`generated_by_persona_id`)
+  - One-to-many: `HostPersona -> VoiceLink` (`host_persona_id`)
   - One-to-many: `HostPersona -> PromptTemplate` (persona-targeted prompts)
 - **Ownership boundary**: `station-scoped`
 
