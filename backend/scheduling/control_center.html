@@ -415,7 +415,7 @@
         body: JSON.stringify(payload),
       });
 
-      await fetchJSON(`${base}/audit-events?decision_type=breaking_news_weather_interruption&origin=human&notes=${encodeURIComponent(notes)}`, { method: 'POST' });
+      await fetchJSON(`${base}/audit-events?decision_type=mode_change&origin=human&notes=${encodeURIComponent(notes)}`, { method: 'POST' });
       state.policy = updated;
       state.selectedMode = updated.station_default_mode;
       renderStatusStrip();
