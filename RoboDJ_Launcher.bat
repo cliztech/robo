@@ -15,6 +15,22 @@ if not exist "%EXE_PATH%" (
     exit /b 1
 )
 
+:: Select Python launcher.
+set "PYTHON_CMD=python"
+where py >nul 2>nul
+if %ERRORLEVEL%==0 set "PYTHON_CMD=py -3"
+
+:: Startup diagnostics + validation + crash recovery gate.
+pushd "%SCRIPT_DIR%"
+call %PYTHON_CMD% config\scripts\startup_safety.py --on-launch
+set "SAFETY_EXIT=%ERRORLEVEL%"
+popd
+if not "%SAFETY_EXIT%"=="0" (
+    echo [RoboDJ] Startup blocked by reliability safety gate.
+    endlocal & exit /b %SAFETY_EXIT%
+)
+
+:: Launch RoboDJ Automation as Administrator.
 if not exist "%VALIDATOR_PATH%" (
     echo [RoboDJ] ERROR: Missing startup preflight validator.
     echo [RoboDJ] Expected path: "%VALIDATOR_PATH%"

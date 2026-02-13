@@ -63,10 +63,10 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 - **Definition of done:** Operator can create and verify a timestamped snapshot without CLI usage, and restored files match snapshot checksums.
 
 ### Must
-- [ ] Startup diagnostics panel (DB checks, key checks, audio device checks) **(M)**
-- [ ] Config validator on launch for `schedules.json` and `prompt_variables.json` **(M)**
-- [ ] Crash-recovery flow with “restore last known good config” **(M)**
-- [ ] One-click config backup snapshot (timestamped) **(S)**
+- [x] Startup diagnostics panel (DB checks, key checks, audio device checks) **(M)**
+- [x] Config validator on launch for `schedules.json` and `prompt_variables.json` **(M)**
+- [x] Crash-recovery flow with “restore last known good config” **(M)**
+- [x] One-click config backup snapshot (timestamped) **(S)**
 
 ### Current Sprint (v1.1 Now)
 
@@ -134,6 +134,10 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 
 ### Release Candidate gate
 - Apply **Required Before Release Candidate** from `PRE_RELEASE_CHECKLIST.md` before cutting the RC; all gate items are signed by the **Release Manager**.
+
+### Implementation acceptance criteria
+- Launch sequence fails closed when `config/schedules.json` or `config/prompt_variables.json` fails validation.
+- Latest `config/backups/config_snapshot_YYYYMMDD_HHMMSS/` can be restored via one command in under 2 minutes.
 
 ---
 
