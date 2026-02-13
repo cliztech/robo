@@ -16,7 +16,7 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
     -   **Agent Orchestrator**: Manages the "DJ Agent" lifecycle.
 3.  **Audio Pipeline (Python/FFmpeg/Liquidsoap)**:
     -   **Streamer**: Generates the continuous audio stream (Icecast/HLS).
-    -   **Mixer**: Handles crossfades, ducking (lowering music volume during speech), and FX.
+    -   **Mixer**: Handles hit-point-aware transitions, beat-aware crossfades, hard cuts, ducking, and segment-level mastering.
     -   **Synthesizer**: Interfacing with TTS providers (ElevenLabs, OpenAI).
 
 ### B. Integration with AI Music Agents
@@ -41,6 +41,23 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 *The "Brain" that decides the programming.*
 
 -   **Clock Wheels**: Define templates for an hour (e.g., "Top of Hour ID" -> "Power Hit" -> "DJ Link" -> "New Release").
+-   **Station Timezone**:
+    -   Every station must define a canonical IANA timezone string (e.g., `America/New_York`, `Europe/Berlin`).
+    -   All recurrence calculations are evaluated in station local time, then expanded into UTC for storage/playout.
+-   **Recurrence Rules**:
+    -   Clock wheels and shows support deterministic recurrence using RFC 5545 style rules (`RRULE`) plus optional include/exclude dates.
+    -   Minimum support: `FREQ`, `INTERVAL`, `BYDAY`, `BYHOUR`, `BYMINUTE`, `UNTIL`, `COUNT`, `WKST`, `RDATE`, `EXDATE`.
+    -   For overlapping recurring blocks, scheduler resolves by explicit `priority` (higher wins), then by most-specific rule (single date > recurring rule), then by earliest creation timestamp.
+-   **DST Handling Policy**:
+    -   `wall_clock_strict`: keep local wall-clock intent stable (e.g., "08:00 local" stays 08:00 across DST boundaries).
+    -   `utc_strict`: keep UTC instant cadence stable (may shift displayed local hour at DST transitions).
+    -   Default for radio scheduling is `wall_clock_strict`.
+    -   Non-existent local times (spring-forward gap) are shifted forward to the next valid local minute.
+    -   Ambiguous local times (fall-back overlap) choose the first occurrence unless `dst_instance=second` is explicitly requested.
+-   **Canonical Storage + Display Rules**:
+    -   Canonical event instances in queue tables are always UTC timestamps.
+    -   Source schedule definitions persist local intent (`local_start_time`, timezone, RRULE) for deterministic regeneration.
+    -   UI always displays both local station time and UTC, with local station time as the primary presentation.
 -   **Rules Engine**:
     -   *Artist Separation*: "Don't play the same artist within 60 minutes."
     -   *Tempo Flow*: "Gradually increase BPM from 6 PM to 9 PM."
@@ -54,33 +71,802 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 
 ## 4. Data Model (Draft Schema)
 
+### StationConfig
+*Used by Dashboard settings, Studio context, and Public Player branding.*
+
+**Required fields**
+- `id`
+- `slug`
+- `display_name`
+- `timezone`
+- `branding`
+- `stream_urls`
+
+**Optional fields**
+- `default_language`
+- `default_locale`
+- `support_email`
+- `social_links`
+- `fallback_track_id` *(FK -> `Tracks.id`)*
+- `active_clock_wheel_id` *(FK -> `ClockWheel.id`)*
+
+```json
+{
+  "id": "station_01HZN9YQ9G0M6Q",
+  "slug": "neon-fm",
+  "display_name": "Neon FM",
+  "timezone": "America/New_York",
+  "branding": {
+    "logo_url": "https://cdn.example.com/branding/neonfm/logo.svg",
+    "primary_color": "#7A3CFF",
+    "accent_color": "#00E5FF",
+    "tagline": "Future sounds, live now"
+  },
+  "stream_urls": {
+    "hls": "https://stream.example.com/neonfm/index.m3u8",
+    "icecast_mp3": "https://stream.example.com/neonfm.mp3",
+    "fallback_preview": "https://cdn.example.com/previews/offline-loop.mp3"
+  },
+  "default_language": "en",
+  "default_locale": "en-US",
+  "support_email": "support@neonfm.example",
+  "social_links": {
+    "x": "https://x.com/neonfm",
+    "instagram": "https://instagram.com/neonfm"
+  },
+  "fallback_track_id": "trk_62f8a2b6",
+  "active_clock_wheel_id": "clock_7am_drive"
+}
+```
+
+### ShowBlock + ClockWheel
+*Defines repeatable schedule templates and concrete blocks visible in Dashboard and Studio View.*
+
+**Required fields (ClockWheel)**
+- `id`
+- `station_id` *(FK -> `StationConfig.id`)*
+- `name`
+- `hour_mask`
+- `segments`
+
+**Optional fields (ClockWheel)**
+- `daypart`
+- `valid_from`
+- `valid_to`
+- `constraints`
+
+**Required fields (ShowBlock)**
+- `id`
+- `station_id` *(FK -> `StationConfig.id`)*
+- `clock_wheel_id` *(FK -> `ClockWheel.id`)*
+- `starts_at`
+- `duration_sec`
+- `status` *(enum: "scheduled", "active", "finished", "cancelled")*
+
+**Optional fields (ShowBlock)**
+- `host_persona_id` *(FK -> `HostPersona.id`)*
+- `resolved_queue_item_ids` *(FK array -> `BroadcastQueue.id`)*
+
+```json
+{
+  "clock_wheel": {
+    "id": "clock_7am_drive",
+    "station_id": "station_01HZN9YQ9G0M6Q",
+    "name": "Morning Drive",
+    "daypart": "morning",
+    "hour_mask": [7, 8, 9],
+    "valid_from": "2026-01-01",
+    "valid_to": null,
+    "segments": [
+      {
+        "offset_sec": 0,
+        "slot_type": "station_id",
+        "duration_sec": 10
+      },
+      {
+        "offset_sec": 10,
+        "slot_type": "music_power",
+        "duration_sec": 240,
+        "track_id": "trk_62f8a2b6"
+      },
+      {
+        "offset_sec": 250,
+        "slot_type": "voice_link",
+        "duration_sec": 40,
+        "prompt_template_id": "tmpl_song_intro"
+      },
+      {
+        "offset_sec": 290,
+        "slot_type": "promo",
+        "duration_sec": 30,
+        "ad_inventory_id": "adinv_weekend_ticket_push"
+      }
+    ],
+    "constraints": {
+      "artist_separation_minutes": 60,
+      "max_consecutive_talk_breaks": 2
+    }
+  },
+  "show_block": {
+    "id": "show_2026-02-12T07",
+    "station_id": "station_01HZN9YQ9G0M6Q",
+    "clock_wheel_id": "clock_7am_drive",
+    "starts_at": "2026-02-12T07:00:00-05:00",
+    "duration_sec": 3600,
+    "status": "scheduled",
+    "host_persona_id": "host_ava_nova",
+    "resolved_queue_item_ids": [
+      "queue_801",
+      "queue_802",
+      "queue_803"
+    ]
+  }
+}
+```
+
+### HostPersona + VoiceProviderBinding
+*Powers AI host management in Dashboard and real-time rendering in Studio View.*
+
+**Required fields (HostPersona)**
+- `id`
+- `station_id` *(FK -> `StationConfig.id`)*
+- `name`
+- `tone_profile`
+- `voice_binding`
+
+**Optional fields (HostPersona)**
+- `backstory`
+- `default_prompt_template_id` *(FK -> `PromptTemplate.id`)*
+- `knowledge_sources`
+- `active`
+
+**Required fields (VoiceProviderBinding)**
+- `provider`
+- `voice_id`
+- `model`
+
+**Optional fields (VoiceProviderBinding)**
+- `style`
+- `speaking_rate`
+- `pitch`
+- `stability`
+
+```json
+{
+  "id": "host_ava_nova",
+  "station_id": "station_01HZN9YQ9G0M6Q",
+  "name": "Ava Nova",
+  "backstory": "Former club resident turned AI tastemaker.",
+  "tone_profile": ["energetic", "witty", "music-forward"],
+  "default_prompt_template_id": "tmpl_song_intro",
+  "knowledge_sources": ["music_catalog", "weather_api", "station_events"],
+  "active": true,
+  "voice_binding": {
+    "provider": "elevenlabs",
+    "voice_id": "21m00Tcm4TlvDq8ikWAM",
+    "model": "eleven_multilingual_v2",
+    "style": "radio",
+    "speaking_rate": 1.02,
+    "pitch": 0,
+    "stability": 0.55
+  }
+}
+```
+
+### PromptTemplate + RuntimeVariableBinding
+*Backs script authoring in Dashboard and generated link text in Studio View.*
+
+**Required fields (PromptTemplate)**
+- `id`
+- `station_id` *(FK -> `StationConfig.id`)*
+- `name`
+- `template_text`
+- `variable_specs`
+
+**Optional fields (PromptTemplate)**
+- `persona_id` *(FK -> `HostPersona.id`)*
+- `applies_to_slot_types`
+- `safety_rules`
+- `version`
+
+**Required fields (RuntimeVariableBinding)**
+- `template_id` *(FK -> `PromptTemplate.id`)*
+- `queue_item_id` *(FK -> `BroadcastQueue.id`)*
+- `bindings`
+
+**Optional fields (RuntimeVariableBinding)**
+- `source_track_id` *(FK -> `Tracks.id`)*
+- `next_track_id` *(FK -> `Tracks.id`)*
+- `listener_request_id`
+
+```json
+{
+  "template": {
+    "id": "tmpl_song_intro",
+    "station_id": "station_01HZN9YQ9G0M6Q",
+    "name": "Song Intro + Tease",
+    "template_text": "Coming up next is {{next_track_title}} by {{next_track_artist}}. {{optional_weather_tag}} Stay with {{station_name}}.",
+    "variable_specs": [
+      {"name": "next_track_title", "required": true, "type": "string"},
+      {"name": "next_track_artist", "required": true, "type": "string"},
+      {"name": "optional_weather_tag", "required": false, "type": "string"},
+      {"name": "station_name", "required": true, "type": "string"}
+    ],
+    "persona_id": "host_ava_nova",
+    "applies_to_slot_types": ["voice_link", "top_of_hour"],
+    "safety_rules": ["no_profanity", "no_medical_claims"],
+    "version": 3
+  },
+  "runtime_binding": {
+    "template_id": "tmpl_song_intro",
+    "queue_item_id": "queue_802",
+    "source_track_id": "trk_51f1a0d9",
+    "next_track_id": "trk_62f8a2b6",
+    "bindings": {
+      "next_track_title": "Neon Nights",
+      "next_track_artist": "AI Synthwave Collective",
+      "optional_weather_tag": "Clear skies tonight in Brooklyn.",
+      "station_name": "Neon FM"
+    }
+  }
+}
+```
+
+### AdPromoInventory
+*Feeds Dashboard campaign controls and scheduler placement decisions surfaced in Studio View.*
+
+**Required fields**
+- `id`
+- `station_id` *(FK -> `StationConfig.id`)*
+- `type`
+- `title`
+- `asset_uri`
+- `duration_sec`
+- `constraints`
+
+**Optional fields**
+- `priority`
+- `campaign_window`
+- `max_plays_per_hour`
+- `target_show_block_ids` *(FK array -> `ShowBlock.id`)*
+- `companion_track_id` *(FK -> `Tracks.id`)*
+- `last_scheduled_queue_item_id` *(FK -> `BroadcastQueue.id`)*
+
+```json
+{
+  "id": "adinv_weekend_ticket_push",
+  "station_id": "station_01HZN9YQ9G0M6Q",
+  "type": "promo",
+  "title": "Weekend Festival Ticket Push",
+  "asset_uri": "s3://station-assets/promos/weekend-fest-30s.wav",
+  "duration_sec": 30,
+  "constraints": {
+    "min_minutes_between_plays": 45,
+    "allowed_dayparts": ["morning", "afternoon"],
+    "exclude_adjacent_slot_types": ["station_id"]
+  },
+  "priority": "high",
+  "campaign_window": {
+    "start": "2026-02-01T00:00:00Z",
+    "end": "2026-02-28T23:59:59Z"
+  },
+  "max_plays_per_hour": 1,
+  "target_show_block_ids": ["show_2026-02-12T07"],
+  "companion_track_id": "trk_62f8a2b6",
+  "last_scheduled_queue_item_id": "queue_803"
+}
+```
+
+### PublicPlayerNowPlayingSnapshot
+*Serves the Public Player with a listener-safe, low-latency now-playing payload.*
+
+**Required fields**
+- `station_id` *(FK -> `StationConfig.id`)*
+- `generated_at`
+- `stream_status`
+- `now_playing`
+- `up_next`
+
+**Optional fields**
+- `host`
+- `recently_played`
+- `public_message`
+- `active_queue_item_id` *(FK -> `BroadcastQueue.id`)*
+
+```json
+{
+  "station_id": "station_01HZN9YQ9G0M6Q",
+  "generated_at": "2026-02-12T12:15:04Z",
+  "stream_status": "live",
+  "active_queue_item_id": "queue_802",
+  "now_playing": {
+    "queue_item_id": "queue_802",
+    "item_type": "track",
+    "track_id": "trk_62f8a2b6",
+    "title": "Neon Nights",
+    "artist": "AI Synthwave Collective",
+    "started_at": "2026-02-12T12:13:10Z",
+    "duration_sec": 245,
+    "artwork_url": "https://cdn.example.com/artwork/trk_62f8a2b6.jpg"
+  },
+  "up_next": [
+    {
+      "queue_item_id": "queue_803",
+      "item_type": "promo",
+      "title": "Weekend Festival Ticket Push",
+      "eta_sec": 38
+    },
+    {
+      "queue_item_id": "queue_804",
+      "item_type": "voice_link",
+      "title": "Ava Nova break",
+      "eta_sec": 68
+    }
+  ],
+  "host": {
+    "host_persona_id": "host_ava_nova",
+    "name": "Ava Nova"
+  },
+  "recently_played": [
+    {
+      "queue_item_id": "queue_801",
+      "track_id": "trk_51f1a0d9",
+      "title": "Midnight Run",
+      "artist": "Digital Skyline",
+      "artwork_url": "https://cdn.example.com/artwork/trk_51f1a0d9.jpg"
+    }
+  ],
+  "public_message": "Vote for tonight's throwback on our app."
+}
+```
+
 ### Tracks
+### StationSchedule
 ```json
 {
   "id": "uuid",
+  "station_id": "uuid",
+  "timezone": "America/New_York",
+  "dst_policy": "wall_clock_strict",
+  "week_start": "MO",
+  "display_time_mode": "local_primary",
+  "version": 3,
+  "effective_from_utc": "2026-01-01T00:00:00Z",
+  "effective_to_utc": null
+}
+```
+
+### ScheduleBlock (Clock Wheel / Show Definition)
+```json
+{
+  "id": "uuid",
+  "station_schedule_id": "uuid",
+  "name": "Drive Time Show",
+  "type": "show | clock_wheel",
+  "priority": 100,
+  "timezone": "America/New_York",
+  "local_start_time": "17:00:00",
+  "duration_minutes": 180,
+  "recurrence_rule": "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR;BYHOUR=17;BYMINUTE=0",
+  "rdate": ["2026-07-03T17:00:00"],
+  "exdate": ["2026-12-25T17:00:00"],
+  "dst_instance": "first",
+  "content_template_id": "uuid"
+}
+```
+
+### Tracks
+```json
+{
+  "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+  "title": "Neon Nights",
+  "artist": "AI Synthwave Collective",
+  "duration": 245,
+  "file_path": "s3://station-assets/tracks/neon_nights_v1.mp3",
+  "publish_status": "published",
+  "availability": "public",
+  "intro_duration": 12,
+  "outro_duration": 15,
+  "file_path": "s3://radio-assets/tracks/neon_nights.mp3",
+  "bpm": 128,
+  "energy": 0.8,
+  "mood": "uplifting",
+  "key": "C#m",
+  "created_at": "2023-10-27T14:00:00Z",
+  "updated_at": "2023-10-27T14:00:00Z"
+}
+```
+
+| Field | Required | Nullable | Type / Format | Default | Constraints |
+|---|---|---|---|---|---|
+| `id` | response-only | non-null | `string` (`uuid`) | server-generated | unique primary key |
+| `title` | required | non-null | `string` | none | min 1, max 200, trimmed |
+| `artist` | required | non-null | `string` | none | min 1, max 160, trimmed |
+| `duration` | required | non-null | `integer` (seconds) | none | min 1, max 7200 |
+| `intro_duration` | optional | non-null | `integer` (seconds) | `0` | min 0, max `duration` |
+| `outro_duration` | optional | non-null | `integer` (seconds) | `0` | min 0, max `duration` |
+| `file_path` | required | non-null | `string` (`uri`) | none | must end with supported audio extension (`.mp3`, `.wav`, `.flac`, `.m4a`, `.aac`) |
+| `bpm` | optional | nullable | `integer` | `null` | min 40, max 240 |
+| `energy` | optional | nullable | `number` (float) | `null` | min 0.0, max 1.0 |
+| `mood` | optional | nullable | `string` | `null` | max 80 |
+| `key` | optional | nullable | `string` | `null` | musical key pattern (`A-G` + optional `#`/`b` + optional `m`) |
+| `created_at` | response-only | non-null | `string` (`date-time`) | server-generated | immutable |
+| `updated_at` | response-only | non-null | `string` (`date-time`) | server-generated | updated on write |
+
+#### Validation examples
+
+**Create (valid)**
+```json
+{
   "title": "Neon Nights",
   "artist": "AI Synthwave Collective",
   "duration": 245,
   "intro_duration": 12,
   "outro_duration": 15,
-  "file_path": "s3://...",
+  "file_path": "s3://radio-assets/tracks/neon_nights.mp3",
   "bpm": 128,
-  "energy": 0.8
+  "energy": 0.8,
+  "artwork_url": "https://cdn.station.fm/artwork/neon_nights.jpg",
+  "is_explicit": false,
+  "genre_tags": ["synthwave", "electronic"],
+  "mood_tags": ["night_drive", "uplifting"],
+  "language": "en",
+  "lufs": -13.5,
+  "peak_db": -1.0,
+  "sample_rate": 44100,
+  "codec": "mp3",
+  "has_intro_marker": true,
+  "has_outro_marker": true,
+  "analytics": {
+    "play_count": 1284,
+    "like_count": 342,
+    "skip_count": 57,
+    "completion_rate": 0.91
+  }
 }
 ```
+
+#### Example A: Minimal ingest record
+```json
+{
+  "id": "5d2a0b1d-54f0-4974-85c4-57e7cd2f0ca7",
+  "title": "Sunrise Loop",
+  "artist": "LoFi Unit",
+  "duration": 186,
+  "file_path": "s3://ingest-bucket/tracks/2026/02/sunrise_loop.wav",
+  "publish_status": "draft",
+  "availability": "private"
+}
+```
+
+#### Example B: Fully enriched published track
+```json
+{
+  "id": "2f9c93e2-f131-41f3-8fc8-84d9f2c8f6d1",
+  "title": "Neon Nights",
+  "artist": "AI Synthwave Collective",
+  "duration": 245,
+  "file_path": "https://cdn.station.fm/audio/neon_nights_master.mp3",
+  "publish_status": "published",
+  "availability": "public",
+  "intro_duration": 12,
+  "outro_duration": 15,
+  "bpm": 128,
+  "energy": 0.8,
+  "artwork_url": "https://cdn.station.fm/artwork/neon_nights.jpg",
+  "is_explicit": false,
+  "genre_tags": ["synthwave", "electronic", "retrowave"],
+  "mood_tags": ["night_drive", "energetic", "futuristic"],
+  "language": "en-US",
+  "lufs": -13.7,
+  "peak_db": -0.8,
+  "sample_rate": 48000,
+  "codec": "mp3",
+  "has_intro_marker": true,
+  "has_outro_marker": true,
+  "analytics": {
+    "play_count": 34981,
+    "like_count": 9123,
+    "skip_count": 1302,
+    "completion_rate": 0.89
+  }
+  "codec": "aac | mp3 | flac | wav",
+  "sample_rate_hz": 44100,
+  "bitrate_kbps": 320,
+  "channels": 2,
+  "integrated_lufs": -13.7,
+  "true_peak_dbtp": -1.0,
+  "is_explicit": false,
+  "content_rating": "clean | explicit | radio_edit",
+  "isrc": "USRC17607839",
+  "label": "Night Drive Records",
+  "release_date": "2026-01-20",
+  "artwork_url": "https://cdn.example.com/artwork/track-id.jpg",
+  "waveform_url": "https://cdn.example.com/waveforms/track-id.json",
+  "rights_status": "cleared | pending | blocked",
+  "availability_status": "ready | geo_blocked | hold | takedown",
+  "ingestion_status": "ingested | normalized | qa_failed | schedulable"
+}
+```
+
+### Track Metadata Constraints for `schedulable`
+
+A track may move to `ingestion_status = schedulable` only when all of the following are true:
+
+- **Core metadata present**: `id`, `title`, `artist`, `duration`, `file_path`.
+- **Ingestion metadata present**: `codec`, `sample_rate_hz`, `bitrate_kbps`, `channels`.
+- **QA loudness metadata present**: `integrated_lufs`, `true_peak_dbtp`.
+- **Compliance metadata present**: `is_explicit`, `content_rating`, `rights_status`, `availability_status`.
+- **Catalog metadata present**: `release_date`.
+- **Rights/availability gate**:
+  - `rights_status = cleared`
+  - `availability_status = ready`
+- **Audio QA gate** (configurable policy defaults):
+  - `integrated_lufs` between `-16` and `-12`
+  - `true_peak_dbtp <= -1.0`
+
+Optional-but-recommended metadata for discovery/player UX: `isrc`, `label`, `artwork_url`, `waveform_url`.
+
+### Frontend Exposure (Admin + Player)
+
+- **Admin track tables** should display:
+  - `ingestion_status` (with badges)
+  - `rights_status`
+  - `availability_status`
+  - `content_rating`
+  - QA summary (`integrated_lufs`, `true_peak_dbtp`)
+- **Admin filters** should include:
+  - `ingestion_status` (especially `schedulable` vs non-schedulable)
+  - `rights_status`
+  - `availability_status`
+  - `is_explicit` / `content_rating`
+  - QA out-of-range toggle
+- **Player-facing tables/cards** should expose:
+  - `artwork_url` for cover display
+  - `waveform_url` for waveform rendering
+  - explicit badge based on `is_explicit` / `content_rating`
 
 ### BroadcastQueue
 ```json
 {
   "id": "uuid",
+  "station_id": "uuid",
   "scheduled_time": "2023-10-27T14:00:00Z",
+  "scheduled_time_local": "2023-10-27T10:00:00-04:00",
+  "station_timezone": "America/New_York",
   "item_type": "track | voice_link | jingle",
   "item_id": "uuid",
-  "status": "pending | playing | played"
+  "status": "pending | playing | played",
+  "source_block_id": "uuid"
+}
+```
+- Expected errors: `end_date` before `start_date`; `created_at` is response-only.
+
+### Sample Deterministic Schedule Object (Recurring + Exceptions)
+```json
+{
+  "station_id": "stn_001",
+  "timezone": "America/New_York",
+  "dst_policy": "wall_clock_strict",
+  "generated_window": {
+    "start_utc": "2026-11-23T00:00:00Z",
+    "end_utc": "2026-12-01T00:00:00Z"
+  },
+  "blocks": [
+    {
+      "id": "blk_morning",
+      "name": "Morning Clock Wheel",
+      "type": "clock_wheel",
+      "priority": 50,
+      "local_start_time": "06:00:00",
+      "duration_minutes": 240,
+      "rrule": "FREQ=DAILY;BYHOUR=6;BYMINUTE=0",
+      "template": ["top_id", "power", "dj_link", "recurrent_news"]
+    },
+    {
+      "id": "blk_drive",
+      "name": "Drive Time Live",
+      "type": "show",
+      "priority": 100,
+      "local_start_time": "17:00:00",
+      "duration_minutes": 180,
+      "rrule": "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR;BYHOUR=17;BYMINUTE=0",
+      "template": ["show_open", "music_rotation_a", "talk_break", "ads_local", "show_close"]
+    }
+  ],
+  "exceptions": [
+    {
+      "id": "ex_thanksgiving",
+      "date_local": "2026-11-26",
+      "action": "replace_block",
+      "target_block_id": "blk_drive",
+      "replacement": {
+        "id": "blk_holiday_special",
+        "name": "Thanksgiving Special",
+        "type": "show",
+        "priority": 200,
+        "local_start_time": "17:00:00",
+        "duration_minutes": 240,
+        "rrule": "FREQ=DAILY;COUNT=1",
+        "template": ["holiday_open", "listener_dedications", "holiday_mix"]
+      }
+    },
+    {
+      "id": "ex_charity_remote",
+      "date_local": "2026-11-28",
+      "action": "insert_one_off",
+      "one_off_block": {
+        "id": "blk_charity_remote",
+        "name": "Charity Remote Broadcast",
+        "type": "show",
+        "priority": 220,
+        "local_start_time": "12:00:00",
+        "duration_minutes": 120,
+        "rrule": "FREQ=DAILY;COUNT=1",
+        "template": ["remote_open", "live_interviews", "sponsor_mentions"]
+      }
+    }
+  ],
+  "resolved_instances": [
+    {
+      "block_id": "blk_drive",
+      "start_local": "2026-11-25T17:00:00-05:00",
+      "start_utc": "2026-11-25T22:00:00Z"
+    },
+    {
+      "block_id": "blk_holiday_special",
+      "start_local": "2026-11-26T17:00:00-05:00",
+      "start_utc": "2026-11-26T22:00:00Z"
+    },
+    {
+      "block_id": "blk_charity_remote",
+      "start_local": "2026-11-28T12:00:00-05:00",
+      "start_utc": "2026-11-28T17:00:00Z"
+    }
+  ]
 }
 ```
 
-## 5. Implementation Plan
+### User
+```json
+{
+  "id": "uuid",
+  "email": "producer@station.fm",
+  "display_name": "Night Shift Producer",
+  "is_active": true,
+  "role_ids": ["role_producer"],
+  "last_login_at": "2026-02-12T09:15:00Z",
+  "created_at": "2026-01-20T10:30:00Z",
+  "updated_at": "2026-02-12T09:15:00Z"
+}
+```
+
+### Role
+```json
+{
+  "id": "role_operator",
+  "name": "operator",
+  "description": "Runs day-to-day playout operations",
+  "permission_ids": [
+    "queue.view",
+    "queue.edit",
+    "queue.reorder",
+    "schedule.view",
+    "host_persona.view"
+  ],
+  "created_at": "2026-01-20T10:30:00Z",
+  "updated_at": "2026-02-12T09:15:00Z"
+}
+```
+
+### Identity and authorization model
+
+#### User
+```json
+{
+  "id": "uuid",
+  "email": "ops@station.com",
+  "display_name": "Alex Producer",
+  "is_active": true,
+  "memberships": [
+    {
+      "station_id": "uuid",
+      "role_id": "uuid"
+    }
+  ]
+}
+```
+
+#### Role
+```json
+{
+  "id": "uuid",
+  "station_id": "uuid",
+  "name": "Program Director",
+  "description": "Can manage content and publish schedules",
+  "scopes": ["read", "write", "publish"]
+}
+```
+
+#### Permission scopes
+- `read`: view station resources and analytics.
+- `write`: create/update/delete station resources (tracks, prompts, schedules, queue adjustments).
+- `publish`: execute state changes that affect live output (publish schedule, trigger go-live, force queue play, approve generated links).
+- `admin`: station governance (user invites, role management, credentials/integrations, destructive station settings).
+
+Scope hierarchy: `admin` implies `publish`, `write`, and `read`; `publish` implies `write` + `read`; `write` implies `read`.
+
+Enforcement rule: API authorization is always evaluated against both `(user_id, station_id)` membership and required scope.
+
+## 5. API station-context requirements
+
+### Required station context in payloads
+For all station-owned resources, API requests must include station context by one of these mechanisms:
+
+1. Path scoping (preferred): `/api/stations/{station_id}/...`
+2. Body field (required for create/upsert if not path-scoped): `station_id`
+3. Event envelope metadata (async workers/webhooks): `{"station_id":"..."}`
+
+If station context is missing or does not match authenticated membership, return `403` for unauthorized station access or `400` for malformed payload.
+
+### Endpoint patterns that must carry station context
+- Authenticated list/query: tracks, prompts, schedules, clock wheels, queue items, promo spots, host personas, listener requests.
+- Mutations: create/update/delete for all station-owned resources.
+- Live actions: publish schedule, regenerate segment, trigger voice link, enqueue/dequeue, force-skip.
+- Analytics: dashboard metrics, now-playing history, performance reports.
+
+### Example payloads
+```http
+POST /api/stations/{station_id}/tracks
+{
+  "title": "Neon Nights",
+  "artist": "AI Synthwave Collective",
+  "duration": 245
+}
+```
+
+```http
+POST /api/queue/enqueue
+{
+  "station_id": "uuid",
+  "item_type": "track",
+  "item_id": "uuid"
+}
+```
+
+## 6. Frontend data filtering requirements
+
+- Resolve active station at login/session restore (station switcher or last-used station).
+- Persist active station in app state and include it in every API call.
+- Filter all client caches by `station_id` key to prevent cross-station leakage.
+- Hide/disable UI actions if user lacks required role scope for the active station.
+- On station switch, clear station-scoped stores (queue, tracks, prompts, dashboard metrics) before refetching.
+- Never render mixed-station lists in shared components; enforce query-level filtering first, then defensive client-side filtering.
+
+Recommended cache keys:
+- `['station', station_id, 'tracks']`
+- `['station', station_id, 'queue']`
+- `['station', station_id, 'schedule', date]`
+- `['station', station_id, 'prompts']`
+
+## 7. Dashboard action-to-permission matrix
+
+| Dashboard Action | Required Scope | Notes |
+|---|---|---|
+| View dashboard KPIs and now-playing | `read` | Station-scoped metrics only |
+| View track library and metadata | `read` | No mutation controls |
+| Upload/edit/delete tracks | `write` | Includes artwork and tags |
+| Create/edit prompts and host persona settings | `write` | Content authoring actions |
+| Build/edit clock wheels and schedules | `write` | Draft changes allowed |
+| Publish schedule to live playout | `publish` | Affects on-air output |
+| Force queue reorder/skip/play-next | `publish` | Real-time broadcast control |
+| Approve generated AI link for air | `publish` | Treated as live editorial action |
+| View user roster and role assignments | `admin` | Station membership management |
+| Invite/remove users | `admin` | Station boundary enforced |
+| Create/update roles and scopes | `admin` | Cannot exceed caller's own max scope |
+| Configure integration credentials and secrets | `admin` | Sensitive operations, audited |
+
+## 8. Implementation Plan
 
 ### Phase 1: Core Engine (MVP)
 -   [ ] Python script to generate a single "Show" (MP3 file) from a list of songs.
@@ -96,9 +882,175 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 -   [ ] Admin Dashboard for uploading tracks and configuring DJ.
 -   [ ] Public Player with "Now Playing" data.
 
-## 6. Technology Stack Recommendations
+## 9. Technology Stack Recommendations
 -   **Language**: Python 3.11+ (Backend), TypeScript (Frontend).
 -   **Audio Processing**: `pydub` (simple) or `ffmpeg-python` (complex).
 -   **Streaming**: `Liquidsoap` (industry standard for radio automation) or custom FFmpeg stream.
 -   **Database**: PostgreSQL (robustness) or SQLite (simplicity).
 -   **AI**: LangChain (orchestration), OpenAI/Anthropic (LLM), ElevenLabs (TTS).
+
+## 7. Audio Pipeline Upgrade Specification
+
+### 7.1 Processing Chain (per rendered segment)
+
+All output segments (music sweeps, voice links, promos, two-voice conversations) follow a deterministic mastering chain:
+
+1. **Loudness normalization (LUFS)**
+   - Analyze integrated loudness and true peak.
+   - Normalize to preset target (format-dependent, see 7.2).
+2. **Multiband compression**
+   - 3- or 4-band split to stabilize tonal balance and perceived loudness.
+   - Independent thresholds/ratios for low, mid, high bands.
+3. **Limiter (true-peak safety)**
+   - Final brickwall limiter to prevent clipping after codec conversion.
+4. **Stereo enhancement (optional)**
+   - Enabled per format/preset.
+   - Apply mid/side widening with mono compatibility guardrails.
+5. **De-esser for voice content**
+   - Voice-only or voice-dominant segments.
+   - Frequency-focused reduction of sibilance before final limiting.
+
+> Implementation note: chain modules should be idempotent and configurable with profile-level overrides.
+
+### 7.2 Per-Format Processing Presets
+
+Define station-format defaults, then allow show-level overrides.
+
+| Format | Target LUFS | Limiter Ceiling | Compression Character | Stereo Enhance | De-esser Intensity |
+|---|---:|---:|---|---|---|
+| **CHR** | -9 LUFS | -1.0 dBTP | Aggressive/punchy | On (moderate) | Medium |
+| **Talk** | -16 LUFS | -2.0 dBTP | Speech-first, transparent | Off | High |
+| **Chill** | -14 LUFS | -1.5 dBTP | Gentle/glue | On (light) | Low-Medium |
+| **Classic Hits** | -12 LUFS | -1.2 dBTP | Medium density, warm | On (light-moderate) | Medium |
+
+Preset object shape (example):
+
+```json
+{
+  "format": "chr",
+  "loudness": { "target_lufs": -9, "max_true_peak_dbtp": -1.0 },
+  "multiband": {
+    "bands": [
+      { "name": "low", "threshold_db": -24, "ratio": 3.0 },
+      { "name": "mid", "threshold_db": -20, "ratio": 2.5 },
+      { "name": "high", "threshold_db": -18, "ratio": 2.0 }
+    ]
+  },
+  "limiter": { "ceiling_dbtp": -1.0, "lookahead_ms": 3 },
+  "stereo_enhancement": { "enabled": true, "width_percent": 115 },
+  "de_esser": { "enabled": true, "freq_hz": 6500, "max_reduction_db": 4 }
+}
+```
+
+### 7.3 Transition Intelligence
+
+Upgrade transitions from timeline-only crossfades to analysis-driven decisions:
+
+1. **Intro/outro hit-point awareness**
+   - Detect/ingest markers (`intro_start`, `vocal_start`, `outro_start`, `cold_end`).
+   - Schedule voice links into intro windows where available.
+2. **Beat-aware crossfades (BPM-compatible)**
+   - If BPM delta and phase confidence are within tolerance, align phrase boundaries.
+   - Use bar-length fade curves (e.g., 4-beat or 8-beat) instead of fixed seconds.
+3. **Hard cut fallback (incompatible tracks)**
+   - Trigger when tempo/key/energy mismatch exceeds configured bounds.
+   - Cut at transient-safe boundaries to avoid clicks.
+
+Transition decision policy (high-level):
+
+```text
+if intro/outro windows overlap with safe margin:
+    if bpm_compatible && beat_confidence >= threshold:
+        use beat-aware crossfade
+    else:
+        use timed hit-point crossfade
+else:
+    use hard cut fallback
+```
+
+### 7.4 Auto-Duck Profiles
+
+Add explicit ducking profiles selected by segment type:
+
+1. **Speech-over-bed**
+   - Fast attack, medium release.
+   - Typical gain reduction: -8 to -12 dB.
+   - Keep bed presence while maximizing intelligibility.
+2. **Two-voice conversation**
+   - Deeper bed reduction during overlaps.
+   - Optional speaker-priority sidechain (active speaker gets less masking).
+   - Typical gain reduction: -10 to -16 dB during dual speech.
+
+Profile fields:
+- `attack_ms`, `release_ms`, `hold_ms`
+- `min_duck_db`, `max_duck_db`
+- `noise_gate_threshold_db` (to avoid pumping)
+- `dual_voice_extra_duck_db`
+
+### 7.5 QA Analyzer (Automated Audio Validation)
+
+Run QA checks post-render and before playout handoff.
+
+Detection goals:
+- **Clipping**: true-peak overs above threshold.
+- **Over-compression**: low crest factor / low short-term loudness variance.
+- **Silence anomalies**: unexpected long silence blocks.
+- **Abrupt cuts**: discontinuity spikes at segment boundaries.
+
+Output:
+- `pass | warn | fail` status per check.
+- Severity score and human-readable diagnostics.
+- Suggested remediation (e.g., "increase fade length", "lower limiter drive").
+
+### 7.6 Segment Technical Metadata for Diagnostics
+
+Persist technical metadata for every rendered segment to support QA, debugging, and model tuning.
+
+Recommended fields:
+
+```json
+{
+  "segment_id": "uuid",
+  "segment_type": "voice_link | track_transition | promo | conversation",
+  "preset": "talk",
+  "input": {
+    "track_a_id": "uuid",
+    "track_b_id": "uuid",
+    "voice_asset_ids": ["uuid"]
+  },
+  "analysis": {
+    "integrated_lufs": -14.2,
+    "short_term_lufs_max": -10.1,
+    "true_peak_dbtp": -1.1,
+    "crest_factor_db": 7.4,
+    "dynamic_range_lu": 5.8,
+    "detected_bpm_a": 124,
+    "detected_bpm_b": 126,
+    "transition_type": "beat_crossfade",
+    "duck_profile": "two_voice_conversation"
+  },
+  "qa": {
+    "status": "warn",
+    "checks": [
+      { "name": "abrupt_cuts", "status": "pass" },
+      { "name": "over_compression", "status": "warn", "score": 0.72 }
+    ]
+  },
+  "render": {
+    "engine_version": "audio-pipeline-2.0.0",
+    "rendered_at": "2026-02-12T20:15:00Z",
+    "duration_ms": 42150
+  }
+}
+```
+
+Storage options:
+- `segment_audio_diagnostics` table in PostgreSQL for queryable history.
+- Optional JSON sidecar file for each exported asset in object storage.
+
+### 7.7 Rollout Approach
+
+1. Ship new pipeline behind a feature flag (`audio_pipeline_v2_enabled`).
+2. Run A/B renders (v1 vs v2) for selected hours.
+3. Compare QA analyzer outputs and human producer feedback.
+4. Promote per-format presets incrementally (Talk first, then music formats).
