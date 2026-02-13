@@ -59,7 +59,11 @@ def convert_property_to_ts(prop: dict[str, Any]) -> str:
         lines = ["{"]
         for key, child in prop["properties"].items():
             optional = "" if key in inner_required else "?"
-            lines.append(f"  {key}{optional}: {convert_property_to_ts(child)};")
+            child_ts = convert_property_to_ts(child)
+            if "\n" in child_ts:
+                child_lines = child_ts.split("\n")
+                child_ts = "\n".join([child_lines[0]] + ["  " + line for line in child_lines[1:]])
+            lines.append(f"  {key}{optional}: {child_ts};")
         lines.append("}")
         return "\n".join(lines)
 
