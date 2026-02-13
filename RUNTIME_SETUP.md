@@ -39,6 +39,11 @@ The script initializes:
 - `runtime/config/secret_v2.key`
 - `runtime/config/settings.db`
 - `runtime/config/user_content.db`
-- `runtime/config/{prompts,scripts,music_beds,logs,cache,backups}/`
+- `runtime/config/prompts/`
+- `runtime/config/scripts/`
+- `runtime/config/music_beds/`
+- `runtime/config/logs/`
+- `runtime/config/cache/`
+- `runtime/config/backups/`
 
 > Note: If template DB files are not provided, empty SQLite DB files are created.
