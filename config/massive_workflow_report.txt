@@ -1,0 +1,35 @@
+Program: robodj_hyper_automation (v1.0.0)
+
+Targets:
+- operator_intervention_reduction_pct: 70
+- publish_preflight_detection_pct: 95
+- workflow_success_rate_pct: 99
+
+Execution profiles: manual, assisted, autonomous
+
+Workstreams:
+- [ws_foundation] foundation_and_guardrails
+  - (p0) schema_and_preflight
+    - publish canonical schema registry
+    - add launch preflight validation
+    - implement backup checkpoint policy
+- [ws_orchestration] unified_workflow_orchestrator
+  - (p1) workflow_engine
+    - add stage graph definition
+    - track workflow run metadata
+    - support risk-based approvals
+- [ws_quality] quality_and_safety
+  - (p2) quality_gates
+    - content policy gate
+    - schedule conflict gate
+    - audio quality gate
+- [ws_observability] operational_intelligence
+  - (p3) telemetry_and_alerting
+    - define KPI event taxonomy
+    - persist workflow outcomes
+    - configure alert thresholds
+- [ws_scale] scale_and_experiments
+  - (p4) experiments_and_multi_station
+    - launch A/B prompt workflow
+    - add multi-station profile support
+    - add what-if simulation packs

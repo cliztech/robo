@@ -19,3 +19,12 @@ python clockwheel_scheduler.py --serve --port 8080
 ### HTTP Endpoints
 - `GET /simulate` → returns a 24h predicted log (`audio_emitted: false`)
 - `GET /validate` → returns schedule validation report
+
+## `workflow_program_builder.py`
+Generates a text milestone report from the machine-readable workflow program JSON.
+
+### Usage
+```bash
+python config/scripts/workflow_program_builder.py
+python config/scripts/workflow_program_builder.py --out config/custom_workflow_report.txt
+```
