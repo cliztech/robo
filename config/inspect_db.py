@@ -143,8 +143,8 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     args = parse_args()
 
-    settings_db = args.settings_db or normalize_default_path("settings.db")
-    user_content_db = args.user_content_db or normalize_default_path("user_content.db")
+    settings_db = args.settings_db or normalize_default_path(DEFAULT_SETTINGS_DB)
+    user_content_db = args.user_content_db or normalize_default_path(DEFAULT_USER_CONTENT_DB)
 
     results = [inspect_db(settings_db), inspect_db(user_content_db)]
 
