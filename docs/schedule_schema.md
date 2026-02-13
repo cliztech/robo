@@ -20,6 +20,19 @@ This document defines the canonical `schedule` record format for RoboDJ scheduli
 | `schema_version` | integer | Yes | Current schema version for the file format. Use `2` for this specification. |
 | `schedules` | array of `schedule` | Yes | List of schedule records. |
 
+## TODO Roadmap Gates
+
+- [ ] Document canonical schedule entities:
+  - show block
+  - override
+  - template
+  - conflict type
+- [ ] Finalize validation rules and edge cases:
+  - overnight rollover handling
+  - holiday override precedence and fallback behavior
+- [ ] Add schema versioning guidance with a migration strategy for older schedule files.
+- [ ] Mark schema freeze as a prerequisite milestone before timeline/conflict/template implementation begins.
+
 ## Schedule Object (v2)
 
 Each item in `schedules` MUST follow this schema.
