@@ -200,7 +200,7 @@ def main() -> int:
         action="store_true",
         help="Treat unknown files/targets as errors (reserved for future use).",
     )
-    _ = parser.parse_args()
+    parser.parse_args()
 
     all_errors: list[str] = []
     for target in TARGETS:
