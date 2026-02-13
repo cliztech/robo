@@ -69,7 +69,7 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 -   **Transcoding**: Real-time encoding to AAC/MP3.
 -   **Metadata Push**: Updates "Now Playing" info on the frontend.
 
-## 4. Data Model (Draft Schema)
+## 4. Domain Model (Canonical)
 
 ### StationConfig
 *Used by Dashboard settings, Studio context, and Public Player branding.*
