@@ -19,6 +19,13 @@ This folder adds an operational telemetry layer around the compiled RoboDJ runti
 4. **Searchable timeline** query for “what happened on-air at minute X”.
 5. **SLO support** through uptime and decision-latency tracking in metrics data.
 
+## TODO: scheduler alert/event coverage
+
+- TODO: Emit `scheduler.startup_validation.succeeded` and `scheduler.startup_validation.failed` via `log-event` using the schema in `docs/scheduling_alert_events.md`.
+- TODO: Emit `scheduler.schedule_parse.failed` when schedule JSON loading/parsing fails, including `schedule_path` and parser details in metadata.
+- TODO: Emit `scheduler.backup.created` and `scheduler.backup.restored` for backup lifecycle actions.
+- TODO: Emit `scheduler.crash_recovery.activated` as a `critical` level event whenever crash recovery logic is entered.
+
 ## Files
 
 - `schema.sql`: Telemetry tables + materialized query views.

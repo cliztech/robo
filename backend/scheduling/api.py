@@ -9,6 +9,9 @@ from .autonomy_service import AutonomyPolicyService
 
 router = APIRouter(prefix="/api/v1/autonomy-policy", tags=["autonomy-policy"])
 
+# TODO(observability): emit scheduler.crash_recovery.activated when API startup
+# enters degraded-mode handlers after scheduler/runtime crash detection.
+
 
 def get_policy_service() -> AutonomyPolicyService:
     return AutonomyPolicyService()
