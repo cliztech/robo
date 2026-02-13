@@ -31,7 +31,7 @@ def main():
             if isinstance(node, dict):
                 for key in node.keys():
                     key_lc = key.lower()
-                    if key_lc in sensitive_keys or any(sensitive in key_lc for sensitive in sensitive_keys):
+                    if any(sensitive in key_lc for sensitive in sensitive_keys):
                         violations.append(
                             f"{schema_file.relative_to(REPO_ROOT)}: denylisted key '{key}' at {json_path}"
                         )
