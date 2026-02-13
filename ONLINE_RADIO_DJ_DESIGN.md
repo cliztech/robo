@@ -116,9 +116,62 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
   "outro_duration": 15,
   "file_path": "s3://...",
   "bpm": 128,
-  "energy": 0.8
+  "energy": 0.8,
+  "codec": "aac | mp3 | flac | wav",
+  "sample_rate_hz": 44100,
+  "bitrate_kbps": 320,
+  "channels": 2,
+  "integrated_lufs": -13.7,
+  "true_peak_dbtp": -1.0,
+  "is_explicit": false,
+  "content_rating": "clean | explicit | radio_edit",
+  "isrc": "USRC17607839",
+  "label": "Night Drive Records",
+  "release_date": "2026-01-20",
+  "artwork_url": "https://cdn.example.com/artwork/track-id.jpg",
+  "waveform_url": "https://cdn.example.com/waveforms/track-id.json",
+  "rights_status": "cleared | pending | blocked",
+  "availability_status": "ready | geo_blocked | hold | takedown",
+  "ingestion_status": "ingested | normalized | qa_failed | schedulable"
 }
 ```
+
+### Track Metadata Constraints for `schedulable`
+
+A track may move to `ingestion_status = schedulable` only when all of the following are true:
+
+- **Core metadata present**: `id`, `title`, `artist`, `duration`, `file_path`.
+- **Ingestion metadata present**: `codec`, `sample_rate_hz`, `bitrate_kbps`, `channels`.
+- **QA loudness metadata present**: `integrated_lufs`, `true_peak_dbtp`.
+- **Compliance metadata present**: `is_explicit`, `content_rating`, `rights_status`, `availability_status`.
+- **Catalog metadata present**: `release_date`.
+- **Rights/availability gate**:
+  - `rights_status = cleared`
+  - `availability_status = ready`
+- **Audio QA gate** (configurable policy defaults):
+  - `integrated_lufs` between `-16` and `-12`
+  - `true_peak_dbtp <= -1.0`
+
+Optional-but-recommended metadata for discovery/player UX: `isrc`, `label`, `artwork_url`, `waveform_url`.
+
+### Frontend Exposure (Admin + Player)
+
+- **Admin track tables** should display:
+  - `ingestion_status` (with badges)
+  - `rights_status`
+  - `availability_status`
+  - `content_rating`
+  - QA summary (`integrated_lufs`, `true_peak_dbtp`)
+- **Admin filters** should include:
+  - `ingestion_status` (especially `schedulable` vs non-schedulable)
+  - `rights_status`
+  - `availability_status`
+  - `is_explicit` / `content_rating`
+  - QA out-of-range toggle
+- **Player-facing tables/cards** should expose:
+  - `artwork_url` for cover display
+  - `waveform_url` for waveform rendering
+  - explicit badge based on `is_explicit` / `content_rating`
 
 ### BroadcastQueue
 ```json
