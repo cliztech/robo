@@ -100,6 +100,35 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 -   **Transcoding**: Real-time encoding to AAC/MP3.
 -   **Metadata Push**: Updates "Now Playing" info on the frontend.
 
+## 4. Data Model (Contract-Backed)
+
+The frontend data model is now defined by machine-validated contracts in `schemas/` rather than inline draft JSON in this document.
+
+### Contract locations
+- `schemas/source/contracts_source.json` (single source of truth)
+- `schemas/json/track.schema.json`
+- `schemas/json/broadcast_queue_item.schema.json`
+- `schemas/json/schedule.schema.json`
+- `schemas/json/prompt_variable_config.schema.json`
+- `schemas/json/now_playing.schema.json`
+- `schemas/types/entities.ts` (generated TypeScript types for frontend consumers)
+
+### Contract generation workflow
+- Edit `schemas/source/contracts_source.json`.
+- Regenerate artifacts with `python3 schemas/generate_contracts.py`.
+- Commit both JSON Schema and TypeScript outputs together.
+
+### Versioning and frontend compatibility policy
+Each contract includes a required `schema_version` field and follows semantic versioning:
+
+- **PATCH**: Non-structural clarifications only; no payload shape changes.
+- **MINOR**: Backward-compatible additions (new optional fields; compatible enum expansion).
+- **MAJOR**: Breaking changes (removed/renamed fields, type changes, stricter requirements, enum narrowing).
+
+Frontend consumers must:
+1. Accept only supported `schema_version` major versions.
+2. Validate payloads against the JSON Schema matching that major version.
+3. Tolerate unknown optional fields on supported major versions to preserve forward compatibility.
 ## 4. Domain Model (Canonical)
 
 ### StationConfig
