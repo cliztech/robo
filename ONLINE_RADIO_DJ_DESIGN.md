@@ -98,7 +98,7 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
   },
   "up_next": [
     {
-      "id": "uuid",
+      "id": "trk_...",
       "title": "City Lights",
       "artist": "Nova Circuit"
     }
