@@ -204,7 +204,12 @@ def main() -> int:
 
     all_errors: list[str] = []
     for target in TARGETS:
-        all_errors.extend(validate_target(target["name"], target["config"], target["schema"]))
+        try:
+            all_errors.extend(
+                validate_target(target["name"], target["config"], target["schema"])
+            )
+        except ValidationError as exc:
+            all_errors.append(f"[{target['name']}] {exc}")
 
     if all_errors:
         print("Configuration validation failed:\n", file=sys.stderr)
