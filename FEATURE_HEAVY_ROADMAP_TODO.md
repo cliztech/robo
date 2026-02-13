@@ -14,6 +14,7 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 
 ## v1.1 — Reliability & Safety Baseline
 **Goal:** make daily operation safer and easier to recover.
+**Release gate:** [v1.1 pass/fail gates](PRE_RELEASE_CHECKLIST.md#v11-passfail-gates)
 
 ### Current Sprint (v1.1 Now)
 
@@ -138,6 +139,7 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 
 ## v1.2 — Scheduling 2.0
 **Goal:** improve scheduling power and reduce operator workload.
+**Release gate:** [v1.2 pass/fail gates](PRE_RELEASE_CHECKLIST.md#v12-passfail-gates)
 
 ### Scheduler UX contracts (v1.2 delivery baseline)
 - **Drag/drop snap granularity**
@@ -198,6 +200,7 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 
 ## v1.3 — Prompt Intelligence & Content Quality
 **Goal:** make generated content more consistent and controllable.
+**Release gate:** [v1.3 pass/fail gates](PRE_RELEASE_CHECKLIST.md#v13-passfail-gates)
 
 ### Must
 - [ ] Prompt template manager with version history + rollback **(M)**
@@ -228,6 +231,7 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 
 ## v1.4 — Audio Production Pipeline
 **Goal:** improve output polish and reduce manual post-processing.
+**Release gate:** [v1.4 pass/fail gates](PRE_RELEASE_CHECKLIST.md#v14-passfail-gates)
 
 ### Must
 - [ ] Segment composer workflow (intro, talk break, transition, outro) **(L)**
@@ -258,6 +262,7 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 
 ## v1.5 — Library, Search, and Scale
 **Goal:** make large media/content libraries manageable.
+**Release gate:** [v1.5 pass/fail gates](PRE_RELEASE_CHECKLIST.md#v15-passfail-gates)
 
 ### Must
 - [ ] Unified media/content browser with fast faceted filters **(M)**
@@ -286,6 +291,7 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 
 ## v1.6 — Integrations & Operations
 **Goal:** make RoboDJ extensible and production-operable.
+**Release gate:** [v1.6 pass/fail gates](PRE_RELEASE_CHECKLIST.md#v16-passfail-gates)
 
 ### Must
 - [ ] Webhook trigger support (start/switch/inject actions) **(M)**
@@ -314,6 +320,7 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 
 ## v2.0 — Enterprise Readiness & Governance
 **Goal:** complete governance, access control, and release confidence.
+**Release gate:** [v2.0 pass/fail gates](PRE_RELEASE_CHECKLIST.md#v20-passfail-gates)
 
 ### Must
 - [ ] Role-based access control (admin/operator/view-only) **(L)**
