@@ -10,8 +10,16 @@ from .autonomy_policy import (
     AutonomyPolicy,
     DecisionType,
     EffectivePolicyDecision,
+    GlobalMode,
     PolicyAuditEvent,
 )
+
+
+LEGACY_MODE_MAP = {
+    "manual": GlobalMode.manual_assist,
+    "assisted": GlobalMode.semi_auto,
+    "autonomous": GlobalMode.auto_with_human_override,
+}
 
 
 class AutonomyPolicyService:
@@ -31,7 +39,37 @@ class AutonomyPolicyService:
             self.update_policy(default_policy)
             return default_policy
 
-        return AutonomyPolicy.model_validate_json(self.policy_path.read_text(encoding="utf-8"))
+        raw_payload = self.policy_path.read_text(encoding="utf-8")
+        try:
+            return AutonomyPolicy.model_validate_json(raw_payload)
+        except Exception:
+            migrated = self._migrate_legacy_policy(json.loads(raw_payload))
+            policy = AutonomyPolicy.model_validate(migrated)
+            self.update_policy(policy)
+            return policy
+
+    def _migrate_legacy_policy(self, payload: dict) -> dict:
+        station_mode = payload.get("station_default_mode")
+        if station_mode in LEGACY_MODE_MAP:
+            payload["station_default_mode"] = LEGACY_MODE_MAP[station_mode]
+
+        mode_permissions = payload.get("mode_permissions", {})
+        payload["mode_permissions"] = {
+            LEGACY_MODE_MAP.get(mode, mode): permissions
+            for mode, permissions in mode_permissions.items()
+        }
+
+        for show_override in payload.get("show_overrides", []):
+            mode = show_override.get("mode")
+            if mode in LEGACY_MODE_MAP:
+                show_override["mode"] = LEGACY_MODE_MAP[mode]
+
+        for timeslot_override in payload.get("timeslot_overrides", []):
+            mode = timeslot_override.get("mode")
+            if mode in LEGACY_MODE_MAP:
+                timeslot_override["mode"] = LEGACY_MODE_MAP[mode]
+
+        return payload
 
     def update_policy(self, policy: AutonomyPolicy) -> AutonomyPolicy:
         payload = policy.model_copy(update={"updated_at": datetime.utcnow().isoformat() + "Z"})
