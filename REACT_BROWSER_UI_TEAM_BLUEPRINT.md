@@ -443,6 +443,11 @@ Exit criteria:
 - [ ] Scaffold app shell and routing
 - [ ] Add design token pipeline (CSS vars + Tailwind mapping)
 - [ ] Add motion token module + shared animation presets
+- [ ] Implement `prefers-reduced-motion` behavior via `config.ui.reduced_motion_mode`
+- [ ] Create core shell components (topbar/sidebar/tabs/workspace)
+- [ ] Add keyboard shortcuts (`Cmd/Ctrl+L`, `Cmd/Ctrl+K`, tab cycling) behind `config.features.enable_keyboard_shortcuts`
+- [ ] Gate command palette (`Cmd/Ctrl+K` + UI entry points) behind `config.features.enable_command_palette`
+- [ ] Enable strong focus rings/highlights behind `config.ui.enable_focus_highlights`
 - [ ] Implement `prefers-reduced-motion` behavior
 - [ ] Implement accessibility profile store + persistence
 - [ ] Add profile token overrides (`high_contrast`, `large_text`, `reduced_motion`, `simplified_density`)
@@ -596,6 +601,26 @@ QA logging requirements:
 - **large_text:** no truncation or overlap for topbar/sidebar/workspace labels at increased text scale.
 - **reduced_motion:** route transitions, tab switching, and panel open/close use reduced-motion variants.
 - **simplified_density:** row heights/hit targets expand and non-essential secondary chrome is suppressed in workspace-heavy views.
+
+### Config Switch Mapping (Contract Alignment)
+
+| Blueprint concern | Config switch | Expected behavior |
+|---|---|---|
+| Reduced motion support | `config.ui.reduced_motion_mode` (`system\|on\|off`) | `on` always uses reduced-motion variants; `off` always uses full-motion variants; `system` follows client `prefers-reduced-motion`. |
+| Command palette availability | `config.features.enable_command_palette` | When `false`, hide palette trigger(s) and ignore palette-only shortcuts. |
+| Optional keyboard shortcuts | `config.features.enable_keyboard_shortcuts` | When `false`, disable non-essential shortcuts but keep baseline accessibility keyboard navigation. |
+| Focus visibility enhancements | `config.ui.enable_focus_highlights` | When `true`, apply high-contrast focus styles; when `false`, keep default accessible focus styles. |
+
+### Preference Precedence and Unsupported Clients
+
+1. **User preference wins over system preference** for motion behavior:
+   - `reduced_motion_mode: "on"` => reduced motion regardless of OS/browser setting.
+   - `reduced_motion_mode: "off"` => full motion regardless of OS/browser setting.
+   - `reduced_motion_mode: "system"` => defer to OS/browser `prefers-reduced-motion`.
+2. For clients that do not support a given capability, **ignore unsupported switches safely**:
+   - Keep baseline accessible keyboard and focus behavior.
+   - Do not hard-fail rendering if a switch cannot be honored.
+   - Unknown future switches should be ignored (forward-compatible behavior).
 
 ---
 
