@@ -37,6 +37,18 @@ Success criteria:
 - PRs are feature-sliced by shell areas (topbar, sidebar, workspace, overlays).
 - No animation ships without a reduced-motion equivalent.
 
+Cross-app accessibility guardrails (required for shell, tabs, scheduler, and overlays):
+- Publish and maintain a keyboard navigation map alongside every shell-area PR.
+- Ensure visible `:focus-visible` treatment for all interactive controls and composite widgets.
+- Implement semantic landmarks (`header`, `nav`, `main`, `aside`, `section[aria-labelledby]`, `dialog`) before visual polish tasks.
+- Validate theme-token contrast and text hierarchy before merge.
+
+Acceptance criteria from Working Agreement:
+- Keyboard map includes entry, traversal, and exit commands for shell, tabs, scheduler, and overlays.
+- Focus ring is perceivable in light/dark themes and never removed without replacement.
+- Landmark regions are discoverable via screen-reader rotor/landmark navigation.
+- Contrast checks pass WCAG AA for body text and non-text UI components.
+
 ---
 
 ## 3. System Architecture (React)
@@ -114,6 +126,12 @@ Behavior:
 - Renders topbar + sidebar + workspace regions.
 - Handles responsive collapse states.
 - Preserves sidebar width and selected tab per user preference.
+- Exposes semantic regions: `header` (topbar), `nav` (sidebar/tab strip), `main` (workspace), optional `aside` (context panels).
+
+Accessibility contract:
+- Supports skip link to `main` content target.
+- Maintains deterministic tab order: topbar -> sidebar -> tabs -> workspace -> utilities.
+- Applies shell-level keyboard map registration for help overlays and QA fixtures.
 
 ### `TabStrip`
 Purpose: browser-like tab management with smooth switching.
@@ -127,6 +145,11 @@ Animation contract:
 - Reordering uses spring with low bounce.
 - Tab activation uses fade + subtle x-translation.
 - Closing animates width to zero and fades.
+
+Accessibility contract:
+- Uses `role="tablist"` with child `role="tab"` and `aria-controls` linkage.
+- Keyboard: `ArrowLeft/ArrowRight` move focus, `Home/End` jump, `Enter/Space` activate, `Delete/Backspace` close (if closable).
+- Active tab state is represented via `aria-selected` and synchronized with visible focus styling.
 
 ### `AddressBar`
 Purpose: command/search/location surface.
@@ -143,6 +166,20 @@ Behavior:
 - Route transitions use shared layout animations.
 - Skeleton state appears for data loading >120ms.
 - Preserves scroll position per tab.
+
+Accessibility contract:
+- Route host uses `main`/`region` with accessible name sourced from active tab/page heading.
+- Announces route changes through polite live region when tab activation changes content.
+- Scheduler views expose grid semantics with keyboard navigation (`Arrow` traversal, `PageUp/PageDown` interval jumps).
+
+### `Overlays` (command palette, notification center, modal root)
+Purpose: interruptive and non-interruptive layered interactions.
+
+Accessibility contract:
+- Modal overlays use `role="dialog"` + `aria-modal="true"`, trap focus, and restore origin focus on close.
+- Non-modal overlays (e.g., notification center) remain reachable by keyboard without stealing focus unexpectedly.
+- `Escape` closes dismissible overlays unless an inner control has higher-priority handling.
+- Overlay launch shortcuts are documented in keyboard map and avoid collisions with shell navigation keys.
 
 ---
 
@@ -174,6 +211,12 @@ Reduced motion strategy:
 - Replace movement with opacity-only transitions.
 - Set durations to 80–140ms.
 - Disable continuous decorative loops.
+
+Acceptance criteria from reduced motion strategy:
+- `@media (prefers-reduced-motion: reduce)` removes x/y transforms and scale transitions from shell, tabs, scheduler timeline, and overlays.
+- Reduced mode keeps only opacity transitions with capped duration (<=140ms) and linear/standard easing.
+- Auto-scrolling and parallax-like effects are disabled or replaced with instant updates.
+- QA verifies no interaction requires motion cues alone to communicate state.
 
 ---
 
@@ -239,6 +282,24 @@ Exit criteria:
 - [ ] Add keyboard shortcuts (`Cmd/Ctrl+L`, `Cmd/Ctrl+K`, tab cycling)
 - [ ] Add profiling pass and animation budget fixes
 - [ ] Complete accessibility audit and fixes
+- [ ] Publish keyboard navigation map for shell/tabs/scheduler/overlays
+- [ ] Validate semantic landmarks and focus-visible states across shell contracts
+- [ ] Run contrast and text hierarchy checks against theme tokens
+
+### Keyboard Navigation Map (cross-app contract)
+
+| Area | Entry | Traverse | Action | Exit |
+| --- | --- | --- | --- | --- |
+| Shell (topbar/sidebar/workspace) | `Tab` from browser chrome or skip link | `Tab` / `Shift+Tab` | `Enter` / `Space` on focused control | `Shift+Tab` to previous region |
+| Tab Strip | `Ctrl/Cmd + 1..9` or `Tab` into strip | `ArrowLeft` / `ArrowRight`, `Home`, `End` | `Enter`/`Space` activate, `Delete` close | `Tab` into workspace |
+| Scheduler | `G then S` (app shortcut) or route entry | Arrow keys for cell/block movement; `PageUp/PageDown` period jump | `Enter` open block, `E` edit, `N` new item | `Escape` close editor / return focus |
+| Overlays | `Ctrl/Cmd + K` (palette), `Ctrl/Cmd + Shift + N` (notifications) | `Tab` cycle within overlay; arrow keys in lists | `Enter` select/confirm | `Escape` dismiss + restore origin focus |
+
+### Theme Contrast + Text Hierarchy Guardrails
+- Theme tokens must maintain at least 4.5:1 contrast for body text and 3:1 for large text/UI icons.
+- Interactive focus indicators must achieve 3:1 contrast against adjacent colors.
+- Text hierarchy checks ensure heading/subheading/body/caption tiers remain visually distinct in both themes.
+- CI or QA script should fail when token changes regress contrast below agreed thresholds.
 
 ---
 
