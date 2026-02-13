@@ -319,7 +319,73 @@ This keeps older saved configs valid without edits while enabling progressive ro
 
 ---
 
-## 7. Delivery Plan (Two Sprints)
+## 7. Micro-State Matrix + Service Status Mapping
+
+Use this matrix to keep state UX consistent across major surfaces: **Dashboard, Studio View, Scheduler, Library**.
+
+### Shared Micro-States (all major surfaces)
+
+| Micro-state | UX intent | Trigger guidance | Primary primitive(s) | `frontend_status_response.service_status` behavior |
+| --- | --- | --- | --- | --- |
+| Loading (short) | Keep perceived latency low without layout shift. | Data expected quickly (<= 400ms). | Inline spinner + subtle skeleton rows/cards. | `healthy`: default; `degraded`: show lightweight “slower than usual” inline hint; `down`: skip spinner loop after timeout and move to error treatment. |
+| Loading (long) | Preserve trust during multi-second fetches. | Data pending > 400ms or progressive pagination. | Placeholder card set + global/in-panel banner with status copy. | `healthy`: neutral progress copy; `degraded`: warning banner (“limited backend performance”); `down`: escalate to transient error with retry CTA. |
+| Empty-first-run | Teach next step rather than show blank space. | No user-created content yet, first session or first feature visit. | Placeholder card with onboarding CTA(s). | `healthy`: standard getting-started copy; `degraded`: keep onboarding visible but include warning inline alert for delayed writes; `down`: disable mutating CTA and explain dependency outage. |
+| No-results search | Confirm query executed and suggest recovery path. | Query returns zero matches with active filter/search term. | Inline alert + placeholder card with clear actions (reset filters, broaden search). | `healthy`: informational tone; `degraded`: add note that some indexes may be stale; `down`: message that search backend is unavailable and fallback list may be incomplete. |
+| Transient error with retry | Recover quickly from intermittent failures. | Timeout, 5xx, websocket drop, network blip. | Inline alert + Retry button (idempotent action). | `healthy`: single retry prompt with exponential backoff after repeated failures; `degraded`: show “service unstable” warning banner + retry; `down`: stop auto-retry after capped attempts and offer manual retry only. |
+| Degraded backend mode | Keep app usable with reduced capability. | `service_status` reports partial outage / dependency lag. | Persistent banner + inline alerts on impacted widgets. | `degraded`: activate degraded UX mode; `healthy`: clear all degraded warnings; `down`: switch from degraded to outage handling states. |
+
+### Surface-level Application Matrix
+
+| Surface | Loading (short vs long) | Empty-first-run | No-results search | Transient error with retry | Degraded backend mode |
+| --- | --- | --- | --- | --- | --- |
+| Dashboard | Short: skeleton KPI chips. Long: skeleton panels + top banner. | Placeholder card with “Connect sources” / “Create first show”. | Inline alert over widget area with “Clear filters”. | Inline alert per failed widget + panel retry button. | Persistent top banner; impacted widgets show inline degraded tags. |
+| Studio View | Short: waveform/queue skeleton. Long: full panel placeholders + status note. | Placeholder card prompting first segment/track setup. | Inline alert in segment list with query suggestions. | Transport-safe retry (never interrupts active playout state). | Sticky banner near transport controls; disable risky mutating actions when status worsens. |
+| Scheduler | Short: calendar cell shimmer. Long: full-grid placeholder + ETA copy. | Placeholder card: “Schedule your first block”. | Inline alert above grid + quick reset filters action. | Retry button on failed fetch/save region with optimistic rollback notice. | Banner indicates delayed sync; highlight stale cells with inline alerts. |
+| Library | Short: row/card skeleton. Long: section placeholder + progress hint. | Placeholder card: “Import your first asset”. | Inline alert in results header with “Remove filters” + “Show all”. | Retry button on list fetch and metadata enrich failures. | Banner warns metadata/search may be incomplete; show stale badge on affected items. |
+
+### Reusable UI Primitives
+
+1. **Banner**
+   - Purpose: global/persistent communication at app or surface top.
+   - Variants: `info`, `warning`, `error`.
+   - `service_status` mapping:
+     - `healthy`: hidden by default.
+     - `degraded`: `warning` banner with scope + expected impact.
+     - `down` (or equivalent outage state): `error` banner with clear fallback text.
+
+2. **Inline Alert**
+   - Purpose: localized contextual guidance in a panel/list/section.
+   - Variants: `info`, `warning`, `error`.
+   - `service_status` mapping:
+     - `healthy`: mostly `info` (empty/no-results guidance).
+     - `degraded`: `warning` for stale/partial data.
+     - `down`: `error` for unavailable section-level operations.
+
+3. **Placeholder Card**
+   - Purpose: non-jarring content substitute for loading/empty states.
+   - Variants: `loading`, `empty`, `empty_search`.
+   - `service_status` mapping:
+     - `healthy`: standard instructional/neutral copy.
+     - `degraded`: add compact warning subtext (“results may lag”).
+     - `down`: disable dependent CTA controls and expose fallback action.
+
+4. **Retry Button**
+   - Purpose: explicit user-controlled recovery from transient failures.
+   - Behavior:
+     - Idempotent actions only.
+     - Debounced click handling.
+     - Optional countdown/backoff label after repeated failures.
+   - `service_status` mapping:
+     - `healthy`: visible on transient errors only.
+     - `degraded`: visible + paired with warning copy about instability.
+     - `down`: visible but paired with “service unavailable” text; no aggressive auto-retry loops.
+
+Implementation note:
+- Normalize `frontend_status_response.service_status` into a UI enum (`healthy | degraded | down`) at the boundary layer so all surfaces consume one predictable contract.
+
+---
+
+## 8. Delivery Plan (Two Sprints)
 
 ### Sprint 1 (Foundation)
 - Build app shell regions and responsive breakpoints.
@@ -343,7 +409,7 @@ Exit criteria:
 
 ---
 
-## 8. Implementation Checklist
+## 9. Implementation Checklist
 - [ ] Scaffold app shell and routing
 - [ ] Add design token pipeline (CSS vars + Tailwind mapping)
 - [ ] Add motion token module + shared animation presets
