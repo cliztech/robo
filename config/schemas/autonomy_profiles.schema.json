@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robodj.local/schema/autonomy_profiles.schema.json",
+  "title": "RoboDJ autonomy profiles document schema",
+  "type": "object",
+  "properties": {
+    "$schema": { "type": "string", "pattern": "^https://json-schema\\.org/" },
+    "$id": { "type": "string", "pattern": "^https://" },
+    "title": { "type": "string" },
+    "description": { "type": "string" },
+    "type": { "type": "string", "enum": ["object"] },
+    "required": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "properties": {
+      "type": "object",
+      "properties": {
+        "schema_version": { "type": "object" },
+        "default_mode": { "type": "object" },
+        "profiles": { "type": "object" }
+      },
+      "required": ["schema_version", "default_mode", "profiles"],
+      "additionalProperties": true
+    },
+    "$defs": {
+      "type": "object",
+      "properties": {
+        "mode_name": { "type": "object" },
+        "permission": { "type": "object" },
+        "approval_policy": { "type": "object" },
+        "time_window": { "type": "object" },
+        "profile": { "type": "object" }
+      },
+      "required": ["mode_name", "permission", "approval_policy", "time_window", "profile"],
+      "additionalProperties": true
+    },
+    "additionalProperties": { "type": "boolean" },
+    "examples": {
+      "type": "array",
+      "items": { "type": "object" }
+    }
+  },
+  "required": [
+    "$schema",
+    "$id",
+    "title",
+    "description",
+    "type",
+    "required",
+    "properties",
+    "$defs",
+    "additionalProperties",
+    "examples"
+  ],
+  "additionalProperties": false
+}

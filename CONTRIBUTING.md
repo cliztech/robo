@@ -19,3 +19,12 @@ If build assets are introduced later, add build workflows in a separate pull req
 1. Which new source/build files were added.
 2. Why the new workflow is now required.
 3. How the workflow maps to this repository's structure.
+
+## Release / deployment handoff requirements
+
+To avoid process drift, follow the same release gate in deployment and handoff activities:
+
+- Run `python config/validate_config.py`.
+- Do not proceed unless output includes: `Configuration validation passed for schedules.json and prompt_variables.json.`
+- For risky configuration changes, archive backup snapshots in `config/backups/` and include them with release/deployment artifacts.
+

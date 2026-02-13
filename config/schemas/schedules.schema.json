@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://robodj.local/schema/schedules.schema.json",
   "title": "RoboDJ schedules configuration",
+  "$comment": "TODO roadmap: (1) document canonical entities: show block, override, template, conflict type; (2) finalize validation edge cases including overnight rollover and holiday overrides; (3) add schema versioning and migration strategy for legacy schedule files; (4) treat schema freeze as prerequisite milestone before timeline/conflict/template implementation.",
   "type": "array",
   "items": {
     "type": "object",

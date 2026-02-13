@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robodj.local/schema/interactivity_channels.schema.json",
+  "title": "RoboDJ interactivity channels configuration",
+  "type": "object",
+  "properties": {
+    "channels": {
+      "type": "object",
+      "properties": {
+        "web_form": { "type": "boolean" },
+        "chat": { "type": "boolean" },
+        "messaging_bridge": { "type": "boolean" },
+        "synthetic_generator": { "type": "boolean" }
+      },
+      "required": ["web_form", "chat", "messaging_bridge", "synthetic_generator"],
+      "additionalProperties": false
+    },
+    "moderation": {
+      "type": "object",
+      "properties": {
+        "spam_detection": { "type": "boolean" },
+        "abuse_detection": { "type": "boolean" },
+        "pii_redaction": { "type": "boolean" }
+      },
+      "required": ["spam_detection", "abuse_detection", "pii_redaction"],
+      "additionalProperties": false
+    },
+    "eligibility": {
+      "type": "object",
+      "properties": {
+        "library_match_required": { "type": "boolean" },
+        "repetition_limit_per_listener": { "type": "integer", "minimum": 0 },
+        "duplicate_request_blocking": { "type": "boolean" }
+      },
+      "required": ["library_match_required", "repetition_limit_per_listener", "duplicate_request_blocking"],
+      "additionalProperties": false
+    },
+    "host_acknowledgement": {
+      "type": "object",
+      "properties": {
+        "personalization": { "type": "boolean" }
+      },
+      "required": ["personalization"],
+      "additionalProperties": false
+    },
+    "off_peak_synthetic_calls": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "internal_flag": { "type": "string", "enum": ["synthetic"] }
+      },
+      "required": ["enabled", "internal_flag"],
+      "additionalProperties": false
+    },
+    "live_human_takeover": {
+      "type": "object",
+      "properties": {
+        "opt_in_only": { "type": "boolean" },
+        "staffed_hours_only": { "type": "boolean" }
+      },
+      "required": ["opt_in_only", "staffed_hours_only"],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "channels",
+    "moderation",
+    "eligibility",
+    "host_acknowledgement",
+    "off_peak_synthetic_calls",
+    "live_human_takeover"
+  ],
+  "additionalProperties": false
+}
