@@ -16,7 +16,7 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
     -   **Agent Orchestrator**: Manages the "DJ Agent" lifecycle.
 3.  **Audio Pipeline (Python/FFmpeg/Liquidsoap)**:
     -   **Streamer**: Generates the continuous audio stream (Icecast/HLS).
-    -   **Mixer**: Handles crossfades, ducking (lowering music volume during speech), and FX.
+    -   **Mixer**: Handles hit-point-aware transitions, beat-aware crossfades, hard cuts, ducking, and segment-level mastering.
     -   **Synthesizer**: Interfacing with TTS providers (ElevenLabs, OpenAI).
 
 ### B. Integration with AI Music Agents
@@ -41,6 +41,23 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 *The "Brain" that decides the programming.*
 
 -   **Clock Wheels**: Define templates for an hour (e.g., "Top of Hour ID" -> "Power Hit" -> "DJ Link" -> "New Release").
+-   **Station Timezone**:
+    -   Every station must define a canonical IANA timezone string (e.g., `America/New_York`, `Europe/Berlin`).
+    -   All recurrence calculations are evaluated in station local time, then expanded into UTC for storage/playout.
+-   **Recurrence Rules**:
+    -   Clock wheels and shows support deterministic recurrence using RFC 5545 style rules (`RRULE`) plus optional include/exclude dates.
+    -   Minimum support: `FREQ`, `INTERVAL`, `BYDAY`, `BYHOUR`, `BYMINUTE`, `UNTIL`, `COUNT`, `WKST`, `RDATE`, `EXDATE`.
+    -   For overlapping recurring blocks, scheduler resolves by explicit `priority` (higher wins), then by most-specific rule (single date > recurring rule), then by earliest creation timestamp.
+-   **DST Handling Policy**:
+    -   `wall_clock_strict`: keep local wall-clock intent stable (e.g., "08:00 local" stays 08:00 across DST boundaries).
+    -   `utc_strict`: keep UTC instant cadence stable (may shift displayed local hour at DST transitions).
+    -   Default for radio scheduling is `wall_clock_strict`.
+    -   Non-existent local times (spring-forward gap) are shifted forward to the next valid local minute.
+    -   Ambiguous local times (fall-back overlap) choose the first occurrence unless `dst_instance=second` is explicitly requested.
+-   **Canonical Storage + Display Rules**:
+    -   Canonical event instances in queue tables are always UTC timestamps.
+    -   Source schedule definitions persist local intent (`local_start_time`, timezone, RRULE) for deterministic regeneration.
+    -   UI always displays both local station time and UTC, with local station time as the primary presentation.
 -   **Rules Engine**:
     -   *Artist Separation*: "Don't play the same artist within 60 minutes."
     -   *Tempo Flow*: "Gradually increase BPM from 6 PM to 9 PM."
@@ -53,6 +70,40 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 -   **Metadata Push**: Updates "Now Playing" info on the frontend.
 
 ## 4. Data Model (Draft Schema)
+
+### StationSchedule
+```json
+{
+  "id": "uuid",
+  "station_id": "uuid",
+  "timezone": "America/New_York",
+  "dst_policy": "wall_clock_strict",
+  "week_start": "MO",
+  "display_time_mode": "local_primary",
+  "version": 3,
+  "effective_from_utc": "2026-01-01T00:00:00Z",
+  "effective_to_utc": null
+}
+```
+
+### ScheduleBlock (Clock Wheel / Show Definition)
+```json
+{
+  "id": "uuid",
+  "station_schedule_id": "uuid",
+  "name": "Drive Time Show",
+  "type": "show | clock_wheel",
+  "priority": 100,
+  "timezone": "America/New_York",
+  "local_start_time": "17:00:00",
+  "duration_minutes": 180,
+  "recurrence_rule": "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR;BYHOUR=17;BYMINUTE=0",
+  "rdate": ["2026-07-03T17:00:00"],
+  "exdate": ["2026-12-25T17:00:00"],
+  "dst_instance": "first",
+  "content_template_id": "uuid"
+}
+```
 
 ### Tracks
 ```json
@@ -74,9 +125,97 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 {
   "id": "uuid",
   "scheduled_time": "2023-10-27T14:00:00Z",
+  "scheduled_time_local": "2023-10-27T10:00:00-04:00",
+  "station_timezone": "America/New_York",
   "item_type": "track | voice_link | jingle",
   "item_id": "uuid",
-  "status": "pending | playing | played"
+  "status": "pending | playing | played",
+  "source_block_id": "uuid"
+}
+```
+
+### Sample Deterministic Schedule Object (Recurring + Exceptions)
+```json
+{
+  "station_id": "stn_001",
+  "timezone": "America/New_York",
+  "dst_policy": "wall_clock_strict",
+  "generated_window": {
+    "start_utc": "2026-11-23T00:00:00Z",
+    "end_utc": "2026-12-01T00:00:00Z"
+  },
+  "blocks": [
+    {
+      "id": "blk_morning",
+      "name": "Morning Clock Wheel",
+      "type": "clock_wheel",
+      "priority": 50,
+      "local_start_time": "06:00:00",
+      "duration_minutes": 240,
+      "rrule": "FREQ=DAILY;BYHOUR=6;BYMINUTE=0",
+      "template": ["top_id", "power", "dj_link", "recurrent_news"]
+    },
+    {
+      "id": "blk_drive",
+      "name": "Drive Time Live",
+      "type": "show",
+      "priority": 100,
+      "local_start_time": "17:00:00",
+      "duration_minutes": 180,
+      "rrule": "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR;BYHOUR=17;BYMINUTE=0",
+      "template": ["show_open", "music_rotation_a", "talk_break", "ads_local", "show_close"]
+    }
+  ],
+  "exceptions": [
+    {
+      "id": "ex_thanksgiving",
+      "date_local": "2026-11-26",
+      "action": "replace_block",
+      "target_block_id": "blk_drive",
+      "replacement": {
+        "id": "blk_holiday_special",
+        "name": "Thanksgiving Special",
+        "type": "show",
+        "priority": 200,
+        "local_start_time": "17:00:00",
+        "duration_minutes": 240,
+        "rrule": "FREQ=DAILY;COUNT=1",
+        "template": ["holiday_open", "listener_dedications", "holiday_mix"]
+      }
+    },
+    {
+      "id": "ex_charity_remote",
+      "date_local": "2026-11-28",
+      "action": "insert_one_off",
+      "one_off_block": {
+        "id": "blk_charity_remote",
+        "name": "Charity Remote Broadcast",
+        "type": "show",
+        "priority": 220,
+        "local_start_time": "12:00:00",
+        "duration_minutes": 120,
+        "rrule": "FREQ=DAILY;COUNT=1",
+        "template": ["remote_open", "live_interviews", "sponsor_mentions"]
+      }
+    }
+  ],
+  "resolved_instances": [
+    {
+      "block_id": "blk_drive",
+      "start_local": "2026-11-25T17:00:00-05:00",
+      "start_utc": "2026-11-25T22:00:00Z"
+    },
+    {
+      "block_id": "blk_holiday_special",
+      "start_local": "2026-11-26T17:00:00-05:00",
+      "start_utc": "2026-11-26T22:00:00Z"
+    },
+    {
+      "block_id": "blk_charity_remote",
+      "start_local": "2026-11-28T12:00:00-05:00",
+      "start_utc": "2026-11-28T17:00:00Z"
+    }
+  ]
 }
 ```
 
@@ -103,52 +242,168 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 -   **Database**: PostgreSQL (robustness) or SQLite (simplicity).
 -   **AI**: LangChain (orchestration), OpenAI/Anthropic (LLM), ElevenLabs (TTS).
 
-## 7. Controlled Interactivity Channels (Segment Engine Feed)
+## 7. Audio Pipeline Upgrade Specification
 
-### 7.1 Intake Channels
-- **Web Form Intake**: Structured listener request form with track/title intent extraction.
-- **Chat Intake**: Real-time conversational capture from station web/app chat.
-- **Messaging App Bridge (Optional)**: Feature-flagged adapter for WhatsApp/Telegram/SMS style sources.
+### 7.1 Processing Chain (per rendered segment)
 
-All channels normalize into a shared `Request` envelope for downstream moderation and eligibility.
+All output segments (music sweeps, voice links, promos, two-voice conversations) follow a deterministic mastering chain:
 
-### 7.2 Moderation Pipeline
-Requests are moderated before entering the segment queue:
-1. **Spam detection** (URLs, promo spam phrases, bot signatures).
-2. **Abuse detection** (brand-safety and host-safety filtering).
-3. **PII stripping** (email/phone redaction before LLM/host exposure).
+1. **Loudness normalization (LUFS)**
+   - Analyze integrated loudness and true peak.
+   - Normalize to preset target (format-dependent, see 7.2).
+2. **Multiband compression**
+   - 3- or 4-band split to stabilize tonal balance and perceived loudness.
+   - Independent thresholds/ratios for low, mid, high bands.
+3. **Limiter (true-peak safety)**
+   - Final brickwall limiter to prevent clipping after codec conversion.
+4. **Stereo enhancement (optional)**
+   - Enabled per format/preset.
+   - Apply mid/side widening with mono compatibility guardrails.
+5. **De-esser for voice content**
+   - Voice-only or voice-dominant segments.
+   - Frequency-focused reduction of sibilance before final limiting.
 
-Moderation outcomes are attached as flags and can hard-reject unsafe requests.
+> Implementation note: chain modules should be idempotent and configurable with profile-level overrides.
 
-### 7.3 Eligibility Queue Gate
-Post-moderation requests pass through policy checks:
-- **Library match** (must map to catalog unless freeform-talk request mode is allowed).
-- **Policy compliance** (inherits moderation hard-fail conditions).
-- **Repetition limits** (per-listener caps and duplicate text checks).
+### 7.2 Per-Format Processing Presets
 
-Only approved items enter the segment request queue.
+Define station-format defaults, then allow show-level overrides.
 
-### 7.4 Host Acknowledgement Agent
-Approved requests can trigger natural, personalized acknowledgements based on:
-- Listener name
-- Requested track/topic
-- Current show context
+| Format | Target LUFS | Limiter Ceiling | Compression Character | Stereo Enhance | De-esser Intensity |
+|---|---:|---:|---|---|---|
+| **CHR** | -9 LUFS | -1.0 dBTP | Aggressive/punchy | On (moderate) | Medium |
+| **Talk** | -16 LUFS | -2.0 dBTP | Speech-first, transparent | Off | High |
+| **Chill** | -14 LUFS | -1.5 dBTP | Gentle/glue | On (light) | Low-Medium |
+| **Classic Hits** | -12 LUFS | -1.2 dBTP | Medium density, warm | On (light-moderate) | Medium |
 
-Acknowledgements are generated for on-air or chat feedback without exposing redacted PII.
+Preset object shape (example):
 
-### 7.5 Synthetic Off-Peak Queue Generation
-When off-peak traffic is low, the system can inject synthetic request seeds for realism:
-- Marked internally as `synthetic=true`
-- Kept auditable and excluded from listener analytics
-- Routed through the same moderation + eligibility pipeline for consistency
+```json
+{
+  "format": "chr",
+  "loudness": { "target_lufs": -9, "max_true_peak_dbtp": -1.0 },
+  "multiband": {
+    "bands": [
+      { "name": "low", "threshold_db": -24, "ratio": 3.0 },
+      { "name": "mid", "threshold_db": -20, "ratio": 2.5 },
+      { "name": "high", "threshold_db": -18, "ratio": 2.0 }
+    ]
+  },
+  "limiter": { "ceiling_dbtp": -1.0, "lookahead_ms": 3 },
+  "stereo_enhancement": { "enabled": true, "width_percent": 115 },
+  "de_esser": { "enabled": true, "freq_hz": 6500, "max_reduction_db": 4 }
+}
+```
 
-### 7.6 Opt-In Live Human Takeover
-If a listener opts in to real-call handling and staff are present:
-- Request is routed to a **live-human takeover queue**
-- Only active during configured staffed windows
-- Falls back to normal AI-host flow outside staffed hours
+### 7.3 Transition Intelligence
 
-### 7.7 Reference Implementation Artifact
-A lightweight prototype is included at:
-- `config/interactive_request_pipeline.py`
-- Config surface: `config/interactivity_channels.json`
+Upgrade transitions from timeline-only crossfades to analysis-driven decisions:
+
+1. **Intro/outro hit-point awareness**
+   - Detect/ingest markers (`intro_start`, `vocal_start`, `outro_start`, `cold_end`).
+   - Schedule voice links into intro windows where available.
+2. **Beat-aware crossfades (BPM-compatible)**
+   - If BPM delta and phase confidence are within tolerance, align phrase boundaries.
+   - Use bar-length fade curves (e.g., 4-beat or 8-beat) instead of fixed seconds.
+3. **Hard cut fallback (incompatible tracks)**
+   - Trigger when tempo/key/energy mismatch exceeds configured bounds.
+   - Cut at transient-safe boundaries to avoid clicks.
+
+Transition decision policy (high-level):
+
+```text
+if intro/outro windows overlap with safe margin:
+    if bpm_compatible && beat_confidence >= threshold:
+        use beat-aware crossfade
+    else:
+        use timed hit-point crossfade
+else:
+    use hard cut fallback
+```
+
+### 7.4 Auto-Duck Profiles
+
+Add explicit ducking profiles selected by segment type:
+
+1. **Speech-over-bed**
+   - Fast attack, medium release.
+   - Typical gain reduction: -8 to -12 dB.
+   - Keep bed presence while maximizing intelligibility.
+2. **Two-voice conversation**
+   - Deeper bed reduction during overlaps.
+   - Optional speaker-priority sidechain (active speaker gets less masking).
+   - Typical gain reduction: -10 to -16 dB during dual speech.
+
+Profile fields:
+- `attack_ms`, `release_ms`, `hold_ms`
+- `min_duck_db`, `max_duck_db`
+- `noise_gate_threshold_db` (to avoid pumping)
+- `dual_voice_extra_duck_db`
+
+### 7.5 QA Analyzer (Automated Audio Validation)
+
+Run QA checks post-render and before playout handoff.
+
+Detection goals:
+- **Clipping**: true-peak overs above threshold.
+- **Over-compression**: low crest factor / low short-term loudness variance.
+- **Silence anomalies**: unexpected long silence blocks.
+- **Abrupt cuts**: discontinuity spikes at segment boundaries.
+
+Output:
+- `pass | warn | fail` status per check.
+- Severity score and human-readable diagnostics.
+- Suggested remediation (e.g., "increase fade length", "lower limiter drive").
+
+### 7.6 Segment Technical Metadata for Diagnostics
+
+Persist technical metadata for every rendered segment to support QA, debugging, and model tuning.
+
+Recommended fields:
+
+```json
+{
+  "segment_id": "uuid",
+  "segment_type": "voice_link | track_transition | promo | conversation",
+  "preset": "talk",
+  "input": {
+    "track_a_id": "uuid",
+    "track_b_id": "uuid",
+    "voice_asset_ids": ["uuid"]
+  },
+  "analysis": {
+    "integrated_lufs": -14.2,
+    "short_term_lufs_max": -10.1,
+    "true_peak_dbtp": -1.1,
+    "crest_factor_db": 7.4,
+    "dynamic_range_lu": 5.8,
+    "detected_bpm_a": 124,
+    "detected_bpm_b": 126,
+    "transition_type": "beat_crossfade",
+    "duck_profile": "two_voice_conversation"
+  },
+  "qa": {
+    "status": "warn",
+    "checks": [
+      { "name": "abrupt_cuts", "status": "pass" },
+      { "name": "over_compression", "status": "warn", "score": 0.72 }
+    ]
+  },
+  "render": {
+    "engine_version": "audio-pipeline-2.0.0",
+    "rendered_at": "2026-02-12T20:15:00Z",
+    "duration_ms": 42150
+  }
+}
+```
+
+Storage options:
+- `segment_audio_diagnostics` table in PostgreSQL for queryable history.
+- Optional JSON sidecar file for each exported asset in object storage.
+
+### 7.7 Rollout Approach
+
+1. Ship new pipeline behind a feature flag (`audio_pipeline_v2_enabled`).
+2. Run A/B renders (v1 vs v2) for selected hours.
+3. Compare QA analyzer outputs and human producer feedback.
+4. Promote per-format presets incrementally (Talk first, then music formats).
