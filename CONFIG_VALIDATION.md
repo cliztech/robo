@@ -2,6 +2,8 @@
 
 Use the validator before any deployment or handoff to catch malformed configuration changes early.
 
+> **Hard gate:** Deployment/handoff must not proceed unless the validator command has been run and the required success line is present in output.
+
 ## What it validates
 
 - `config/schedules.json` against `config/schemas/schedules.schema.json`
@@ -15,6 +17,14 @@ The validator reports actionable errors with JSON paths (for example `$.variable
 python config/validate_config.py
 ```
 
+## Required success output
+
+The run is only considered passing for release/deployment/handoff when output includes exactly:
+
+```text
+Configuration validation passed for schedules.json and prompt_variables.json.
+```
+
 ## Example failure output
 
 ```text
@@ -25,4 +35,5 @@ Configuration validation failed:
 ## Release gating
 
 - **CI:** `.github/workflows/config-validation.yml` runs this check automatically on pull requests and pushes to `main`.
-- **Manual pre-release:** include this command in your release checklist and require a passing run before shipping.
+- **Manual pre-release / deployment / handoff:** do not proceed until `python config/validate_config.py` has been executed and output includes `Configuration validation passed for schedules.json and prompt_variables.json.`.
+- **Risky config changes:** archive backup snapshots in `config/backups/` and include them as release/deployment artifacts for traceability and rollback readiness.
