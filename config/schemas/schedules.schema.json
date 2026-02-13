@@ -39,6 +39,6 @@
       "metadata": { "type": "object" }
     },
     "required": ["id", "name", "enabled"],
-    "additionalProperties": true
+    "additionalProperties": false
   }
 }
