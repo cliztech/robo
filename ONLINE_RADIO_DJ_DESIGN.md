@@ -96,7 +96,7 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 | `locked` | `playing` | Audio pipeline starts (`started_at`) | Show **On Air** badge + expose interrupt control |
 | `playing` | `completed` | Playback finishes (`ended_at`) | Show **Completed** badge + lock destructive edits |
 | `playing` / `locked` | `interrupted` | Operator stop, stream disconnect, or preemption (`ended_at`) | Show **Interrupted** badge + allow resume/requeue |
-| `locked` / `playing` | `failed` | Runtime error (`failed_at`, `failure_reason`) | Show **Failed** badge + surface retry action |
+| `locked` / `playing` | `failed` | Runtime error (`failed_at`, `failure_reason`, `ended_at`) | Show **Failed** badge + surface retry action |
 | `failed` / `interrupted` | `queued` | Retry requested (`retry_count` incremented) | Show **Retrying** badge until lock acquired |
 | `pending` / `queued` | `cancelled` | Item removed before play | Show **Cancelled** badge + keep audit timeline visible |
 
