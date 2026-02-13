@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robodj.local/contracts/frontend_responses/frontend_status_response.schema.json",
+  "title": "frontend_status_response",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["service_status", "queue_depth", "last_rotation_at"],
+  "properties": {
+    "service_status": {
+      "type": "string",
+      "enum": ["healthy", "degraded", "offline"]
+    },
+    "queue_depth": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "last_rotation_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}
