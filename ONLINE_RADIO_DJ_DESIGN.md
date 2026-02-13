@@ -467,6 +467,43 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
   "availability": "public",
   "intro_duration": 12,
   "outro_duration": 15,
+  "file_path": "s3://radio-assets/tracks/neon_nights.mp3",
+  "bpm": 128,
+  "energy": 0.8,
+  "mood": "uplifting",
+  "key": "C#m",
+  "created_at": "2023-10-27T14:00:00Z",
+  "updated_at": "2023-10-27T14:00:00Z"
+}
+```
+
+| Field | Required | Nullable | Type / Format | Default | Constraints |
+|---|---|---|---|---|---|
+| `id` | response-only | non-null | `string` (`uuid`) | server-generated | unique primary key |
+| `title` | required | non-null | `string` | none | min 1, max 200, trimmed |
+| `artist` | required | non-null | `string` | none | min 1, max 160, trimmed |
+| `duration` | required | non-null | `integer` (seconds) | none | min 1, max 7200 |
+| `intro_duration` | optional | non-null | `integer` (seconds) | `0` | min 0, max `duration` |
+| `outro_duration` | optional | non-null | `integer` (seconds) | `0` | min 0, max `duration` |
+| `file_path` | required | non-null | `string` (`uri`) | none | must end with supported audio extension (`.mp3`, `.wav`, `.flac`, `.m4a`, `.aac`) |
+| `bpm` | optional | nullable | `integer` | `null` | min 40, max 240 |
+| `energy` | optional | nullable | `number` (float) | `null` | min 0.0, max 1.0 |
+| `mood` | optional | nullable | `string` | `null` | max 80 |
+| `key` | optional | nullable | `string` | `null` | musical key pattern (`A-G` + optional `#`/`b` + optional `m`) |
+| `created_at` | response-only | non-null | `string` (`date-time`) | server-generated | immutable |
+| `updated_at` | response-only | non-null | `string` (`date-time`) | server-generated | updated on write |
+
+#### Validation examples
+
+**Create (valid)**
+```json
+{
+  "title": "Neon Nights",
+  "artist": "AI Synthwave Collective",
+  "duration": 245,
+  "intro_duration": 12,
+  "outro_duration": 15,
+  "file_path": "s3://radio-assets/tracks/neon_nights.mp3",
   "bpm": 128,
   "energy": 0.8,
   "artwork_url": "https://cdn.station.fm/artwork/neon_nights.jpg",
@@ -603,6 +640,7 @@ Optional-but-recommended metadata for discovery/player UX: `isrc`, `label`, `art
   "source_block_id": "uuid"
 }
 ```
+- Expected errors: `end_date` before `start_date`; `created_at` is response-only.
 
 ### Sample Deterministic Schedule Object (Recurring + Exceptions)
 ```json
