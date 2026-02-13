@@ -1,0 +1,58 @@
+from __future__ import annotations
+
+from fastapi import APIRouter, Depends, HTTPException
+
+from .scheduler_models import (
+    PreviewRequest,
+    ScheduleConflict,
+    SchedulerUiState,
+    SchedulerUiStateUpdate,
+    TemplateApplyRequest,
+)
+from .scheduler_ui_service import SchedulerUiService
+
+router = APIRouter(prefix="/api/v1/scheduler-ui", tags=["scheduler-ui"])
+
+
+def get_scheduler_service() -> SchedulerUiService:
+    return SchedulerUiService()
+
+
+@router.get("/state", response_model=SchedulerUiState)
+def read_scheduler_state(service: SchedulerUiService = Depends(get_scheduler_service)) -> SchedulerUiState:
+    return service.get_ui_state()
+
+
+@router.put("/state", response_model=SchedulerUiState)
+def write_scheduler_state(
+    payload: SchedulerUiStateUpdate,
+    service: SchedulerUiService = Depends(get_scheduler_service),
+) -> SchedulerUiState:
+    try:
+        return service.update_schedules(payload.schedules)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@router.post("/validate", response_model=list[ScheduleConflict])
+def validate_scheduler_state(
+    payload: SchedulerUiStateUpdate,
+    service: SchedulerUiService = Depends(get_scheduler_service),
+) -> list[ScheduleConflict]:
+    return service.validate_schedules(payload.schedules)
+
+
+@router.post("/templates/apply")
+def apply_schedule_template(
+    payload: TemplateApplyRequest,
+    service: SchedulerUiService = Depends(get_scheduler_service),
+):
+    return {"template": payload.template, "schedules": service.apply_template(payload)}
+
+
+@router.post("/preview")
+def preview_schedule_spec(
+    payload: PreviewRequest,
+    service: SchedulerUiService = Depends(get_scheduler_service),
+):
+    return service.preview_schedule_spec(payload)
