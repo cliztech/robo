@@ -102,7 +102,7 @@ Allowed status transitions for `broadcast_queue_item`:
 
 - `pending -> ready | cancelled`
 - `ready -> starting | skipped | cancelled`
-- `starting -> playing | failed | retry_scheduled`
+- `starting -> playing | failed`
 - `playing -> completed | failed`
 - `failed -> retry_scheduled | cancelled`
 - `retry_scheduled -> ready | cancelled`
