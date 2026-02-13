@@ -29,11 +29,8 @@ If any key was ever committed to version control, treat it as compromised and ro
    - `cp config/secret.key config/backups/secret.key.YYYYMMDDHHMMSS.bak`
    - `cp config/secret_v2.key config/backups/secret_v2.key.YYYYMMDDHHMMSS.bak`
 3. Generate new keys:
-   - `python - <<'PY'`
-   - `import secrets, base64`
-   - `print('secret.key=', base64.urlsafe_b64encode(secrets.token_bytes(32)).decode())`
-   - `print('secret_v2.key=', secrets.token_hex(64))`
-   - `PY`
+   - `python -c "import secrets, base64; print('secret.key=', base64.urlsafe_b64encode(secrets.token_bytes(32)).decode())"`
+   - `python -c "import secrets; print('secret_v2.key=', secrets.token_hex(64))"`
 4. Write new values into `config/secret.key` and `config/secret_v2.key`.
 5. Restart RoboDJ and verify authentication/encryption-dependent features.
 6. Invalidate any sessions/tokens derived from old keys (if applicable).
