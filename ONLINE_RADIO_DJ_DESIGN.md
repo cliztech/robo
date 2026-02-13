@@ -986,19 +986,39 @@ Use `frontend_status_response` as the only source for operational status shown t
 
 ## 8. Implementation Plan
 
-### Phase 1: Core Engine (MVP)
--   [ ] Python script to generate a single "Show" (MP3 file) from a list of songs.
--   [ ] Basic LLM integration to announce song titles.
--   [ ] Simple crossfade mixing.
+This section is the **Implementation Plan artifact** and should be completed before execution begins.
 
-### Phase 2: Streaming & Scheduling
--   [ ] Implement Shoutcast/Icecast server connection.
--   [ ] Build the "Clock Wheel" scheduler logic.
--   [ ] Real-time weather/time injection.
+### 8.1 Architecture Review Summary (Required)
 
-### Phase 3: Web Integration
--   [ ] Admin Dashboard for uploading tracks and configuring DJ.
--   [ ] Public Player with "Now Playing" data.
+- **Backend boundary:** FastAPI service owns scheduler, content management, and agent orchestration.
+- **Audio boundary:** FFmpeg/Liquidsoap pipeline owns render, transitions, and stream output.
+- **Frontend boundary:** Next.js dashboard/studio/player consumes contract-validated APIs.
+- **Data contract boundary:** `schemas/source/contracts_source.json` remains the source of truth for payload shape.
+
+### 8.2 Execution Plan (Stage-Gated)
+
+#### Phase 1 — Core Engine (MVP)
+- [ ] Render a single show output from a deterministic song list.
+- [ ] Generate host links via LLM with station-safe prompt templates.
+- [ ] Apply baseline transitions (crossfade + hard-cut fallback).
+
+#### Phase 2 — Streaming & Scheduling
+- [ ] Connect playout output to Icecast/HLS delivery path.
+- [ ] Implement clock-wheel scheduling with timezone + DST policy handling.
+- [ ] Inject contextual segments (time/weather/IDs) through scheduler hooks.
+
+#### Phase 3 — Web Integration
+- [ ] Deliver dashboard flows for track ingest and host/persona configuration.
+- [ ] Expose now-playing and queue telemetry for public player experience.
+
+### 8.3 Approval Gate (Required Before Implementation)
+
+Mark all items before code execution:
+
+- [ ] Architecture review completed.
+- [ ] Markdown plan reviewed for sequencing and dependencies.
+- [ ] Risks and out-of-scope items documented.
+- [ ] **Execution approved.**
 
 ## 9. Technology Stack Recommendations
 -   **Language**: Python 3.11+ (Backend), TypeScript (Frontend).
