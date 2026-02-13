@@ -24,6 +24,20 @@ and dual-time local+UTC presentation requirements in `ONLINE_RADIO_DJ_DESIGN.md`
 | `schema_version` | integer | Yes | Must be exactly `2`. |
 | `schedules` | array | Yes | List of schedule records. |
 
+## TODO Roadmap Gates
+
+- [ ] Document canonical schedule entities:
+  - show block
+  - override
+  - template
+  - conflict type
+- [ ] Finalize validation rules and edge cases:
+  - overnight rollover handling
+  - holiday override precedence and fallback behavior
+- [ ] Add schema versioning guidance with a migration strategy for older schedule files.
+- [ ] Mark schema freeze as a prerequisite milestone before timeline/conflict/template implementation begins.
+
+## Schedule Object (v2)
 ---
 
 ## Schedule Record Shapes
