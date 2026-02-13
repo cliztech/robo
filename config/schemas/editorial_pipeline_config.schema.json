@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robodj.local/schema/editorial_pipeline_config.schema.json",
+  "title": "RoboDJ editorial pipeline configuration",
+  "type": "object",
+  "properties": {
+    "sources": {
+      "type": "object",
+      "properties": {
+        "weather": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "endpoint": { "type": "string" },
+            "headers": { "type": "object" }
+          },
+          "required": ["enabled", "endpoint", "headers"],
+          "additionalProperties": false
+        },
+        "news": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "endpoint": { "type": "string" },
+            "headers": { "type": "object" }
+          },
+          "required": ["enabled", "endpoint", "headers"],
+          "additionalProperties": false
+        },
+        "trends": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "endpoint": { "type": "string" },
+            "headers": { "type": "object" }
+          },
+          "required": ["enabled", "endpoint", "headers"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["weather", "news", "trends"],
+      "additionalProperties": false
+    },
+    "ranking": {
+      "type": "object",
+      "properties": {
+        "weights": {
+          "type": "object",
+          "properties": {
+            "relevance": { "type": "number", "minimum": 0, "maximum": 1 },
+            "freshness": { "type": "number", "minimum": 0, "maximum": 1 },
+            "safety": { "type": "number", "minimum": 0, "maximum": 1 }
+          },
+          "required": ["relevance", "freshness", "safety"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["weights"],
+      "additionalProperties": false
+    },
+    "insertion_rules": {
+      "type": "object",
+      "properties": {
+        "thresholds": {
+          "type": "object",
+          "properties": {
+            "emergency_min_rank": { "type": "number", "minimum": 0, "maximum": 1 },
+            "top_of_hour_min_rank": { "type": "number", "minimum": 0, "maximum": 1 },
+            "mid_break_min_rank": { "type": "number", "minimum": 0, "maximum": 1 }
+          },
+          "required": ["emergency_min_rank", "top_of_hour_min_rank", "mid_break_min_rank"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["thresholds"],
+      "additionalProperties": false
+    },
+    "attribution": {
+      "type": "object",
+      "properties": {
+        "require_source_attribution": { "type": "boolean" },
+        "confidence_disclaimers": {
+          "type": "object",
+          "properties": {
+            "low": { "type": "string" },
+            "medium": { "type": "string" },
+            "high": { "type": "string" }
+          },
+          "required": ["low", "medium", "high"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["require_source_attribution", "confidence_disclaimers"],
+      "additionalProperties": false
+    },
+    "format": {
+      "type": "object",
+      "properties": {
+        "quiet_mode": { "type": "boolean" },
+        "quiet_mode_description": { "type": "string" }
+      },
+      "required": ["quiet_mode", "quiet_mode_description"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["sources", "ranking", "insertion_rules", "attribution", "format"],
+  "additionalProperties": false
+}

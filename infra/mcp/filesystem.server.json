@@ -1,0 +1,16 @@
+{
+  "id": "filesystem",
+  "name": "Filesystem MCP Server",
+  "transport": "stdio",
+  "package": "@modelcontextprotocol/server-filesystem",
+  "runtime": "npx",
+  "args": [
+    "-y",
+    "@modelcontextprotocol/server-filesystem",
+    "/workspace/robo/config",
+    "/workspace/robo/infra",
+    "/workspace/robo/skills"
+  ],
+  "capabilities": ["tools", "resources"],
+  "purpose": "Scoped file access for config, MCP, and skill metadata"
+}

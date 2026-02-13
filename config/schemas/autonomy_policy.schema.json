@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robodj.local/schema/autonomy_policy.schema.json",
+  "title": "RoboDJ autonomy policy configuration",
+  "type": "object",
+  "properties": {
+    "station_default_mode": {
+      "type": "string",
+      "enum": ["manual", "assisted", "autonomous"]
+    },
+    "mode_permissions": {
+      "type": "object",
+      "properties": {
+        "manual": {
+          "type": "object",
+          "properties": {
+            "track_selection": { "type": "string", "enum": ["human_only", "human_with_ai_assist", "ai_with_human_approval", "ai_autonomous"] },
+            "script_generation": { "type": "string", "enum": ["human_only", "human_with_ai_assist", "ai_with_human_approval", "ai_autonomous"] },
+            "voice_persona_selection": { "type": "string", "enum": ["human_only", "human_with_ai_assist", "ai_with_human_approval", "ai_autonomous"] },
+            "caller_simulation_usage": { "type": "string", "enum": ["human_only", "human_with_ai_assist", "ai_with_human_approval", "ai_autonomous"] },
+            "breaking_news_weather_interruption": { "type": "string", "enum": ["human_only", "human_with_ai_assist", "ai_with_human_approval", "ai_autonomous"] }
+          },
+          "required": [
+            "track_selection",
+            "script_generation",
+            "voice_persona_selection",
+            "caller_simulation_usage",
+            "breaking_news_weather_interruption"
+          ],
+          "additionalProperties": false
+        },
+        "assisted": {
+          "type": "object",
+          "properties": {
+            "track_selection": { "type": "string", "enum": ["human_only", "human_with_ai_assist", "ai_with_human_approval", "ai_autonomous"] },
+            "script_generation": { "type": "string", "enum": ["human_only", "human_with_ai_assist", "ai_with_human_approval", "ai_autonomous"] },
+            "voice_persona_selection": { "type": "string", "enum": ["human_only", "human_with_ai_assist", "ai_with_human_approval", "ai_autonomous"] },
+            "caller_simulation_usage": { "type": "string", "enum": ["human_only", "human_with_ai_assist", "ai_with_human_approval", "ai_autonomous"] },
+            "breaking_news_weather_interruption": { "type": "string", "enum": ["human_only", "human_with_ai_assist", "ai_with_human_approval", "ai_autonomous"] }
+          },
+          "required": [
+            "track_selection",
+            "script_generation",
+            "voice_persona_selection",
+            "caller_simulation_usage",
+            "breaking_news_weather_interruption"
+          ],
+          "additionalProperties": false
+        },
+        "autonomous": {
+          "type": "object",
+          "properties": {
+            "track_selection": { "type": "string", "enum": ["human_only", "human_with_ai_assist", "ai_with_human_approval", "ai_autonomous"] },
+            "script_generation": { "type": "string", "enum": ["human_only", "human_with_ai_assist", "ai_with_human_approval", "ai_autonomous"] },
+            "voice_persona_selection": { "type": "string", "enum": ["human_only", "human_with_ai_assist", "ai_with_human_approval", "ai_autonomous"] },
+            "caller_simulation_usage": { "type": "string", "enum": ["human_only", "human_with_ai_assist", "ai_with_human_approval", "ai_autonomous"] },
+            "breaking_news_weather_interruption": { "type": "string", "enum": ["human_only", "human_with_ai_assist", "ai_with_human_approval", "ai_autonomous"] }
+          },
+          "required": [
+            "track_selection",
+            "script_generation",
+            "voice_persona_selection",
+            "caller_simulation_usage",
+            "breaking_news_weather_interruption"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": ["manual", "assisted", "autonomous"],
+      "additionalProperties": false
+    },
+    "show_overrides": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "show_id": { "type": "string" },
+          "mode": { "type": "string", "enum": ["manual", "assisted", "autonomous"] }
+        },
+        "required": ["show_id", "mode"],
+        "additionalProperties": false
+      }
+    },
+    "timeslot_overrides": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "day_of_week": {
+            "type": "string",
+            "enum": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+          },
+          "start_time": { "type": "string", "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$" },
+          "end_time": { "type": "string", "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$" },
+          "mode": { "type": "string", "enum": ["manual", "assisted", "autonomous"] }
+        },
+        "required": ["id", "day_of_week", "start_time", "end_time", "mode"],
+        "additionalProperties": false
+      }
+    },
+    "conflict_resolution": {
+      "type": "string",
+      "enum": ["timeslot_override > show_override > station_default"]
+    },
+    "updated_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+    }
+  },
+  "required": [
+    "station_default_mode",
+    "mode_permissions",
+    "show_overrides",
+    "timeslot_overrides",
+    "conflict_resolution",
+    "updated_at"
+  ],
+  "additionalProperties": false
+}

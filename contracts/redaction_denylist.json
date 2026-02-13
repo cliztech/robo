@@ -1,0 +1,27 @@
+{
+  "sensitive_keys": [
+    "api_key",
+    "openai_api_key",
+    "openrouter_api_key",
+    "weatherapi_key",
+    "elevenlabs_api_key",
+    "token",
+    "secret",
+    "secret_key",
+    "secret_key_path",
+    "secret_v2_key_path",
+    "password",
+    "signing_key",
+    "private_key"
+  ],
+  "sensitive_path_fragments": [
+    "config/secret.key",
+    "config/secret_v2.key",
+    "settings.db",
+    "user_content.db",
+    "config/backups",
+    "config/cache",
+    "C:/",
+    "\\\\"
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robodj.local/contracts/internal_config.schema.json",
+  "title": "internal_config",
+  "description": "Desktop/runtime-only configuration contract. This schema includes sensitive values and internal key paths that must never be sent to the web frontend.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "runtime",
+    "integrations",
+    "security",
+    "storage"
+  ],
+  "properties": {
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instance_id",
+        "host_os",
+        "machine_profile"
+      ],
+      "properties": {
+        "instance_id": { "type": "string" },
+        "host_os": { "type": "string" },
+        "machine_profile": { "type": "string" }
+      }
+    },
+    "integrations": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "openai_api_key": { "type": "string" },
+        "openrouter_api_key": { "type": "string" },
+        "weatherapi_key": { "type": "string" },
+        "elevenlabs_api_key": { "type": "string" }
+      }
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "secret_key_path",
+        "secret_v2_key_path"
+      ],
+      "properties": {
+        "secret_key_path": { "type": "string" },
+        "secret_v2_key_path": { "type": "string" },
+        "signing_key": { "type": "string" }
+      }
+    },
+    "storage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "settings_db_path",
+        "user_content_db_path"
+      ],
+      "properties": {
+        "settings_db_path": { "type": "string" },
+        "user_content_db_path": { "type": "string" },
+        "logs_directory": { "type": "string" },
+        "cache_directory": { "type": "string" }
+      }
+    }
+  }
+}
