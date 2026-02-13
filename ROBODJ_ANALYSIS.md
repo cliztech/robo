@@ -45,11 +45,11 @@ RoboDJ is a Windows desktop automation tool designed to generate AI-hosted voice
 
 ## 4. Key Configurations
 
-### Secrets Handling
-- `config/secret.key` and `config/secret_v2.key` are local runtime secrets and must never be committed.
-- Provision secrets out-of-band for each environment (for example: secret manager, deployment variable injection, or secure manual bootstrap).
-- If a key is exposed in git history, rotate/regenerate it immediately and redeploy updated values to every environment.
-- Use `config/secret.key.example` as a template only; it must not contain real key material.
+-   **Secrets Handling**:
+    -   `config/secret.key` and `config/secret_v2.key` are local runtime secrets and must never be committed.
+    -   Provision secrets out-of-band for each environment (for example: secret manager, deployment variable injection, or secure manual bootstrap).
+    -   If a key is exposed in git history, rotate/regenerate it immediately and redeploy updated values to every environment.
+    -   Use `config/secret.key.example` as a template only; it must not contain real key material.
 
 -   **Freshness**: "Script Freshness" settings to prevent repetitive content.
 -   **Banned Words**: Filter to ensure FCC compliance or brand safety.
