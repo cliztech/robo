@@ -41,7 +41,7 @@ Success criteria:
 
 ## 3. System Architecture (React)
 
-###+ Folder Structure
+### Folder Structure
 ```txt
 src/
   app/
