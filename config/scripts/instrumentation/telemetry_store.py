@@ -56,6 +56,8 @@ def insert_playout_decision(db_path: Path, payload: Dict[str, Any]) -> int:
 
 
 def insert_system_event(db_path: Path, payload: Dict[str, Any]) -> int:
+    # TODO(observability): enforce event_name/event_version/component/correlation_id
+    # fields from docs/scheduling_alert_events.md before writing scheduler events.
     sql = """
     INSERT INTO system_events (
         event_ts,
@@ -265,6 +267,8 @@ def build_parser() -> argparse.ArgumentParser:
     event_p.add_argument("--event-type", required=True)
     event_p.add_argument("--severity", default="info")
     event_p.add_argument("--metadata-json", default="{}")
+    # TODO(observability): add --event-version/--component/--correlation-id flags and
+    # normalize levels to debug|info|warning|error|critical for alert routing.
 
     transition_p = sub.add_parser("log-transition", help="Log transition quality")
     transition_p.add_argument("--scored-ts", required=True)

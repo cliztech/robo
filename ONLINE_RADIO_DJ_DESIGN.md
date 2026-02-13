@@ -62,6 +62,37 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
     -   *Artist Separation*: "Don't play the same artist within 60 minutes."
     -   *Tempo Flow*: "Gradually increase BPM from 6 PM to 9 PM."
 
+#### Scheduler UX Contracts (Dashboard + Studio)
+-   **Drag/drop snap granularity**:
+    -   Primary scheduler grid interval is 15 minutes.
+    -   Fine adjustment mode supports 5-minute snapping while modifier key is held.
+    -   Resize handles and keyboard nudges inherit the active snap interval.
+-   **Overlap/conflict visualization (color and icon states)**:
+    -   `state=clear`: default block color, no icon.
+    -   `state=warning`: amber/yellow accent + warning-triangle icon for rule risk (e.g., artist separation).
+    -   `state=error`: red accent/fill + error-octagon icon for hard collisions (overlapping airtime).
+    -   Tooltip and side-panel diagnostics must include machine-readable conflict code and one-click resolution actions.
+-   **Keyboard operations for accessibility**:
+    -   Arrow keys move selected block by one snap unit.
+    -   `Shift+Arrow` resizes block duration by one snap unit.
+    -   `Ctrl/Cmd+C`, `Ctrl/Cmd+V`, `Ctrl/Cmd+D`, `Delete/Backspace`, `Ctrl/Cmd+Z`, and redo shortcuts are required and discoverable in command hints.
+    -   Full timeline interaction must be operable without mouse, with visible focus ring and ARIA announcements for move/resize/conflict changes.
+-   **Undo/redo behavior**:
+    -   Command-stack history records all timeline mutations: move, resize, split, merge, delete, template apply, and paste.
+    -   Undo and redo restore prior selection and viewport anchor when feasible.
+    -   Publish endpoint rejects requests while client has unresolved optimistic history operations.
+-   **Multi-select and copy/paste patterns**:
+    -   Multi-select supports `Shift+Click` range selection, `Ctrl/Cmd+Click` additive selection, and lasso selection.
+    -   Copy/paste preserves relative temporal offsets and assigned metadata unless overridden by paste options.
+    -   Paste executes in two-phase mode: preview placement -> confirm commit, with conflicts visualized pre-commit.
+
+#### Acceptance Criteria (Performance + Safety)
+-   Conflict recomputation + repaint completes within 200 ms p95 for drag, resize, and paste operations at typical weekly view density.
+-   Common collision resolution path (open suggestion, apply fix, verify clear) completes in <=3 user actions.
+-   Publish preflight fails hard on unresolved `state=error` conflicts and lists blocking items.
+-   Publish preflight warns on `state=warning` items and requires explicit acknowledgement.
+-   Error-prevention controls must reduce accidental destructive actions through confirmations and guaranteed undo coverage for edit commands.
+
 ### 3.3. Streaming Server
 *The "Mouth" that broadcasts to the world.*
 
@@ -626,6 +657,43 @@ Optional-but-recommended metadata for discovery/player UX: `isrc`, `label`, `art
   - `waveform_url` for waveform rendering
   - explicit badge based on `is_explicit` / `content_rating`
 
+#### UI Spec: Queue Rows with Waveform Mini-Visuals
+
+- Every queue row representing `item_type = track` should render a compact waveform strip sourced from `waveform_url`.
+- Waveform strip should be visually lightweight (single-row sparkline style) and remain readable at dense list heights.
+- If `waveform_url` is absent, fallback to a neutral placeholder bar set; do not leave the area blank.
+- Hover/focus state should reveal a tooltip with `title`, `artist`, `duration`, and a short QA summary (`integrated_lufs`, `true_peak_dbtp`).
+- Current `playing` row should animate the waveform playhead to communicate progress while preserving table performance.
+
+#### UI Spec: Artwork-First Now-Playing Tile
+
+- The now-playing card should prioritize a large cover-art panel from `artwork_url` as the primary visual anchor.
+- Overlay text stack should include: `title`, `artist`, and optional `label` / `release_date` metadata.
+- If `artwork_url` is unavailable, use station branding fallback from `StationConfig.branding` and still preserve layout proportions.
+- Secondary metadata rail should show codec/format context (`codec`, `sample_rate_hz`, `bitrate_kbps`) to support high-information cards.
+- The tile should support a compact mode (studio side panel) and expanded mode (public player hero) with the same field contract.
+
+#### UI Spec: Explicit + Content Badges
+
+- Badge logic should map from compliance metadata:
+  - `content_rating = explicit` or `is_explicit = true` => prominent **Explicit** badge.
+  - `content_rating = radio_edit` => **Radio Edit** badge.
+  - `content_rating = clean` => optional subdued **Clean** badge.
+- Badges should appear in queue rows, now-playing tile, and track detail drawers for consistent moderation signaling.
+- Badge color tokens should encode urgency/accessibility contrast, with explicit content always visually dominant over non-critical tags.
+
+#### UI Spec: Loudness + Quality Indicators (QA Metrics)
+
+- Frontend should render compact QA chips sourced directly from:
+  - `integrated_lufs` (program loudness)
+  - `true_peak_dbtp` (peak headroom)
+- Suggested display states:
+  - **In spec**: `integrated_lufs` in `[-16, -12]` and `true_peak_dbtp <= -1.0`
+  - **Warning**: values present but outside policy range
+  - **Missing QA**: one or both metrics absent
+- QA chips should be visible in admin track tables and optional in listener-facing cards where quality transparency is desired.
+- Tooltip copy should explain why tracks with out-of-range metrics may fail `ingestion_status = schedulable`.
+
 ### BroadcastQueue
 ```json
 {
@@ -848,6 +916,27 @@ Recommended cache keys:
 - `['station', station_id, 'queue']`
 - `['station', station_id, 'schedule', date]`
 - `['station', station_id, 'prompts']`
+
+### 6.1 Frontend status UX display rules
+
+Use `frontend_status_response` as the only source for operational status shown to dashboard users.
+
+- **Banner severity mapping**
+  - `service_status = healthy` -> no persistent outage banner; allow subtle success styling only.
+  - `service_status = degraded` -> warning banner (`amber`) with `status_message` if present.
+  - `service_status = offline` -> critical banner (`red`) with fallback copy when `status_message` is absent.
+- **Inline badge behavior**
+  - Show a compact status badge in queue/now-playing panels using `service_status` color semantics.
+  - Append a humanized staleness suffix when `data_freshness_seconds` is present (for example, `updated 45s ago`).
+  - If `degraded_reason_code` is present, show a tooltip/secondary label from a frontend-owned lookup table (never raw internal error text).
+- **Retry CTA visibility**
+  - Show `Retry now` CTA for `degraded` and `offline` states.
+  - If `next_retry_at` is present and in the future, disable CTA and show countdown/next-at helper text.
+  - Keep CTA hidden for `healthy` unless manual refresh is enabled globally.
+- **Frontend safety requirements**
+  - Treat `status_message` and `degraded_reason_code` as pre-sanitized, user-visible fields only; they must not include stack traces, hostnames, credential fragments, or provider-specific incident IDs.
+  - Do not infer internal system topology from status responses; only render explicitly provided fields.
+  - Unknown `degraded_reason_code` values should degrade gracefully to generic copy (no debug fallback text).
 
 ## 7. Dashboard action-to-permission matrix
 
