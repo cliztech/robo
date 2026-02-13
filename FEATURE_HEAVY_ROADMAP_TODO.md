@@ -124,6 +124,7 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 ### Dependencies
 - Requires consistent config schema definitions.
 - Backup path conventions in `config/backups/`.
+- Backup/restore behavior must follow `config/BACKUP_RESTORE_CONTRACT.md`.
 
 ### Exit criteria
 - Operator can recover from a bad config change in under 2 minutes.
