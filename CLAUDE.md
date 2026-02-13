@@ -15,7 +15,7 @@ This repository appears to be a distribution or installation directory for **Rob
 
 Since this is a compiled distribution, there are no build or test commands.
 
-- **Run Application**: `.\RoboDJ_Launcher.bat` (Recommended, ensures Admin privileges)
+- **Run Application**: `.\RoboDJ_Launcher.bat` (Recommended, ensures Admin privileges and uses relative path resolution so it remains portable across install locations)
 - **Run Directly**: `.\RoboDJ Automation.exe`
 
 ## Architecture & Structure

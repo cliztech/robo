@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robodj.local/contracts/frontend_responses/frontend_config_response.schema.json",
+  "title": "frontend_config_response",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["config", "generated_at"],
+  "properties": {
+    "config": {
+      "$ref": "../public_frontend_config.schema.json"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}
