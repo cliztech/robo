@@ -35,6 +35,21 @@
         }
       }
     },
+    "status_message": {
+      "type": "string",
+      "maxLength": 160,
+      "description": "Optional operator-approved message safe for direct UI display. Must not include internal diagnostics, stack traces, or secret identifiers."
+    },
+    "degraded_reason_code": {
+      "type": "string",
+      "enum": [
+        "upstream_latency",
+        "content_backlog",
+        "scheduled_maintenance",
+        "partial_outage"
+      ],
+      "description": "Optional frontend-safe reason code for degraded/offline states."
+    },
     "queue_depth": {
       "type": "object",
       "additionalProperties": false,
@@ -167,6 +182,17 @@
       "type": "string",
       "enum": ["healthy", "degraded", "offline"],
       "deprecated": true
+    },
+    "data_freshness_seconds": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 86400,
+      "description": "Optional staleness indicator for currently displayed status data."
+    },
+    "next_retry_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Optional ISO-8601 timestamp indicating when the frontend should try refreshing status again."
     },
     "last_rotation_at": {
       "type": "string",
