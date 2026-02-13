@@ -8,14 +8,13 @@ DENYLIST_PATH = CONTRACTS_DIR / "redaction_denylist.json"
 
 
 def flatten_json(value, path="$"):
-    nodes = [(path, value)]
+    yield path, value
     if isinstance(value, dict):
         for key, child in value.items():
-            nodes.extend(flatten_json(child, f"{path}.{key}"))
+            yield from flatten_json(child, f"{path}.{key}")
     elif isinstance(value, list):
         for index, child in enumerate(value):
-            nodes.extend(flatten_json(child, f"{path}[{index}]"))
-    return nodes
+            yield from flatten_json(child, f"{path}[{index}]")
 
 
 def main():
