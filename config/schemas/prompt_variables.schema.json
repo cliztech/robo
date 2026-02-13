@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robodj.local/schema/prompt_variables.schema.json",
+  "title": "RoboDJ prompt variables configuration",
+  "type": "object",
+  "properties": {
+    "custom_variables": {
+      "type": "object",
+      "additionalProperties": {
+        "anyOf": [
+          { "type": "string" },
+          { "type": "number" },
+          { "type": "boolean" }
+        ]
+      }
+    },
+    "variable_settings": {
+      "type": "object",
+      "properties": {
+        "custom_variables_override_builtin": { "type": "boolean" },
+        "missing_variable_behavior": {
+          "type": "string",
+          "enum": ["empty_string", "leave_placeholder", "error"]
+        },
+        "filter_artist_parentheses": { "type": "boolean" },
+        "filter_title_parentheses": { "type": "boolean" }
+      },
+      "required": [
+        "custom_variables_override_builtin",
+        "missing_variable_behavior",
+        "filter_artist_parentheses",
+        "filter_title_parentheses"
+      ],
+      "additionalProperties": false
+    },
+    "time_variable_configs": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "format": { "type": "string" },
+          "timezone": { "type": "string" },
+          "locale": { "type": "string" }
+        },
+        "required": ["format"],
+        "additionalProperties": false
+      }
+    },
+    "version": { "type": "string" }
+  },
+  "required": [
+    "custom_variables",
+    "variable_settings",
+    "time_variable_configs",
+    "version"
+  ],
+  "additionalProperties": false
+}

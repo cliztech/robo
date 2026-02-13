@@ -1,0 +1,45 @@
+{
+  "weather": [
+    {
+      "headline": "Severe thunderstorm warning issued for downtown corridor",
+      "source": "NOAA",
+      "timestamp": "2026-02-12T17:05:00Z",
+      "confidence": 0.94,
+      "locality": "Metro City",
+      "relevance": 0.95,
+      "severity": "severe",
+      "emergency": true
+    }
+  ],
+  "news": [
+    {
+      "title": "City transit adds late-night trains for weekend events",
+      "source": "City Desk",
+      "published_at": "2026-02-12T15:45:00Z",
+      "confidence": 0.86,
+      "locality": "Metro City",
+      "relevance": 0.74,
+      "safety_score": 0.99
+    },
+    {
+      "title": "Unverified social post claims stadium closure",
+      "source": "Social Feed",
+      "published_at": "2026-02-12T16:20:00Z",
+      "confidence": 0.43,
+      "locality": "Metro City",
+      "relevance": 0.58,
+      "safety_score": 0.35
+    }
+  ],
+  "trends": [
+    {
+      "topic": "#SunsetSessions trending after artist pop-up",
+      "source": "TrendPulse",
+      "timestamp": "2026-02-12T16:50:00Z",
+      "confidence": 0.7,
+      "locality": "online",
+      "relevance": 0.5,
+      "safety_score": 0.9
+    }
+  ]
+}
