@@ -87,7 +87,7 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
   - `completion_rate` (number `0.0-1.0`)
 
 #### Validation rules
-- `id` must match UUID format: `^[0-9a-fA-F-]{36}$`
+- `id` must match UUID format: `^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$`
 - `file_path` must match one of:
   - local/relative path: `^(?:[A-Za-z]:\\|/|\./|\../).+`
   - object/blob URI: `^(?:s3|gs|azure|https?)://.+`
