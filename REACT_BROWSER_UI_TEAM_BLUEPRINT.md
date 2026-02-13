@@ -104,6 +104,10 @@ src/
 
 ## 4. Component Contracts
 
+### Interaction Specs
+- Command palette + shortcut architecture: `docs/command_palette_and_shortcuts_spec.md`
+
+
 ### `AppShell`
 Purpose: structural frame for all core navigation and content.
 
