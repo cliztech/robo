@@ -84,7 +84,7 @@ def write_json_schemas(source: dict[str, Any]) -> None:
             "$schema": "https://json-schema.org/draft/2020-12/schema",
             "$id": f"https://robodj/contracts/{name}.schema.json",
             "title": to_pascal_case(name),
-            "description": entity["description"],
+            "description": entity.get("description", ""),
             "type": "object",
             "additionalProperties": False,
             "properties": {},
