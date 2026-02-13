@@ -7,11 +7,34 @@
   "required": ["config", "generated_at"],
   "properties": {
     "config": {
-      "$ref": "../public_frontend_config.schema.json"
+      "$ref": "../public_frontend_config.schema.json",
+      "description": "Frontend-safe runtime config payload, including optional appearance controls under config.ui (theme, accent_color, density, font_scale, surface_style)."
     },
     "generated_at": {
       "type": "string",
       "format": "date-time"
     }
-  }
+  },
+  "examples": [
+    {
+      "generated_at": "2026-01-01T00:00:00Z",
+      "config": {
+        "station": {
+          "display_name": "RoboDJ",
+          "time_zone": "UTC"
+        },
+        "ui": {
+          "theme": "auto",
+          "accent_color": "#2AA9FF",
+          "density": "comfortable",
+          "font_scale": 1,
+          "surface_style": "elevated"
+        },
+        "features": {
+          "enable_request_queue": true,
+          "enable_now_playing": true
+        }
+      }
+    }
+  ]
 }
