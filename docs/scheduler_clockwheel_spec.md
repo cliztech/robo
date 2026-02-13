@@ -107,6 +107,57 @@ The scheduler should map local time to daypart templates, each with distinct wei
 - Permit larger transitions at ad-break exits or top-of-hour resets.
 - Apply daypart energy curves (higher mornings/evenings, smoother overnight).
 
+## 6) Drag/Drop Scheduling Interaction Model
+
+### Pointer interaction pattern
+
+- **Move block**: click-drag a block body along the timeline; snap to configured grid (default 5 seconds).
+- **Resize block**: drag leading/trailing handles; respect `min_duration_sec` / `max_duration_sec`.
+- **Multi-select move**: Shift+drag grouped blocks when preserving relative offsets is required.
+- **Drop commit**: release pointer to stage a change; final persistence still requires explicit save/publish action.
+
+### Real-time validation during drag (required)
+
+Validation MUST run continuously while moving/resizing, not only on save:
+
+1. Recompute impacted block windows on every drag frame (or throttled interval <= 100 ms).
+2. Highlight all impacted blocks immediately.
+3. Show inline conflict card with one-click suggestions.
+4. Show consequence preview before accepting a suggestion or committing drop.
+
+### Conflict classes and inline UI treatment
+
+| Conflict class | Trigger condition | Inline treatment | One-click fix examples | Consequence preview content |
+|---|---|---|---|---|
+| `overlap` | Two blocks occupy same time range. | Both blocks outlined red; overlap segment hatched; timeline gutter marker. | Shift moved block after nearest hard block; compress flexible block within limits. | Net hour drift, downstream shifts, any new overlaps introduced. |
+| `missing_legal_id_window` | Legal ID no longer falls inside allowed top-of-hour window. | Legal ID block turns red with compliance badge; top-of-hour region highlighted. | Pin legal ID to nearest legal slot; auto-shift adjacent non-hard block. | Compliance status before/after and affected neighboring offsets. |
+| `incompatible_show_preset` | Moved block violates selected show/daypart preset (type/order/slot). | Block outlined amber/red; preset rule tooltip shown inline. | Convert block to preset-compatible type; move block to nearest allowed slot. | Preset conformance delta and any required type substitutions. |
+| `ad_quota_breach` | Hour/day ad load exceeds quota after move/resize. | Ad blocks and quota meter highlighted red; deficit/excess shown in sidebar. | Trim break to quota-safe duration; move surplus ad inventory to next eligible hour. | Quota delta, make-good requirement, revenue-risk indicator. |
+
+### Keyboard-equivalent accessibility interactions
+
+Keyboard paths MUST provide parity with pointer workflows:
+
+- **Move block**: focus block, `Alt+Left/Right` to move by snap increment; `Shift+Alt+Left/Right` for larger step (e.g., 30 sec).
+- **Resize block**: `Alt+[` shrink start / `Alt+]` extend end; with `Shift` for larger increments.
+- **Inspect conflict**: `Ctrl+I` opens conflict panel for focused block and cycles detected conflicts.
+- **Apply suggestion**: `Ctrl+.` applies highlighted recommendation; `Ctrl+,` cycles available suggestions.
+
+Each keyboard operation should announce updates via ARIA live region (e.g., "Overlap error introduced with ad break at 00:20").
+
+### Suggestion and preview behavior
+
+- Suggestions should be ranked safe-first: preserve compliance, then ad quota, then aesthetic preferences.
+- Selecting a suggestion should open a lightweight before/after preview showing timeline offsets and rule status deltas.
+- Users should be able to apply a suggestion in one action from inline card, conflict drawer, or keyboard shortcut.
+
+## 7) Scheduling UX Success Metrics
+
+Track these outcomes after rollout:
+
+- **Reduced scheduling time**: median time to construct and finalize one hour of programming decreases by at least 20%.
+- **Reduced publish-time conflicts**: number of conflicts first discovered at publish time decreases by at least 50%.
+
 ---
 
 ## Proposed `schedules.json` Schema v2
