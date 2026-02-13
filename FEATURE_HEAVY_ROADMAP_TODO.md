@@ -191,6 +191,13 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 - [ ] Surface conflict objects inline with fix actions from backend response.
 - [ ] Add keyboard parity for move/resize/resolve actions in timeline editor.
 
+#### Scoped UI tasks (post-foundation sequencing)
+1. Build read-only week timeline shell fed by normalized `timeline_blocks` from `/api/v1/scheduler-ui/state`.
+2. Add drag/resize interactions with 15-minute snap and 5-minute modifier, then wire live `/validate` calls.
+3. Render conflict lane states mapped to normalized backend conflict types and suggestion actions.
+4. Add publish preflight panel using `/publish` and blocking conflict details.
+5. Add keyboard parity for move/resize/conflict resolution against the same normalized block model.
+
 ### Should
 - [ ] Holiday and special-event override calendar **(M)**
 - [ ] Per-show profile presets (voice, pacing, bed defaults) **(M)**
