@@ -16,10 +16,10 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 **Goal:** make daily operation safer and easier to recover.
 
 ### Must
-- [ ] Startup diagnostics panel (DB checks, key checks, audio device checks) **(M)**
-- [ ] Config validator on launch for `schedules.json` and `prompt_variables.json` **(M)**
-- [ ] Crash-recovery flow with “restore last known good config” **(M)**
-- [ ] One-click config backup snapshot (timestamped) **(S)**
+- [x] Startup diagnostics panel (DB checks, key checks, audio device checks) **(M)**
+- [x] Config validator on launch for `schedules.json` and `prompt_variables.json` **(M)**
+- [x] Crash-recovery flow with “restore last known good config” **(M)**
+- [x] One-click config backup snapshot (timestamped) **(S)**
 
 ### Should
 - [ ] Structured log viewer (ERROR/WARN/INFO + date filter) **(M)**
@@ -35,6 +35,10 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 ### Exit criteria
 - Operator can recover from a bad config change in under 2 minutes.
 - Invalid JSON/config references are blocked before runtime failures.
+
+### Implementation acceptance criteria
+- Launch sequence fails closed when `config/schedules.json` or `config/prompt_variables.json` fails validation.
+- Latest `config/backups/config_snapshot_YYYYMMDD_HHMMSS/` can be restored via one command in under 2 minutes.
 
 ---
 
