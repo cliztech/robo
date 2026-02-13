@@ -90,7 +90,7 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
   },
   "live_status": "live",
   "now_playing": {
-    "id": "uuid",
+    "id": "trk_...",
     "title": "Neon Nights",
     "artist": "AI Synthwave Collective",
     "started_at": "2023-10-27T14:00:00Z",
