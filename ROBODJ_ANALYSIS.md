@@ -47,3 +47,17 @@ RoboDJ is a Windows desktop automation tool designed to generate AI-hosted voice
 -   **Freshness**: "Script Freshness" settings to prevent repetitive content.
 -   **Banned Words**: Filter to ensure FCC compliance or brand safety.
 -   **Scheduling**: Time-based logic for different prompts (Morning Show vs. Late Night).
+
+## 5. End-to-End Instrumentation Layer
+A new telemetry package is available at `config/scripts/instrumentation/` to operationalize playout observability around the compiled app.
+
+### Instrumentation Features
+- Logs every playout decision including `decision_inputs_json` and `selected_rule_path`.
+- Tracks dead-air incidents, fallback usage, script rejection outcomes, transition quality, and per-daypart repetition score.
+- Provides operator dashboard data views:
+  - `live_queue_health`
+  - `ai_confidence_trend`
+  - `persona_activity`
+  - `ad_delivery_completion`
+- Supports minute-level timeline lookups for “what happened on-air at minute X”.
+- Includes SLO definitions for uptime and decision latency in `config/scripts/SLOS.md`.
