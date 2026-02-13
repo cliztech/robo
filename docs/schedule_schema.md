@@ -53,6 +53,25 @@ All schedule writes/publish operations must validate against this normalized mod
 - [ ] Add schema versioning guidance with a migration strategy for older schedule files.
 - [ ] Mark schema freeze as a prerequisite milestone before timeline/conflict/template implementation begins.
 
+## Normalized Representation (Blocks, Overrides, Templates)
+
+The backend normalizes every schedule into these entities before conflict detection:
+
+- **Template primitive**: reusable block patterns for `weekday`, `weekend`, and `overnight`.
+- **Override map**: field-level replacements (`timezone`, `ui_state`, `priority`, `start_window`, `end_window`, `content_refs`, `schedule_spec`) applied on top of template defaults.
+- **Derived timeline blocks**: deterministic `day_of_week + start_time + end_time + overnight` blocks used by conflict detection and timeline rendering.
+
+Conflict classes used by backend validation:
+
+- `duplicate_id`
+- `duplicate_name`
+- `invalid_window`
+- `overlap`
+- `ambiguous_active`
+
+Validation is fail-fast on save/publish: schedule writes are rejected when any conflict class is present.
+
+---
 ## UI Scope (post-backend foundation)
 
 Backend prerequisites are complete only when schema validation + conflict checks hard-block invalid save/publish flows.

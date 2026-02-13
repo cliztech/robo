@@ -180,6 +180,17 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 - [ ] Conflict detector with actionable suggestions **(M)**
 - [ ] Reusable schedule templates (weekday/weekend/overnight) **(M)**
 
+### Backend Foundation (v1.2 sequencing gate)
+- [x] Confirm normalized representation for schedule blocks + template overrides (`docs/schedule_schema.md`).
+- [x] Ship deterministic backend conflict detection with actionable messages.
+- [x] Ship reusable backend template primitives (`weekday`, `weekend`, `overnight`).
+- [x] Enforce schema + conflict validation before save/publish.
+
+### UI Scope (unblocked only after backend foundation)
+- [ ] Implement drag/drop weekly timeline using normalized blocks from scheduler API.
+- [ ] Surface conflict objects inline with fix actions from backend response.
+- [ ] Add keyboard parity for move/resize/resolve actions in timeline editor.
+
 ### Should
 - [ ] Holiday and special-event override calendar **(M)**
 - [ ] Per-show profile presets (voice, pacing, bed defaults) **(M)**

@@ -8,14 +8,16 @@ from zoneinfo import ZoneInfo
 
 from .schedule_conflict_detection import detect_schedule_conflicts
 from .scheduler_models import (
+    ContentRef,
     ConflictType,
     PreviewRequest,
-    ScheduleConflict,
+    ScheduleBlock,
     ScheduleEnvelope,
     ScheduleRecord,
     ScheduleSpec,
     ScheduleSpecMode,
     ScheduleSpecPreview,
+    ScheduleTemplatePrimitive,
     SchedulerUiState,
     TemplateApplyRequest,
     TemplateType,
@@ -43,20 +45,22 @@ class SchedulerUiService:
     def get_ui_state(self) -> SchedulerUiState:
         envelope = self._load_and_migrate()
         timeline = self._build_timeline_blocks(envelope.schedules)
-        conflicts = self.detect_conflicts(envelope.schedules, timeline)
+        conflicts = detect_schedule_conflicts(envelope.schedules, timeline)
         return SchedulerUiState(schedule_file=envelope, timeline_blocks=timeline, conflicts=conflicts)
 
     def update_schedules(self, schedules: list[ScheduleRecord]) -> SchedulerUiState:
         envelope = ScheduleEnvelope(schema_version=2, schedules=schedules)
         timeline = self._build_timeline_blocks(schedules)
-        conflicts = self.detect_conflicts(schedules, timeline)
-
+        conflicts = detect_schedule_conflicts(schedules, timeline)
         if conflicts:
+            messages = "; ".join(conflict.message for conflict in conflicts[:3])
+            raise ValueError(f"Cannot save schedules while conflicts exist: {messages}")
             raise ValueError(self._format_conflict_error(conflicts))
 
         self.schedules_path.write_text(envelope.model_dump_json(indent=2), encoding="utf-8")
         return SchedulerUiState(schedule_file=envelope, timeline_blocks=timeline, conflicts=[])
 
+    def validate_schedules(self, schedules: list[ScheduleRecord]):
     def publish_schedules(self, schedules: list[ScheduleRecord]) -> dict[str, object]:
         ui_state = self.update_schedules(schedules)
         return {
@@ -68,18 +72,52 @@ class SchedulerUiService:
 
     def validate_schedules(self, schedules: list[ScheduleRecord]) -> list[ScheduleConflict]:
         timeline = self._build_timeline_blocks(schedules)
-        return self.detect_conflicts(schedules, timeline)
+        return detect_schedule_conflicts(schedules, timeline)
+
+    def template_primitives(self) -> dict[TemplateType, ScheduleTemplatePrimitive]:
+        return {
+            TemplateType.weekday: ScheduleTemplatePrimitive(
+                template=TemplateType.weekday,
+                blocks=[
+                    ScheduleBlock(day_of_week=day, start_time="09:00", end_time="17:00")
+                    for day in WEEK_DAYS[:5]
+                ],
+            ),
+            TemplateType.weekend: ScheduleTemplatePrimitive(
+                template=TemplateType.weekend,
+                blocks=[
+                    ScheduleBlock(day_of_week=day, start_time="10:00", end_time="14:00")
+                    for day in WEEK_DAYS[5:]
+                ],
+            ),
+            TemplateType.overnight: ScheduleTemplatePrimitive(
+                template=TemplateType.overnight,
+                blocks=[
+                    ScheduleBlock(day_of_week=day, start_time="22:00", end_time="06:00", overnight=True)
+                    for day in WEEK_DAYS
+                ],
+            ),
+        }
 
     def apply_template(self, request: TemplateApplyRequest) -> list[ScheduleRecord]:
+        primitive = self.template_primitives()[request.template]
+
         blocks = TEMPLATE_PRIMITIVES[request.template]
         schedules: list[ScheduleRecord] = []
-        for day, start_time, end_time, overnight in blocks:
-            spec = self._timeline_to_rrule(day, start_time)
+        for block in primitive.blocks:
+            spec = self._timeline_to_rrule(block.day_of_week, block.start_time)
             schedules.append(
                 ScheduleRecord(
                     id=f"sch_{uuid4()}",
-                    name=f"{request.template.value.title()} Template {day.title()}",
+                    name=f"{request.template.value.title()} Template {block.day_of_week.title()}",
                     enabled=True,
+                    timezone=request.timezone,
+                    ui_state=UiState.active,
+                    priority=50,
+                    start_window=request.start_window,
+                    end_window=request.end_window,
+                    content_refs=[ref.model_copy() for ref in request.content_refs],
+                    schedule_spec=ScheduleSpec(mode=ScheduleSpecMode.rrule, rrule=spec),
                     template_ref={"id": f"tpl_{request.template.value}_baseline", "version": 1},
                     overrides={
                         "timezone": request.timezone,
@@ -92,8 +130,6 @@ class SchedulerUiService:
                     },
                 )
             )
-            if overnight:
-                schedules[-1].name = f"Overnight Template {day.title()}"
         return schedules
 
     def preview_schedule_spec(self, request: PreviewRequest) -> ScheduleSpecPreview:
@@ -121,6 +157,13 @@ class SchedulerUiService:
         raw = json.loads(self.schedules_path.read_text(encoding="utf-8"))
         migrated = self._migrate_payload(raw)
         envelope = ScheduleEnvelope.model_validate(migrated)
+
+        timeline = self._build_timeline_blocks(envelope.schedules)
+        conflicts = detect_schedule_conflicts(envelope.schedules, timeline)
+        if conflicts:
+            messages = "\n".join(f"- {conflict.message}" for conflict in conflicts)
+            raise ValueError(f"schedules.json contains conflicts:\n{messages}")
+
         self.schedules_path.write_text(envelope.model_dump_json(indent=2), encoding="utf-8")
         return envelope
 
@@ -155,6 +198,10 @@ class SchedulerUiService:
     def _build_timeline_blocks(self, schedules: list[ScheduleRecord]) -> list[TimelineBlock]:
         blocks: list[TimelineBlock] = []
         for schedule in schedules:
+            spec = schedule.schedule_spec or (schedule.overrides.schedule_spec if schedule.overrides else None)
+            if spec is None:
+                continue
+
             spec = schedule.effective_schedule_spec()
             if spec is None:
                 continue
