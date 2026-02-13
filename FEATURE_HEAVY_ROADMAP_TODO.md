@@ -67,6 +67,52 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 - [ ] Crash-recovery flow with “restore last known good config” **(M)**
 - [ ] One-click config backup snapshot (timestamped) **(S)**
 
+### Current Sprint (v1.1 Now)
+
+#### Ticket V11-01 — Startup Diagnostics Panel
+- **Owner:** App Core (Runtime)
+- **Estimate:** M (4-5 dev days)
+- **Dependency:** Existing startup pipeline + read-only DB/key/audio probe helpers.
+- **Acceptance criteria:**
+  - On every app launch, a diagnostics panel renders startup checks for DB reachability, key-file presence, and audio device availability.
+  - Each check returns a clear status (`pass`, `warn`, `fail`) with a human-readable remediation hint.
+  - Launch blocking behavior is enforced only for hard-fail checks (e.g., DB unavailable), while warn-level checks allow continue.
+  - Diagnostics results are written once per startup to logs for support triage.
+- **Definition of done:** Merged with startup diagnostics UI + probe wiring, test evidence for pass/warn/fail states, and operator notes added to release docs.
+
+#### Ticket V11-02 — Launch-Time Config Validator
+- **Owner:** Config & Validation
+- **Estimate:** M (3-4 dev days)
+- **Dependency:** Canonical schema definitions for `schedules.json` and `prompt_variables.json`.
+- **Acceptance criteria:**
+  - App startup validates both `config/schedules.json` and `config/prompt_variables.json` before runtime automations initialize.
+  - Validation checks include JSON parse, required keys, value types, and cross-reference integrity where applicable.
+  - Validation failures are surfaced in UI with file-level and field-level error locations.
+  - Invalid config blocks normal startup path and offers recovery actions (open file location / restore backup).
+- **Definition of done:** Validator integrated into launch gate with actionable error output, schema test cases committed, and startup block behavior verified.
+
+#### Ticket V11-03 — Crash Recovery (Restore Last Known Good)
+- **Owner:** Reliability & Recovery
+- **Estimate:** M (4-5 dev days)
+- **Dependency:** Backup snapshot mechanism + startup validator integration.
+- **Acceptance criteria:**
+  - After abnormal termination, next launch detects crash context and prompts recovery options.
+  - Operator can restore the most recent valid snapshot in one flow without manual file surgery.
+  - Recovery flow validates restored files before relaunching normal operations.
+  - Recovery action and source snapshot metadata are recorded to logs for auditability.
+- **Definition of done:** Crash marker detection, guided restore workflow, and validated relaunch path all shipped with a tested happy path and rollback path.
+
+#### Ticket V11-04 — One-Click Timestamped Backup Snapshot
+- **Owner:** Config & Platform Utilities
+- **Estimate:** S (1-2 dev days)
+- **Dependency:** Backup path conventions in `config/backups/`.
+- **Acceptance criteria:**
+  - Operator can trigger a manual backup snapshot via single action from the app surface.
+  - Snapshot creates a timestamped backup artifact for targeted config files (`schedules.json`, `prompt_variables.json`, and related runtime JSON files).
+  - Backup operation reports success/failure immediately and logs backup path.
+  - Snapshot naming format is deterministic and collision-safe for repeated operations in the same day.
+- **Definition of done:** One-click backup flow is available and logged, snapshot files are verified in `config/backups/`, and restore compatibility is confirmed.
+
 ### Should
 - [ ] Structured log viewer (ERROR/WARN/INFO + date filter) **(M)**
 - [ ] “Safe mode” boot toggle (disable non-critical automations) **(S)**
