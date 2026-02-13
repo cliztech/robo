@@ -1,0 +1,10 @@
+{
+  "id": "git",
+  "name": "Git MCP Server",
+  "transport": "stdio",
+  "package": "@modelcontextprotocol/server-git",
+  "runtime": "npx",
+  "args": ["-y", "@modelcontextprotocol/server-git", "--repository", "/workspace/robo"],
+  "capabilities": ["tools", "resources"],
+  "purpose": "Repository-aware operations for change tracking and release hygiene"
+}

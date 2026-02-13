@@ -1,0 +1,27 @@
+{
+  "$schema": "./schemas/mcp-servers.schema.json",
+  "version": "1.0.0",
+  "project": "dgn-dj",
+  "servers": [
+    {
+      "id": "time",
+      "manifest": "./time.server.json"
+    },
+    {
+      "id": "filesystem",
+      "manifest": "./filesystem.server.json"
+    },
+    {
+      "id": "sqlite",
+      "manifest": "./sqlite.server.json"
+    },
+    {
+      "id": "fetch",
+      "manifest": "./fetch.server.json"
+    },
+    {
+      "id": "git",
+      "manifest": "./git.server.json"
+    }
+  ]
+}
