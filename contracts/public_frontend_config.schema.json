@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robodj.local/contracts/public_frontend_config.schema.json",
+  "title": "public_frontend_config",
+  "description": "Frontend-safe configuration contract. Must contain only non-sensitive settings suitable for web clients.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "station",
+    "ui",
+    "features"
+  ],
+  "properties": {
+    "station": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "display_name",
+        "time_zone"
+      ],
+      "properties": {
+        "display_name": { "type": "string" },
+        "tagline": { "type": "string" },
+        "time_zone": { "type": "string" }
+      }
+    },
+    "ui": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "theme": {
+          "type": "string",
+          "enum": ["light", "dark", "auto"]
+        },
+        "show_weather_widget": { "type": "boolean" },
+        "refresh_interval_seconds": {
+          "type": "integer",
+          "minimum": 5,
+          "maximum": 300
+        }
+      }
+    },
+    "features": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enable_request_queue": { "type": "boolean" },
+        "enable_now_playing": { "type": "boolean" }
+      }
+    }
+  }
+}

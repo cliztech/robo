@@ -40,10 +40,11 @@ Use this stage-gated flow for all requests:
 
 ## Build, Test, and Development Commands
 This repo is a compiled distribution; there is no build system.
-- Run (recommended): `./RoboDJ_Launcher.bat`
-- Run directly: `./RoboDJ Automation.exe`
-- Inspect DB schemas (read-only):
-  - `cd ./config && python ./inspect_db.py`
+- Run (recommended): `.\RoboDJ_Launcher.bat`  
+  Launches with elevated privileges when needed, and now resolves paths relative to the launcher location so it is portable across install folders.
+- Run directly: `.\RoboDJ Automation.exe`
+- Inspect DB schemas (read-only):  
+  `cd .\config; python .\inspect_db.py`
 
 ## Coding Style & Naming Conventions
 - Only lightweight scripts are expected here (e.g., `config/inspect_db.py`).
