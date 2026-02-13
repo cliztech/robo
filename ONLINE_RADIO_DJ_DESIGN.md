@@ -111,6 +111,7 @@ Terminal states (no further transitions):
 - `completed`
 - `skipped`
 - `cancelled`
+- `failed`
 
 Validation rules:
 - `started_at` is set when entering `starting` (or backfilled when directly entering `playing`).
