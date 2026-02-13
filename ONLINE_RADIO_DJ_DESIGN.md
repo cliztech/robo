@@ -124,7 +124,7 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 - `clock_wheel_id` *(FK -> `ClockWheel.id`)*
 - `starts_at`
 - `duration_sec`
-- `status`
+- `status` *(enum: "scheduled", "active", "finished", "cancelled")*
 
 **Optional fields (ShowBlock)**
 - `host_persona_id` *(FK -> `HostPersona.id`)*
