@@ -42,7 +42,7 @@ class AutonomyPolicyService:
         raw_payload = self.policy_path.read_text(encoding="utf-8")
         try:
             return AutonomyPolicy.model_validate_json(raw_payload)
-        except Exception:
+        except ValidationError:
             migrated = self._migrate_legacy_policy(json.loads(raw_payload))
             policy = AutonomyPolicy.model_validate(migrated)
             self.update_policy(policy)
