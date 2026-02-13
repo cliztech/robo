@@ -6,13 +6,19 @@ services:
       - --servers=time
       - --transport=streaming
       - --port=8811
-    # The current "time" MCP server does not require Docker daemon access.
-    # Keep the Docker socket unmounted by default to reduce host compromise risk.
-    # volumes:
-    #   # WARNING: Mounting /var/run/docker.sock grants root-equivalent control
-    #   # of the host Docker daemon and all containers/images managed by it.
-    #   # Only enable on a trusted single-user development machine.
-    #   - /var/run/docker.sock:/var/run/docker.sock:ro
+
+    # SECURITY NOTE:
+    # Mounting /var/run/docker.sock effectively grants root-equivalent control
+    # of the Docker host to processes inside this container.
+    # The default compose file intentionally does NOT mount the Docker socket.
+    # If you require container-control features, opt in with:
+    #   docker compose -f docker-compose.yaml -f docker-compose.docker-control.yaml up -d
+
+    # Bind only to localhost by default to avoid exposing the gateway externally.
+    ports:
+      - "127.0.0.1:8811:8811"
+
+    # Least-privilege runtime defaults.
     read_only: true
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=64m
@@ -20,6 +26,6 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    ports:
-      - "127.0.0.1:8811:8811"
+    pids_limit: 256
+
     restart: unless-stopped

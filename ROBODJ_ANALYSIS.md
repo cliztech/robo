@@ -44,6 +44,27 @@ RoboDJ is a Windows desktop automation tool designed to generate AI-hosted voice
 6.  **Handoff**: Updates Playout System database to point to the new audio file.
 
 ## 4. Key Configurations
+
+-   **Secrets Handling**:
+    -   `config/secret.key` and `config/secret_v2.key` are local runtime secrets and must never be committed.
+    -   Provision secrets out-of-band for each environment (for example: secret manager, deployment variable injection, or secure manual bootstrap).
+    -   If a key is exposed in git history, rotate/regenerate it immediately and redeploy updated values to every environment.
+    -   Use `config/secret.key.example` as a template only; it must not contain real key material.
+
 -   **Freshness**: "Script Freshness" settings to prevent repetitive content.
 -   **Banned Words**: Filter to ensure FCC compliance or brand safety.
 -   **Scheduling**: Time-based logic for different prompts (Morning Show vs. Late Night).
+
+## 5. End-to-End Instrumentation Layer
+A new telemetry package is available at `config/scripts/instrumentation/` to operationalize playout observability around the compiled app.
+
+### Instrumentation Features
+- Logs every playout decision including `decision_inputs_json` and `selected_rule_path`.
+- Tracks dead-air incidents, fallback usage, script rejection outcomes, transition quality, and per-daypart repetition score.
+- Provides operator dashboard data views:
+  - `live_queue_health`
+  - `ai_confidence_trend`
+  - `persona_activity`
+  - `ad_delivery_completion`
+- Supports minute-level timeline lookups for “what happened on-air at minute X”.
+- Includes SLO definitions for uptime and decision latency in `config/scripts/SLOS.md`.

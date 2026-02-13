@@ -1,0 +1,401 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robodj.local/schemas/autonomy_profiles.json",
+  "title": "RoboDJ Autonomy Profiles",
+  "description": "Schema and default profile set for RoboDJ operating autonomy modes.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "default_mode",
+    "profiles"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^v[0-9]+\\.[0-9]+$"
+    },
+    "default_mode": {
+      "$ref": "#/$defs/mode_name"
+    },
+    "profiles": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "$ref": "#/$defs/profile"
+      }
+    }
+  },
+  "$defs": {
+    "mode_name": {
+      "type": "string",
+      "enum": [
+        "manual_assist",
+        "semi_auto_user_approved_scripts",
+        "auto_with_human_override",
+        "full_auto_guardrailed",
+        "lights_out_overnight"
+      ]
+    },
+    "permission": {
+      "type": "string",
+      "enum": [
+        "none",
+        "draft_only",
+        "staging_only",
+        "auto_within_policy",
+        "full"
+      ]
+    },
+    "approval_policy": {
+      "type": "string",
+      "enum": [
+        "always",
+        "conditional",
+        "never"
+      ]
+    },
+    "time_window": {
+      "type": "object",
+      "required": [
+        "days",
+        "start",
+        "end",
+        "timezone"
+      ],
+      "properties": {
+        "days": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "mon",
+              "tue",
+              "wed",
+              "thu",
+              "fri",
+              "sat",
+              "sun"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "start": {
+          "type": "string",
+          "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+        },
+        "end": {
+          "type": "string",
+          "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+        },
+        "timezone": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "profile": {
+      "type": "object",
+      "required": [
+        "mode",
+        "enabled",
+        "permissions",
+        "approval_requirements",
+        "schedule_windows",
+        "emergency",
+        "audit_logging"
+      ],
+      "properties": {
+        "mode": {
+          "$ref": "#/$defs/mode_name"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "permissions": {
+          "type": "object",
+          "required": [
+            "playlisting",
+            "scripting",
+            "tts",
+            "ad_insertion",
+            "caller_simulation"
+          ],
+          "properties": {
+            "playlisting": { "$ref": "#/$defs/permission" },
+            "scripting": { "$ref": "#/$defs/permission" },
+            "tts": { "$ref": "#/$defs/permission" },
+            "ad_insertion": { "$ref": "#/$defs/permission" },
+            "caller_simulation": { "$ref": "#/$defs/permission" }
+          },
+          "additionalProperties": false
+        },
+        "approval_requirements": {
+          "type": "object",
+          "required": [
+            "playlist_commit",
+            "script_publish",
+            "tts_live_playout",
+            "ad_break_finalize",
+            "caller_simulation_live",
+            "policy_change"
+          ],
+          "properties": {
+            "playlist_commit": { "$ref": "#/$defs/approval_policy" },
+            "script_publish": { "$ref": "#/$defs/approval_policy" },
+            "tts_live_playout": { "$ref": "#/$defs/approval_policy" },
+            "ad_break_finalize": { "$ref": "#/$defs/approval_policy" },
+            "caller_simulation_live": { "$ref": "#/$defs/approval_policy" },
+            "policy_change": { "$ref": "#/$defs/approval_policy" }
+          },
+          "additionalProperties": false
+        },
+        "schedule_windows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/time_window"
+          }
+        },
+        "emergency": {
+          "type": "object",
+          "required": [
+            "global_stop_enabled",
+            "rollback_checkpoint_required",
+            "fallback_mode_on_stop",
+            "max_auto_retries"
+          ],
+          "properties": {
+            "global_stop_enabled": { "type": "boolean" },
+            "rollback_checkpoint_required": { "type": "boolean" },
+            "fallback_mode_on_stop": { "$ref": "#/$defs/mode_name" },
+            "max_auto_retries": { "type": "integer", "minimum": 0, "maximum": 10 }
+          },
+          "additionalProperties": false
+        },
+        "audit_logging": {
+          "type": "object",
+          "required": [
+            "enabled",
+            "level",
+            "immutable",
+            "retention_days",
+            "include_policy_trace",
+            "include_before_after_diff"
+          ],
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "level": {
+              "type": "string",
+              "enum": ["basic", "standard", "detailed", "forensic"]
+            },
+            "immutable": { "type": "boolean" },
+            "retention_days": { "type": "integer", "minimum": 7 },
+            "include_policy_trace": { "type": "boolean" },
+            "include_before_after_diff": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "examples": [
+    {
+      "schema_version": "v1.0",
+      "default_mode": "manual_assist",
+      "profiles": [
+        {
+          "mode": "manual_assist",
+          "enabled": true,
+          "permissions": {
+            "playlisting": "draft_only",
+            "scripting": "draft_only",
+            "tts": "staging_only",
+            "ad_insertion": "draft_only",
+            "caller_simulation": "draft_only"
+          },
+          "approval_requirements": {
+            "playlist_commit": "always",
+            "script_publish": "always",
+            "tts_live_playout": "always",
+            "ad_break_finalize": "always",
+            "caller_simulation_live": "always",
+            "policy_change": "always"
+          },
+          "schedule_windows": [
+            {
+              "days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"],
+              "start": "00:00",
+              "end": "23:59",
+              "timezone": "UTC"
+            }
+          ],
+          "emergency": {
+            "global_stop_enabled": true,
+            "rollback_checkpoint_required": true,
+            "fallback_mode_on_stop": "manual_assist",
+            "max_auto_retries": 0
+          },
+          "audit_logging": {
+            "enabled": true,
+            "level": "standard",
+            "immutable": true,
+            "retention_days": 90,
+            "include_policy_trace": true,
+            "include_before_after_diff": true
+          }
+        },
+        {
+          "mode": "semi_auto_user_approved_scripts",
+          "enabled": true,
+          "permissions": {
+            "playlisting": "staging_only",
+            "scripting": "staging_only",
+            "tts": "staging_only",
+            "ad_insertion": "staging_only",
+            "caller_simulation": "staging_only"
+          },
+          "approval_requirements": {
+            "playlist_commit": "always",
+            "script_publish": "always",
+            "tts_live_playout": "always",
+            "ad_break_finalize": "always",
+            "caller_simulation_live": "always",
+            "policy_change": "always"
+          },
+          "schedule_windows": [],
+          "emergency": {
+            "global_stop_enabled": true,
+            "rollback_checkpoint_required": true,
+            "fallback_mode_on_stop": "manual_assist",
+            "max_auto_retries": 1
+          },
+          "audit_logging": {
+            "enabled": true,
+            "level": "detailed",
+            "immutable": true,
+            "retention_days": 120,
+            "include_policy_trace": true,
+            "include_before_after_diff": true
+          }
+        },
+        {
+          "mode": "auto_with_human_override",
+          "enabled": true,
+          "permissions": {
+            "playlisting": "auto_within_policy",
+            "scripting": "auto_within_policy",
+            "tts": "auto_within_policy",
+            "ad_insertion": "auto_within_policy",
+            "caller_simulation": "auto_within_policy"
+          },
+          "approval_requirements": {
+            "playlist_commit": "conditional",
+            "script_publish": "conditional",
+            "tts_live_playout": "conditional",
+            "ad_break_finalize": "conditional",
+            "caller_simulation_live": "conditional",
+            "policy_change": "always"
+          },
+          "schedule_windows": [],
+          "emergency": {
+            "global_stop_enabled": true,
+            "rollback_checkpoint_required": true,
+            "fallback_mode_on_stop": "manual_assist",
+            "max_auto_retries": 2
+          },
+          "audit_logging": {
+            "enabled": true,
+            "level": "detailed",
+            "immutable": true,
+            "retention_days": 180,
+            "include_policy_trace": true,
+            "include_before_after_diff": true
+          }
+        },
+        {
+          "mode": "full_auto_guardrailed",
+          "enabled": true,
+          "permissions": {
+            "playlisting": "full",
+            "scripting": "full",
+            "tts": "full",
+            "ad_insertion": "full",
+            "caller_simulation": "full"
+          },
+          "approval_requirements": {
+            "playlist_commit": "never",
+            "script_publish": "never",
+            "tts_live_playout": "never",
+            "ad_break_finalize": "never",
+            "caller_simulation_live": "conditional",
+            "policy_change": "always"
+          },
+          "schedule_windows": [],
+          "emergency": {
+            "global_stop_enabled": true,
+            "rollback_checkpoint_required": true,
+            "fallback_mode_on_stop": "auto_with_human_override",
+            "max_auto_retries": 3
+          },
+          "audit_logging": {
+            "enabled": true,
+            "level": "forensic",
+            "immutable": true,
+            "retention_days": 365,
+            "include_policy_trace": true,
+            "include_before_after_diff": true
+          }
+        },
+        {
+          "mode": "lights_out_overnight",
+          "enabled": true,
+          "permissions": {
+            "playlisting": "auto_within_policy",
+            "scripting": "auto_within_policy",
+            "tts": "auto_within_policy",
+            "ad_insertion": "auto_within_policy",
+            "caller_simulation": "staging_only"
+          },
+          "approval_requirements": {
+            "playlist_commit": "conditional",
+            "script_publish": "conditional",
+            "tts_live_playout": "conditional",
+            "ad_break_finalize": "conditional",
+            "caller_simulation_live": "always",
+            "policy_change": "always"
+          },
+          "schedule_windows": [
+            {
+              "days": ["mon", "tue", "wed", "thu", "fri"],
+              "start": "22:00",
+              "end": "06:00",
+              "timezone": "UTC"
+            },
+            {
+              "days": ["sat", "sun"],
+              "start": "21:00",
+              "end": "07:00",
+              "timezone": "UTC"
+            }
+          ],
+          "emergency": {
+            "global_stop_enabled": true,
+            "rollback_checkpoint_required": true,
+            "fallback_mode_on_stop": "manual_assist",
+            "max_auto_retries": 1
+          },
+          "audit_logging": {
+            "enabled": true,
+            "level": "forensic",
+            "immutable": true,
+            "retention_days": 365,
+            "include_policy_trace": true,
+            "include_before_after_diff": true
+          }
+        }
+      ]
+    }
+  ]
+}

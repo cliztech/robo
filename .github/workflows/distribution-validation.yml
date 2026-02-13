@@ -1,0 +1,47 @@
+name: Distribution Config Validation
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  validate-distribution-layout:
+    name: Validate distribution repository config and layout
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate JSON syntax (config/*.json)
+        run: |
+          python - <<'PY'
+          import glob
+          import json
+          import pathlib
+
+          paths = sorted(glob.glob('config/*.json'))
+          if not paths:
+              raise SystemExit('No JSON files found in config/*.json')
+
+          for path in paths:
+              with open(path, 'r', encoding='utf-8') as fh:
+                  json.load(fh)
+              print(f'valid json: {path}')
+          PY
+
+      - name: Python syntax check for maintenance scripts
+        run: |
+          python -m py_compile config/inspect_db.py pyinstxtractor.py
+
+      - name: Verify expected distribution files
+        run: |
+          test -f "RoboDJ_Launcher.bat"
+          test -d "config"
+          test -f "config/inspect_db.py"
+          test -f "config/prompt_variables.json"
+          test -f "config/schedules.json"
+          test -f "README.pdf"
+          test -f "QUICK_START_FEATURE_GUIDE.pdf"
