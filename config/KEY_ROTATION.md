@@ -26,8 +26,8 @@ If any key was ever committed to version control, treat it as compromised and ro
 
 1. Stop RoboDJ processes using the old keys.
 2. Back up current config:
-   - `cp config/secret.key config/backups/secret.key.$(date +%Y%m%d%H%M%S).bak`
-   - `cp config/secret_v2.key config/backups/secret_v2.key.$(date +%Y%m%d%H%M%S).bak`
+   - `cp config/secret.key config/backups/secret.key.YYYYMMDDHHMMSS.bak`
+   - `cp config/secret_v2.key config/backups/secret_v2.key.YYYYMMDDHHMMSS.bak`
 3. Generate new keys:
    - `python - <<'PY'`
    - `import secrets, base64`
