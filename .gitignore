@@ -48,3 +48,9 @@ build/
 # Secrets (local runtime only)
 config/secret.key
 config/secret_v2.key
+# RoboDJ machine/runtime-local files (explicitly untracked)
+config/secret.key
+config/secret_v2.key
+config/robodj.lock
+config/scheduler.signal
+config/.robodj_trial
