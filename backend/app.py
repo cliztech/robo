@@ -1,6 +1,25 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 
 from backend.scheduling.api import router as autonomy_policy_router
+from backend.security.secret_integrity import run_secret_integrity_checks
 
-app = FastAPI(title="RoboDJ Backend Scheduler Services")
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    result = run_secret_integrity_checks()
+    for alert in result.alerts:
+        print(alert, flush=True)
+
+    if not result.ok:
+        raise RuntimeError(
+            "Startup aborted due to secret integrity check failures. "
+            "Resolve alerts and restart RoboDJ."
+        )
+
+    yield
+
+
+app = FastAPI(title="RoboDJ Backend Scheduler Services", lifespan=lifespan)
 app.include_router(autonomy_policy_router)

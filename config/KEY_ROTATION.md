@@ -1,43 +1,32 @@
-# Key Rotation and Local Runtime File Setup
+# Key Rotation Runbook
 
-This repository no longer tracks runtime-generated machine files or live secrets.
+For lifecycle requirements (generation, storage, cadence, revocation, incidents), see `docs/SECRET_LIFECYCLE_POLICY.md`.
 
-## Files now local-only
+## Runtime Source Priority
+1. Environment variables (preferred):
+   - `ROBODJ_SECRET_KEY`
+   - `ROBODJ_SECRET_V2_KEY`
+2. Local fallback files (development/break-glass only):
+   - `config/secret.key`
+   - `config/secret_v2.key`
 
-- `config/secret.key`
-- `config/secret_v2.key`
-- `config/robodj.lock`
-- `config/scheduler.signal`
-- `config/.robodj_trial`
+Only templates are versioned:
+- `config/secret.key.example`
+- `config/secret_v2.key.example`
 
-Use the `.example` templates in this folder as references.
+## Rotation Procedure
+1. Stop RoboDJ processes using the active secrets.
+2. Generate replacement values out-of-band:
+   - `python -c "import secrets; print(secrets.token_urlsafe(32))"`
+   - `python -c "import secrets; print(secrets.token_hex(64))"`
+3. Update secret manager/environment variables.
+4. Remove stale local fallback files unless explicitly needed.
+5. Run integrity validation:
+   - `python config/check_runtime_secrets.py --require-env-only`
+6. Restart RoboDJ and verify key-dependent workflows.
+7. Revoke old keys and invalidate dependent sessions/tokens where applicable.
 
-## Initial setup
-
-1. Copy template files for secrets:
-   - `cp config/secret.key.example config/secret.key`
-   - `cp config/secret_v2.key.example config/secret_v2.key`
-2. Generate fresh values and replace placeholders in both files.
-3. Start the application (`RoboDJ_Launcher.bat`) so runtime files are recreated as needed.
-
-## Rotation procedure (for any previously committed key)
-
-If any key was ever committed to version control, treat it as compromised and rotate immediately:
-
-1. Stop RoboDJ processes using the old keys.
-2. Back up current config:
-   - `cp config/secret.key config/backups/secret.key.YYYYMMDDHHMMSS.bak`
-   - `cp config/secret_v2.key config/backups/secret_v2.key.YYYYMMDDHHMMSS.bak`
-3. Generate new keys:
-   - `python -c "import secrets, base64; print('secret.key=', base64.urlsafe_b64encode(secrets.token_bytes(32)).decode())"`
-   - `python -c "import secrets; print('secret_v2.key=', secrets.token_hex(64))"`
-4. Write new values into `config/secret.key` and `config/secret_v2.key`.
-5. Restart RoboDJ and verify authentication/encryption-dependent features.
-6. Invalidate any sessions/tokens derived from old keys (if applicable).
-7. Confirm `git status` does not show secret files as tracked changes.
-
-## Notes
-
-- Do not commit real key material.
-- Do not share backups of rotated keys.
-- Store production keys in a secure secret manager when possible.
+## Emergency Rotation Trigger Examples
+- Suspected key exposure.
+- Startup integrity check reports invalid/missing/expired keys.
+- Ownership transfer or operator offboarding.
