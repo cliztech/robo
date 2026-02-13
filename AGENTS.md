@@ -60,9 +60,9 @@ This repo is a compiled distribution; there is no build system.
 - Use Conventional Commit style (e.g., `chore: ...`, `docs: ...`).
 - Keep commits scoped to configuration/documentation/scripts.
 - PRs should include:
-  - a short summary of changes
-  - any config files touched
-  - screenshots only for UI behavior changes
+  - A short summary of changes
+  - Any config files touched
+  - Screenshots only for UI behavior changes
 
 ## Security & Configuration Tips
 - `config/secret.key` and `config/secret_v2.key` are sensitive; do not share.
