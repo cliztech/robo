@@ -167,7 +167,7 @@ All non-2xx responses return a normalized error body:
     {
       "items": [],
       "page": null,
-      "page_size": 50,
+      "limit": 50,
       "total": null,
       "next_cursor": "eyJzY2hlZHVsZWRfdGltZSI6IjIwMjYtMDUtMTVUMTg6MzA6MDBaIiwiaWQiOiIuLi4ifQ=="
     }
