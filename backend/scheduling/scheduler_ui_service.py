@@ -97,7 +97,7 @@ class SchedulerUiService:
                     priority=50,
                     start_window=request.start_window,
                     end_window=request.end_window,
-                    content_refs=[ContentRef.model_validate(ref.model_dump()) for ref in request.content_refs],
+                    content_refs=[ref.model_copy() for ref in request.content_refs],
                     schedule_spec=ScheduleSpec(mode=ScheduleSpecMode.rrule, rrule=spec),
                 )
             )
