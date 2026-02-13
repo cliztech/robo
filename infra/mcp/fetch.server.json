@@ -1,0 +1,10 @@
+{
+  "id": "fetch",
+  "name": "Fetch MCP Server",
+  "transport": "stdio",
+  "package": "@modelcontextprotocol/server-fetch",
+  "runtime": "npx",
+  "args": ["-y", "@modelcontextprotocol/server-fetch"],
+  "capabilities": ["tools"],
+  "purpose": "External HTTP fetches for feeds, metadata, and remote content"
+}

@@ -1,0 +1,8 @@
+{
+  "name": "mcp-operations",
+  "version": "1.0.0",
+  "description": "Operate and verify MCP service manifests and connectivity assumptions.",
+  "entrypoint": "README.md",
+  "tags": ["mcp", "infra", "integration"],
+  "owner": "dgn-dj"
+}

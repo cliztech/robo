@@ -1,0 +1,32 @@
+name: Config Validation
+
+on:
+  pull_request:
+    paths:
+      - 'config/**/*.json'
+      - 'config/validate_config.py'
+      - 'config/schemas/**/*.json'
+      - '.github/workflows/config-validation.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'config/**/*.json'
+      - 'config/validate_config.py'
+      - 'config/schemas/**/*.json'
+      - '.github/workflows/config-validation.yml'
+
+jobs:
+  validate-config:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Validate configuration files
+        run: python config/validate_config.py

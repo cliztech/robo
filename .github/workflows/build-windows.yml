@@ -1,0 +1,63 @@
+name: Build Windows Package
+
+on:
+  push:
+    branches:
+      - main
+      - work
+    paths:
+      - 'RoboDJ_Launcher.bat'
+      - 'RoboDJ Automation.exe'
+      - 'config/**'
+      - '.github/workflows/build-windows.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'RoboDJ_Launcher.bat'
+      - 'RoboDJ Automation.exe'
+      - 'config/**'
+      - '.github/workflows/build-windows.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    name: Package and checksum
+    runs-on: windows-latest
+    if: ${{ hashFiles('RoboDJ_Launcher.bat', 'config/prompt_variables.json') != '' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare package directory
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path dist -Force | Out-Null
+          Copy-Item 'RoboDJ_Launcher.bat' dist/
+          if (Test-Path 'RoboDJ Automation.exe') { Copy-Item 'RoboDJ Automation.exe' dist/ }
+          if (Test-Path 'config') { Copy-Item 'config' dist/config -Recurse }
+
+      - name: Build deterministic archive
+        shell: pwsh
+        run: |
+          Compress-Archive -Path dist/* -DestinationPath robodj-windows-package.zip -Force
+
+      - name: Generate checksums
+        shell: pwsh
+        run: |
+          Get-FileHash robodj-windows-package.zip -Algorithm SHA256 | ForEach-Object {
+            "$($_.Hash.ToLower())  $($_.Path | Split-Path -Leaf)"
+          } | Out-File -FilePath robodj-windows-package.sha256 -Encoding ascii
+
+      - name: Upload package artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: robodj-windows-package
+          path: |
+            robodj-windows-package.zip
+            robodj-windows-package.sha256
+          retention-days: 30

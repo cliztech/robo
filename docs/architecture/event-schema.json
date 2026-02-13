@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robodj.local/contracts/event-schema.json",
+  "title": "RoboDJ Inter-Module Event",
+  "type": "object",
+  "required": ["event_type", "module"],
+  "properties": {
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "airwaves.segment.created",
+        "rippa.asset.normalized"
+      ]
+    },
+    "module": {
+      "type": "string",
+      "enum": [
+        "dgn-airwaves",
+        "dgn-robo-rippa"
+      ]
+    },
+    "segment_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "asset_id": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "event_type": { "const": "airwaves.segment.created" } }
+      },
+      "then": {
+        "required": ["segment_id"]
+      }
+    },
+    {
+      "if": {
+        "properties": { "event_type": { "const": "rippa.asset.normalized" } }
+      },
+      "then": {
+        "required": ["asset_id"]
+      }
+    }
+  ],
+  "additionalProperties": false
+}
