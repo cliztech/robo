@@ -45,7 +45,11 @@
       "additionalProperties": false,
       "properties": {
         "enable_request_queue": { "type": "boolean" },
-        "enable_now_playing": { "type": "boolean" }
+        "enable_now_playing": { "type": "boolean" },
+        "enable_persona_feedback": {
+          "type": "boolean",
+          "description": "Gates listener persona feedback controls in frontend clients."
+        }
       }
     }
   }
