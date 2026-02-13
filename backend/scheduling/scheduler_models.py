@@ -105,7 +105,6 @@ class ScheduleOverrides(BaseModel):
     priority: Optional[int] = Field(default=None, ge=0, le=100)
     start_window: Optional[ScheduleWindow] = None
     end_window: Optional[ScheduleWindow] = None
-    content_refs: Optional[list[ContentRef]] = None
     content_refs: Optional[list[ContentRef]] = Field(default=None, min_length=1)
     schedule_spec: Optional[ScheduleSpec] = None
 
@@ -141,83 +140,17 @@ class ScheduleRecord(BaseModel):
         if self.overrides and not self.template_ref:
             raise ValueError("overrides cannot be used without template_ref")
 
-        if self.overrides:
-            for key in self.overrides.model_dump(exclude_none=True):
-                if getattr(self, key) is not None:
-                    raise ValueError(f"ambiguous configuration: '{key}' appears both at top-level and in overrides")
-
-        required_runtime_fields = (
-            "timezone",
-            "ui_state",
-            "priority",
-            "start_window",
-            "end_window",
-            "content_refs",
-            "schedule_spec",
-        )
-        if not self.template_ref:
-            for field_name in required_runtime_fields:
-                if getattr(self, field_name) is None:
-                    raise ValueError(f"standalone schedule requires '{field_name}'")
-
-        start_window = self.start_window or (self.overrides.start_window if self.overrides else None)
-        end_window = self.end_window or (self.overrides.end_window if self.overrides else None)
-        if start_window and end_window:
-            start_value = datetime.fromisoformat(start_window.value.replace("Z", "+00:00"))
-            end_value = datetime.fromisoformat(end_window.value.replace("Z", "+00:00"))
-            if start_value > end_value:
-                raise ValueError("start_window.value must be <= end_window.value")
-
-        return self
-
-
-class ScheduleBlock(BaseModel):
-    day_of_week: Literal[
-        "monday",
-        "tuesday",
-        "wednesday",
-        "thursday",
-        "friday",
-        "saturday",
-        "sunday",
-    ]
-    start_time: str = Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
-    end_time: str = Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
-    overnight: bool = False
-
-    @model_validator(mode="after")
-    def validate_block_window(self) -> "ScheduleBlock":
-        start_obj = time.fromisoformat(self.start_time)
-        end_obj = time.fromisoformat(self.end_time)
-        if end_obj < start_obj and not self.overnight:
-            raise ValueError("end_time must be after start_time unless overnight=true")
-
-    template_ref: Optional[ScheduleTemplateRef] = None
-    overrides: Optional[ScheduleOverrides] = None
-
-    @model_validator(mode="after")
-    def validate_shape(self) -> "ScheduleRecord":
-        if self.overrides and not self.template_ref:
-            raise ValueError("overrides cannot exist without template_ref")
-
         duplicate_keys = self.duplicate_override_keys()
         if duplicate_keys:
             joined = ", ".join(sorted(duplicate_keys))
-            raise ValueError(
-                f"Ambiguous fields present in top-level and overrides: {joined}"
-            )
+            raise ValueError(f"Ambiguous fields present in top-level and overrides: {joined}")
 
         if self.template_ref is None:
             missing_fields = [
-                field_name
-                for field_name in SCHEDULE_OVERRIDE_FIELDS
-                if getattr(self, field_name) is None
+                field_name for field_name in SCHEDULE_OVERRIDE_FIELDS if getattr(self, field_name) is None
             ]
             if missing_fields:
-                raise ValueError(
-                    "Standalone schedules require runtime fields: "
-                    + ", ".join(missing_fields)
-                )
+                raise ValueError("Standalone schedules require runtime fields: " + ", ".join(missing_fields))
 
         start = self.effective_start_window()
         end = self.effective_end_window()
@@ -246,31 +179,95 @@ class ScheduleBlock(BaseModel):
             return getattr(self.overrides, field_name)
         return None
 
-    def effective_timezone(self) -> str:
+    def effective_timezone(self):
         return self._effective("timezone")
 
-    def effective_ui_state(self) -> UiState:
+    def effective_ui_state(self):
         return self._effective("ui_state")
 
-    def effective_priority(self) -> int:
+    def effective_priority(self):
         return self._effective("priority")
 
-    def effective_start_window(self) -> ScheduleWindow:
+    def effective_start_window(self):
         return self._effective("start_window")
 
-    def effective_end_window(self) -> ScheduleWindow:
+    def effective_end_window(self):
         return self._effective("end_window")
 
-    def effective_content_refs(self) -> list[ContentRef]:
+    def effective_content_refs(self):
         return self._effective("content_refs")
 
-    def effective_schedule_spec(self) -> ScheduleSpec:
+    def effective_schedule_spec(self):
         return self._effective("schedule_spec")
 
 
 class ScheduleEnvelope(BaseModel):
     schema_version: int = 2
     schedules: list[ScheduleRecord] = Field(default_factory=list)
+
+
+class ScheduleBlock(BaseModel):
+    day_of_week: Literal[
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday",
+    ]
+    start_time: str = Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
+    end_time: str = Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
+    overnight: bool = False
+
+    @model_validator(mode="after")
+    def validate_block_window(self) -> "ScheduleBlock":
+        start_obj = time.fromisoformat(self.start_time)
+        end_obj = time.fromisoformat(self.end_time)
+        if end_obj < start_obj and not self.overnight:
+            raise ValueError("end_time must be after start_time unless overnight=true")
+        return self
+
+
+class ScheduleTemplatePrimitive(BaseModel):
+    template: str
+    blocks: list[ScheduleBlock] = Field(default_factory=list)
+
+
+class TemplateType(str, Enum):
+    weekday = "weekday"
+    weekend = "weekend"
+    overnight = "overnight"
+
+
+class TemplateApplyRequest(BaseModel):
+    template: TemplateType
+    timezone: str
+    content_refs: list[ContentRef] = Field(min_length=1)
+    start_window: ScheduleWindow = Field(default_factory=lambda: ScheduleWindow(value="1970-01-01T00:00:00Z"))
+    end_window: ScheduleWindow = Field(default_factory=lambda: ScheduleWindow(value="9999-12-31T23:59:59Z"))
+
+
+class PreviewRequest(BaseModel):
+    day_of_week: Literal[
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday",
+    ]
+    start_time: str = Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
+    end_time: str = Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
+    timezone: str
+    start_date: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
+
+
+class ScheduleSpecPreview(BaseModel):
+    one_off: str
+    rrule: str
+    cron: str
 
 
 class TimelineBlock(BaseModel):
@@ -320,61 +317,11 @@ class ScheduleConflict(BaseModel):
     suggestions: list[ConflictSuggestion] = Field(default_factory=list)
 
 
-class SchedulerUiState(BaseModel):
-    schedule_file: ScheduleEnvelope
-    timeline_blocks: list[TimelineBlock]
-    conflicts: list[ScheduleConflict]
-
-
 class SchedulerUiStateUpdate(BaseModel):
     schedules: list[ScheduleRecord]
 
 
-class TemplateType(str, Enum):
-    weekday = "weekday"
-    weekend = "weekend"
-    overnight = "overnight"
-
-
-class ScheduleTemplatePrimitive(BaseModel):
-    template: TemplateType
-    blocks: list[ScheduleBlock]
-
-
-class TemplateApplyRequest(BaseModel):
-    template: TemplateType
-    timezone: str = "UTC"
-    start_window: ScheduleWindow = Field(
-        default_factory=lambda: ScheduleWindow(value="1970-01-01T00:00:00Z")
-    )
-    end_window: ScheduleWindow = Field(
-        default_factory=lambda: ScheduleWindow(value="9999-12-31T23:59:59Z")
-    )
-    content_refs: list[ContentRef] = Field(min_length=1)
-
-
-class ScheduleSpecPreview(BaseModel):
-    one_off: str
-    rrule: str
-    cron: str
-
-
-class PreviewRequest(BaseModel):
-    day_of_week: Literal[
-        "monday",
-        "tuesday",
-        "wednesday",
-        "thursday",
-        "friday",
-        "saturday",
-        "sunday",
-    ]
-    start_time: str = Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
-    timezone: str = "UTC"
-    start_date: str = Field(description="ISO date, e.g. 2026-01-01")
-
-    @field_validator("start_date")
-    @classmethod
-    def validate_start_date(cls, value: str) -> str:
-        datetime.fromisoformat(value + "T00:00:00")
-        return value
+class SchedulerUiState(BaseModel):
+    schedule_file: ScheduleEnvelope
+    timeline_blocks: list[TimelineBlock]
+    conflicts: list[ScheduleConflict] = Field(default_factory=list)
