@@ -23,6 +23,12 @@ Overrides:
 Conflict resolution:
 - `timeslot_override > show_override > station_default`
 
+Validation diagnostics:
+- Detects duplicate `timeslot_overrides[].id` values
+- Detects overlapping day/time ranges within the same day + show scope
+- Detects contradictory show-level vs show-scoped timeslot intent
+- `PUT /api/v1/autonomy-policy` returns `422` with human-readable conflict details and suggested resolutions
+
 Persistence:
 - JSON policy config in `config/autonomy_policy.json`
 - JSONL audit events in `config/logs/autonomy_audit_events.jsonl`

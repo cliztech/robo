@@ -3,9 +3,10 @@ from __future__ import annotations
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
+from fastapi import HTTPException
 
 from .autonomy_policy import AutonomyPolicy, DecisionOrigin, DecisionType, PolicyAuditEvent
-from .autonomy_service import AutonomyPolicyService
+from .autonomy_service import AutonomyPolicyService, PolicyValidationError
 
 router = APIRouter(prefix="/api/v1/autonomy-policy", tags=["autonomy-policy"])
 
@@ -16,7 +17,16 @@ def get_policy_service() -> AutonomyPolicyService:
 
 @router.get("", response_model=AutonomyPolicy)
 def read_policy(service: AutonomyPolicyService = Depends(get_policy_service)) -> AutonomyPolicy:
-    return service.get_policy()
+    try:
+        return service.get_policy()
+    except PolicyValidationError as error:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "message": "Stored autonomy policy has invalid/conflicting overrides.",
+                "conflicts": [conflict.to_error_detail() for conflict in error.conflicts],
+            },
+        ) from error
 
 
 @router.put("", response_model=AutonomyPolicy)
@@ -24,7 +34,16 @@ def write_policy(
     payload: AutonomyPolicy,
     service: AutonomyPolicyService = Depends(get_policy_service),
 ) -> AutonomyPolicy:
-    return service.update_policy(payload)
+    try:
+        return service.update_policy(payload)
+    except PolicyValidationError as error:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "message": "Submitted autonomy policy has conflicting overrides.",
+                "conflicts": [conflict.to_error_detail() for conflict in error.conflicts],
+            },
+        ) from error
 
 
 @router.get("/effective")

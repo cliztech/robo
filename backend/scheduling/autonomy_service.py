@@ -12,6 +12,13 @@ from .autonomy_policy import (
     EffectivePolicyDecision,
     PolicyAuditEvent,
 )
+from .conflict_detection import PolicyConflict, detect_policy_conflicts
+
+
+class PolicyValidationError(ValueError):
+    def __init__(self, conflicts: List[PolicyConflict]) -> None:
+        super().__init__("Autonomy policy contains conflicting overrides.")
+        self.conflicts = conflicts
 
 
 class AutonomyPolicyService:
@@ -31,15 +38,24 @@ class AutonomyPolicyService:
             self.update_policy(default_policy)
             return default_policy
 
-        return AutonomyPolicy.model_validate_json(self.policy_path.read_text(encoding="utf-8"))
+        policy = AutonomyPolicy.model_validate_json(self.policy_path.read_text(encoding="utf-8"))
+        self.validate_policy(policy)
+        return policy
 
     def update_policy(self, policy: AutonomyPolicy) -> AutonomyPolicy:
+        self.validate_policy(policy)
         payload = policy.model_copy(update={"updated_at": datetime.utcnow().isoformat() + "Z"})
         self.policy_path.write_text(
             payload.model_dump_json(indent=2),
             encoding="utf-8",
         )
         return payload
+
+    def validate_policy(self, policy: AutonomyPolicy) -> List[PolicyConflict]:
+        conflicts = detect_policy_conflicts(policy)
+        if conflicts:
+            raise PolicyValidationError(conflicts)
+        return conflicts
 
     def resolve_effective_policy(
         self,
