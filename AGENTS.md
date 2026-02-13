@@ -12,7 +12,7 @@
 ## Build, Test, and Development Commands
 This repo is a compiled distribution; there is no build system.
 - Run (recommended): `.\RoboDJ_Launcher.bat`  
-  Launches with elevated privileges when needed.
+  Launches with elevated privileges when needed, and now resolves paths relative to the launcher location so it is portable across install folders.
 - Run directly: `.\RoboDJ Automation.exe`
 - Inspect DB schemas (read-only):  
   `cd .\config; python .\inspect_db.py`
