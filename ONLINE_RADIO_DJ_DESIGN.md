@@ -88,7 +88,7 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
     "aac_128": "https://radio.example.com/live/aac-128.m3u8",
     "mp3_128": "https://radio.example.com/live/mp3-128.mp3"
   },
-  "live_status": "live | reconnecting | offline",
+  "live_status": "live",
   "now_playing": {
     "id": "uuid",
     "title": "Neon Nights",
