@@ -460,8 +460,8 @@
         document.getElementById('refreshTimeline').addEventListener('click', refreshTimeline);
         originFilterEl.addEventListener('change', renderTimeline);
 
-        setInterval(() => refreshEffectivePolicy().catch(() => {}), 8000);
-        setInterval(() => refreshTimeline().catch(() => {}), 10000);
+        setInterval(() => refreshEffectivePolicy().catch(console.error), 8000);
+        setInterval(() => refreshTimeline().catch(console.error), 10000);
       } catch (error) {
         console.error(error);
         flash('Failed to load control center data.');
