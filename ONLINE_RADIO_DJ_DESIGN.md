@@ -76,11 +76,11 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
   "scheduled_time": "2023-10-27T14:00:00Z",
   "item_type": "track | voice_link | jingle | ad_spot | station_id",
   "item_ref": {
-    "track": { "track_id": "uuid" },
-    "voice_link": { "voice_link_id": "uuid" },
-    "jingle": { "jingle_id": "uuid" },
-    "ad_spot": { "ad_spot_id": "uuid" },
-    "station_id": { "station_id_id": "uuid" }
+    "track": { "id": "uuid" },
+    "voice_link": { "id": "uuid" },
+    "jingle": { "id": "uuid" },
+    "ad_spot": { "id": "uuid" },
+    "station_id": { "id": "uuid" }
   },
   "resolved_title": "Neon Nights",
   "resolved_duration": 245,
