@@ -3,7 +3,12 @@
 build:
 	@test -f "RoboDJ_Launcher.bat"
 	@mkdir -p .artifacts
-	@tar -czf .artifacts/robodj-config.tgz config/*.json config/*.signal config/*.lock
+	@files=$$(find config -maxdepth 1 -type f \( -name '*.json' -o -name '*.signal' -o -name '*.lock' \)); \
+	if [ -z "$$files" ]; then \
+		echo "No config artifacts found to package"; \
+		exit 1; \
+	fi; \
+	tar -czf .artifacts/robodj-config.tgz $$files
 	@echo "Build complete: .artifacts/robodj-config.tgz"
 
 qa:
