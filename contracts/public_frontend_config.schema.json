@@ -29,17 +29,43 @@
       "type": "object",
       "additionalProperties": false,
       "description": "UI presentation settings. When optional fields are absent, clients should apply schema-provided defaults for stable rendering.",
+      "description": "Optional appearance and behavior controls consumed by browser clients. All appearance fields are optional and include defaults for backwards compatibility.",
+      "required": [
+        "preferences",
+        "module_visibility"
+      ],
       "properties": {
         "theme": {
           "type": "string",
           "enum": ["light", "dark", "auto"],
           "default": "auto",
-          "description": "Global theme hint. Fallback: auto."
+          "description": "Base color-scheme mode selector."
         },
-        "show_weather_widget": {
-          "type": "boolean",
-          "default": false,
-          "description": "Whether to render the weather widget. Fallback: false."
+        "accent_color": {
+          "type": "string",
+          "pattern": "^#[A-Fa-f0-9]{6}$",
+          "default": "#2AA9FF",
+          "description": "Primary brand/accent color in 6-digit hex form."
+        },
+        "density": {
+          "type": "string",
+          "enum": ["comfortable", "compact"],
+          "default": "comfortable",
+          "description": "Controls spacing density for shell layout and controls."
+        },
+        "font_scale": {
+          "type": "number",
+          "minimum": 0.9,
+          "maximum": 1.25,
+          "multipleOf": 0.05,
+          "default": 1,
+          "description": "Global typography scale multiplier used by frontend token mapping."
+        },
+        "surface_style": {
+          "type": "string",
+          "enum": ["flat", "elevated"],
+          "default": "elevated",
+          "description": "Optional surface rendering mode for cards/panels."
         },
         "refresh_interval_seconds": {
           "type": "integer",
@@ -90,6 +116,51 @@
               "default": "system_ui",
               "description": "Optional named frontend font stack key (not a raw font file/path). Fallback: system_ui."
             }
+          }
+          "maximum": 300
+        },
+        "preferences": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "density",
+            "font_scale",
+            "reduced_motion",
+            "preferred_layout"
+          ],
+          "properties": {
+            "density": {
+              "type": "string",
+              "enum": ["compact", "comfortable", "spacious"]
+            },
+            "font_scale": {
+              "type": "number",
+              "minimum": 0.8,
+              "maximum": 1.5
+            },
+            "reduced_motion": { "type": "boolean" },
+            "preferred_layout": {
+              "type": "string",
+              "enum": ["auto", "single_column", "two_column", "focus"]
+            }
+          }
+        },
+        "module_visibility": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "scheduler",
+            "queue",
+            "alerts",
+            "diagnostics",
+            "autonomy_panel"
+          ],
+          "properties": {
+            "scheduler": { "type": "boolean" },
+            "queue": { "type": "boolean" },
+            "alerts": { "type": "boolean" },
+            "diagnostics": { "type": "boolean" },
+            "autonomy_panel": { "type": "boolean" }
           }
         }
       }
