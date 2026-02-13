@@ -100,19 +100,19 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 
 #### Frontend Resolution Rules by `item_type`
 - `track`:
-  - Resolve `item_ref.track.track_id` against the Tracks API/detail cache.
+  - Resolve `item_ref.track.id` against the Tracks API/detail cache.
   - Primary view: full track card (title, artist, artwork, duration, metadata).
 - `voice_link`:
-  - Resolve `item_ref.voice_link.voice_link_id` against generated script/TTS assets.
+  - Resolve `item_ref.voice_link.id` against generated script/TTS assets.
   - Primary view: script preview + selected voice/persona + estimated duration.
 - `jingle`:
-  - Resolve `item_ref.jingle.jingle_id` against station imaging library.
+  - Resolve `item_ref.jingle.id` against station imaging library.
   - Primary view: jingle name, category (TOH, sweep, branding), duration.
 - `ad_spot`:
-  - Resolve `item_ref.ad_spot.ad_spot_id` against ad inventory/campaign service.
+  - Resolve `item_ref.ad_spot.id` against ad inventory/campaign service.
   - Primary view: advertiser, campaign/flight, compliance tags, duration.
 - `station_id`:
-  - Resolve `item_ref.station_id.station_id_id` against station ID registry.
+  - Resolve `item_ref.station_id.id` against station ID registry.
   - Primary view: ID variant/voice, legal ID marker, duration.
 
 #### Missing/Deleted Linked Entity Behavior
