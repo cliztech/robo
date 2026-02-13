@@ -1,6 +1,6 @@
 # Autonomy Policy Layer (Scheduler + Agent Orchestrator)
 
-This module adds a policy layer for AI autonomy in scheduling/orchestration decisions.
+This module adds policy and schedule-editing APIs for AI autonomy and scheduling/orchestration decisions.
 
 ## Policy Model
 
@@ -29,11 +29,21 @@ Persistence:
 
 ## FastAPI Endpoints
 
+### Autonomy policy
+
 - `GET /api/v1/autonomy-policy` - read policy
 - `PUT /api/v1/autonomy-policy` - update policy
 - `GET /api/v1/autonomy-policy/effective?show_id=...&timeslot_id=...` - evaluate effective policy using override precedence
 - `POST /api/v1/autonomy-policy/audit-events` - write event marking AI vs human-directed decision
 - `GET /api/v1/autonomy-policy/audit-events?limit=100` - list recent audit events
+
+### Scheduler UI module (Scheduling 2.0)
+
+- `GET /api/v1/scheduler-ui/state` - return schedule envelope, derived week/day timeline blocks, and detected conflicts.
+- `PUT /api/v1/scheduler-ui/state` - validate and persist schedules to `config/schedules.json`; rejects writes with unresolved conflicts.
+- `POST /api/v1/scheduler-ui/validate` - detect inline conflicts (`overlap`, `invalid_window`) and suggestion actions prior to save.
+- `POST /api/v1/scheduler-ui/templates/apply` - quick-apply `weekday`, `weekend`, or `overnight` templates.
+- `POST /api/v1/scheduler-ui/preview` - return `schedule_spec` translation preview (`one_off`, `rrule`, `cron`).
 
 ## Usage
 
@@ -52,3 +62,4 @@ Then read/edit policy and record decision-origin audit events using the endpoint
 - TODO: Emit `scheduler.schedule_parse.failed` on schedule/policy decode failures before returning API errors.
 - TODO: Emit backup lifecycle events `scheduler.backup.created` and `scheduler.backup.restored` for config protection flows.
 - TODO: Emit `scheduler.crash_recovery.activated` whenever recovery mode is triggered.
+Then read/edit policy and scheduler state through the endpoints above.

@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robodj.local/contracts/frontend_responses/frontend_schedule_response.schema.json",
+  "title": "frontend_schedule_response",
+  "description": "Frontend scheduler payload with clockwheel timeline blocks, detected conflicts, and actionable suggestions.",
+  "$comment": "Cross-reference: docs/scheduler_clockwheel_spec.md, docs/schedule_schema.md, and ONLINE_RADIO_DJ_DESIGN.md (UI must present local station time and UTC).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schedule_id",
+    "generated_at",
+    "timezone_label",
+    "timeline_blocks",
+    "conflicts",
+    "suggestions"
+  ],
+  "properties": {
+    "schedule_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable schedule identifier for frontend route resolution."
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp when this response payload was generated."
+    },
+    "timezone_label": {
+      "type": "string",
+      "minLength": 1,
+      "description": "IANA timezone label used for station-local schedule calculations."
+    },
+    "timeline_blocks": {
+      "type": "array",
+      "description": "Ordered scheduler timeline blocks for frontend clockwheel rendering.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "block_id",
+          "block_type",
+          "station_local_time",
+          "utc_time",
+          "duration_sec",
+          "status"
+        ],
+        "properties": {
+          "block_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "block_type": {
+            "type": "string",
+            "enum": [
+              "music",
+              "link",
+              "sweeper",
+              "legal_id",
+              "ad_break",
+              "weather_news_hit",
+              "custom"
+            ]
+          },
+          "station_local_time": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Primary local station datetime for UX presentation."
+          },
+          "utc_time": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Canonical UTC datetime for storage and scheduling integrity."
+          },
+          "duration_sec": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "scheduled",
+              "locked",
+              "at_risk",
+              "skipped"
+            ]
+          },
+          "content_ref": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Optional content identifier for block source lookup."
+          }
+        }
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "description": "Detected schedule conflicts surfaced to frontend diagnostics panes.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "conflict_id",
+          "severity",
+          "message",
+          "timeline_block_ids"
+        ],
+        "properties": {
+          "conflict_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "info",
+              "warning",
+              "error"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "timeline_block_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "suggestions": {
+      "type": "array",
+      "description": "Actionable suggestions for conflict mitigation or timeline optimization.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "suggestion_id",
+          "action",
+          "reason"
+        ],
+        "properties": {
+          "suggestion_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "action": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target_block_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "priority": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          }
+        }
+      }
+    }
+  }
+}
