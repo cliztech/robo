@@ -351,6 +351,30 @@ Exit criteria:
 - [ ] Create core shell components (topbar/sidebar/tabs/workspace)
 - [ ] Add keyboard shortcuts (`Cmd/Ctrl+L`, `Cmd/Ctrl+K`, tab cycling)
 - [ ] Add profiling pass and animation budget fixes
+
+---
+
+## 9. Accessibility QA Matrix (Release-Blocking)
+
+Run this matrix for every release candidate. A failed blocking item must be fixed before ship.
+
+| Component category | Required checks | Pass criteria | Fail criteria | Blocking severity |
+| --- | --- | --- | --- | --- |
+| Shell (topbar, sidebar, workspace, tab strip) | Keyboard-only flow; focus visibility + logical focus order; screen-reader naming/landmarks; color contrast; reduced-motion behavior; zoom/reflow at 200%+ | All primary actions are operable without pointer; visible focus ring in all states; tab order follows reading/task order; controls expose accessible name/role/value; text + UI contrast meets WCAG AA; `prefers-reduced-motion` removes motion-heavy transitions; layout reflows without horizontal loss of critical controls at 1280px and 200% zoom. | Any primary flow blocked by keyboard; hidden/ambiguous focus; non-semantic or unnamed controls; contrast failures on default themes; motion cannot be reduced; clipped/overlapping controls during zoom/reflow. | **Blocker (P0)** for keyboard/focus/semantics, **High (P1)** for contrast and reflow regressions. |
+| Overlays (command palette, modal dialogs, notifications, popovers) | Keyboard-only flow; focus trap/restore + focus visibility/order; screen-reader naming and state announcements; color contrast; reduced-motion entry/exit; zoom/reflow | Overlay opens, navigates, confirms, and closes by keyboard; focus is trapped while open and restored on close; dialog/popup has programmatic label and live announcements where needed; contrast remains AA in overlay layers; reduced-motion variant uses opacity or instant state change; overlay content remains usable at 200% zoom without off-screen dead zones. | Focus escapes modal; ESC/close not keyboard-accessible; missing `aria-label`/`aria-labelledby`/`aria-describedby`; unreadable dimmed content; animated transitions cannot be reduced; overlay content inaccessible at zoom. | **Blocker (P0)** for trap/restore and naming issues, **High (P1)** for contrast/reflow/motion issues that obscure content. |
+| Scheduler interactions (timeline blocks, drag/drop scheduling, time-grid edits) | Keyboard-only flow with non-pointer parity; focus visibility/order across grid; screen-reader naming/instructions for time slots/events; color contrast for status chips; reduced-motion updates; zoom/reflow in dense timelines | Every drag/drop action has keyboard equivalent (select, move, resize, confirm/cancel); active slot/event is visibly focused; SR announces item, time range, and result of move; status colors preserve AA with text/icons; animated timeline shifts respect reduced motion; dense views remain navigable at 200% zoom with wrapping/reflow strategy. | Scheduling task requires mouse/touch only; no keyboard move/resize; unclear focus in dense grid; SR cannot identify event/time changes; color-only status cues; motion-heavy timeline updates with no fallback; timeline becomes unusable when zoomed. | **Blocker (P0)** for lack of keyboard or SR parity, **High (P1)** for contrast/reflow/motion regressions. |
+
+### No-Ship Rule: Custom Widget Fallbacks
+
+Do not ship custom interactive widgets without complete keyboard + ARIA equivalents.
+
+- Applies to: drag/drop zones, tab strips, timeline blocks, and any custom composite widget.
+- Minimum fallback requirements:
+  - Keyboard operation for all primary and destructive actions.
+  - Semantic role mapping (`button`, `tablist`/`tab`, `listbox`/`option`, `grid`, etc.) plus accessible names.
+  - State exposure via ARIA (`aria-selected`, `aria-expanded`, `aria-pressed`, `aria-current`, `aria-live`, etc.) as appropriate.
+  - Non-drag alternative path for move/reorder (menu actions, shortcuts, stepper controls).
+- If fallback parity is missing, mark release as **No Ship** until parity is implemented and verified.
 - [ ] Complete accessibility audit and fixes
 - [ ] Publish keyboard navigation map for shell/tabs/scheduler/overlays
 - [ ] Validate semantic landmarks and focus-visible states across shell contracts
