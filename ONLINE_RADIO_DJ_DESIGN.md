@@ -108,7 +108,7 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 ### Tracks
 ```json
 {
-  "id": "uuid",
+  "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
   "title": "Neon Nights",
   "artist": "AI Synthwave Collective",
   "duration": 245,
