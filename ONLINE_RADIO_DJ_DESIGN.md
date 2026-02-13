@@ -110,10 +110,9 @@ All non-2xx responses return a normalized error body:
 {
   "code": "VALIDATION_ERROR",
   "message": "One or more query parameters are invalid.",
-  "details": {
-    "field": "sort",
-    "reason": "Unknown sort field: popularity"
-  },
+  "details": [
+    { "field": "sort", "reason": "Unknown sort field: popularity" }
+  ],
   "trace_id": "req_7f4db6c4aa3b4e57"
 }
 ```
