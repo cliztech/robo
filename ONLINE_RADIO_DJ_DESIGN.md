@@ -657,6 +657,43 @@ Optional-but-recommended metadata for discovery/player UX: `isrc`, `label`, `art
   - `waveform_url` for waveform rendering
   - explicit badge based on `is_explicit` / `content_rating`
 
+#### UI Spec: Queue Rows with Waveform Mini-Visuals
+
+- Every queue row representing `item_type = track` should render a compact waveform strip sourced from `waveform_url`.
+- Waveform strip should be visually lightweight (single-row sparkline style) and remain readable at dense list heights.
+- If `waveform_url` is absent, fallback to a neutral placeholder bar set; do not leave the area blank.
+- Hover/focus state should reveal a tooltip with `title`, `artist`, `duration`, and a short QA summary (`integrated_lufs`, `true_peak_dbtp`).
+- Current `playing` row should animate the waveform playhead to communicate progress while preserving table performance.
+
+#### UI Spec: Artwork-First Now-Playing Tile
+
+- The now-playing card should prioritize a large cover-art panel from `artwork_url` as the primary visual anchor.
+- Overlay text stack should include: `title`, `artist`, and optional `label` / `release_date` metadata.
+- If `artwork_url` is unavailable, use station branding fallback from `StationConfig.branding` and still preserve layout proportions.
+- Secondary metadata rail should show codec/format context (`codec`, `sample_rate_hz`, `bitrate_kbps`) to support high-information cards.
+- The tile should support a compact mode (studio side panel) and expanded mode (public player hero) with the same field contract.
+
+#### UI Spec: Explicit + Content Badges
+
+- Badge logic should map from compliance metadata:
+  - `content_rating = explicit` or `is_explicit = true` => prominent **Explicit** badge.
+  - `content_rating = radio_edit` => **Radio Edit** badge.
+  - `content_rating = clean` => optional subdued **Clean** badge.
+- Badges should appear in queue rows, now-playing tile, and track detail drawers for consistent moderation signaling.
+- Badge color tokens should encode urgency/accessibility contrast, with explicit content always visually dominant over non-critical tags.
+
+#### UI Spec: Loudness + Quality Indicators (QA Metrics)
+
+- Frontend should render compact QA chips sourced directly from:
+  - `integrated_lufs` (program loudness)
+  - `true_peak_dbtp` (peak headroom)
+- Suggested display states:
+  - **In spec**: `integrated_lufs` in `[-16, -12]` and `true_peak_dbtp <= -1.0`
+  - **Warning**: values present but outside policy range
+  - **Missing QA**: one or both metrics absent
+- QA chips should be visible in admin track tables and optional in listener-facing cards where quality transparency is desired.
+- Tooltip copy should explain why tracks with out-of-range metrics may fail `ingestion_status = schedulable`.
+
 ### BroadcastQueue
 ```json
 {
