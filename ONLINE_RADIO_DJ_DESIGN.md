@@ -71,6 +71,356 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 
 ## 4. Data Model (Draft Schema)
 
+### StationConfig
+*Used by Dashboard settings, Studio context, and Public Player branding.*
+
+**Required fields**
+- `id`
+- `slug`
+- `display_name`
+- `timezone`
+- `branding`
+- `stream_urls`
+
+**Optional fields**
+- `default_language`
+- `default_locale`
+- `support_email`
+- `social_links`
+- `fallback_track_id` *(FK -> `Tracks.id`)*
+- `active_clock_wheel_id` *(FK -> `ClockWheel.id`)*
+
+```json
+{
+  "id": "station_01HZN9YQ9G0M6Q",
+  "slug": "neon-fm",
+  "display_name": "Neon FM",
+  "timezone": "America/New_York",
+  "branding": {
+    "logo_url": "https://cdn.example.com/branding/neonfm/logo.svg",
+    "primary_color": "#7A3CFF",
+    "accent_color": "#00E5FF",
+    "tagline": "Future sounds, live now"
+  },
+  "stream_urls": {
+    "hls": "https://stream.example.com/neonfm/index.m3u8",
+    "icecast_mp3": "https://stream.example.com/neonfm.mp3",
+    "fallback_preview": "https://cdn.example.com/previews/offline-loop.mp3"
+  },
+  "default_language": "en",
+  "default_locale": "en-US",
+  "support_email": "support@neonfm.example",
+  "social_links": {
+    "x": "https://x.com/neonfm",
+    "instagram": "https://instagram.com/neonfm"
+  },
+  "fallback_track_id": "trk_62f8a2b6",
+  "active_clock_wheel_id": "clock_7am_drive"
+}
+```
+
+### ShowBlock + ClockWheel
+*Defines repeatable schedule templates and concrete blocks visible in Dashboard and Studio View.*
+
+**Required fields (ClockWheel)**
+- `id`
+- `station_id` *(FK -> `StationConfig.id`)*
+- `name`
+- `hour_mask`
+- `segments`
+
+**Optional fields (ClockWheel)**
+- `daypart`
+- `valid_from`
+- `valid_to`
+- `constraints`
+
+**Required fields (ShowBlock)**
+- `id`
+- `station_id` *(FK -> `StationConfig.id`)*
+- `clock_wheel_id` *(FK -> `ClockWheel.id`)*
+- `starts_at`
+- `duration_sec`
+- `status` *(enum: "scheduled", "active", "finished", "cancelled")*
+
+**Optional fields (ShowBlock)**
+- `host_persona_id` *(FK -> `HostPersona.id`)*
+- `resolved_queue_item_ids` *(FK array -> `BroadcastQueue.id`)*
+
+```json
+{
+  "clock_wheel": {
+    "id": "clock_7am_drive",
+    "station_id": "station_01HZN9YQ9G0M6Q",
+    "name": "Morning Drive",
+    "daypart": "morning",
+    "hour_mask": [7, 8, 9],
+    "valid_from": "2026-01-01",
+    "valid_to": null,
+    "segments": [
+      {
+        "offset_sec": 0,
+        "slot_type": "station_id",
+        "duration_sec": 10
+      },
+      {
+        "offset_sec": 10,
+        "slot_type": "music_power",
+        "duration_sec": 240,
+        "track_id": "trk_62f8a2b6"
+      },
+      {
+        "offset_sec": 250,
+        "slot_type": "voice_link",
+        "duration_sec": 40,
+        "prompt_template_id": "tmpl_song_intro"
+      },
+      {
+        "offset_sec": 290,
+        "slot_type": "promo",
+        "duration_sec": 30,
+        "ad_inventory_id": "adinv_weekend_ticket_push"
+      }
+    ],
+    "constraints": {
+      "artist_separation_minutes": 60,
+      "max_consecutive_talk_breaks": 2
+    }
+  },
+  "show_block": {
+    "id": "show_2026-02-12T07",
+    "station_id": "station_01HZN9YQ9G0M6Q",
+    "clock_wheel_id": "clock_7am_drive",
+    "starts_at": "2026-02-12T07:00:00-05:00",
+    "duration_sec": 3600,
+    "status": "scheduled",
+    "host_persona_id": "host_ava_nova",
+    "resolved_queue_item_ids": [
+      "queue_801",
+      "queue_802",
+      "queue_803"
+    ]
+  }
+}
+```
+
+### HostPersona + VoiceProviderBinding
+*Powers AI host management in Dashboard and real-time rendering in Studio View.*
+
+**Required fields (HostPersona)**
+- `id`
+- `station_id` *(FK -> `StationConfig.id`)*
+- `name`
+- `tone_profile`
+- `voice_binding`
+
+**Optional fields (HostPersona)**
+- `backstory`
+- `default_prompt_template_id` *(FK -> `PromptTemplate.id`)*
+- `knowledge_sources`
+- `active`
+
+**Required fields (VoiceProviderBinding)**
+- `provider`
+- `voice_id`
+- `model`
+
+**Optional fields (VoiceProviderBinding)**
+- `style`
+- `speaking_rate`
+- `pitch`
+- `stability`
+
+```json
+{
+  "id": "host_ava_nova",
+  "station_id": "station_01HZN9YQ9G0M6Q",
+  "name": "Ava Nova",
+  "backstory": "Former club resident turned AI tastemaker.",
+  "tone_profile": ["energetic", "witty", "music-forward"],
+  "default_prompt_template_id": "tmpl_song_intro",
+  "knowledge_sources": ["music_catalog", "weather_api", "station_events"],
+  "active": true,
+  "voice_binding": {
+    "provider": "elevenlabs",
+    "voice_id": "21m00Tcm4TlvDq8ikWAM",
+    "model": "eleven_multilingual_v2",
+    "style": "radio",
+    "speaking_rate": 1.02,
+    "pitch": 0,
+    "stability": 0.55
+  }
+}
+```
+
+### PromptTemplate + RuntimeVariableBinding
+*Backs script authoring in Dashboard and generated link text in Studio View.*
+
+**Required fields (PromptTemplate)**
+- `id`
+- `station_id` *(FK -> `StationConfig.id`)*
+- `name`
+- `template_text`
+- `variable_specs`
+
+**Optional fields (PromptTemplate)**
+- `persona_id` *(FK -> `HostPersona.id`)*
+- `applies_to_slot_types`
+- `safety_rules`
+- `version`
+
+**Required fields (RuntimeVariableBinding)**
+- `template_id` *(FK -> `PromptTemplate.id`)*
+- `queue_item_id` *(FK -> `BroadcastQueue.id`)*
+- `bindings`
+
+**Optional fields (RuntimeVariableBinding)**
+- `source_track_id` *(FK -> `Tracks.id`)*
+- `next_track_id` *(FK -> `Tracks.id`)*
+- `listener_request_id`
+
+```json
+{
+  "template": {
+    "id": "tmpl_song_intro",
+    "station_id": "station_01HZN9YQ9G0M6Q",
+    "name": "Song Intro + Tease",
+    "template_text": "Coming up next is {{next_track_title}} by {{next_track_artist}}. {{optional_weather_tag}} Stay with {{station_name}}.",
+    "variable_specs": [
+      {"name": "next_track_title", "required": true, "type": "string"},
+      {"name": "next_track_artist", "required": true, "type": "string"},
+      {"name": "optional_weather_tag", "required": false, "type": "string"},
+      {"name": "station_name", "required": true, "type": "string"}
+    ],
+    "persona_id": "host_ava_nova",
+    "applies_to_slot_types": ["voice_link", "top_of_hour"],
+    "safety_rules": ["no_profanity", "no_medical_claims"],
+    "version": 3
+  },
+  "runtime_binding": {
+    "template_id": "tmpl_song_intro",
+    "queue_item_id": "queue_802",
+    "source_track_id": "trk_51f1a0d9",
+    "next_track_id": "trk_62f8a2b6",
+    "bindings": {
+      "next_track_title": "Neon Nights",
+      "next_track_artist": "AI Synthwave Collective",
+      "optional_weather_tag": "Clear skies tonight in Brooklyn.",
+      "station_name": "Neon FM"
+    }
+  }
+}
+```
+
+### AdPromoInventory
+*Feeds Dashboard campaign controls and scheduler placement decisions surfaced in Studio View.*
+
+**Required fields**
+- `id`
+- `station_id` *(FK -> `StationConfig.id`)*
+- `type`
+- `title`
+- `asset_uri`
+- `duration_sec`
+- `constraints`
+
+**Optional fields**
+- `priority`
+- `campaign_window`
+- `max_plays_per_hour`
+- `target_show_block_ids` *(FK array -> `ShowBlock.id`)*
+- `companion_track_id` *(FK -> `Tracks.id`)*
+- `last_scheduled_queue_item_id` *(FK -> `BroadcastQueue.id`)*
+
+```json
+{
+  "id": "adinv_weekend_ticket_push",
+  "station_id": "station_01HZN9YQ9G0M6Q",
+  "type": "promo",
+  "title": "Weekend Festival Ticket Push",
+  "asset_uri": "s3://station-assets/promos/weekend-fest-30s.wav",
+  "duration_sec": 30,
+  "constraints": {
+    "min_minutes_between_plays": 45,
+    "allowed_dayparts": ["morning", "afternoon"],
+    "exclude_adjacent_slot_types": ["station_id"]
+  },
+  "priority": "high",
+  "campaign_window": {
+    "start": "2026-02-01T00:00:00Z",
+    "end": "2026-02-28T23:59:59Z"
+  },
+  "max_plays_per_hour": 1,
+  "target_show_block_ids": ["show_2026-02-12T07"],
+  "companion_track_id": "trk_62f8a2b6",
+  "last_scheduled_queue_item_id": "queue_803"
+}
+```
+
+### PublicPlayerNowPlayingSnapshot
+*Serves the Public Player with a listener-safe, low-latency now-playing payload.*
+
+**Required fields**
+- `station_id` *(FK -> `StationConfig.id`)*
+- `generated_at`
+- `stream_status`
+- `now_playing`
+- `up_next`
+
+**Optional fields**
+- `host`
+- `recently_played`
+- `public_message`
+- `active_queue_item_id` *(FK -> `BroadcastQueue.id`)*
+
+```json
+{
+  "station_id": "station_01HZN9YQ9G0M6Q",
+  "generated_at": "2026-02-12T12:15:04Z",
+  "stream_status": "live",
+  "active_queue_item_id": "queue_802",
+  "now_playing": {
+    "queue_item_id": "queue_802",
+    "item_type": "track",
+    "track_id": "trk_62f8a2b6",
+    "title": "Neon Nights",
+    "artist": "AI Synthwave Collective",
+    "started_at": "2026-02-12T12:13:10Z",
+    "duration_sec": 245,
+    "artwork_url": "https://cdn.example.com/artwork/trk_62f8a2b6.jpg"
+  },
+  "up_next": [
+    {
+      "queue_item_id": "queue_803",
+      "item_type": "promo",
+      "title": "Weekend Festival Ticket Push",
+      "eta_sec": 38
+    },
+    {
+      "queue_item_id": "queue_804",
+      "item_type": "voice_link",
+      "title": "Ava Nova break",
+      "eta_sec": 68
+    }
+  ],
+  "host": {
+    "host_persona_id": "host_ava_nova",
+    "name": "Ava Nova"
+  },
+  "recently_played": [
+    {
+      "queue_item_id": "queue_801",
+      "track_id": "trk_51f1a0d9",
+      "title": "Midnight Run",
+      "artist": "Digital Skyline",
+      "artwork_url": "https://cdn.example.com/artwork/trk_51f1a0d9.jpg"
+    }
+  ],
+  "public_message": "Vote for tonight's throwback on our app."
+}
+```
+
+### Tracks
 ### StationSchedule
 ```json
 {
