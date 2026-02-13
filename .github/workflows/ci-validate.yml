@@ -1,0 +1,68 @@
+name: CI Validate
+
+on:
+  push:
+    branches:
+      - main
+      - work
+    paths:
+      - '.github/workflows/ci-validate.yml'
+      - 'config/**/*.json'
+      - 'config/**/*.py'
+      - '*.md'
+      - '*.bat'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/ci-validate.yml'
+      - 'config/**/*.json'
+      - 'config/**/*.py'
+      - '*.md'
+      - '*.bat'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Lint, format, and schema validation
+    runs-on: ubuntu-latest
+    if: ${{ hashFiles('config/prompt_variables.json', 'config/schedules.json') != '' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Validate JSON syntax
+        run: |
+          python -m json.tool config/prompt_variables.json > /dev/null
+          python -m json.tool config/schedules.json > /dev/null
+
+      - name: Validate JSON structural shape
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          prompt = json.loads(Path('config/prompt_variables.json').read_text(encoding='utf-8'))
+          schedules = json.loads(Path('config/schedules.json').read_text(encoding='utf-8'))
+
+          if not isinstance(prompt, dict):
+              raise SystemExit('config/prompt_variables.json must be a JSON object')
+
+          if not isinstance(schedules, (dict, list)):
+              raise SystemExit('config/schedules.json must be a JSON object or array')
+
+          print('JSON shape checks passed.')
+          PY
+
+      - name: Check Python formatting (inspect_db.py)
+        run: |
+          python -m pip install --upgrade pip black
+          black --check config/inspect_db.py
