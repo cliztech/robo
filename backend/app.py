@@ -20,6 +20,13 @@ async def lifespan(_: FastAPI):
 
     yield
 
+from backend.status.api import router as status_router
 
 app = FastAPI(title="RoboDJ Backend Scheduler Services", lifespan=lifespan)
 app.include_router(autonomy_policy_router)
+app.include_router(status_router)
+from backend.scheduling.scheduler_ui_api import router as scheduler_ui_router
+
+app = FastAPI(title="RoboDJ Backend Scheduler Services")
+app.include_router(autonomy_policy_router)
+app.include_router(scheduler_ui_router)
