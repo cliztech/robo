@@ -176,8 +176,12 @@ def _load_json(path: Path) -> Any:
 
 
 def validate_target(name: str, config_path: Path, schema_path: Path) -> list[str]:
-    config = _load_json(config_path)
-    schema = _load_json(schema_path)
+    try:
+        config = _load_json(config_path)
+        schema = _load_json(schema_path)
+    except ValidationError as exc:
+        return [f"[{name}] {exc}"]
+
     errors: list[str] = []
     _validate(config, schema, "$", errors)
 
