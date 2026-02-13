@@ -40,6 +40,31 @@ TARGETS = [
         "config": CONFIG_DIR / "prompt_variables.json",
         "schema": SCHEMA_DIR / "prompt_variables.schema.json",
     },
+    {
+        "name": "autonomy_policy",
+        "config": CONFIG_DIR / "autonomy_policy.json",
+        "schema": SCHEMA_DIR / "autonomy_policy.schema.json",
+    },
+    {
+        "name": "autonomy_profiles",
+        "config": CONFIG_DIR / "autonomy_profiles.json",
+        "schema": SCHEMA_DIR / "autonomy_profiles.schema.json",
+    },
+    {
+        "name": "persona_ops",
+        "config": CONFIG_DIR / "persona_ops.json",
+        "schema": SCHEMA_DIR / "persona_ops.schema.json",
+    },
+    {
+        "name": "interactivity_channels",
+        "config": CONFIG_DIR / "interactivity_channels.json",
+        "schema": SCHEMA_DIR / "interactivity_channels.schema.json",
+    },
+    {
+        "name": "editorial_pipeline_config",
+        "config": CONFIG_DIR / "editorial_pipeline_config.json",
+        "schema": SCHEMA_DIR / "editorial_pipeline_config.schema.json",
+    },
 ]
 
 
@@ -216,7 +241,8 @@ def main() -> int:
         )
         return 1
 
-    print("Configuration validation passed for schedules.json and prompt_variables.json.")
+    validated_names = ", ".join(f"{target['name']}.json" for target in TARGETS)
+    print(f"Configuration validation passed for: {validated_names}.")
     return 0
 
 

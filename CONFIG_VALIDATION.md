@@ -6,8 +6,13 @@ Use the validator before any deployment or handoff to catch malformed configurat
 
 - `config/schedules.json` against `config/schemas/schedules.schema.json`
 - `config/prompt_variables.json` against `config/schemas/prompt_variables.schema.json`
+- `config/autonomy_policy.json` against `config/schemas/autonomy_policy.schema.json`
+- `config/autonomy_profiles.json` against `config/schemas/autonomy_profiles.schema.json`
+- `config/persona_ops.json` against `config/schemas/persona_ops.schema.json`
+- `config/interactivity_channels.json` against `config/schemas/interactivity_channels.schema.json`
+- `config/editorial_pipeline_config.json` against `config/schemas/editorial_pipeline_config.schema.json`
 
-The validator reports actionable errors with JSON paths (for example `$.variable_settings.missing_variable_behavior`) and expected types/enums.
+The validator reports actionable errors with JSON paths in `[$.json.path]` style (for example `$.variable_settings.missing_variable_behavior`) and expected types/enums.
 
 ## Run locally
 
