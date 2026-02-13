@@ -593,6 +593,7 @@ Optional-but-recommended metadata for discovery/player UX: `isrc`, `label`, `art
 ```json
 {
   "id": "uuid",
+  "station_id": "uuid",
   "scheduled_time": "2023-10-27T14:00:00Z",
   "scheduled_time_local": "2023-10-27T10:00:00-04:00",
   "station_timezone": "America/New_York",
@@ -720,50 +721,114 @@ Optional-but-recommended metadata for discovery/player UX: `isrc`, `label`, `art
 }
 ```
 
-### Permission
+### Identity and authorization model
+
+#### User
 ```json
 {
-  "id": "schedule.publish",
-  "resource": "schedule",
-  "action": "publish",
-  "description": "Publish a drafted schedule to the live programming timeline"
+  "id": "uuid",
+  "email": "ops@station.com",
+  "display_name": "Alex Producer",
+  "is_active": true,
+  "memberships": [
+    {
+      "station_id": "uuid",
+      "role_id": "uuid"
+    }
+  ]
 }
 ```
 
-### Permission-Gated Actions (for API enforcement + frontend control states)
-The backend MUST enforce permissions server-side and also return the current user's effective permission identifiers so the frontend can enable/disable controls deterministically.
+#### Role
+```json
+{
+  "id": "uuid",
+  "station_id": "uuid",
+  "name": "Program Director",
+  "description": "Can manage content and publish schedules",
+  "scopes": ["read", "write", "publish"]
+}
+```
 
-| Action | Permission ID | Typical UI Controls |
+#### Permission scopes
+- `read`: view station resources and analytics.
+- `write`: create/update/delete station resources (tracks, prompts, schedules, queue adjustments).
+- `publish`: execute state changes that affect live output (publish schedule, trigger go-live, force queue play, approve generated links).
+- `admin`: station governance (user invites, role management, credentials/integrations, destructive station settings).
+
+Scope hierarchy: `admin` implies `publish`, `write`, and `read`; `publish` implies `write` + `read`; `write` implies `read`.
+
+Enforcement rule: API authorization is always evaluated against both `(user_id, station_id)` membership and required scope.
+
+## 5. API station-context requirements
+
+### Required station context in payloads
+For all station-owned resources, API requests must include station context by one of these mechanisms:
+
+1. Path scoping (preferred): `/api/stations/{station_id}/...`
+2. Body field (required for create/upsert if not path-scoped): `station_id`
+3. Event envelope metadata (async workers/webhooks): `{"station_id":"..."}`
+
+If station context is missing or does not match authenticated membership, return `403` for unauthorized station access or `400` for malformed payload.
+
+### Endpoint patterns that must carry station context
+- Authenticated list/query: tracks, prompts, schedules, clock wheels, queue items, promo spots, host personas, listener requests.
+- Mutations: create/update/delete for all station-owned resources.
+- Live actions: publish schedule, regenerate segment, trigger voice link, enqueue/dequeue, force-skip.
+- Analytics: dashboard metrics, now-playing history, performance reports.
+
+### Example payloads
+```http
+POST /api/stations/{station_id}/tracks
+{
+  "title": "Neon Nights",
+  "artist": "AI Synthwave Collective",
+  "duration": 245
+}
+```
+
+```http
+POST /api/queue/enqueue
+{
+  "station_id": "uuid",
+  "item_type": "track",
+  "item_id": "uuid"
+}
+```
+
+## 6. Frontend data filtering requirements
+
+- Resolve active station at login/session restore (station switcher or last-used station).
+- Persist active station in app state and include it in every API call.
+- Filter all client caches by `station_id` key to prevent cross-station leakage.
+- Hide/disable UI actions if user lacks required role scope for the active station.
+- On station switch, clear station-scoped stores (queue, tracks, prompts, dashboard metrics) before refetching.
+- Never render mixed-station lists in shared components; enforce query-level filtering first, then defensive client-side filtering.
+
+Recommended cache keys:
+- `['station', station_id, 'tracks']`
+- `['station', station_id, 'queue']`
+- `['station', station_id, 'schedule', date]`
+- `['station', station_id, 'prompts']`
+
+## 7. Dashboard action-to-permission matrix
+
+| Dashboard Action | Required Scope | Notes |
 |---|---|---|
-| View broadcast queue | `queue.view` | Queue tab visibility |
-| Edit queue entries (insert/remove/swap tracks) | `queue.edit` | Edit buttons, track replace modal |
-| Reorder queue | `queue.reorder` | Drag-and-drop handle |
-| View schedule drafts/live grid | `schedule.view` | Schedule page and timeline |
-| Edit schedule drafts | `schedule.edit` | Save draft button, slot editor |
-| Publish schedule to live | `schedule.publish` | Publish button + confirmation dialog |
-| View host persona settings | `host_persona.view` | Persona panel visibility |
-| Modify host persona (name/tone/voice/profile) | `host_persona.edit` | Persona form fields + save action |
-| View API key metadata | `api_keys.view` | Integrations/settings page |
-| Rotate API keys | `api_keys.rotate` | Rotate key button |
-| Manage users and role assignments | `users.manage` | User admin section |
-| View observability logs/audit trail | `audit_logs.view` | Logs dashboard |
+| View dashboard KPIs and now-playing | `read` | Station-scoped metrics only |
+| View track library and metadata | `read` | No mutation controls |
+| Upload/edit/delete tracks | `write` | Includes artwork and tags |
+| Create/edit prompts and host persona settings | `write` | Content authoring actions |
+| Build/edit clock wheels and schedules | `write` | Draft changes allowed |
+| Publish schedule to live playout | `publish` | Affects on-air output |
+| Force queue reorder/skip/play-next | `publish` | Real-time broadcast control |
+| Approve generated AI link for air | `publish` | Treated as live editorial action |
+| View user roster and role assignments | `admin` | Station membership management |
+| Invite/remove users | `admin` | Station boundary enforced |
+| Create/update roles and scopes | `admin` | Cannot exceed caller's own max scope |
+| Configure integration credentials and secrets | `admin` | Sensitive operations, audited |
 
-### Minimal Role Set and Effective Permissions
-
-| Role | Effective Permissions |
-|---|---|
-| `admin` | `queue.view`, `queue.edit`, `queue.reorder`, `schedule.view`, `schedule.edit`, `schedule.publish`, `host_persona.view`, `host_persona.edit`, `api_keys.view`, `api_keys.rotate`, `users.manage`, `audit_logs.view` |
-| `producer` | `queue.view`, `queue.edit`, `queue.reorder`, `schedule.view`, `schedule.edit`, `schedule.publish`, `host_persona.view`, `host_persona.edit` |
-| `operator` | `queue.view`, `queue.edit`, `queue.reorder`, `schedule.view`, `host_persona.view` |
-| `viewer` | `queue.view`, `schedule.view`, `host_persona.view`, `api_keys.view` |
-
-**Notes:**
-- `admin` is the only minimal role that can rotate API keys and manage user-role assignments.
-- `producer` can prepare and publish content but cannot manage users or secrets.
-- `operator` can run live operations but cannot publish schedules or change host persona.
-- `viewer` is read-only and intended for stakeholders/monitoring users.
-
-## 5. Implementation Plan
+## 8. Implementation Plan
 
 ### Phase 1: Core Engine (MVP)
 -   [ ] Python script to generate a single "Show" (MP3 file) from a list of songs.
@@ -779,7 +844,7 @@ The backend MUST enforce permissions server-side and also return the current use
 -   [ ] Admin Dashboard for uploading tracks and configuring DJ.
 -   [ ] Public Player with "Now Playing" data.
 
-## 6. Technology Stack Recommendations
+## 9. Technology Stack Recommendations
 -   **Language**: Python 3.11+ (Backend), TypeScript (Frontend).
 -   **Audio Processing**: `pydub` (simple) or `ffmpeg-python` (complex).
 -   **Streaming**: `Liquidsoap` (industry standard for radio automation) or custom FFmpeg stream.
