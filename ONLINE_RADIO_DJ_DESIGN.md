@@ -147,7 +147,7 @@ This section defines all user-facing domain objects and their relationships so b
   - `voice_link_id -> VoiceLink.id` (nullable; set when `item_type=voice_link`)
   - `jingle_id -> Jingle.id` (nullable; set when `item_type=jingle`)
   - `ad_spot_id -> AdSpot.id` (nullable; set when `item_type=ad_spot`)
-  - `request_id -> Request.id` (nullable if generated from listener request)
+  - `request_id -> Request.id` (nullable; set if the item originates from a listener request)
 - **Relations**:
   - Many-to-one: `QueueItem -> Station`
   - Many-to-one: `QueueItem -> ClockWheel` (optional)
