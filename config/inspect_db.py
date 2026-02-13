@@ -30,9 +30,9 @@ def normalize_default_path(filename: str) -> str:
 def get_table_names(cursor: sqlite3.Cursor) -> tuple[list[str], list[str]]:
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
     tables = [row[0] for row in cursor.fetchall()]
-    invalid_names = [name for name in tables if not VALID_IDENTIFIER_PATTERN.match(name)]
-    valid_names = [name for name in tables if name not in invalid_names]
-    return valid_names, invalid_names
+    invalid_names_set = {name for name in tables if not VALID_IDENTIFIER_PATTERN.match(name)}
+    valid_names = [name for name in tables if name not in invalid_names_set]
+    return valid_names, list(invalid_names_set)
 
 
 def inspect_db(db_path: str) -> dict[str, Any]:
