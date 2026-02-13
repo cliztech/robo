@@ -1,0 +1,43 @@
+{
+  "station_default_mode": "assisted",
+  "mode_permissions": {
+    "manual": {
+      "track_selection": "human_only",
+      "script_generation": "human_with_ai_assist",
+      "voice_persona_selection": "human_only",
+      "caller_simulation_usage": "human_only",
+      "breaking_news_weather_interruption": "human_only"
+    },
+    "assisted": {
+      "track_selection": "human_with_ai_assist",
+      "script_generation": "ai_with_human_approval",
+      "voice_persona_selection": "human_with_ai_assist",
+      "caller_simulation_usage": "ai_with_human_approval",
+      "breaking_news_weather_interruption": "ai_with_human_approval"
+    },
+    "autonomous": {
+      "track_selection": "ai_autonomous",
+      "script_generation": "ai_autonomous",
+      "voice_persona_selection": "ai_autonomous",
+      "caller_simulation_usage": "ai_autonomous",
+      "breaking_news_weather_interruption": "ai_with_human_approval"
+    }
+  },
+  "show_overrides": [
+    {
+      "show_id": "morning_show",
+      "mode": "assisted"
+    }
+  ],
+  "timeslot_overrides": [
+    {
+      "id": "overnight_weekdays",
+      "day_of_week": "monday",
+      "start_time": "00:00",
+      "end_time": "05:59",
+      "mode": "autonomous"
+    }
+  ],
+  "conflict_resolution": "timeslot_override > show_override > station_default",
+  "updated_at": "2026-01-01T00:00:00Z"
+}
