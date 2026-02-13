@@ -58,10 +58,14 @@ def validate_skills(errors: list[str]) -> None:
             if key not in metadata:
                 errors.append(f"{rel_skill}: missing required key '{key}'")
                 continue
-            if not isinstance(metadata[key], expected_type):
+            value = metadata[key]
+            if not isinstance(value, expected_type):
                 errors.append(
                     f"{rel_skill}: key '{key}' must be {expected_type.__name__}"
                 )
+                continue
+            if expected_type in (str, list) and not value:
+                errors.append(f"{rel_skill}: key '{key}' cannot be empty")
 
         name = metadata.get("name")
         if isinstance(name, str):
