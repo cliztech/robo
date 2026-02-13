@@ -5,6 +5,7 @@
   "description": "Frontend-safe configuration contract. Must contain only non-sensitive settings suitable for web clients.",
   "type": "object",
   "additionalProperties": false,
+  "$comment": "All fields are optional unless listed in required. Consumers should apply documented defaults when optional fields are absent.",
   "required": [
     "station",
     "ui",
@@ -27,16 +28,140 @@
     "ui": {
       "type": "object",
       "additionalProperties": false,
+      "description": "UI presentation settings. When optional fields are absent, clients should apply schema-provided defaults for stable rendering.",
+      "description": "Optional appearance and behavior controls consumed by browser clients. All appearance fields are optional and include defaults for backwards compatibility.",
+      "required": [
+        "preferences",
+        "module_visibility"
+      ],
       "properties": {
         "theme": {
           "type": "string",
-          "enum": ["light", "dark", "auto"]
+          "enum": ["light", "dark", "auto"],
+          "default": "auto",
+          "description": "Base color-scheme mode selector."
         },
-        "show_weather_widget": { "type": "boolean" },
+        "accent_color": {
+          "type": "string",
+          "pattern": "^#[A-Fa-f0-9]{6}$",
+          "default": "#2AA9FF",
+          "description": "Primary brand/accent color in 6-digit hex form."
+        },
+        "density": {
+          "type": "string",
+          "enum": ["comfortable", "compact"],
+          "default": "comfortable",
+          "description": "Controls spacing density for shell layout and controls."
+        },
+        "font_scale": {
+          "type": "number",
+          "minimum": 0.9,
+          "maximum": 1.25,
+          "multipleOf": 0.05,
+          "default": 1,
+          "description": "Global typography scale multiplier used by frontend token mapping."
+        },
+        "surface_style": {
+          "type": "string",
+          "enum": ["flat", "elevated"],
+          "default": "elevated",
+          "description": "Optional surface rendering mode for cards/panels."
+        },
         "refresh_interval_seconds": {
           "type": "integer",
           "minimum": 5,
+          "maximum": 300,
+          "default": 30,
+          "description": "Polling interval for frontend refresh behavior. Fallback: 30 seconds."
+        },
+        "tokens": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Safe visual primitives only; never include secrets or file paths. If omitted, clients should use the documented token defaults.",
+          "properties": {
+            "primary_color": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "default": "#2B6CB0",
+              "description": "Primary UI color in 6-digit hex format. Fallback: #2B6CB0."
+            },
+            "accent_color": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$",
+              "default": "#D69E2E",
+              "description": "Accent/highlight color in 6-digit hex format. Fallback: #D69E2E."
+            },
+            "surface_style": {
+              "type": "string",
+              "enum": ["flat", "elevated", "glass"],
+              "default": "flat",
+              "description": "Surface treatment preset. Fallback: flat."
+            },
+            "density": {
+              "type": "string",
+              "enum": ["comfortable", "compact"],
+              "default": "comfortable",
+              "description": "Spacing/compactness preset. Fallback: comfortable."
+            },
+            "corner_radius_scale": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2,
+              "default": 1,
+              "description": "Multiplier applied to component corner radii. Fallback: 1."
+            },
+            "font_stack": {
+              "type": "string",
+              "enum": ["system_ui", "humanist", "neo_grotesk", "serif"],
+              "default": "system_ui",
+              "description": "Optional named frontend font stack key (not a raw font file/path). Fallback: system_ui."
+            }
+          }
           "maximum": 300
+        },
+        "preferences": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "density",
+            "font_scale",
+            "reduced_motion",
+            "preferred_layout"
+          ],
+          "properties": {
+            "density": {
+              "type": "string",
+              "enum": ["compact", "comfortable", "spacious"]
+            },
+            "font_scale": {
+              "type": "number",
+              "minimum": 0.8,
+              "maximum": 1.5
+            },
+            "reduced_motion": { "type": "boolean" },
+            "preferred_layout": {
+              "type": "string",
+              "enum": ["auto", "single_column", "two_column", "focus"]
+            }
+          }
+        },
+        "module_visibility": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "scheduler",
+            "queue",
+            "alerts",
+            "diagnostics",
+            "autonomy_panel"
+          ],
+          "properties": {
+            "scheduler": { "type": "boolean" },
+            "queue": { "type": "boolean" },
+            "alerts": { "type": "boolean" },
+            "diagnostics": { "type": "boolean" },
+            "autonomy_panel": { "type": "boolean" }
+          }
         }
       }
     },

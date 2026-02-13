@@ -12,6 +12,21 @@ This document defines how runtime configuration data is transformed before becom
 2. Promote fields to frontend payloads only when explicitly listed in `public_frontend_config.schema.json`.
 3. Never pass through raw integration, security, storage, or path-bearing fields.
 
+## Explicit UI-Safe Allowlist Addendum
+The following `ui.tokens` fields are explicitly allowed for frontend exposure because they are visual primitives and non-sensitive:
+
+- `ui.tokens.primary_color`
+- `ui.tokens.accent_color`
+- `ui.tokens.surface_style`
+- `ui.tokens.density` (`comfortable` or `compact`)
+- `ui.tokens.corner_radius_scale`
+- `ui.tokens.font_stack` (named stack key only, not raw font files, URLs, or local file paths)
+
+Fallback behavior for omitted UI-safe fields:
+- If `ui.tokens` is absent, frontend clients should use schema defaults.
+- If individual `ui.tokens.*` keys are absent, frontend clients should apply each field's documented default.
+- Unknown `ui.tokens` keys are disallowed by schema (`additionalProperties: false`).
+
 ## Denylist (Keys/Paths)
 Denylist source of truth: `redaction_denylist.json`.
 
