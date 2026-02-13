@@ -195,6 +195,8 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 - [ ] Documentation refresh per release, including operator runbooks.
 
 ## Prioritization snapshot
+
+This snapshot provides a cross-release view of priority, highlighting the most critical themes regardless of their target release.
 - **P0:** Reliability, backup/recovery, conflict detection, diagnostics.
 - **P1:** Scheduler UX, prompt versioning/guardrails, audio normalization.
 - **P2:** Library intelligence, integrations, operations dashboard.
