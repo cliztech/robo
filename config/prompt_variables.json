@@ -15,4 +15,27 @@
     "unresolved_tokens": []
   },
   "version": "1.1"
+  "version": "1.0",
+  "memory_service": {
+    "enabled": true,
+    "db_path": "config/memory_service.db",
+    "mention_kinds": [
+      "song",
+      "topic",
+      "trivia",
+      "caller",
+      "promo"
+    ],
+    "duplicate_detection": {
+      "string_threshold": 0.9,
+      "semantic_threshold": 0.82,
+      "lookback_days": 30
+    },
+    "reset_controls": [
+      "show",
+      "day",
+      "week",
+      "all"
+    ]
+  }
 }
