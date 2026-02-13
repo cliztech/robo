@@ -117,7 +117,7 @@ def validate_mcp(errors: list[str]) -> None:
             errors.append(f"infra/mcp/servers.json: manifest missing for '{server_id}'")
             continue
 
-        manifest_path = (MCP_DIR / manifest_ref.replace("./", "")).resolve()
+        manifest_path = (MCP_DIR / manifest_ref).resolve()
         if not manifest_path.exists():
             errors.append(
                 f"infra/mcp/servers.json: manifest does not exist for '{server_id}': {manifest_ref}"
