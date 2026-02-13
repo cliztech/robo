@@ -1,0 +1,9 @@
+services:
+  mcp-gateway:
+    # Optional override for Docker control integration.
+    # Use only when you explicitly trust workloads and need host Docker access.
+    environment:
+      - DOCKER_MCP_IN_CONTAINER=1
+    volumes:
+      # WARNING: this is a high-privilege mount.
+      - /var/run/docker.sock:/var/run/docker.sock:rw

@@ -1,0 +1,21 @@
+# Safer variant for users who do not need container control features.
+# This file mirrors the secure defaults in docker-compose.yaml.
+services:
+  mcp-gateway:
+    image: docker/mcp-gateway:latest
+    container_name: mcp-gateway
+    command:
+      - --servers=time
+      - --transport=streaming
+      - --port=8811
+    ports:
+      - "127.0.0.1:8811:8811"
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 256
+    restart: unless-stopped
