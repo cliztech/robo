@@ -89,7 +89,7 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 
 A track may move to `ingestion_status = schedulable` only when all of the following are true:
 
-- **Core metadata present**: `title`, `artist`, `duration`, `file_path`.
+- **Core metadata present**: `id`, `title`, `artist`, `duration`, `file_path`.
 - **Ingestion metadata present**: `codec`, `sample_rate_hz`, `bitrate_kbps`, `channels`.
 - **QA loudness metadata present**: `integrated_lufs`, `true_peak_dbtp`.
 - **Compliance metadata present**: `is_explicit`, `content_rating`, `rights_status`, `availability_status`.
