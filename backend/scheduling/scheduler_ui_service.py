@@ -55,12 +55,10 @@ class SchedulerUiService:
         if conflicts:
             messages = "; ".join(conflict.message for conflict in conflicts[:3])
             raise ValueError(f"Cannot save schedules while conflicts exist: {messages}")
-            raise ValueError(self._format_conflict_error(conflicts))
 
         self.schedules_path.write_text(envelope.model_dump_json(indent=2), encoding="utf-8")
         return SchedulerUiState(schedule_file=envelope, timeline_blocks=timeline, conflicts=[])
 
-    def validate_schedules(self, schedules: list[ScheduleRecord]):
     def publish_schedules(self, schedules: list[ScheduleRecord]) -> dict[str, object]:
         ui_state = self.update_schedules(schedules)
         return {
@@ -102,7 +100,6 @@ class SchedulerUiService:
     def apply_template(self, request: TemplateApplyRequest) -> list[ScheduleRecord]:
         primitive = self.template_primitives()[request.template]
 
-        blocks = TEMPLATE_PRIMITIVES[request.template]
         schedules: list[ScheduleRecord] = []
         for block in primitive.blocks:
             spec = self._timeline_to_rrule(block.day_of_week, block.start_time)
@@ -118,16 +115,6 @@ class SchedulerUiService:
                     end_window=request.end_window,
                     content_refs=[ref.model_copy() for ref in request.content_refs],
                     schedule_spec=ScheduleSpec(mode=ScheduleSpecMode.rrule, rrule=spec),
-                    template_ref={"id": f"tpl_{request.template.value}_baseline", "version": 1},
-                    overrides={
-                        "timezone": request.timezone,
-                        "ui_state": UiState.active,
-                        "priority": 50,
-                        "start_window": request.start_window,
-                        "end_window": request.end_window,
-                        "content_refs": request.content_refs,
-                        "schedule_spec": ScheduleSpec(mode=ScheduleSpecMode.rrule, rrule=spec),
-                    },
                 )
             )
         return schedules
