@@ -91,7 +91,7 @@ To prevent inconsistencies between backend scheduling and frontend views, all qu
   "starts_at_utc": "2026-03-10T13:00:00Z",
   "ends_at_utc": "2026-03-10T17:00:00Z",
   "effective_from": "2026-03-01T00:00:00Z",
-  "recurrence_rule": "RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR;BYHOUR=9;BYMINUTE=0",
+  "recurrence_rule": "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR;BYHOUR=9;BYMINUTE=0",
   "blackout_windows": [
     {
       "starts_at_utc": "2026-03-15T00:00:00Z",
