@@ -240,8 +240,8 @@ The scheduler should migrate legacy records to schema version `2` before use.
 
 After migration, reject invalid schedules where:
 
-- required fields are missing,
-- `ui_state` is not one of `draft|active|paused|archived`,
-- `schedule_spec` mode and payload mismatch,
-- timezone is not IANA-compatible,
-- content reference list is empty.
+- required fields are missing
+- `ui_state` is not one of `draft|active|paused|archived`
+- `schedule_spec` mode and payload mismatch
+- timezone is not IANA-compatible
+- content reference list is empty
