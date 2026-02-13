@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robodj.local/contracts/frontend_responses/listener_feedback_ui_state_response.schema.json",
+  "title": "listener_feedback_ui_state_response",
+  "description": "Frontend-safe listener feedback UI state and submission constraints.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "feedback_enabled",
+    "context",
+    "channels",
+    "allowed_reactions",
+    "submission_limits",
+    "offline_fallback"
+  ],
+  "properties": {
+    "feedback_enabled": {
+      "type": "boolean",
+      "description": "True when frontend clients should render active feedback controls."
+    },
+    "disabled_reason_code": {
+      "type": "string",
+      "enum": [
+        "feature_disabled",
+        "persona_ineligible",
+        "maintenance_window",
+        "channel_unavailable",
+        "unknown"
+      ],
+      "description": "Optional machine-readable reason shown when feedback_enabled is false."
+    },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "persona_id",
+        "persona_version_id"
+      ],
+      "properties": {
+        "persona_id": {
+          "type": "string",
+          "description": "Public persona identifier aligned to persona_ops concepts."
+        },
+        "persona_version_id": {
+          "type": "string",
+          "description": "Public persona version identifier for attribution."
+        },
+        "daypart": {
+          "type": "string",
+          "description": "Current broadcast daypart label (for example morning_drive)."
+        },
+        "variant_id": {
+          "type": "string",
+          "description": "Optional frontend-safe experiment variant identifier."
+        }
+      }
+    },
+    "channels": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": [
+          "thumbs_up",
+          "thumbs_down",
+          "skip",
+          "emoji"
+        ]
+      },
+      "description": "Enabled feedback channels clients may render for the active context."
+    },
+    "allowed_reactions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": [
+          "like",
+          "dislike",
+          "skip",
+          "love",
+          "fire",
+          "laugh",
+          "surprised"
+        ]
+      },
+      "description": "Supported reaction payload values accepted by the feedback endpoint."
+    },
+    "submission_limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cooldown_seconds",
+        "max_submissions_per_minute",
+        "max_submissions_per_hour"
+      ],
+      "properties": {
+        "cooldown_seconds": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_submissions_per_minute": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "max_submissions_per_hour": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "offline_fallback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "allow_queueing",
+        "max_queued_submissions",
+        "queue_ttl_seconds"
+      ],
+      "properties": {
+        "allow_queueing": {
+          "type": "boolean",
+          "description": "When true, client may queue feedback locally while offline."
+        },
+        "max_queued_submissions": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "queue_ttl_seconds": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "feedback_enabled": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "disabled_reason_code"
+        ]
+      }
+    }
+  ]
+}

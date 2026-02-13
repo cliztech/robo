@@ -2,6 +2,12 @@
 
 This document defines the canonical `schedule` record format for RoboDJ scheduling data stored in `config/schedules.json`.
 
+## Frontend response contract linkage
+
+Scheduler UX responses should use `contracts/frontend_responses/frontend_schedule_response.schema.json`.
+That contract aligns with timeline/clockwheel behavior in `docs/scheduler_clockwheel_spec.md`
+and dual-time local+UTC presentation requirements in `ONLINE_RADIO_DJ_DESIGN.md`.
+
 ## Root Envelope
 
 `schedules.json` MUST use an object root with a schema version marker:
@@ -93,6 +99,53 @@ Each referenced item must include source and identifier details.
 | `ref_id` | string | Yes | Stable internal identifier for resource lookup. |
 | `label` | string | No | Display label for UI selection chips/dropdowns. |
 | `weight` | integer | No | Relative selection weight in multi-content schedules. |
+
+### `ui_interaction` (drag/drop editing contract)
+
+This optional object defines behavior for schedule editors that support direct timeline manipulation.
+
+| Field | Type | Required | Description |
+|---|---|---:|---|
+| `drag_enabled` | boolean | No | Enables pointer drag/drop for moving and resizing blocks. Default `true`. |
+| `keyboard_enabled` | boolean | No | Enables keyboard-equivalent move/resize/inspect/fix actions. Default `true`. |
+| `live_validation` | boolean | No | Runs conflict validation continuously during drag/resize, not only on save. Default `true`. |
+| `conflict_classes` | array of string | No | Allowed values: `overlap`, `missing_legal_id_window`, `incompatible_show_preset`, `ad_quota_breach`. |
+| `inline_fix_policy` | string | No | `manual_only`, `suggest_and_apply`, `auto_apply_safe_only`. Recommended `suggest_and_apply`. |
+| `consequence_preview` | boolean | No | Show before/after impact preview before commit. Default `true`. |
+
+#### UI conflict object shape
+
+When `live_validation=true`, UI implementations SHOULD normalize each conflict to:
+
+```json
+{
+  "class": "overlap",
+  "severity": "error",
+  "target_schedule_id": "sch_...",
+  "target_block_id": "b03_ad",
+  "message": "Ad break overlaps weather hit by 00:00:35.",
+  "suggestions": [
+    {
+      "id": "shift_after_weather",
+      "label": "Move ad break to 00:20:45",
+      "action": "shift_start",
+      "delta_sec": 45
+    }
+  ],
+  "consequence_preview": {
+    "hour_fill_delta_sec": -10,
+    "legal_id_status": "ok",
+    "ad_quota_delta_sec": 0
+  }
+}
+```
+
+Validation notes:
+
+- `class` MUST be one of the four conflict classes.
+- `severity` SHOULD be `error` for publish-blocking issues and `warning` for non-blocking degradations.
+- `suggestions` SHOULD be sorted by lowest operational risk first.
+- `consequence_preview` SHOULD be present when a suggested fix changes timing, legal compliance, or ad delivery.
 
 ---
 
@@ -245,3 +298,10 @@ After migration, reject invalid schedules where:
 - `schedule_spec` mode and payload mismatch
 - timezone is not IANA-compatible
 - content reference list is empty
+
+## Scheduling UX Success Metrics
+
+Implementations that support drag/drop + live validation should track:
+
+- **Reduced scheduling time**: median time to place and finalize a one-hour clock decreases by at least 20% from baseline.
+- **Reduced publish-time conflicts**: number of conflicts first detected at publish decreases by at least 50% from baseline.
