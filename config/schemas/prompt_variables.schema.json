@@ -31,7 +31,7 @@
         "filter_artist_parentheses",
         "filter_title_parentheses"
       ],
-      "additionalProperties": true
+      "additionalProperties": false
     },
     "time_variable_configs": {
       "type": "object",
