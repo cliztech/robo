@@ -37,6 +37,18 @@ Success criteria:
 - PRs are feature-sliced by shell areas (topbar, sidebar, workspace, overlays).
 - No animation ships without a reduced-motion equivalent.
 
+Cross-app accessibility guardrails (required for shell, tabs, scheduler, and overlays):
+- Publish and maintain a keyboard navigation map alongside every shell-area PR.
+- Ensure visible `:focus-visible` treatment for all interactive controls and composite widgets.
+- Implement semantic landmarks (`header`, `nav`, `main`, `aside`, `section[aria-labelledby]`, `dialog`) before visual polish tasks.
+- Validate theme-token contrast and text hierarchy before merge.
+
+Acceptance criteria from Working Agreement:
+- Keyboard map includes entry, traversal, and exit commands for shell, tabs, scheduler, and overlays.
+- Focus ring is perceivable in light/dark themes and never removed without replacement.
+- Landmark regions are discoverable via screen-reader rotor/landmark navigation.
+- Contrast checks pass WCAG AA for body text and non-text UI components.
+
 ---
 
 ## 3. System Architecture (React)
@@ -104,6 +116,10 @@ src/
 
 ## 4. Component Contracts
 
+### Interaction Specs
+- Command palette + shortcut architecture: `docs/command_palette_and_shortcuts_spec.md`
+
+
 ### `AppShell`
 Purpose: structural frame for all core navigation and content.
 
@@ -114,6 +130,12 @@ Behavior:
 - Renders topbar + sidebar + workspace regions.
 - Handles responsive collapse states.
 - Preserves sidebar width and selected tab per user preference.
+- Exposes semantic regions: `header` (topbar), `nav` (sidebar/tab strip), `main` (workspace), optional `aside` (context panels).
+
+Accessibility contract:
+- Supports skip link to `main` content target.
+- Maintains deterministic tab order: topbar -> sidebar -> tabs -> workspace -> utilities.
+- Applies shell-level keyboard map registration for help overlays and QA fixtures.
 
 ### `TabStrip`
 Purpose: browser-like tab management with smooth switching.
@@ -127,6 +149,11 @@ Animation contract:
 - Reordering uses spring with low bounce.
 - Tab activation uses fade + subtle x-translation.
 - Closing animates width to zero and fades.
+
+Accessibility contract:
+- Uses `role="tablist"` with child `role="tab"` and `aria-controls` linkage.
+- Keyboard: `ArrowLeft/ArrowRight` move focus, `Home/End` jump, `Enter/Space` activate, `Delete/Backspace` close (if closable).
+- Active tab state is represented via `aria-selected` and synchronized with visible focus styling.
 
 ### `AddressBar`
 Purpose: command/search/location surface.
@@ -143,6 +170,20 @@ Behavior:
 - Route transitions use shared layout animations.
 - Skeleton state appears for data loading >120ms.
 - Preserves scroll position per tab.
+
+Accessibility contract:
+- Route host uses `main`/`region` with accessible name sourced from active tab/page heading.
+- Announces route changes through polite live region when tab activation changes content.
+- Scheduler views expose grid semantics with keyboard navigation (`Arrow` traversal, `PageUp/PageDown` interval jumps).
+
+### `Overlays` (command palette, notification center, modal root)
+Purpose: interruptive and non-interruptive layered interactions.
+
+Accessibility contract:
+- Modal overlays use `role="dialog"` + `aria-modal="true"`, trap focus, and restore origin focus on close.
+- Non-modal overlays (e.g., notification center) remain reachable by keyboard without stealing focus unexpectedly.
+- `Escape` closes dismissible overlays unless an inner control has higher-priority handling.
+- Overlay launch shortcuts are documented in keyboard map and avoid collisions with shell navigation keys.
 
 ---
 
@@ -174,6 +215,12 @@ Reduced motion strategy:
 - Replace movement with opacity-only transitions.
 - Set durations to 80–140ms.
 - Disable continuous decorative loops.
+
+Acceptance criteria from reduced motion strategy:
+- `@media (prefers-reduced-motion: reduce)` removes x/y transforms and scale transitions from shell, tabs, scheduler timeline, and overlays.
+- Reduced mode keeps only opacity transitions with capped duration (<=140ms) and linear/standard easing.
+- Auto-scrolling and parallax-like effects are disabled or replaced with instant updates.
+- QA verifies no interaction requires motion cues alone to communicate state.
 
 ---
 
@@ -305,10 +352,81 @@ Exit criteria:
 - [ ] Add keyboard shortcuts (`Cmd/Ctrl+L`, `Cmd/Ctrl+K`, tab cycling)
 - [ ] Add profiling pass and animation budget fixes
 - [ ] Complete accessibility audit and fixes
+- [ ] Publish keyboard navigation map for shell/tabs/scheduler/overlays
+- [ ] Validate semantic landmarks and focus-visible states across shell contracts
+- [ ] Run contrast and text hierarchy checks against theme tokens
+
+### Keyboard Navigation Map (cross-app contract)
+
+| Area | Entry | Traverse | Action | Exit |
+| --- | --- | --- | --- | --- |
+| Shell (topbar/sidebar/workspace) | `Tab` from browser chrome or skip link | `Tab` / `Shift+Tab` | `Enter` / `Space` on focused control | `Shift+Tab` to previous region |
+| Tab Strip | `Ctrl/Cmd + 1..9` or `Tab` into strip | `ArrowLeft` / `ArrowRight`, `Home`, `End` | `Enter`/`Space` activate, `Delete` close | `Tab` into workspace |
+| Scheduler | `G then S` (app shortcut) or route entry | Arrow keys for cell/block movement; `PageUp/PageDown` period jump | `Enter` open block, `E` edit, `N` new item | `Escape` close editor / return focus |
+| Overlays | `Ctrl/Cmd + K` (palette), `Ctrl/Cmd + Shift + N` (notifications) | `Tab` cycle within overlay; arrow keys in lists | `Enter` select/confirm | `Escape` dismiss + restore origin focus |
+
+### Theme Contrast + Text Hierarchy Guardrails
+- Theme tokens must maintain at least 4.5:1 contrast for body text and 3:1 for large text/UI icons.
+- Interactive focus indicators must achieve 3:1 contrast against adjacent colors.
+- Text hierarchy checks ensure heading/subheading/body/caption tiers remain visually distinct in both themes.
+- CI or QA script should fail when token changes regress contrast below agreed thresholds.
 
 ---
 
-## 9. Definition of Done
+## 9. Interaction Frame + Latency Budgets
+
+Use this budget table as the source of truth for motion acceptance and QA sign-off on mid-range hardware.
+
+| Interaction | Frame Budget | Interaction Latency Budget | Primary Animation Constraints |
+| --- | --- | --- | --- |
+| Tab switch | 16.7ms/frame (target 60fps), max 2 dropped frames | Input-to-visual response <=100ms | Keep transform + opacity only; avoid layout-affecting width/height animation on active panel.
+| Panel open/close (sidebar, notification center) | 16.7ms/frame, max 3 dropped frames | Trigger-to-stable-state <=180ms | Use translate + opacity; no expensive backdrop filters on low-power devices.
+| Route transition | 16.7ms/frame, max 4 dropped frames | Navigation start-to-first-transition-frame <=120ms | Shared element transitions only for above-the-fold regions; defer secondary motion.
+| Command palette open | 16.7ms/frame, zero long tasks >50ms during open | Shortcut press-to-first-visible-pixel <=90ms | Animate overlay opacity and palette scale/translate lightly; preload palette structure.
+
+### Budget Exceeded Fallback Policy
+If any interaction exceeds the budgets above in profiling or QA runs, apply fallbacks in this exact order until the interaction returns within budget:
+
+1. **Disable blur/backdrop filters** on animated layers and overlays.
+2. **Reduce parallax depth** (cut translation distance by >=50%, disable multi-layer drift).
+3. **Shorten animation chain** by removing secondary/tertiary staggered elements and using single-step enter/exit transitions.
+
+Ship-blocking rule:
+- Any interaction that still misses budget after step 3 must default to reduced-motion behavior for that component until optimized.
+
+---
+
+## 10. Reduced-Motion Compliance Checklist
+
+All movement-based interactions must provide a verified reduced-motion equivalent before merge.
+
+- [ ] Every movement animation has an **opacity-only fallback** (no translate/scale/parallax required in reduced mode).
+- [ ] Critical workflows (navigation, save/confirm, command palette, dialog actions) include an **instant-state shortcut** (0ms or effectively immediate transition).
+- [ ] `prefers-reduced-motion: reduce` is honored across shell, overlays, and route transitions.
+- [ ] Decorative continuous motion (ambient parallax, shimmer loops) is disabled in reduced mode.
+- [ ] Focus visibility and reading order remain stable when motion is removed.
+
+---
+
+## 11. Profiling Checklist (Interaction-Linked)
+
+Run this checklist on at least one mid-range device profile before sign-off (e.g., 4x CPU throttle equivalent or representative hardware).
+
+| Interaction Name | How to Trigger | Metrics to Capture | Pass Criteria |
+| --- | --- | --- | --- |
+| `tab_switch` | Click inactive tab, then keyboard cycle tabs | FPS, dropped frames, input delay, long tasks | Meets tab-switch budget; no visible hitch in active content swap.
+| `panel_toggle` | Open/close sidebar and notification center 5x each | FPS, style/layout cost, paint time | Meets panel budget; no escalating frame cost across repeated toggles.
+| `route_transition` | Navigate between two heavy routes repeatedly | Navigation timing, first transition frame, dropped frames | Meets route budget; skeleton appears only when pending >120ms.
+| `command_palette_open` | `Cmd/Ctrl+K` from idle and busy UI states | Shortcut latency, scripting time, long tasks | Meets palette budget in both states; input remains responsive.
+
+QA logging requirements:
+- Record profiler trace filename with interaction name prefix (example: `tab_switch_2025-02-10.json`).
+- Document hardware profile + browser version for every run.
+- Mark each interaction as Pass / Needs fallback / Blocked with notes tied to the fallback policy.
+
+---
+
+## 12. Definition of Done
 A feature slice is complete only when:
 1. UX acceptance criteria are met.
 2. Motion behavior includes reduced-motion alternative.

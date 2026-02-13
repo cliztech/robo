@@ -28,6 +28,10 @@
       "type": "object",
       "additionalProperties": false,
       "description": "Optional appearance and behavior controls consumed by browser clients. All appearance fields are optional and include defaults for backwards compatibility.",
+      "required": [
+        "preferences",
+        "module_visibility"
+      ],
       "properties": {
         "theme": {
           "type": "string",
@@ -66,6 +70,50 @@
           "type": "integer",
           "minimum": 5,
           "maximum": 300
+        },
+        "preferences": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "density",
+            "font_scale",
+            "reduced_motion",
+            "preferred_layout"
+          ],
+          "properties": {
+            "density": {
+              "type": "string",
+              "enum": ["compact", "comfortable", "spacious"]
+            },
+            "font_scale": {
+              "type": "number",
+              "minimum": 0.8,
+              "maximum": 1.5
+            },
+            "reduced_motion": { "type": "boolean" },
+            "preferred_layout": {
+              "type": "string",
+              "enum": ["auto", "single_column", "two_column", "focus"]
+            }
+          }
+        },
+        "module_visibility": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "scheduler",
+            "queue",
+            "alerts",
+            "diagnostics",
+            "autonomy_panel"
+          ],
+          "properties": {
+            "scheduler": { "type": "boolean" },
+            "queue": { "type": "boolean" },
+            "alerts": { "type": "boolean" },
+            "diagnostics": { "type": "boolean" },
+            "autonomy_panel": { "type": "boolean" }
+          }
         }
       }
     },
