@@ -27,6 +27,7 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 
 ### Could
 - [ ] Backup rotation policy (keep N daily/weekly snapshots) **(S)**
+- [ ] Accessibility preset framework (high contrast, large text, reduced motion, simplified workspace density) **(M)**
 
 ### Dependencies
 - Requires consistent config schema definitions.
@@ -35,6 +36,7 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 ### Exit criteria
 - Operator can recover from a bad config change in under 2 minutes.
 - Invalid JSON/config references are blocked before runtime failures.
+- Accessibility preset selection persists across restart with no manual file edits.
 
 ---
 
@@ -49,6 +51,7 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 ### Should
 - [ ] Holiday and special-event override calendar **(M)**
 - [ ] Per-show profile presets (voice, pacing, bed defaults) **(M)**
+- [ ] Keyboard-first schedule editing workflow (navigate, edit, save, conflict resolution) **(M)**
 
 ### Could
 - [ ] Bulk schedule edit mode (copy/paste between days) **(S)**
@@ -60,6 +63,7 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 ### Exit criteria
 - New weekly schedule setup time reduced by ~50%.
 - Schedule conflicts are surfaced before save/publish.
+- Schedule editor is fully usable from keyboard under large text and simplified density presets.
 
 ---
 
@@ -74,6 +78,7 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 ### Should
 - [ ] A/B prompt testing with side-by-side scoring workflow **(L)**
 - [ ] Persona library (station voice packs + tone presets) **(M)**
+- [ ] Keyboard-first prompt approval workflow (open, approve, request changes, next pending) **(S)**
 
 ### Could
 - [ ] Continuity memory for recurring segments **(L)**
@@ -85,6 +90,7 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 ### Exit criteria
 - Prompt rollback can be done per template without DB edits.
 - Operators can preview 100% of variable substitutions before run.
+- Prompt approval pipeline supports keyboard-only operation in high contrast and reduced motion presets.
 
 ---
 
@@ -99,6 +105,7 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 ### Should
 - [ ] Smart music bed recommendation (mood/tempo/category) **(M)**
 - [ ] Jingle/SFX library with tag-based lookup **(M)**
+- [ ] Keyboard-first queue control workflow (focus queue, reorder, hold/release, start next) **(S)**
 
 ### Could
 - [ ] Crossfade strategy presets (smooth/punchy/broadcast) **(S)**
@@ -110,6 +117,7 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 ### Exit criteria
 - Default output levels meet target loudness profile.
 - Producer can audition composed segments before publish.
+- Queue control workflow passes keyboard-only checks with large text and simplified density presets enabled.
 
 ---
 
@@ -192,7 +200,20 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 - [ ] Performance profiling and startup-time reduction.
 - [ ] DB maintenance helpers (vacuum/analyze/reindex workflow).
 - [ ] Accessibility and UX polish (themes, keyboard workflows, readability).
+- [ ] Define and maintain default focus order + ARIA landmarks for dashboard and studio pages.
+- [ ] Add preset-specific acceptance checks to release sign-off (high contrast, large text, reduced motion, simplified density).
 - [ ] Documentation refresh per release, including operator runbooks.
+
+## Accessibility preset acceptance matrix (release gate)
+
+Every release with UI changes must pass these checks, not only generic audit completion:
+
+- [ ] **High contrast preset:** critical controls and text in dashboard/studio meet contrast targets; focus indicators remain clearly visible.
+- [ ] **Large text preset:** no clipping/overlap in top navigation, sidebar, queue controls, scheduler cells, and prompt approval actions.
+- [ ] **Reduced motion preset:** route transitions, panel transitions, and list updates use reduced-motion variants with no continuous decorative loops.
+- [ ] **Simplified workspace density preset:** operator-critical actions stay above the fold and primary targets maintain larger hit areas.
+- [ ] **Keyboard-first workflows:** queue control, schedule edits, and prompt approvals complete without pointer interaction in each preset.
+- [ ] **Landmark and focus order:** dashboard and studio use consistent landmarks and deterministic tab order for top-level tasks.
 
 ## Prioritization snapshot
 

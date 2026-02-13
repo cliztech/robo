@@ -8,6 +8,11 @@ Success criteria:
 - Navigation, tabs, and panel transitions feel intentional and calm.
 - Motion remains performant on mid-range devices.
 - Accessibility and reduced-motion behavior are first-class.
+- Preset profiles ship and can be toggled without page reload:
+  - high contrast
+  - large text
+  - reduced motion
+  - simplified workspace density
 
 ---
 
@@ -31,6 +36,7 @@ Success criteria:
    - Removes jank and costly paint/layout operations.
 6. **A11y QA Engineer (owner: inclusive quality)**
    - Verifies keyboard flow, semantic structure, and reduced motion.
+   - Verifies profile presets and profile-specific acceptance checks.
 
 ### Working Agreement
 - Each agent provides: **what changed / why / acceptance checks / open questions**.
@@ -144,6 +150,28 @@ Behavior:
 - Skeleton state appears for data loading >120ms.
 - Preserves scroll position per tab.
 
+### Accessibility Preset Profiles
+Purpose: give operators quick, reliable UX modes for different accessibility needs.
+
+State contract:
+- `accessibilityProfile: 'default' | 'high_contrast' | 'large_text' | 'reduced_motion' | 'simplified_density'`
+- Action: `setAccessibilityProfile(profile)`
+- Persistence: save in user preferences and apply on initial app shell hydration.
+
+Profile behavior:
+- **high_contrast**
+  - Raises text/background contrast beyond base theme targets.
+  - Ensures focus ring and active selection use high-visibility colors.
+- **large_text**
+  - Increases root type scale and minimum control label sizes.
+  - Preserves layout stability (no clipped labels in topbar/sidebar/workspace).
+- **reduced_motion**
+  - Uses opacity-only transitions and removes parallax/continuous loops.
+  - Keeps state-change feedback with non-motion affordances (icon/state text).
+- **simplified_density**
+  - Increases row heights and click targets.
+  - Reduces simultaneous panels and visual clutter in dashboard/studio work areas.
+
 ---
 
 ## 5. Motion Token File (starter)
@@ -174,6 +202,9 @@ Reduced motion strategy:
 - Replace movement with opacity-only transitions.
 - Set durations to 80–140ms.
 - Disable continuous decorative loops.
+
+Preset implementation note:
+- Keep profile tokens layered (base theme -> accessibility profile overrides -> component local tweaks).
 
 ---
 
@@ -213,20 +244,23 @@ Create `src/styles/tokens.css`:
 - Implement tab strip, address bar, and sidebar v1.
 - Integrate motion tokens and reduced-motion guardrails.
 - Wire baseline keyboard interactions.
+- Add accessibility profile selector with persistence.
 
 Exit criteria:
 - Route changes and tab switching are functional.
 - 60fps on common interactions in Chrome profiler.
+- All four accessibility preset profiles can be enabled and persist across reload.
 
 ### Sprint 2 (Polish + Reliability)
 - Add command palette and notification center.
 - Improve hover/focus/pressed interaction details.
 - Add visual regression checks for key layouts.
-- Final a11y pass: focus order, ARIA landmarks, contrast.
+- Final a11y pass: focus order, ARIA landmarks, contrast, and preset-specific behavior.
 
 Exit criteria:
 - Lighthouse performance and accessibility targets met.
 - No high-severity a11y findings.
+- Preset acceptance checks pass for high contrast, large text, reduced motion, and simplified density.
 
 ---
 
@@ -235,10 +269,63 @@ Exit criteria:
 - [ ] Add design token pipeline (CSS vars + Tailwind mapping)
 - [ ] Add motion token module + shared animation presets
 - [ ] Implement `prefers-reduced-motion` behavior
+- [ ] Implement accessibility profile store + persistence
+- [ ] Add profile token overrides (`high_contrast`, `large_text`, `reduced_motion`, `simplified_density`)
 - [ ] Create core shell components (topbar/sidebar/tabs/workspace)
 - [ ] Add keyboard shortcuts (`Cmd/Ctrl+L`, `Cmd/Ctrl+K`, tab cycling)
+- [ ] Add keyboard-first workflows for queue control, schedule edits, and prompt approvals
+- [ ] Define and implement default focus order + landmarks for dashboard and studio pages
 - [ ] Add profiling pass and animation budget fixes
 - [ ] Complete accessibility audit and fixes
+
+### Keyboard-first workflows
+
+#### Queue control
+- Open queue panel: `Cmd/Ctrl+Shift+Q`.
+- Move focus into queue list from anywhere: `g` then `q`.
+- Reorder selected item: `Alt+Up` / `Alt+Down`.
+- Toggle hold/release on selected item: `Space`.
+- Start next item: `Enter` on primary queue action.
+
+#### Schedule edits
+- Jump to scheduler: `g` then `s`.
+- Move timeslot focus: arrow keys.
+- Create/edit block: `Enter`.
+- Save draft: `Cmd/Ctrl+S`.
+- Resolve next conflict: `Shift+N`.
+
+#### Prompt approvals
+- Jump to approvals inbox: `g` then `p`.
+- Open focused prompt details: `Enter`.
+- Approve prompt: `a`.
+- Request changes: `r`.
+- Move to next pending prompt: `j` / `k`.
+
+### Default focus order and landmarks
+
+#### Dashboard page
+- Landmarks (in order): `header` (topbar), `nav` (primary sidebar), `main` (dashboard content), `aside` (notifications/activity).
+- Default tab sequence inside `main`:
+  1. Global status banner
+  2. Queue summary card actions
+  3. Schedule snapshot quick actions
+  4. Prompt approvals summary actions
+  5. Recent alerts list
+
+#### Studio page
+- Landmarks (in order): `header` (transport + timers), `nav` (studio sections), `main` (active workspace), `aside` (inspector/tools).
+- Default tab sequence inside `main`:
+  1. Now playing / current segment panel
+  2. Queue list and item actions
+  3. Prompt review panel actions
+  4. Audio controls (preview/publish)
+  5. Studio activity log
+
+### Preset-specific acceptance checks
+- **high_contrast:** key text, interactive controls, and focus indicators meet elevated contrast targets in dashboard and studio.
+- **large_text:** no truncation or overlap for topbar/sidebar/workspace labels at increased text scale.
+- **reduced_motion:** route transitions, tab switching, and panel open/close use reduced-motion variants.
+- **simplified_density:** row heights/hit targets expand and non-essential secondary chrome is suppressed in workspace-heavy views.
 
 ---
 
@@ -248,4 +335,5 @@ A feature slice is complete only when:
 2. Motion behavior includes reduced-motion alternative.
 3. Keyboard and screen-reader basics are validated.
 4. Performance profile shows no obvious frame drops.
-5. Handoff notes are recorded for downstream agents.
+5. Accessibility preset profile checks pass in dashboard and studio.
+6. Handoff notes are recorded for downstream agents.
