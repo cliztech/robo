@@ -2,6 +2,12 @@
 
 This document defines the canonical `schedule` record format for RoboDJ scheduling data stored in `config/schedules.json`.
 
+## Frontend response contract linkage
+
+Scheduler UX responses should use `contracts/frontend_responses/frontend_schedule_response.schema.json`.
+That contract aligns with timeline/clockwheel behavior in `docs/scheduler_clockwheel_spec.md`
+and dual-time local+UTC presentation requirements in `ONLINE_RADIO_DJ_DESIGN.md`.
+
 ## Root Envelope
 
 `schedules.json` MUST use an object root with a schema version marker:
