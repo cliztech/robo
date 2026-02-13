@@ -37,6 +37,15 @@
           "type": "integer",
           "minimum": 5,
           "maximum": 300
+        },
+        "reduced_motion_mode": {
+          "type": "string",
+          "enum": ["system", "on", "off"],
+          "description": "UX motion preference. `on` always reduces motion, `off` always allows full motion, and `system` defers to the client OS/browser preference (`prefers-reduced-motion`)."
+        },
+        "enable_focus_highlights": {
+          "type": "boolean",
+          "description": "Enables high-contrast focus rings/highlights for keyboard navigation. Unsupported clients should ignore this flag and keep their default focus indicator behavior."
         }
       }
     },
@@ -45,7 +54,15 @@
       "additionalProperties": false,
       "properties": {
         "enable_request_queue": { "type": "boolean" },
-        "enable_now_playing": { "type": "boolean" }
+        "enable_now_playing": { "type": "boolean" },
+        "enable_command_palette": {
+          "type": "boolean",
+          "description": "Enables command palette entry points (for example Cmd/Ctrl+K). Unsupported clients should hide command palette UI and continue to expose primary navigation surfaces."
+        },
+        "enable_keyboard_shortcuts": {
+          "type": "boolean",
+          "description": "Enables non-essential keyboard shortcuts (for example tab cycling and command actions). Unsupported clients should ignore this flag and keep mandatory accessibility keyboard behaviors intact."
+        }
       }
     }
   }
