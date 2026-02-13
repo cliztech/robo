@@ -242,7 +242,60 @@ Exit criteria:
 
 ---
 
-## 9. Definition of Done
+## 9. Interaction Frame + Latency Budgets
+
+Use this budget table as the source of truth for motion acceptance and QA sign-off on mid-range hardware.
+
+| Interaction | Frame Budget | Interaction Latency Budget | Primary Animation Constraints |
+| --- | --- | --- | --- |
+| Tab switch | 16.7ms/frame (target 60fps), max 2 dropped frames | Input-to-visual response <=100ms | Keep transform + opacity only; avoid layout-affecting width/height animation on active panel.
+| Panel open/close (sidebar, notification center) | 16.7ms/frame, max 3 dropped frames | Trigger-to-stable-state <=180ms | Use translate + opacity; no expensive backdrop filters on low-power devices.
+| Route transition | 16.7ms/frame, max 4 dropped frames | Navigation start-to-first-transition-frame <=120ms | Shared element transitions only for above-the-fold regions; defer secondary motion.
+| Command palette open | 16.7ms/frame, zero long tasks >50ms during open | Shortcut press-to-first-visible-pixel <=90ms | Animate overlay opacity and palette scale/translate lightly; preload palette structure.
+
+### Budget Exceeded Fallback Policy
+If any interaction exceeds the budgets above in profiling or QA runs, apply fallbacks in this exact order until the interaction returns within budget:
+
+1. **Disable blur/backdrop filters** on animated layers and overlays.
+2. **Reduce parallax depth** (cut translation distance by >=50%, disable multi-layer drift).
+3. **Shorten animation chain** by removing secondary/tertiary staggered elements and using single-step enter/exit transitions.
+
+Ship-blocking rule:
+- Any interaction that still misses budget after step 3 must default to reduced-motion behavior for that component until optimized.
+
+---
+
+## 10. Reduced-Motion Compliance Checklist
+
+All movement-based interactions must provide a verified reduced-motion equivalent before merge.
+
+- [ ] Every movement animation has an **opacity-only fallback** (no translate/scale/parallax required in reduced mode).
+- [ ] Critical workflows (navigation, save/confirm, command palette, dialog actions) include an **instant-state shortcut** (0ms or effectively immediate transition).
+- [ ] `prefers-reduced-motion: reduce` is honored across shell, overlays, and route transitions.
+- [ ] Decorative continuous motion (ambient parallax, shimmer loops) is disabled in reduced mode.
+- [ ] Focus visibility and reading order remain stable when motion is removed.
+
+---
+
+## 11. Profiling Checklist (Interaction-Linked)
+
+Run this checklist on at least one mid-range device profile before sign-off (e.g., 4x CPU throttle equivalent or representative hardware).
+
+| Interaction Name | How to Trigger | Metrics to Capture | Pass Criteria |
+| --- | --- | --- | --- |
+| `tab_switch` | Click inactive tab, then keyboard cycle tabs | FPS, dropped frames, input delay, long tasks | Meets tab-switch budget; no visible hitch in active content swap.
+| `panel_toggle` | Open/close sidebar and notification center 5x each | FPS, style/layout cost, paint time | Meets panel budget; no escalating frame cost across repeated toggles.
+| `route_transition` | Navigate between two heavy routes repeatedly | Navigation timing, first transition frame, dropped frames | Meets route budget; skeleton appears only when pending >120ms.
+| `command_palette_open` | `Cmd/Ctrl+K` from idle and busy UI states | Shortcut latency, scripting time, long tasks | Meets palette budget in both states; input remains responsive.
+
+QA logging requirements:
+- Record profiler trace filename with interaction name prefix (example: `tab_switch_2025-02-10.json`).
+- Document hardware profile + browser version for every run.
+- Mark each interaction as Pass / Needs fallback / Blocked with notes tied to the fallback policy.
+
+---
+
+## 12. Definition of Done
 A feature slice is complete only when:
 1. UX acceptance criteria are met.
 2. Motion behavior includes reduced-motion alternative.
