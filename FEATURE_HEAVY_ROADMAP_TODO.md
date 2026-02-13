@@ -194,6 +194,16 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 - [ ] Accessibility and UX polish (themes, keyboard workflows, readability).
 - [ ] Documentation refresh per release, including operator runbooks.
 
+
+## Security hardening backlog (keys & secret hygiene)
+- [ ] Define and automate key rotation cadence policy (time-based + event-based triggers).
+- [ ] Add key provenance verification gates in operator workflow (approved source, generation metadata, reviewer sign-off).
+- [ ] Deliver migration path away from in-repo active secrets to vault/injected runtime-only secrets.
+- [ ] Publish and drill an incident playbook for key compromise (containment, rotation, token invalidation, post-incident review).
+- [ ] Update operator runbook to explicitly separate template/example key files from production key storage locations.
+
+---
+
 ## Prioritization snapshot
 
 This snapshot provides a cross-release view of priority, highlighting the most critical themes regardless of their target release.
