@@ -6,17 +6,17 @@ from pathlib import Path
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
+from .schedule_conflict_detection import detect_schedule_conflicts
 from .scheduler_models import (
     ContentRef,
-    ConflictSuggestion,
-    ConflictType,
     PreviewRequest,
-    ScheduleConflict,
+    ScheduleBlock,
     ScheduleEnvelope,
     ScheduleRecord,
     ScheduleSpec,
     ScheduleSpecMode,
     ScheduleSpecPreview,
+    ScheduleTemplatePrimitive,
     SchedulerUiState,
     TemplateApplyRequest,
     TemplateType,
@@ -38,52 +38,69 @@ class SchedulerUiService:
     def get_ui_state(self) -> SchedulerUiState:
         envelope = self._load_and_migrate()
         timeline = self._build_timeline_blocks(envelope.schedules)
-        conflicts = self.detect_conflicts(envelope.schedules, timeline)
+        conflicts = detect_schedule_conflicts(envelope.schedules, timeline)
         return SchedulerUiState(schedule_file=envelope, timeline_blocks=timeline, conflicts=conflicts)
 
     def update_schedules(self, schedules: list[ScheduleRecord]) -> SchedulerUiState:
         envelope = ScheduleEnvelope(schema_version=2, schedules=schedules)
         timeline = self._build_timeline_blocks(schedules)
-        conflicts = self.detect_conflicts(schedules, timeline)
-
+        conflicts = detect_schedule_conflicts(schedules, timeline)
         if conflicts:
-            raise ValueError("Cannot save schedules while conflicts exist")
+            messages = "; ".join(conflict.message for conflict in conflicts[:3])
+            raise ValueError(f"Cannot save schedules while conflicts exist: {messages}")
 
         self.schedules_path.write_text(envelope.model_dump_json(indent=2), encoding="utf-8")
         return SchedulerUiState(schedule_file=envelope, timeline_blocks=timeline, conflicts=[])
 
-    def validate_schedules(self, schedules: list[ScheduleRecord]) -> list[ScheduleConflict]:
+    def validate_schedules(self, schedules: list[ScheduleRecord]):
         timeline = self._build_timeline_blocks(schedules)
-        return self.detect_conflicts(schedules, timeline)
+        return detect_schedule_conflicts(schedules, timeline)
+
+    def template_primitives(self) -> dict[TemplateType, ScheduleTemplatePrimitive]:
+        return {
+            TemplateType.weekday: ScheduleTemplatePrimitive(
+                template=TemplateType.weekday,
+                blocks=[
+                    ScheduleBlock(day_of_week=day, start_time="09:00", end_time="17:00")
+                    for day in WEEK_DAYS[:5]
+                ],
+            ),
+            TemplateType.weekend: ScheduleTemplatePrimitive(
+                template=TemplateType.weekend,
+                blocks=[
+                    ScheduleBlock(day_of_week=day, start_time="10:00", end_time="14:00")
+                    for day in WEEK_DAYS[5:]
+                ],
+            ),
+            TemplateType.overnight: ScheduleTemplatePrimitive(
+                template=TemplateType.overnight,
+                blocks=[
+                    ScheduleBlock(day_of_week=day, start_time="22:00", end_time="06:00", overnight=True)
+                    for day in WEEK_DAYS
+                ],
+            ),
+        }
 
     def apply_template(self, request: TemplateApplyRequest) -> list[ScheduleRecord]:
-        blocks: list[tuple[str, str, str, bool]]
-        if request.template == TemplateType.weekday:
-            blocks = [(day, "09:00", "17:00", False) for day in WEEK_DAYS[:5]]
-        elif request.template == TemplateType.weekend:
-            blocks = [(day, "10:00", "14:00", False) for day in WEEK_DAYS[5:]]
-        else:
-            blocks = [(day, "22:00", "06:00", True) for day in WEEK_DAYS]
+        primitive = self.template_primitives()[request.template]
 
         schedules: list[ScheduleRecord] = []
-        for day, start_time, end_time, overnight in blocks:
-            spec = self._timeline_to_rrule(day, start_time)
+        for block in primitive.blocks:
+            spec = self._timeline_to_rrule(block.day_of_week, block.start_time)
             schedules.append(
                 ScheduleRecord(
                     id=f"sch_{uuid4()}",
-                    name=f"{request.template.value.title()} Template {day.title()}",
+                    name=f"{request.template.value.title()} Template {block.day_of_week.title()}",
                     enabled=True,
                     timezone=request.timezone,
                     ui_state=UiState.active,
                     priority=50,
                     start_window=request.start_window,
                     end_window=request.end_window,
-                    content_refs=request.content_refs,
+                    content_refs=[ContentRef.model_validate(ref.model_dump()) for ref in request.content_refs],
                     schedule_spec=ScheduleSpec(mode=ScheduleSpecMode.rrule, rrule=spec),
                 )
             )
-            if overnight:
-                schedules[-1].name = f"Overnight Template {day.title()}"
         return schedules
 
     def preview_schedule_spec(self, request: PreviewRequest) -> ScheduleSpecPreview:
@@ -95,67 +112,6 @@ class SchedulerUiService:
         cron = self._timeline_to_cron(request.day_of_week, request.start_time)
         return ScheduleSpecPreview(one_off=one_off_with_tz, rrule=rrule, cron=cron)
 
-    def detect_conflicts(
-        self,
-        schedules: list[ScheduleRecord],
-        timeline: list[TimelineBlock],
-    ) -> list[ScheduleConflict]:
-        conflicts: list[ScheduleConflict] = []
-        schedule_map = {schedule.id: schedule for schedule in schedules}
-
-        for schedule in schedules:
-            start = datetime.fromisoformat(schedule.start_window.value.replace("Z", "+00:00"))
-            end = datetime.fromisoformat(schedule.end_window.value.replace("Z", "+00:00"))
-            if start > end:
-                conflicts.append(
-                    ScheduleConflict(
-                        conflict_type=ConflictType.invalid_window,
-                        schedule_ids=[schedule.id],
-                        message=f"{schedule.name} has start_window after end_window",
-                        suggestions=[
-                            ConflictSuggestion(
-                                action="swap_window_bounds",
-                                message="Swap start/end window values to restore a valid window.",
-                            )
-                        ],
-                    )
-                )
-
-        day_blocks: dict[str, list[TimelineBlock]] = {day: [] for day in WEEK_DAYS}
-        for block in timeline:
-            day_blocks[block.day_of_week].append(block)
-
-        for day, blocks in day_blocks.items():
-            sorted_blocks = sorted(blocks, key=lambda item: item.start_time)
-            for left, right in zip(sorted_blocks, sorted_blocks[1:]):
-                if left.overnight:
-                    continue
-                if right.start_time < left.end_time:
-                    left_name = schedule_map[left.schedule_id].name if left.schedule_id in schedule_map else left.schedule_id
-                    right_name = schedule_map[right.schedule_id].name if right.schedule_id in schedule_map else right.schedule_id
-                    conflicts.append(
-                        ScheduleConflict(
-                            conflict_type=ConflictType.overlap,
-                            schedule_ids=[left.schedule_id, right.schedule_id],
-                            message=(
-                                f"Overlap on {day.title()}: {left_name} ({left.start_time}-{left.end_time}) "
-                                f"and {right_name} ({right.start_time}-{right.end_time})."
-                            ),
-                            suggestions=[
-                                ConflictSuggestion(
-                                    action="raise_priority",
-                                    message="Raise priority on the preferred block so conflict resolution is deterministic.",
-                                ),
-                                ConflictSuggestion(
-                                    action="nudge_block",
-                                    message="Drag one block to a non-overlapping time window.",
-                                ),
-                            ],
-                        )
-                    )
-
-        return conflicts
-
     def _load_and_migrate(self) -> ScheduleEnvelope:
         if not self.schedules_path.exists():
             envelope = ScheduleEnvelope(schema_version=2, schedules=[])
@@ -165,6 +121,13 @@ class SchedulerUiService:
         raw = json.loads(self.schedules_path.read_text(encoding="utf-8"))
         migrated = self._migrate_payload(raw)
         envelope = ScheduleEnvelope.model_validate(migrated)
+
+        timeline = self._build_timeline_blocks(envelope.schedules)
+        conflicts = detect_schedule_conflicts(envelope.schedules, timeline)
+        if conflicts:
+            messages = "\n".join(f"- {conflict.message}" for conflict in conflicts)
+            raise ValueError(f"schedules.json contains conflicts:\n{messages}")
+
         self.schedules_path.write_text(envelope.model_dump_json(indent=2), encoding="utf-8")
         return envelope
 
@@ -199,7 +162,10 @@ class SchedulerUiService:
     def _build_timeline_blocks(self, schedules: list[ScheduleRecord]) -> list[TimelineBlock]:
         blocks: list[TimelineBlock] = []
         for schedule in schedules:
-            spec = schedule.schedule_spec
+            spec = schedule.schedule_spec or (schedule.overrides.schedule_spec if schedule.overrides else None)
+            if spec is None:
+                continue
+
             if spec.mode == ScheduleSpecMode.one_off and spec.run_at:
                 run_dt = datetime.fromisoformat(spec.run_at.replace("Z", "+00:00"))
                 day = WEEK_DAYS[run_dt.weekday()]

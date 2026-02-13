@@ -18,6 +18,15 @@ from typing import Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from pydantic import ValidationError as PydanticValidationError
+
+from backend.scheduling.schedule_conflict_detection import detect_schedule_conflicts
+from backend.scheduling.scheduler_models import ScheduleEnvelope
+from backend.scheduling.scheduler_ui_service import SchedulerUiService
+
 CONFIG_DIR = REPO_ROOT / "config"
 SCHEMA_DIR = CONFIG_DIR / "schemas"
 
@@ -432,55 +441,18 @@ def _validate_schedule_entry(schedule: Any, index: int, errors: list[str]) -> No
 
 
 def _validate_schedule_conflicts(schedules: list[dict[str, Any]], errors: list[str]) -> None:
-    seen_ids: dict[str, int] = {}
-    seen_names: dict[str, int] = {}
-    for idx, schedule in enumerate(schedules):
-        schedule_id = schedule.get("id")
-        if isinstance(schedule_id, str):
-            if schedule_id in seen_ids:
-                errors.append(
-                    f"$.schedules[{idx}].id: duplicate id {schedule_id!r}; already used at $.schedules[{seen_ids[schedule_id]}]"
-                )
-            else:
-                seen_ids[schedule_id] = idx
+    try:
+        envelope = ScheduleEnvelope.model_validate({"schema_version": 2, "schedules": schedules})
+    except PydanticValidationError as exc:
+        for item in exc.errors(include_url=False):
+            loc = ".".join(str(part) for part in item.get("loc", ()))
+            message = item.get("msg", "validation error")
+            errors.append(f"{loc}: {message}")
+        return
 
-        schedule_name = schedule.get("name")
-        if isinstance(schedule_name, str):
-            key = schedule_name.strip().lower()
-            if key in seen_names:
-                errors.append(
-                    f"$.schedules[{idx}].name: duplicate name {schedule_name!r}; already used at $.schedules[{seen_names[key]}]"
-                )
-            else:
-                seen_names[key] = idx
-
-    for i, left in enumerate(schedules):
-        if not isinstance(left, dict) or left.get("template_ref") is not None:
-            continue
-        if left.get("enabled") is not True or left.get("ui_state") != "active":
-            continue
-        for j in range(i + 1, len(schedules)):
-            right = schedules[j]
-            if not isinstance(right, dict) or right.get("template_ref") is not None:
-                continue
-            if right.get("enabled") is not True or right.get("ui_state") != "active":
-                continue
-            if left.get("priority") != right.get("priority"):
-                continue
-            if left.get("timezone") != right.get("timezone"):
-                continue
-            if left.get("schedule_spec") != right.get("schedule_spec"):
-                continue
-            left_start, left_end = _effective_window(left)
-            right_start, right_end = _effective_window(right)
-            if not all((left_start, left_end, right_start, right_end)):
-                continue
-            if left_start <= right_end and right_start <= left_end:
-                errors.append(
-                    "$.schedules[{}] and $.schedules[{}]: ambiguous conflict; active schedules share timezone, priority, trigger and overlapping windows".format(
-                        i, j
-                    )
-                )
+    timeline = SchedulerUiService()._build_timeline_blocks(envelope.schedules)
+    for conflict in detect_schedule_conflicts(envelope.schedules, timeline):
+        errors.append(f"{conflict.conflict_type.value}: {conflict.message}")
 
 
 def validate_schedules(config: Any) -> list[str]:

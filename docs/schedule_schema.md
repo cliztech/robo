@@ -26,7 +26,7 @@ and dual-time local+UTC presentation requirements in `ONLINE_RADIO_DJ_DESIGN.md`
 
 ## TODO Roadmap Gates
 
-- [ ] Document canonical schedule entities:
+- [x] Document canonical schedule entities:
   - show block
   - override
   - template
@@ -36,6 +36,26 @@ and dual-time local+UTC presentation requirements in `ONLINE_RADIO_DJ_DESIGN.md`
   - holiday override precedence and fallback behavior
 - [ ] Add schema versioning guidance with a migration strategy for older schedule files.
 - [ ] Mark schema freeze as a prerequisite milestone before timeline/conflict/template implementation begins.
+
+## Normalized Representation (Blocks, Overrides, Templates)
+
+The backend normalizes every schedule into these entities before conflict detection:
+
+- **Template primitive**: reusable block patterns for `weekday`, `weekend`, and `overnight`.
+- **Override map**: field-level replacements (`timezone`, `ui_state`, `priority`, `start_window`, `end_window`, `content_refs`, `schedule_spec`) applied on top of template defaults.
+- **Derived timeline blocks**: deterministic `day_of_week + start_time + end_time + overnight` blocks used by conflict detection and timeline rendering.
+
+Conflict classes used by backend validation:
+
+- `duplicate_id`
+- `duplicate_name`
+- `invalid_window`
+- `overlap`
+- `ambiguous_active`
+
+Validation is fail-fast on save/publish: schedule writes are rejected when any conflict class is present.
+
+---
 
 ## Schedule Object (v2)
 ---
