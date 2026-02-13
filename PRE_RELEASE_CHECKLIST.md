@@ -3,6 +3,15 @@
 - [ ] Run configuration validation: `python config/validate_config.py`
 - [ ] Confirm validation output is: `Configuration validation passed for schedules.json and prompt_variables.json.`
 - [ ] Archive config backups in `config/backups/` for any risky config changes.
+
+## Required Before Release Candidate
+
+> Accountable signer for every gate item: **Release Manager**
+
+- [ ] Config schema validation pass — Sign-off: Release Manager
+- [ ] Backup/restore drill pass — Sign-off: Release Manager
+- [ ] Crash recovery simulation pass — Sign-off: Release Manager
+- [ ] Rollback path verified — Sign-off: Release Manager
 - [ ] Execute the accessibility QA matrix in `REACT_BROWSER_UI_TEAM_BLUEPRINT.md` for shell, overlays, and scheduler interactions.
 - [ ] Verify keyboard-only flow for all release-critical user paths (no pointer required).
 - [ ] Verify visible, logical focus order and focus restoration behavior for overlays/modals.

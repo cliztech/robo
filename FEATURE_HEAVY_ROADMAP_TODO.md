@@ -84,6 +84,9 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 - Invalid JSON/config references are blocked before runtime failures.
 - Accessibility preset selection persists across restart with no manual file edits.
 
+### Release Candidate gate
+- Apply **Required Before Release Candidate** from `PRE_RELEASE_CHECKLIST.md` before cutting the RC; all gate items are signed by the **Release Manager**.
+
 ---
 
 ## v1.2 — Scheduling 2.0
@@ -141,6 +144,9 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 - Schedule conflicts are surfaced before save/publish.
 - Schedule editor is fully usable from keyboard under large text and simplified density presets.
 
+### Release Candidate gate
+- Apply **Required Before Release Candidate** from `PRE_RELEASE_CHECKLIST.md` before cutting the RC; all gate items are signed by the **Release Manager**.
+
 ---
 
 ## v1.3 — Prompt Intelligence & Content Quality
@@ -167,6 +173,9 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 - Prompt rollback can be done per template without DB edits.
 - Operators can preview 100% of variable substitutions before run.
 - Prompt approval pipeline supports keyboard-only operation in high contrast and reduced motion presets.
+
+### Release Candidate gate
+- Apply **Required Before Release Candidate** from `PRE_RELEASE_CHECKLIST.md` before cutting the RC; all gate items are signed by the **Release Manager**.
 
 ---
 
@@ -195,6 +204,9 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 - Producer can audition composed segments before publish.
 - Queue control workflow passes keyboard-only checks with large text and simplified density presets enabled.
 
+### Release Candidate gate
+- Apply **Required Before Release Candidate** from `PRE_RELEASE_CHECKLIST.md` before cutting the RC; all gate items are signed by the **Release Manager**.
+
 ---
 
 ## v1.5 — Library, Search, and Scale
@@ -219,6 +231,9 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 ### Exit criteria
 - Search returns relevant assets in sub-second time for typical datasets.
 - Duplicate issues are detected before publish.
+
+### Release Candidate gate
+- Apply **Required Before Release Candidate** from `PRE_RELEASE_CHECKLIST.md` before cutting the RC; all gate items are signed by the **Release Manager**.
 
 ---
 
@@ -245,6 +260,9 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 - External systems can trigger key automation paths reliably.
 - Operators receive actionable alerts within minutes of failure.
 
+### Release Candidate gate
+- Apply **Required Before Release Candidate** from `PRE_RELEASE_CHECKLIST.md` before cutting the RC; all gate items are signed by the **Release Manager**.
+
 ---
 
 ## v2.0 — Enterprise Readiness & Governance
@@ -269,6 +287,9 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 ### Exit criteria
 - Access restrictions and change attribution are enforced end-to-end.
 - Full day simulation can run pre-air to catch schedule/content errors.
+
+### Release Candidate gate
+- Apply **Required Before Release Candidate** from `PRE_RELEASE_CHECKLIST.md` before cutting the RC; all gate items are signed by the **Release Manager**.
 
 ---
 
