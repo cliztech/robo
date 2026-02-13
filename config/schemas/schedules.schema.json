@@ -38,7 +38,7 @@
       "notes": { "type": "string" },
       "metadata": { "type": "object" }
     },
-    "required": ["name", "enabled"],
+    "required": ["id", "name", "enabled"],
     "additionalProperties": true
   }
 }
