@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robodj/contracts/broadcast_queue_item.schema.json",
+  "title": "BroadcastQueueItem",
+  "description": "A normalized queue item for track playout, voice links, or jingles.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "scheduled_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "item_type": {
+      "type": "string",
+      "enum": [
+        "track",
+        "voice_link",
+        "jingle"
+      ]
+    },
+    "item_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "playing",
+        "played",
+        "failed"
+      ]
+    },
+    "priority": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "estimated_duration_seconds": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "scheduled_time",
+    "item_type",
+    "item_id",
+    "status"
+  ]
+}

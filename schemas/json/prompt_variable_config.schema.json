@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robodj/contracts/prompt_variable_config.schema.json",
+  "title": "PromptVariableConfig",
+  "description": "Typed prompt variable definitions available to DJ script templates.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "station_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "variables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "value_type": {
+            "type": "string",
+            "enum": [
+              "string",
+              "number",
+              "boolean",
+              "json"
+            ]
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "default_value": {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "object",
+              "array",
+              "null"
+            ]
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "value_type",
+          "required"
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "station_id",
+    "variables"
+  ]
+}

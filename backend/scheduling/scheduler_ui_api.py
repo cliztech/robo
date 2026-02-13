@@ -42,6 +42,17 @@ def validate_scheduler_state(
     return service.validate_schedules(payload.schedules)
 
 
+@router.post("/publish")
+def publish_scheduler_state(
+    payload: SchedulerUiStateUpdate,
+    service: SchedulerUiService = Depends(get_scheduler_service),
+):
+    try:
+        return service.publish_schedules(payload.schedules)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
 @router.post("/templates/apply")
 def apply_schedule_template(
     payload: TemplateApplyRequest,

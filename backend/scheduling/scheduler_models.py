@@ -18,6 +18,16 @@ WEEK_DAYS = [
     "sunday",
 ]
 
+SCHEDULE_OVERRIDE_FIELDS = (
+    "timezone",
+    "ui_state",
+    "priority",
+    "start_window",
+    "end_window",
+    "content_refs",
+    "schedule_spec",
+)
+
 
 class UiState(str, Enum):
     draft = "draft"
@@ -84,6 +94,11 @@ class ScheduleSpec(BaseModel):
         return self
 
 
+class ScheduleTemplateRef(BaseModel):
+    id: str = Field(min_length=1)
+    version: int = Field(ge=1)
+
+
 class ScheduleOverrides(BaseModel):
     timezone: Optional[str] = None
     ui_state: Optional[UiState] = None
@@ -91,6 +106,7 @@ class ScheduleOverrides(BaseModel):
     start_window: Optional[ScheduleWindow] = None
     end_window: Optional[ScheduleWindow] = None
     content_refs: Optional[list[ContentRef]] = None
+    content_refs: Optional[list[ContentRef]] = Field(default=None, min_length=1)
     schedule_spec: Optional[ScheduleSpec] = None
 
 
@@ -98,6 +114,7 @@ class ScheduleRecord(BaseModel):
     id: str = Field(min_length=1)
     name: str = Field(min_length=1, max_length=120)
     enabled: bool
+
     timezone: Optional[str] = None
     ui_state: Optional[UiState] = None
     priority: Optional[int] = Field(default=None, ge=0, le=100)
@@ -174,7 +191,81 @@ class ScheduleBlock(BaseModel):
         end_obj = time.fromisoformat(self.end_time)
         if end_obj < start_obj and not self.overnight:
             raise ValueError("end_time must be after start_time unless overnight=true")
+
+    template_ref: Optional[ScheduleTemplateRef] = None
+    overrides: Optional[ScheduleOverrides] = None
+
+    @model_validator(mode="after")
+    def validate_shape(self) -> "ScheduleRecord":
+        if self.overrides and not self.template_ref:
+            raise ValueError("overrides cannot exist without template_ref")
+
+        duplicate_keys = self.duplicate_override_keys()
+        if duplicate_keys:
+            joined = ", ".join(sorted(duplicate_keys))
+            raise ValueError(
+                f"Ambiguous fields present in top-level and overrides: {joined}"
+            )
+
+        if self.template_ref is None:
+            missing_fields = [
+                field_name
+                for field_name in SCHEDULE_OVERRIDE_FIELDS
+                if getattr(self, field_name) is None
+            ]
+            if missing_fields:
+                raise ValueError(
+                    "Standalone schedules require runtime fields: "
+                    + ", ".join(missing_fields)
+                )
+
+        start = self.effective_start_window()
+        end = self.effective_end_window()
+        if start and end:
+            start_value = datetime.fromisoformat(start.value.replace("Z", "+00:00"))
+            end_value = datetime.fromisoformat(end.value.replace("Z", "+00:00"))
+            if start_value > end_value:
+                raise ValueError("start_window.value must be <= end_window.value")
+
         return self
+
+    def duplicate_override_keys(self) -> set[str]:
+        if self.overrides is None:
+            return set()
+        duplicates: set[str] = set()
+        for key in SCHEDULE_OVERRIDE_FIELDS:
+            if getattr(self, key) is not None and getattr(self.overrides, key) is not None:
+                duplicates.add(key)
+        return duplicates
+
+    def _effective(self, field_name: str):
+        value = getattr(self, field_name)
+        if value is not None:
+            return value
+        if self.overrides is not None:
+            return getattr(self.overrides, field_name)
+        return None
+
+    def effective_timezone(self) -> str:
+        return self._effective("timezone")
+
+    def effective_ui_state(self) -> UiState:
+        return self._effective("ui_state")
+
+    def effective_priority(self) -> int:
+        return self._effective("priority")
+
+    def effective_start_window(self) -> ScheduleWindow:
+        return self._effective("start_window")
+
+    def effective_end_window(self) -> ScheduleWindow:
+        return self._effective("end_window")
+
+    def effective_content_refs(self) -> list[ContentRef]:
+        return self._effective("content_refs")
+
+    def effective_schedule_spec(self) -> ScheduleSpec:
+        return self._effective("schedule_spec")
 
 
 class ScheduleEnvelope(BaseModel):
@@ -213,6 +304,8 @@ class ConflictType(str, Enum):
     duplicate_id = "duplicate_id"
     duplicate_name = "duplicate_name"
     ambiguous_active = "ambiguous_active"
+    template_ambiguity = "template_ambiguity"
+    ambiguous_dispatch = "ambiguous_dispatch"
 
 
 class ConflictSuggestion(BaseModel):

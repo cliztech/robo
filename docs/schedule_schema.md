@@ -24,6 +24,22 @@ and dual-time local+UTC presentation requirements in `ONLINE_RADIO_DJ_DESIGN.md`
 | `schema_version` | integer | Yes | Must be exactly `2`. |
 | `schedules` | array | Yes | List of schedule records. |
 
+## Canonical Normalized Entities (Scheduling 2.0 foundation)
+
+The scheduler runtime normalizes every record into a deterministic shape before conflict checks or writes:
+
+- **Show block**: a day-scoped timeline segment (`schedule_id`, `day_of_week`, `start_time`, `end_time`, `overnight`).
+- **Template**: reusable baseline identified by `template_ref` (`id`, `version`).
+- **Override**: field-level substitutions under `overrides` for runtime keys (`timezone`, `ui_state`, `priority`, windows, `content_refs`, `schedule_spec`).
+- **Conflict type**: one of `overlap`, `invalid_window`, `duplicate_id`, `duplicate_name`, `template_ambiguity`, `ambiguous_dispatch`.
+
+`ScheduleRecord` MAY be either:
+
+1. standalone (all runtime fields defined at top-level), or
+2. template-backed (`template_ref` + optional `overrides`).
+
+All schedule writes/publish operations must validate against this normalized model and then execute deterministic conflict detection.
+
 ## TODO Roadmap Gates
 
 - [x] Document canonical schedule entities:
@@ -56,6 +72,15 @@ Conflict classes used by backend validation:
 Validation is fail-fast on save/publish: schedule writes are rejected when any conflict class is present.
 
 ---
+## UI Scope (post-backend foundation)
+
+Backend prerequisites are complete only when schema validation + conflict checks hard-block invalid save/publish flows.
+After this gate, timeline UI implementation can be scoped as:
+
+1. Day/week drag-drop timeline with 15-minute snap (5-minute modifier override).
+2. Conflict lane rendering mapped to normalized conflict types.
+3. Publish preflight surface fed by `/api/v1/scheduler-ui/validate` and `/api/v1/scheduler-ui/publish`.
+4. Keyboard move/resize parity using the same normalized block model.
 
 ## Schedule Object (v2)
 ---

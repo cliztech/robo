@@ -199,6 +199,17 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 ### Could
 - [ ] Bulk schedule edit mode (copy/paste between days) **(S)**
 
+### Backend foundation status (v1.2 prerequisite)
+- [x] Normalized schedule representation defined for blocks, template refs, and overrides.
+- [x] Deterministic conflict detection module with actionable operator messages.
+- [x] Weekday/weekend/overnight template primitives wired for reuse.
+- [x] Save/publish hard-blocks on schema or conflict failures.
+
+### UI scoping (only after backend foundation)
+- [ ] Drag/drop weekly timeline interaction model (15-minute snap + 5-minute modifier).
+- [ ] Conflict visualization pass mapped to normalized conflict types.
+- [ ] Publish preflight panel fed by validate/publish backend endpoints.
+
 ### Dependencies
 - Builds on v1.1 config validation and backup.
 - Requires normalized schedule schema to support templates/overrides.
