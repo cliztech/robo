@@ -5,6 +5,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": ["service_health", "queue_depth", "rotation", "alert_center"],
+  "required": [
+    "service_status",
+    "queue_depth",
+    "last_rotation_at",
+    "last_error_message",
+    "degraded_reason",
+    "latency_ms",
+    "pending_jobs",
+    "panel_states"
+  ],
   "properties": {
     "service_health": {
       "type": "object",
@@ -162,6 +172,52 @@
       "type": "string",
       "format": "date-time",
       "deprecated": true
+      "format": "date-time"
+    },
+    "last_error_message": {
+      "type": ["string", "null"]
+    },
+    "degraded_reason": {
+      "type": ["string", "null"]
+    },
+    "latency_ms": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "pending_jobs": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "panel_states": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scheduler",
+        "queue",
+        "alerts",
+        "diagnostics",
+        "autonomy_panel"
+      ],
+      "properties": {
+        "scheduler": { "$ref": "#/$defs/ui_state" },
+        "queue": { "$ref": "#/$defs/ui_state" },
+        "alerts": { "$ref": "#/$defs/ui_state" },
+        "diagnostics": { "$ref": "#/$defs/ui_state" },
+        "autonomy_panel": { "$ref": "#/$defs/ui_state" }
+      }
+    },
+    "card_states": {
+      "type": "object",
+      "description": "Optional map of card identifiers to standardized UI states.",
+      "additionalProperties": {
+        "$ref": "#/$defs/ui_state"
+      }
+    }
+  },
+  "$defs": {
+    "ui_state": {
+      "type": "string",
+      "enum": ["loading", "ready", "empty", "error"]
     }
   }
 }

@@ -1,0 +1,13 @@
+@import './tokens.css';
+@import '../components/primitives/primitives.css';
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: hsl(var(--color-bg));
+  color: hsl(var(--color-text));
+  font-family: Inter, 'Segoe UI', sans-serif;
+}
