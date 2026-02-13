@@ -15,6 +15,52 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 ## v1.1 — Reliability & Safety Baseline
 **Goal:** make daily operation safer and easier to recover.
 
+### Current Sprint (v1.1 Now)
+
+#### Ticket R11-01 — Startup diagnostics panel
+- **Owner:** Desktop App Engineer
+- **Estimate:** 5 days (M)
+- **Dependency:** Reusable health-check functions for DB, key files, and audio device discovery.
+- **Scope:** Add a launch-time diagnostics panel that reports pass/fail/warn for DB availability, key integrity, and audio output readiness before automation starts.
+- **Acceptance criteria:**
+  - Diagnostics panel appears automatically during startup and can be reopened from the main UI.
+  - DB, key, and audio checks each report status with clear remediation guidance.
+  - Startup flow blocks automation start on hard-fail checks and allows continue on warnings.
+- **Definition of done:** Feature is merged with QA evidence showing pass/warn/fail states and operator can act on each status without reading logs.
+
+#### Ticket R11-02 — Launch-time config validator (`schedules.json`, `prompt_variables.json`)
+- **Owner:** Configuration/Runtime Engineer
+- **Estimate:** 4 days (M)
+- **Dependency:** Stable JSON schema definitions and a shared validation utility.
+- **Scope:** Validate `config/schedules.json` and `config/prompt_variables.json` on launch and prevent runtime start when either file is invalid.
+- **Acceptance criteria:**
+  - Validator runs before scheduler/prompt execution begins.
+  - Invalid JSON, missing required keys, and type mismatches are surfaced with file + line context.
+  - Validation errors provide one-click open path to the offending config file location.
+- **Definition of done:** Invalid configs are consistently blocked at launch, and known-good sample configs pass validation in automated checks.
+
+#### Ticket R11-03 — Crash recovery with restore-last-known-good
+- **Owner:** Reliability Engineer
+- **Estimate:** 6 days (M)
+- **Dependency:** Backup snapshot writer and startup crash-state detector.
+- **Scope:** Detect unclean shutdowns and present a guided restore flow to recover config files from the latest known-good snapshot.
+- **Acceptance criteria:**
+  - App detects prior crash/unclean exit and offers recovery on next launch.
+  - Restore flow lists available snapshots with timestamp and source metadata.
+  - Operator can restore last known good config in one action and confirm recovery success before continuing.
+- **Definition of done:** Simulated crash scenario recovers to an operable state in under 2 minutes using only in-app recovery prompts.
+
+#### Ticket R11-04 — One-click timestamped backup snapshot
+- **Owner:** Platform/Tooling Engineer
+- **Estimate:** 2 days (S)
+- **Dependency:** Backup directory convention in `config/backups/` and manifest format for snapshot contents.
+- **Scope:** Add a one-click/manual action that writes timestamped snapshots of critical config files to `config/backups/`.
+- **Acceptance criteria:**
+  - Backup action is available from settings/operations menu and returns success/failure feedback.
+  - Snapshot directory names are timestamped and collision-safe.
+  - Snapshot includes `schedules.json`, `prompt_variables.json`, and relevant launcher/runtime config artifacts.
+- **Definition of done:** Operator can create and verify a timestamped snapshot without CLI usage, and restored files match snapshot checksums.
+
 ### Must
 - [ ] Startup diagnostics panel (DB checks, key checks, audio device checks) **(M)**
 - [ ] Config validator on launch for `schedules.json` and `prompt_variables.json` **(M)**
