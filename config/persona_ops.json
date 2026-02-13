@@ -1,0 +1,232 @@
+{
+  "schema_version": "1.0.0",
+  "personas": [
+    {
+      "persona_id": "host_ava",
+      "display_name": "Ava",
+      "status": "live",
+      "live_pointer": "1.1.0",
+      "versions": [
+        {
+          "version_id": "1.0.0",
+          "parent_version_id": null,
+          "state": "approved",
+          "created_at": "2026-01-01T10:00:00Z",
+          "approved_at": "2026-01-02T08:00:00Z",
+          "schema": {
+            "tone": ["warm", "conversational"],
+            "pace": {
+              "style": "moderate",
+              "target_wpm": {
+                "min": 130,
+                "max": 160
+              }
+            },
+            "vocabulary_limits": {
+              "max_grade_level": 8,
+              "banned_words": ["folks"],
+              "preferred_phrases": ["great to have you", "coming up next"]
+            },
+            "taboo_topics": ["political endorsements", "medical advice"],
+            "voice_model": {
+              "provider": "elevenlabs",
+              "model": "eleven_multilingual_v2",
+              "voice_id": "voice_ava_primary"
+            },
+            "fallback_voice": {
+              "provider": "openai",
+              "model": "gpt-4o-mini-tts",
+              "voice_id": "alloy"
+            }
+          },
+          "rubric_scores": {
+            "warmth": 4.1,
+            "clarity": 4.0,
+            "authenticity": 3.9,
+            "brand_fit": 4.2,
+            "composite": 4.05
+          }
+        },
+        {
+          "version_id": "1.1.0",
+          "parent_version_id": "1.0.0",
+          "state": "live",
+          "created_at": "2026-01-10T09:00:00Z",
+          "approved_at": "2026-01-11T12:00:00Z",
+          "go_live_at": "2026-01-12T06:00:00Z",
+          "schema": {
+            "tone": ["warm", "upbeat"],
+            "pace": {
+              "style": "moderate",
+              "target_wpm": {
+                "min": 135,
+                "max": 165
+              }
+            },
+            "vocabulary_limits": {
+              "max_grade_level": 8,
+              "banned_words": ["guys"],
+              "preferred_phrases": ["good to have you here", "up next"]
+            },
+            "taboo_topics": ["political endorsements", "medical advice"],
+            "voice_model": {
+              "provider": "elevenlabs",
+              "model": "eleven_multilingual_v2",
+              "voice_id": "voice_ava_primary"
+            },
+            "fallback_voice": {
+              "provider": "openai",
+              "model": "gpt-4o-mini-tts",
+              "voice_id": "alloy"
+            }
+          },
+          "rubric_scores": {
+            "warmth": 4.4,
+            "clarity": 4.2,
+            "authenticity": 4.1,
+            "brand_fit": 4.3,
+            "composite": 4.25
+          }
+        },
+        {
+          "version_id": "1.2.0",
+          "parent_version_id": "1.1.0",
+          "state": "draft",
+          "created_at": "2026-01-20T15:00:00Z",
+          "schema": {
+            "tone": ["warm", "upbeat", "playful"],
+            "pace": {
+              "style": "moderate_fast",
+              "target_wpm": {
+                "min": 145,
+                "max": 175
+              }
+            },
+            "vocabulary_limits": {
+              "max_grade_level": 7,
+              "banned_words": ["guys"],
+              "preferred_phrases": ["let's keep it moving", "up next"]
+            },
+            "taboo_topics": ["political endorsements", "medical advice"],
+            "voice_model": {
+              "provider": "elevenlabs",
+              "model": "eleven_multilingual_v2",
+              "voice_id": "voice_ava_alt"
+            },
+            "fallback_voice": {
+              "provider": "openai",
+              "model": "gpt-4o-mini-tts",
+              "voice_id": "alloy"
+            }
+          }
+        }
+      ],
+      "audit_log": [
+        {
+          "event_type": "approve",
+          "version_id": "1.0.0",
+          "actor": "content_editor",
+          "timestamp": "2026-01-02T08:00:00Z",
+          "reason": "Initial persona baseline approved"
+        },
+        {
+          "event_type": "go_live",
+          "version_id": "1.1.0",
+          "actor": "station_ops",
+          "timestamp": "2026-01-12T06:00:00Z",
+          "reason": "Improved warmth and clarity in pilot"
+        },
+        {
+          "event_type": "rollback",
+          "from_version_id": "1.1.0",
+          "to_version_id": "1.0.0",
+          "actor": "station_ops",
+          "timestamp": "2026-01-14T19:30:00Z",
+          "reason": "Temporary fallback due to TTS outage"
+        },
+        {
+          "event_type": "go_live",
+          "version_id": "1.1.0",
+          "actor": "station_ops",
+          "timestamp": "2026-01-15T06:00:00Z",
+          "reason": "Primary TTS restored"
+        }
+      ]
+    }
+  ],
+  "experiments": [
+    {
+      "experiment_id": "exp_morning_ava_2026w03",
+      "persona_id": "host_ava",
+      "status": "running",
+      "routing": {
+        "dayparts": ["morning_drive"],
+        "audience_segments": ["new_listeners", "loyal_weekday"],
+        "hash_key": "listener_id_plus_date"
+      },
+      "variants": [
+        {
+          "variant_id": "A_control",
+          "persona_version_id": "1.0.0",
+          "traffic_weight": 50
+        },
+        {
+          "variant_id": "B_candidate",
+          "persona_version_id": "1.1.0",
+          "traffic_weight": 50
+        }
+      ],
+      "window": {
+        "start_date": "2026-01-13",
+        "end_date": "2026-01-27",
+        "min_samples": 800
+      },
+      "success_metrics": ["feedback_positive_rate", "retention_delta", "rubric_composite"]
+    }
+  ],
+  "quality_rubric": {
+    "dimensions": ["warmth", "clarity", "authenticity", "brand_fit"],
+    "scale": {
+      "min": 1,
+      "max": 5
+    },
+    "weights": {
+      "warmth": 0.25,
+      "clarity": 0.25,
+      "authenticity": 0.25,
+      "brand_fit": 0.25
+    },
+    "guardrails": {
+      "minimum_dimension_score": 2,
+      "minimum_trial_composite": 4.0
+    }
+  },
+  "listener_feedback": [
+    {
+      "event_id": "fbk_001",
+      "timestamp": "2026-01-16T07:14:22Z",
+      "persona_id": "host_ava",
+      "persona_version_id": "1.1.0",
+      "experiment_id": "exp_morning_ava_2026w03",
+      "variant_id": "B_candidate",
+      "daypart": "morning_drive",
+      "audience_segment": "new_listeners",
+      "channel": "thumbs_up",
+      "sentiment": 0.82,
+      "retained_60s": true
+    },
+    {
+      "event_id": "fbk_002",
+      "timestamp": "2026-01-16T08:01:08Z",
+      "persona_id": "host_ava",
+      "persona_version_id": "1.0.0",
+      "experiment_id": "exp_morning_ava_2026w03",
+      "variant_id": "A_control",
+      "daypart": "morning_drive",
+      "audience_segment": "loyal_weekday",
+      "channel": "thumbs_down",
+      "sentiment": -0.35,
+      "retained_60s": false
+    }
+  ]
+}

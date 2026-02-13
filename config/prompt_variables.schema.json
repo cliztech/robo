@@ -1,0 +1,239 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robodj.local/schema/prompt_variables.schema.json",
+  "title": "RoboDJ Prompt Variables Configuration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "custom_variables",
+    "variable_settings",
+    "time_variable_configs",
+    "version"
+  ],
+  "properties": {
+    "custom_variables": {
+      "type": "object",
+      "description": "Custom token map used for prompt interpolation. Keys are token names without surrounding braces.",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*$"
+      },
+      "additionalProperties": {
+        "type": "string",
+        "maxLength": 500
+      }
+    },
+    "variable_settings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "override_precedence",
+        "missing_variable_behavior",
+        "filter_artist_parentheses",
+        "filter_title_parentheses"
+      ],
+      "properties": {
+        "override_precedence": {
+          "type": "string",
+          "enum": [
+            "custom_over_builtin",
+            "builtin_over_custom"
+          ],
+          "description": "Defines collision resolution between custom and built-in variables."
+        },
+        "custom_variables_override_builtin": {
+          "type": "boolean",
+          "description": "Legacy alias for override_precedence. Prefer override_precedence for new configs."
+        },
+        "missing_variable_behavior": {
+          "type": "string",
+          "enum": [
+            "empty_string",
+            "keep_token",
+            "warning",
+            "strict_error"
+          ],
+          "description": "Strict mode is enabled with strict_error and must emit a validation error when any token is unresolved."
+        },
+        "filter_artist_parentheses": {
+          "type": "boolean"
+        },
+        "filter_title_parentheses": {
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "custom_variables_override_builtin": {
+                "const": true
+              }
+            },
+            "required": [
+              "custom_variables_override_builtin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "override_precedence": {
+                "const": "custom_over_builtin"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "custom_variables_override_builtin": {
+                "const": false
+              }
+            },
+            "required": [
+              "custom_variables_override_builtin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "override_precedence": {
+                "const": "builtin_over_custom"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "time_variable_configs": {
+      "type": "object",
+      "description": "Per-token time formatting and timezone behavior.",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "source",
+          "format"
+        ],
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "now",
+              "show_start",
+              "show_end",
+              "custom_timestamp"
+            ]
+          },
+          "format": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "timezone": {
+            "type": "string",
+            "pattern": "^[A-Za-z_]+(?:/[A-Za-z_+-]+)+$"
+          },
+          "locale": {
+            "type": "string",
+            "pattern": "^[a-z]{2}(?:-[A-Z]{2})?$"
+          },
+          "fallback_value": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "custom_timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "source": {
+                  "const": "custom_timestamp"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "custom_timestamp"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "validation_state": {
+      "type": "object",
+      "description": "Optional render/preview validation payload exposed to frontend consumers.",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "warnings",
+        "errors",
+        "unresolved_tokens"
+      ],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "ok",
+            "warning",
+            "error"
+          ]
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "unresolved_tokens": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^\\{[a-z0-9_]+\\}$"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "ok"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "warnings": {
+                "maxItems": 0
+              },
+              "errors": {
+                "maxItems": 0
+              },
+              "unresolved_tokens": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ]
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+$"
+    }
+  }
+}
