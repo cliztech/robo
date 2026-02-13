@@ -27,6 +27,7 @@
     "ui": {
       "type": "object",
       "additionalProperties": false,
+      "description": "Optional appearance and behavior controls consumed by browser clients. All appearance fields are optional and include defaults for backwards compatibility.",
       "required": [
         "preferences",
         "module_visibility"
@@ -34,7 +35,35 @@
       "properties": {
         "theme": {
           "type": "string",
-          "enum": ["light", "dark", "auto"]
+          "enum": ["light", "dark", "auto"],
+          "default": "auto",
+          "description": "Base color-scheme mode selector."
+        },
+        "accent_color": {
+          "type": "string",
+          "pattern": "^#[A-Fa-f0-9]{6}$",
+          "default": "#2AA9FF",
+          "description": "Primary brand/accent color in 6-digit hex form."
+        },
+        "density": {
+          "type": "string",
+          "enum": ["comfortable", "compact"],
+          "default": "comfortable",
+          "description": "Controls spacing density for shell layout and controls."
+        },
+        "font_scale": {
+          "type": "number",
+          "minimum": 0.9,
+          "maximum": 1.25,
+          "multipleOf": 0.05,
+          "default": 1,
+          "description": "Global typography scale multiplier used by frontend token mapping."
+        },
+        "surface_style": {
+          "type": "string",
+          "enum": ["flat", "elevated"],
+          "default": "elevated",
+          "description": "Optional surface rendering mode for cards/panels."
         },
         "show_weather_widget": { "type": "boolean" },
         "refresh_interval_seconds": {

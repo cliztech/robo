@@ -224,32 +224,98 @@ Acceptance criteria from reduced motion strategy:
 
 ---
 
-## 6. Design Tokens (starter)
+## 6. Design Tokens + Frontend Config Appearance Mapping
 
 Create `src/styles/tokens.css`:
 
 ```css
 :root {
-  --bg: 224 24% 7%;
-  --surface: 224 20% 11%;
-  --surface-2: 224 18% 14%;
-  --text: 220 20% 96%;
-  --text-muted: 220 12% 70%;
-  --accent: 199 98% 58%;
+  /* default/light baseline */
+  --bg: 220 20% 98%;
+  --surface: 0 0% 100%;
+  --surface-2: 220 20% 96%;
+  --text: 224 24% 10%;
+  --text-muted: 220 10% 40%;
+
+  /* runtime-driven appearance controls */
+  --accent: 199 98% 58%; /* from config.ui.accent_color */
+  --font-scale: 1;       /* from config.ui.font_scale */
+  --density-scale: 1;    /* 1 (comfortable) | 0.875 (compact) */
 
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
 
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-6: 24px;
+  --space-1: calc(4px * var(--density-scale));
+  --space-2: calc(8px * var(--density-scale));
+  --space-3: calc(12px * var(--density-scale));
+  --space-4: calc(16px * var(--density-scale));
+  --space-6: calc(24px * var(--density-scale));
 
-  --shadow-soft: 0 6px 20px hsl(0 0% 0% / 0.25);
+  --elevation-shadow: 0 6px 20px hsl(220 30% 12% / 0.15);
+  --surface-border: hsl(220 16% 88%);
+}
+
+/* dark parity */
+[data-theme='dark'] {
+  --bg: 224 24% 7%;
+  --surface: 224 20% 11%;
+  --surface-2: 224 18% 14%;
+  --text: 220 20% 96%;
+  --text-muted: 220 12% 70%;
+  --elevation-shadow: 0 6px 20px hsl(0 0% 0% / 0.25);
+  --surface-border: hsl(224 12% 28%);
+}
+
+/* high-contrast variants (must exist for both light + dark) */
+[data-contrast='high'][data-theme='light'] {
+  --bg: 0 0% 100%;
+  --surface: 0 0% 100%;
+  --surface-2: 0 0% 97%;
+  --text: 0 0% 0%;
+  --text-muted: 0 0% 16%;
+  --surface-border: hsl(0 0% 10%);
+}
+
+[data-contrast='high'][data-theme='dark'] {
+  --bg: 0 0% 0%;
+  --surface: 0 0% 4%;
+  --surface-2: 0 0% 10%;
+  --text: 0 0% 100%;
+  --text-muted: 0 0% 88%;
+  --surface-border: hsl(0 0% 86%);
+}
+
+/* surface style mapping */
+[data-surface-style='flat'] {
+  --elevation-shadow: none;
+}
+
+[data-surface-style='elevated'] {
+  --elevation-shadow: 0 6px 20px hsl(220 30% 12% / 0.15);
 }
 ```
+
+### Config-to-token mapping contract
+- `config.ui.theme` -> sets `data-theme` (`light`/`dark`) with `auto` resolved from OS preference.
+- `config.ui.accent_color` -> `--accent` (convert hex to HSL once at app boot/update).
+- `config.ui.density` -> `--density-scale` (`comfortable=1`, `compact=0.875`).
+- `config.ui.font_scale` -> `--font-scale`; root font-size should use `calc(16px * var(--font-scale))`.
+- `config.ui.surface_style` -> `data-surface-style` (`flat` disables shadow, `elevated` enables it).
+
+### Light/dark parity + high-contrast requirements
+- Every semantic token used by shell components must define light and dark values.
+- High-contrast variants must be provided for both light and dark modes.
+- Accent usage must continue to pass contrast checks against both surface modes.
+
+### Migration defaults (backward compatibility)
+When loading existing configs that only provide `theme`, frontend should apply schema defaults:
+- `accent_color`: `#2AA9FF`
+- `density`: `comfortable`
+- `font_scale`: `1`
+- `surface_style`: `elevated`
+
+This keeps older saved configs valid without edits while enabling progressive rollout of new appearance controls.
 
 ---
 
