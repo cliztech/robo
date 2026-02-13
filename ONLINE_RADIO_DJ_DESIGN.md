@@ -80,7 +80,7 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
   "failure_code": "string | null",
   "failure_message": "string | null",
 "retry_count": "integer"
-  "last_attempt_at": "2023-10-27T13:59:41Z | null"
+"last_attempt_at": "string (ISO 8601) | null"
 }
 ```
 
