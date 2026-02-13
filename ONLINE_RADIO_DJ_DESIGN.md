@@ -108,15 +108,81 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
 ### Tracks
 ```json
 {
-  "id": "uuid",
+  "id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
   "title": "Neon Nights",
   "artist": "AI Synthwave Collective",
   "duration": 245,
+  "file_path": "s3://station-assets/tracks/neon_nights_v1.mp3",
+  "publish_status": "published",
+  "availability": "public",
   "intro_duration": 12,
   "outro_duration": 15,
-  "file_path": "s3://...",
   "bpm": 128,
   "energy": 0.8,
+  "artwork_url": "https://cdn.station.fm/artwork/neon_nights.jpg",
+  "is_explicit": false,
+  "genre_tags": ["synthwave", "electronic"],
+  "mood_tags": ["night_drive", "uplifting"],
+  "language": "en",
+  "lufs": -13.5,
+  "peak_db": -1.0,
+  "sample_rate": 44100,
+  "codec": "mp3",
+  "has_intro_marker": true,
+  "has_outro_marker": true,
+  "analytics": {
+    "play_count": 1284,
+    "like_count": 342,
+    "skip_count": 57,
+    "completion_rate": 0.91
+  }
+}
+```
+
+#### Example A: Minimal ingest record
+```json
+{
+  "id": "5d2a0b1d-54f0-4974-85c4-57e7cd2f0ca7",
+  "title": "Sunrise Loop",
+  "artist": "LoFi Unit",
+  "duration": 186,
+  "file_path": "s3://ingest-bucket/tracks/2026/02/sunrise_loop.wav",
+  "publish_status": "draft",
+  "availability": "private"
+}
+```
+
+#### Example B: Fully enriched published track
+```json
+{
+  "id": "2f9c93e2-f131-41f3-8fc8-84d9f2c8f6d1",
+  "title": "Neon Nights",
+  "artist": "AI Synthwave Collective",
+  "duration": 245,
+  "file_path": "https://cdn.station.fm/audio/neon_nights_master.mp3",
+  "publish_status": "published",
+  "availability": "public",
+  "intro_duration": 12,
+  "outro_duration": 15,
+  "bpm": 128,
+  "energy": 0.8,
+  "artwork_url": "https://cdn.station.fm/artwork/neon_nights.jpg",
+  "is_explicit": false,
+  "genre_tags": ["synthwave", "electronic", "retrowave"],
+  "mood_tags": ["night_drive", "energetic", "futuristic"],
+  "language": "en-US",
+  "lufs": -13.7,
+  "peak_db": -0.8,
+  "sample_rate": 48000,
+  "codec": "mp3",
+  "has_intro_marker": true,
+  "has_outro_marker": true,
+  "analytics": {
+    "play_count": 34981,
+    "like_count": 9123,
+    "skip_count": 1302,
+    "completion_rate": 0.89
+  }
   "codec": "aac | mp3 | flac | wav",
   "sample_rate_hz": 44100,
   "bitrate_kbps": 320,
