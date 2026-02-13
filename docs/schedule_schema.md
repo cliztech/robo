@@ -1,10 +1,10 @@
 # Schedule Schema Specification
 
-This document defines the canonical `schedule` record format for RoboDJ scheduling data stored in `config/schedules.json`.
+This document defines the canonical schedule format for `config/schedules.json` and the fail-fast validation behavior enforced by `config/validate_config.py`.
 
 ## Root Envelope
 
-`schedules.json` MUST use an object root with a schema version marker:
+`schedules.json` must use an object root:
 
 ```json
 {
@@ -13,96 +13,123 @@ This document defines the canonical `schedule` record format for RoboDJ scheduli
 }
 ```
 
-### Root fields
-
-| Field | Type | Required | Description |
+| Field | Type | Required | Rules |
 |---|---|---:|---|
-| `schema_version` | integer | Yes | Current schema version for the file format. Use `2` for this specification. |
-| `schedules` | array of `schedule` | Yes | List of schedule records. |
-
-## Schedule Object (v2)
-
-Each item in `schedules` MUST follow this schema.
-
-### Required fields
-
-| Field | Type | Allowed values / format | Description |
-|---|---|---|---|
-| `id` | string | Stable unique identifier (UUID preferred). | Primary identifier for updates and references. |
-| `name` | string | 1..120 chars. | Human-readable schedule name shown in UI. |
-| `enabled` | boolean | `true` / `false`. | Runtime switch for scheduler execution. |
-| `timezone` | string | IANA tz database name (e.g., `UTC`, `America/New_York`). | Timezone used to evaluate all date/time rules. |
-| `ui_state` | string | `draft`, `active`, `paused`, `archived`. | Frontend-facing lifecycle state for editing and visibility rules. |
-| `priority` | integer | 0..100 (higher number = higher priority). | Conflict resolution and ordering weight. |
-| `start_window` | object | See below. | Earliest run eligibility constraints. |
-| `end_window` | object | See below. | Latest run eligibility constraints. |
-| `content_refs` | array of object | At least 1 entry. | References to playable/generated content resources. |
-| `schedule_spec` | object | Exactly one mode: `one_off`, `rrule`, or `cron`. | Recurrence definition for when the schedule should run. |
-
-### `schedule_spec`
-
-`schedule_spec.mode` defines how recurrence is interpreted:
-
-- `one_off`: single point-in-time schedule.
-- `rrule`: RFC 5545-like recurrence rule string.
-- `cron`: five-field cron-like expression.
-
-```json
-{
-  "mode": "rrule",
-  "rrule": "FREQ=DAILY;INTERVAL=1;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
-}
-```
-
-Validation requirements:
-
-- `mode=one_off` requires `run_at` (ISO-8601 datetime with timezone offset or `Z`).
-- `mode=rrule` requires `rrule` string.
-- `mode=cron` requires `cron` string (five-field format: minute hour day-of-month month day-of-week).
-- Only the field matching the selected mode may be present.
-
-### `start_window` and `end_window`
-
-These fields define inclusive scheduling boundaries.
-
-```json
-"start_window": {
-  "type": "datetime",
-  "value": "2026-01-01T00:00:00Z"
-},
-"end_window": {
-  "type": "datetime",
-  "value": "2026-12-31T23:59:59Z"
-}
-```
-
-Rules:
-
-- `type` currently supports `datetime`.
-- `value` must be ISO-8601 datetime.
-- `start_window.value` must be <= `end_window.value` when both are finite bounds.
-- Open-ended ranges can use `null` values only if explicitly supported by consuming code; default expectation is finite bounds.
-
-### `content_refs`
-
-Each referenced item must include source and identifier details.
-
-| Field | Type | Required | Description |
-|---|---|---:|---|
-| `type` | string | Yes | Content category (e.g., `prompt`, `script`, `playlist`, `music_bed`). |
-| `ref_id` | string | Yes | Stable internal identifier for resource lookup. |
-| `label` | string | No | Display label for UI selection chips/dropdowns. |
-| `weight` | integer | No | Relative selection weight in multi-content schedules. |
+| `schema_version` | integer | Yes | Must be exactly `2`. |
+| `schedules` | array | Yes | List of schedule records. |
 
 ---
 
-## Examples
+## Schedule Record Shapes
 
-### 1) One-off schedule
+Each schedule must include `id`, `name`, and `enabled`.
+
+### 1) Standalone schedule (fully concrete)
+
+A standalone schedule must include all runtime fields directly on the schedule:
+
+- `timezone`
+- `ui_state`
+- `priority`
+- `start_window`
+- `end_window`
+- `content_refs`
+- `schedule_spec`
+
+### 2) Template-compatible schedule
+
+A template-compatible schedule references shared defaults and may override selected runtime fields.
 
 ```json
 {
-  "id": "sch_4f8a1f88-5ca1-47e9-8bb1-3e0db3ac3c8c",
+  "id": "sch_hourly_news",
+  "name": "Hourly News",
+  "enabled": true,
+  "template_ref": {
+    "id": "tpl_news_base",
+    "version": 3
+  },
+  "overrides": {
+    "timezone": "America/New_York",
+    "schedule_spec": {
+      "mode": "cron",
+      "cron": "0 * * * *"
+    }
+  }
+}
+```
+
+Template rules:
+
+- `template_ref` requires:
+  - `id` (non-empty string)
+  - `version` (integer `>= 1`)
+- `overrides` is optional, but if present must be an object.
+- `overrides` keys are limited to:
+  - `timezone`, `ui_state`, `priority`, `start_window`, `end_window`, `content_refs`, `schedule_spec`
+- Ambiguity is rejected: a field may not appear both at top-level and inside `overrides`.
+- `overrides` cannot exist without `template_ref`.
+
+---
+
+## Required Fields and Allowed Enums
+
+| Field | Type | Required | Allowed values / constraints |
+|---|---|---:|---|
+| `id` | string | Yes | Non-empty, unique across file. |
+| `name` | string | Yes | Non-empty, unique (case-insensitive) across file. |
+| `enabled` | boolean | Yes | `true` or `false`. |
+| `timezone` | string | Standalone: Yes / Template: Optional | Must be valid IANA timezone (`UTC`, `Europe/London`, etc.). |
+| `ui_state` | string | Standalone: Yes / Template: Optional | `draft`, `active`, `paused`, `archived`. |
+| `priority` | integer | Standalone: Yes / Template: Optional | `0..100` (higher = stronger precedence). |
+| `start_window` | object | Standalone: Yes / Template: Optional | `{"type":"datetime","value":"<ISO-8601-with-offset-or-Z>"}` |
+| `end_window` | object | Standalone: Yes / Template: Optional | Same format as `start_window`. |
+| `content_refs` | array | Standalone: Yes / Template: Optional | Non-empty array of valid content refs. |
+| `schedule_spec` | object | Standalone: Yes / Template: Optional | Exactly one schedule mode payload. |
+
+### `schedule_spec` modes
+
+| `mode` | Required payload | Forbidden payload keys |
+|---|---|---|
+| `one_off` | `run_at` (ISO-8601 datetime with timezone) | `rrule`, `cron` |
+| `rrule` | `rrule` string containing `FREQ=` | `run_at`, `cron` |
+| `cron` | `cron` five-field expression (`min hour dom mon dow`) | `run_at`, `rrule` |
+
+### `content_refs` entries
+
+Each entry must be an object with:
+
+- `type`: one of `prompt`, `script`, `playlist`, `music_bed`
+- `ref_id`: non-empty string
+- optional `weight`: integer `1..100`
+
+---
+
+## Conflict and Ambiguity Rules
+
+Validation fails fast if any of these are detected:
+
+1. Duplicate `id` values.
+2. Duplicate `name` values (case-insensitive).
+3. For standalone active schedules (`enabled=true`, `ui_state=active`):
+   - same `timezone`
+   - same `priority`
+   - identical `schedule_spec`
+   - overlapping `start_window`/`end_window`
+
+   This combination is treated as **ambiguous conflict** and rejected.
+4. `start_window.value > end_window.value`.
+5. Template ambiguity (same field defined at top-level and in `overrides`).
+
+---
+
+## Representative Examples
+
+### Valid: standalone one-off
+
+```json
+{
+  "id": "sch_new_year_countdown",
   "name": "New Year Countdown",
   "enabled": true,
   "timezone": "UTC",
@@ -124,59 +151,49 @@ Each referenced item must include source and identifier details.
     {
       "type": "script",
       "ref_id": "script:new_year_countdown",
-      "label": "New Year Countdown Script",
       "weight": 100
     }
   ]
 }
 ```
 
-### 2) Daily schedule (RRULE)
+### Valid: template + override
 
 ```json
 {
-  "id": "sch_2a22aab0-bbd7-4b54-9363-a818d2fb27aa",
-  "name": "Morning Top-of-Hour Update",
+  "id": "sch_hourly_news",
+  "name": "Hourly News",
   "enabled": true,
-  "timezone": "America/New_York",
+  "template_ref": {
+    "id": "tpl_news_base",
+    "version": 3
+  },
+  "overrides": {
+    "timezone": "America/New_York",
+    "ui_state": "active",
+    "priority": 80,
+    "schedule_spec": {
+      "mode": "cron",
+      "cron": "0 * * * *"
+    }
+  }
+}
+```
+
+### Invalid: mode payload mismatch
+
+```json
+{
+  "id": "sch_bad_mode",
+  "name": "Bad Mode",
+  "enabled": true,
+  "timezone": "UTC",
   "ui_state": "active",
-  "priority": 70,
+  "priority": 50,
   "schedule_spec": {
-    "mode": "rrule",
-    "rrule": "FREQ=DAILY;INTERVAL=1;BYHOUR=9;BYMINUTE=0;BYSECOND=0"
-  },
-  "start_window": {
-    "type": "datetime",
-    "value": "2026-01-01T00:00:00-05:00"
-  },
-  "end_window": {
-    "type": "datetime",
-    "value": "2026-12-31T23:59:59-05:00"
-  },
-  "content_refs": [
-    {
-      "type": "prompt",
-      "ref_id": "prompt:morning_update",
-      "label": "Morning Update Prompt",
-      "weight": 100
-    }
-  ]
-}
-```
-
-### 3) Weekly schedule (cron-like)
-
-```json
-{
-  "id": "sch_f6e37af8-f2cf-4b39-bf9f-4c12d56f9b9d",
-  "name": "Friday Drive-Time Show",
-  "enabled": true,
-  "timezone": "Europe/London",
-  "ui_state": "paused",
-  "priority": 80,
-  "schedule_spec": {
-    "mode": "cron",
-    "cron": "30 17 * * 5"
+    "mode": "one_off",
+    "run_at": "2026-01-01T00:00:00Z",
+    "cron": "0 * * * *"
   },
   "start_window": {
     "type": "datetime",
@@ -184,64 +201,68 @@ Each referenced item must include source and identifier details.
   },
   "end_window": {
     "type": "datetime",
-    "value": "2026-12-31T23:59:59Z"
+    "value": "2026-02-01T00:00:00Z"
   },
   "content_refs": [
     {
-      "type": "playlist",
-      "ref_id": "playlist:friday_drive",
-      "label": "Friday Drive",
-      "weight": 100
-    },
-    {
-      "type": "music_bed",
-      "ref_id": "music_bed:drive_time_bed",
-      "label": "Drive Time Bed",
-      "weight": 40
+      "type": "prompt",
+      "ref_id": "prompt:headline"
     }
   ]
 }
 ```
 
----
+Reason: `mode=one_off` may not include `cron`.
 
-## Migration Behavior
+### Invalid: template ambiguity
 
-The scheduler should migrate legacy records to schema version `2` before use.
+```json
+{
+  "id": "sch_ambiguous_override",
+  "name": "Ambiguous Override",
+  "enabled": true,
+  "timezone": "UTC",
+  "template_ref": {
+    "id": "tpl_base",
+    "version": 1
+  },
+  "overrides": {
+    "timezone": "America/Chicago"
+  }
+}
+```
 
-### Legacy forms to accept
+Reason: `timezone` appears both top-level and in `overrides`.
 
-1. **Array root (v1 implicit)**
-   - Old file format: `[]` or `[ { ...schedule... } ]`
-2. **Object root without `schema_version`**
-   - Example: `{ "schedules": [ ... ] }`
-3. **Schedules without explicit `ui_state`**
-   - Legacy records may only have `enabled`.
+### Invalid: active conflict pair (ambiguous dispatch)
 
-### Migration rules
+```json
+[
+  {
+    "id": "sch_a",
+    "name": "Top Hour A",
+    "enabled": true,
+    "timezone": "UTC",
+    "ui_state": "active",
+    "priority": 75,
+    "schedule_spec": { "mode": "cron", "cron": "0 * * * *" },
+    "start_window": { "type": "datetime", "value": "2026-01-01T00:00:00Z" },
+    "end_window": { "type": "datetime", "value": "2026-12-31T23:59:59Z" },
+    "content_refs": [{ "type": "script", "ref_id": "script:a" }]
+  },
+  {
+    "id": "sch_b",
+    "name": "Top Hour B",
+    "enabled": true,
+    "timezone": "UTC",
+    "ui_state": "active",
+    "priority": 75,
+    "schedule_spec": { "mode": "cron", "cron": "0 * * * *" },
+    "start_window": { "type": "datetime", "value": "2026-06-01T00:00:00Z" },
+    "end_window": { "type": "datetime", "value": "2026-10-01T00:00:00Z" },
+    "content_refs": [{ "type": "script", "ref_id": "script:b" }]
+  }
+]
+```
 
-1. If root is an array, wrap into:
-   - `{ "schema_version": 2, "schedules": <old_array> }`
-2. If root is object with missing `schema_version`, set `schema_version: 2`.
-3. For each schedule missing `ui_state`:
-   - `enabled=true` => `ui_state="active"`
-   - `enabled=false` => `ui_state="paused"`
-4. If `schedule_spec` is missing but legacy recurrence fields exist:
-   - map legacy one-time datetime -> `schedule_spec: {"mode":"one_off","run_at":...}`
-   - map legacy rrule string -> `schedule_spec: {"mode":"rrule","rrule":...}`
-   - map legacy cron string -> `schedule_spec: {"mode":"cron","cron":...}`
-5. If `priority` is missing, default to `50`.
-6. If `start_window`/`end_window` are missing, populate conservative defaults:
-   - `start_window = {"type":"datetime","value":"1970-01-01T00:00:00Z"}`
-   - `end_window = {"type":"datetime","value":"9999-12-31T23:59:59Z"}`
-7. Persist migrated output back to disk in v2 envelope format.
-
-### Post-migration validation
-
-After migration, reject invalid schedules where:
-
-- required fields are missing
-- `ui_state` is not one of `draft|active|paused|archived`
-- `schedule_spec` mode and payload mismatch
-- timezone is not IANA-compatible
-- content reference list is empty
+Reason: active schedules have identical trigger + priority in overlapping windows.
