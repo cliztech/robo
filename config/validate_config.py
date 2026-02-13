@@ -486,6 +486,12 @@ def validate_target(name: str, config_path: Path, schema_path: Path) -> list[str
         return validate_schedules(config)
 
     schema = _load_json(schema_path)
+    try:
+        config = _load_json(config_path)
+        schema = _load_json(schema_path)
+    except ValidationError as exc:
+        return [f"[{name}] {exc}"]
+
     errors: list[str] = []
     _validate(config, schema, "$", errors)
 

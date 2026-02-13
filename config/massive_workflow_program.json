@@ -1,0 +1,91 @@
+{
+  "program_name": "robodj_hyper_automation",
+  "version": "1.0.0",
+  "targets": {
+    "operator_intervention_reduction_pct": 70,
+    "publish_preflight_detection_pct": 95,
+    "workflow_success_rate_pct": 99
+  },
+  "execution_profiles": [
+    "manual",
+    "assisted",
+    "autonomous"
+  ],
+  "workstreams": [
+    {
+      "id": "ws_foundation",
+      "name": "foundation_and_guardrails",
+      "phases": [
+        {
+          "id": "p0",
+          "name": "schema_and_preflight",
+          "milestones": [
+            "publish canonical schema registry",
+            "add launch preflight validation",
+            "implement backup checkpoint policy"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ws_orchestration",
+      "name": "unified_workflow_orchestrator",
+      "phases": [
+        {
+          "id": "p1",
+          "name": "workflow_engine",
+          "milestones": [
+            "add stage graph definition",
+            "track workflow run metadata",
+            "support risk-based approvals"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ws_quality",
+      "name": "quality_and_safety",
+      "phases": [
+        {
+          "id": "p2",
+          "name": "quality_gates",
+          "milestones": [
+            "content policy gate",
+            "schedule conflict gate",
+            "audio quality gate"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ws_observability",
+      "name": "operational_intelligence",
+      "phases": [
+        {
+          "id": "p3",
+          "name": "telemetry_and_alerting",
+          "milestones": [
+            "define KPI event taxonomy",
+            "persist workflow outcomes",
+            "configure alert thresholds"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ws_scale",
+      "name": "scale_and_experiments",
+      "phases": [
+        {
+          "id": "p4",
+          "name": "experiments_and_multi_station",
+          "milestones": [
+            "launch A/B prompt workflow",
+            "add multi-station profile support",
+            "add what-if simulation packs"
+          ]
+        }
+      ]
+    }
+  ]
+}
