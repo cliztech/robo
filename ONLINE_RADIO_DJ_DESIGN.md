@@ -395,7 +395,8 @@ The **Online Radio DJ** is an autonomous, AI-driven internet radio station platf
       "queue_item_id": "queue_801",
       "track_id": "trk_51f1a0d9",
       "title": "Midnight Run",
-      "artist": "Digital Skyline"
+      "artist": "Digital Skyline",
+      "artwork_url": "https://cdn.example.com/artwork/trk_51f1a0d9.jpg"
     }
   ],
   "public_message": "Vote for tonight's throwback on our app."
