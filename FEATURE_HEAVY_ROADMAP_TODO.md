@@ -41,6 +41,36 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 ## v1.2 — Scheduling 2.0
 **Goal:** improve scheduling power and reduce operator workload.
 
+### Scheduler UX contracts (v1.2 delivery baseline)
+- **Drag/drop snap granularity**
+  - Day and week timeline views snap to **15-minute increments** by default.
+  - Operators can temporarily refine snapping to **5-minute increments** with a modifier key.
+  - Start/end resize handles use the same snap grid as drag operations.
+- **Overlap/conflict visualization (color + icon states)**
+  - **No conflict**: neutral/brand block color with no alert icon.
+  - **Soft conflict (rule warning)**: amber/yellow stripe and warning-triangle icon.
+  - **Hard conflict (double-booking/airtime collision)**: red fill and error-octagon icon.
+  - Hover/focus tooltips must explain conflict cause and suggested resolution.
+- **Keyboard operations (accessibility)**
+  - Arrow keys move focused block by one snap unit; `Shift+Arrow` resizes by one snap unit.
+  - `Ctrl/Cmd+D` duplicate selected block(s); `Delete/Backspace` removes selected block(s) with confirmation when destructive.
+  - `Tab`/`Shift+Tab` traverse blocks and controls in visual order with clear focus indicators.
+- **Undo/redo behavior**
+  - Support multi-step history (`Ctrl/Cmd+Z`, `Ctrl/Cmd+Shift+Z` or `Ctrl/Cmd+Y`) for drag, resize, delete, paste, template apply, and conflict-resolution actions.
+  - Undo/redo history is session-scoped and must preserve selection context when possible.
+  - Publish action is blocked while history replay is in progress.
+- **Multi-select and copy/paste patterns**
+  - Multi-select via `Shift+Click`, marquee drag, and `Ctrl/Cmd+Click` additive selection.
+  - `Ctrl/Cmd+C` and `Ctrl/Cmd+V` copy/paste within day or across days, preserving relative offsets and metadata.
+  - Pasted blocks enter a preview state until confirmed; any generated conflicts are highlighted before commit.
+
+### Acceptance criteria (conflict resolution + error prevention)
+- Conflict detection and visualization updates must render within **<=200 ms p95** after drag/drop, resize, or paste interactions.
+- From conflict banner interaction to resolved state, operator workflow must complete within **<=3 clicks/keystrokes** for common collisions.
+- Publish must be hard-blocked when unresolved hard conflicts exist.
+- Publish confirmation must show a preflight summary of warnings and conflicts prevented, requiring explicit operator acknowledgment.
+- System must prevent accidental destructive edits via undo support and confirmation prompts for delete/publish actions.
+
 ### Must
 - [ ] Visual weekly scheduler timeline (drag/drop blocks) **(L)**
 - [ ] Conflict detector with actionable suggestions **(M)**
