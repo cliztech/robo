@@ -1,88 +1,129 @@
-# AetherRadio — Database Schema
+# AetherRadio - Database Schema
 
-## Core Entities
+## Overview
 
-## 1) `users`
+AetherRadio uses Supabase PostgreSQL with Row Level Security (RLS). All primary records are UUID keyed and scoped by organization/station ownership.
 
-- `id` UUID PK
-- `email` text unique
-- `display_name` text
-- `created_at` timestamptz
+## Core Tables
+
+## 1) `profiles`
+
+Stores app user profile metadata.
+
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid PK | References `auth.users.id` |
+| display_name | text | Nullable |
+| avatar_url | text | Nullable |
+| created_at | timestamptz | Default `now()` |
+| updated_at | timestamptz | Default `now()` |
 
 ## 2) `stations`
 
-- `id` UUID PK
-- `owner_id` UUID FK -> users.id
-- `slug` text unique
-- `name` text
-- `description` text
-- `is_live` boolean default false
-- `created_at` timestamptz
+Represents a radio station instance.
+
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid PK | |
+| owner_id | uuid FK | `profiles.id` |
+| slug | text UNIQUE | Public URL identifier |
+| name | text | |
+| description | text | Nullable |
+| stream_url | text | Nullable |
+| timezone | text | Default `UTC` |
+| created_at | timestamptz | Default `now()` |
+| updated_at | timestamptz | Default `now()` |
 
 ## 3) `tracks`
 
-- `id` UUID PK
-- `station_id` UUID FK -> stations.id
-- `storage_path` text
-- `title`, `artist`, `album` text
-- `duration_seconds` integer
-- `bpm` integer nullable
-- `energy` numeric(4,3) nullable
-- `genre` text nullable
-- `created_at` timestamptz
+Media library records.
+
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid PK | |
+| station_id | uuid FK | `stations.id` |
+| title | text | |
+| artist | text | |
+| album | text | Nullable |
+| duration_seconds | integer | |
+| bpm | integer | Nullable |
+| musical_key | text | Nullable |
+| energy | numeric(4,3) | 0.000-1.000 |
+| mood_tags | text[] | Nullable |
+| storage_path | text | Supabase bucket path |
+| artwork_path | text | Nullable |
+| created_at | timestamptz | Default `now()` |
 
 ## 4) `playlists`
 
-- `id` UUID PK
-- `station_id` UUID FK -> stations.id
-- `name` text
-- `strategy` text (manual | ai_balanced | ai_energy_arc)
-- `created_at` timestamptz
+Logical playlists and rotation groups.
+
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid PK | |
+| station_id | uuid FK | `stations.id` |
+| name | text | |
+| strategy | text | e.g., `ai`, `clockwheel`, `manual` |
+| is_active | boolean | Default `true` |
+| created_at | timestamptz | Default `now()` |
 
 ## 5) `playlist_items`
 
-- `id` UUID PK
-- `playlist_id` UUID FK -> playlists.id
-- `track_id` UUID FK -> tracks.id
-- `position` integer
-- `crossfade_seconds` integer default 6
+Ordered members of playlists.
 
-## 6) `broadcast_sessions`
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid PK | |
+| playlist_id | uuid FK | `playlists.id` |
+| track_id | uuid FK | `tracks.id` |
+| position | integer | Indexed |
+| weight | integer | Rotation weight |
+| created_at | timestamptz | Default `now()` |
 
-- `id` UUID PK
-- `station_id` UUID FK -> stations.id
-- `started_at` timestamptz
-- `ended_at` timestamptz nullable
-- `encoder_profile` text
+## 6) `play_events`
 
-## 7) `track_plays`
+Historical and live event log.
 
-- `id` UUID PK
-- `session_id` UUID FK -> broadcast_sessions.id
-- `track_id` UUID FK -> tracks.id
-- `played_at` timestamptz
-- `listener_peak` integer
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid PK | |
+| station_id | uuid FK | `stations.id` |
+| track_id | uuid FK | `tracks.id` |
+| started_at | timestamptz | |
+| ended_at | timestamptz | Nullable |
+| listener_count | integer | Snapshot metric |
+| source | text | `automation`, `live_dj`, `manual` |
 
-## 8) `ai_decisions`
+## 7) `ai_decisions`
 
-- `id` UUID PK
-- `station_id` UUID FK -> stations.id
-- `decision_type` text
-- `input_payload` jsonb
-- `output_payload` jsonb
-- `confidence` numeric(4,3)
-- `created_at` timestamptz
+Tracks model reasoning for observability.
 
-## RLS Guidance
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid PK | |
+| station_id | uuid FK | `stations.id` |
+| decision_type | text | `next_track`, `playlist_build`, etc. |
+| input_payload | jsonb | |
+| output_payload | jsonb | |
+| confidence | numeric(4,3) | |
+| created_at | timestamptz | Default `now()` |
 
-- Users can only access rows where `owner_id = auth.uid()` or station membership exists.
-- Service role bypasses RLS for server-side background jobs.
-
-## Index Recommendations
+## Indexing Recommendations
 
 - `tracks(station_id, created_at desc)`
 - `playlist_items(playlist_id, position)`
-- `track_plays(session_id, played_at)`
+- `play_events(station_id, started_at desc)`
 - `ai_decisions(station_id, created_at desc)`
 
-_Last updated: 2026-02-14_
+## RLS Policy Pattern
+
+- Users can only access rows where `station.owner_id = auth.uid()`.
+- Service role bypasses RLS for background ingestion jobs.
+
+## Migration Strategy
+
+1. Create baseline schema in `supabase/migrations/001_initial_schema.sql`.
+2. Add incremental migrations for new features.
+3. Never rewrite old migrations in shared environments.
+
+Last Updated: February 14, 2026

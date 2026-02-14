@@ -1,54 +1,94 @@
-# AetherRadio — Project Structure
+# AetherRadio - Project Structure
 
-## Top-Level Layout
+## Complete Folder Organization
 
 ```text
 aetherradio/
+├── .github/
+│   └── workflows/
+│       ├── ci.yml
+│       └── deploy.yml
+├── public/
+│   ├── favicon.ico
+│   └── images/
+│       └── logo.svg
 ├── src/
 │   ├── app/
+│   │   ├── (auth)/
+│   │   ├── (dashboard)/
+│   │   └── api/
 │   ├── components/
-│   ├── hooks/
 │   ├── lib/
-│   └── types/
+│   ├── hooks/
+│   ├── types/
+│   └── middleware.ts
 ├── supabase/
 │   ├── migrations/
-│   └── functions/
+│   ├── functions/
+│   └── config.toml
 ├── tests/
 │   ├── unit/
 │   ├── integration/
 │   └── e2e/
 ├── docs/
-├── public/
-└── package.json
+├── .env.example
+├── next.config.js
+├── tailwind.config.ts
+├── tsconfig.json
+├── package.json
+└── README.md
 ```
 
-## App Router Overview (`src/app`)
+## Key Directories
 
-- `(auth)`: login, signup, forgot-password
-- `(dashboard)`: stations, tracks, playlists, analytics, settings
-- `api`: REST-like route handlers for auth, tracks, AI, stream, webhooks
+### `/src/app`
 
-## Component Organization (`src/components`)
+Next.js App Router pages, route groups, and API routes.
 
-- `audio/`: player, mixer, EQ, meters, visualizer
-- `station/`: station cards, now-playing, queue, playlist views
-- `upload/`: dropzone, progress, batch upload
-- `ai/`: AI assistant and decision cards
-- `ui/`: Shadcn base components
+### `/src/components`
 
-## Service Layer (`src/lib`)
+Feature-oriented React components:
 
-- `audio/`: engine, analysis, crossfade
-- `ai/`: track analysis and playlist generation
-- `db/`: typed DB data access
-- `supabase/`: client/server helpers
-- `streaming/`: Icecast/encoder integration
+- `audio/`
+- `station/`
+- `upload/`
+- `ai/`
+- `ui/`
+
+### `/src/lib`
+
+Business logic and service integrations:
+
+- `audio/`
+- `ai/`
+- `db/`
+- `supabase/`
+- `streaming/`
+
+### `/tests`
+
+- `unit/`
+- `integration/`
+- `e2e/`
 
 ## Naming Conventions
 
-- Components: `PascalCase.tsx`
-- Utilities/services: kebab-case.ts
-- Hooks: `useX.ts`
-- API route folders: lowercase paths
+- **Components**: `PascalCase` (e.g., `AudioPlayer.tsx`)
+- **Hooks**: `camelCase` with `use` prefix (e.g., `useAudioEngine.ts`)
+- **Utilities**: `kebab-case` or `camelCase` (e.g., `upload-service.ts`)
+- **Constants**: `UPPER_SNAKE_CASE`
+- **Routes**: lowercase path segments
 
-_Last updated: 2026-02-14_
+## Import Aliases
+
+```json
+{
+  "@/*": ["./src/*"],
+  "@/components/*": ["./src/components/*"],
+  "@/lib/*": ["./src/lib/*"],
+  "@/hooks/*": ["./src/hooks/*"],
+  "@/types/*": ["./src/types/*"]
+}
+```
+
+Last Updated: February 14, 2026

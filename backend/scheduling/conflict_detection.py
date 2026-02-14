@@ -32,7 +32,6 @@ def detect_policy_conflicts(policy: AutonomyPolicy) -> list[PolicyConflict]:
     conflicts: list[PolicyConflict] = []
     conflicts.extend(_detect_duplicate_timeslot_ids(policy.timeslot_overrides))
     conflicts.extend(_detect_overlapping_timeslots(policy.timeslot_overrides))
-    conflicts.extend(_detect_show_timeslot_contradictions(policy))
     return conflicts
 
 

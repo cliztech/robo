@@ -1,36 +1,77 @@
-# AetherRadio — Technology Stack
+# AetherRadio - Technology Stack
 
-## Frontend
+## Core Framework
 
-- **Next.js 14** (App Router, middleware, API routes)
-- **React 18** (hooks + concurrent rendering)
+- **Next.js 14** (App Router, API routes, middleware)
+- **React 18** (hooks, suspense, context)
 - **TypeScript 5** (strict mode)
-- **Tailwind CSS + Shadcn/UI** for styling and component system
 
-## Backend + Data
+## UI & Styling
+
+- **Tailwind CSS 3**
+- **Shadcn/UI**
+- **Framer Motion**
+- **Lucide React**
+
+## Backend & Data
 
 - **Supabase**
-  - PostgreSQL (primary data store)
-  - Auth (session + OAuth)
-  - Storage (audio/artwork)
-  - Realtime (dashboard updates)
-- **Next.js Route Handlers** for backend APIs
+  - PostgreSQL
+  - Auth
+  - Storage
+  - Realtime
+- **PostgreSQL extensions**: `uuid-ossp`, `pg_cron`, `vector` (optional)
 
-## Audio + Media
+## Audio Stack
 
-- **Web Audio API** for real-time client playback and DSP
-- **FFmpeg / FFprobe** for metadata extraction + transcoding
-- **Icecast** for live stream distribution
+- **Web Audio API** (in-browser engine)
+- **FFmpeg/FFprobe** (server-side analysis/transcoding)
+- **Howler.js** (optional compatibility fallback)
 
-## AI
+## AI Stack
 
-- **OpenAI API** for tagging/classification and playlist generation
-- **Vercel AI SDK** for typed model integration
+- **OpenAI API** (`gpt-4o`, `gpt-4o-mini`)
+- **Vercel AI SDK** for typed AI integration
 
-## Quality + Tooling
+## Upload, Validation, State
 
-- ESLint + Prettier
-- Vitest + Testing Library + Playwright
-- pnpm + Husky + lint-staged
+- **React Dropzone** (file ingestion)
+- **React Hook Form + Zod** (forms/validation)
+- **Zustand** (global state)
 
-_Last updated: 2026-02-14_
+## Payments & Streaming
+
+- **Stripe** (checkout, subscriptions, webhooks)
+- **Icecast 2.4+** (live stream distribution)
+
+## Developer Tooling
+
+- **ESLint + Prettier**
+- **Vitest + React Testing Library**
+- **Playwright**
+- **Husky + lint-staged**
+
+## Deployment
+
+- **Vercel** (frontend/API)
+- **Supabase Cloud** (database/storage)
+- **Cloudflare** (DNS/security optional)
+- **DigitalOcean/AWS** (Icecast hosting options)
+
+## System Requirements
+
+### Development
+
+- Node.js 20.x LTS
+- 8 GB RAM minimum
+- 20 GB free disk space
+- Modern browser
+
+### Production
+
+- Vercel account
+- Supabase account
+- OpenAI API key
+- Stripe account (if billing enabled)
+
+Last Updated: February 14, 2026

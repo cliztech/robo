@@ -1,6 +1,6 @@
 # Repository Guidelines
 
-> **DGN-AirWaves** — AI-powered radio automation platform
+> **DGN-DJ** by DGNradio — AI-powered radio automation platform
 > Python 3.x · PyInstaller · SQLite · JSON config · Windows desktop
 
 ## Scope
@@ -135,6 +135,21 @@ Use this stage-gated flow for all requests:
 - Commit secrets, API keys, or credentials
 - Modify `RoboDJ Automation.exe_extracted/` (reference only)
 - Remove files without explicit user approval
+
+## Key Documentation
+
+> 📚 These documents extend the agent pipeline with detailed specifications. Load only what's needed for the active task.
+
+| Document | Purpose |
+| -------- | ------- |
+| [`SKILLS.md`](SKILLS.md) | Reusable skill definitions with triggers and boundaries |
+| [`CLAUDE.md`](CLAUDE.md) | Claude Code-specific guidance |
+| [`PERSONA_OPS.md`](PERSONA_OPS.md) | AI host persona schema, versioning, A/B testing, KPIs |
+| [`docs/autonomy_modes.md`](docs/autonomy_modes.md) | 5-level autonomy operating modes (Manual → Lights-Out) |
+| [`docs/conversation_orchestrator_spec.md`](docs/conversation_orchestrator_spec.md) | Conversation orchestration, turn-taking, energy curves |
+| [`contracts/redaction_rules.md`](contracts/redaction_rules.md) | Frontend data redaction denylist and enforcement |
+| [`CONFIG_VALIDATION.md`](CONFIG_VALIDATION.md) | JSON schema validation procedures |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Contribution guidelines, CI scope, PR standards |
 
 ## Route Selection
 

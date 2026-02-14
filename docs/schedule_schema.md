@@ -67,7 +67,7 @@ Conflict classes used by backend validation:
 - `duplicate_name`
 - `invalid_window`
 - `overlap`
-- `ambiguous_active`
+- `ambiguous_dispatch`
 
 Validation is fail-fast on save/publish: schedule writes are rejected when any conflict class is present.
 
