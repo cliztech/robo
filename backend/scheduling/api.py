@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
@@ -58,6 +59,11 @@ def read_effective_policy(
     return service.resolve_effective_policy(show_id=show_id, timeslot_id=timeslot_id)
 
 
+@router.get("/mode-definitions")
+def get_mode_definitions():
+    return {"source": "docs/autonomy_modes.md", "modes": MODE_DEFINITIONS}
+
+
 @router.post("/audit-events", response_model=PolicyAuditEvent)
 def create_audit_event(
     decision_type: DecisionType,
@@ -82,3 +88,9 @@ def get_audit_events(
     service: AutonomyPolicyService = Depends(get_policy_service),
 ) -> list[PolicyAuditEvent]:
     return service.list_audit_events(limit=limit)
+
+
+@router.get("/control-center", response_class=HTMLResponse)
+def get_control_center() -> HTMLResponse:
+    html_path = Path(__file__).with_name("control_center.html")
+    return HTMLResponse(content=html_path.read_text(encoding="utf-8"))

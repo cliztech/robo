@@ -10,6 +10,7 @@ from .autonomy_policy import (
     AutonomyPolicy,
     DecisionType,
     EffectivePolicyDecision,
+    GlobalMode,
     PolicyAuditEvent,
 )
 from .conflict_detection import PolicyConflict, detect_policy_conflicts
@@ -19,6 +20,13 @@ class PolicyValidationError(ValueError):
     def __init__(self, conflicts: List[PolicyConflict]) -> None:
         super().__init__("Autonomy policy contains conflicting overrides.")
         self.conflicts = conflicts
+
+
+LEGACY_MODE_MAP = {
+    "manual": GlobalMode.manual_assist,
+    "assisted": GlobalMode.semi_auto,
+    "autonomous": GlobalMode.auto_with_human_override,
+}
 
 
 class AutonomyPolicyService:
