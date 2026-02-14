@@ -311,6 +311,8 @@
 
 ## Complete Dependencies
 
+**Note:** The list below is a snapshot for informational purposes. The `package.json` file is the single source of truth for all project dependencies.
+
 ```json
 {
   "dependencies": {
