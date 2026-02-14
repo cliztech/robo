@@ -1,7 +1,7 @@
 # Work Folder Review
 
 ## Scope
-Quick review of the `/workspace/robo` repository working folder layout and state.
+Quick review of the repository's working folder layout and state.
 
 ## Current State
 - Git working tree is clean (`git status --short` returned no modified files before this report).
