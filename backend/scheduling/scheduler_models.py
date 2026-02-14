@@ -261,7 +261,13 @@ class PreviewRequest(BaseModel):
     start_time: str = Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
     end_time: str = Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
     timezone: str
-    start_date: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
+    start_date: str
+
+    @field_validator("start_date")
+    @classmethod
+    def validate_start_date(cls, value: str) -> str:
+        datetime.fromisoformat(value)
+        return value
 
 
 class ScheduleSpecPreview(BaseModel):
