@@ -77,38 +77,7 @@ cd aetherradio
 ## Step 4: Install Core Dependencies
 
 ```bash
-# Supabase
-pnpm add @supabase/supabase-js @supabase/auth-helpers-nextjs
-
-# AI
-pnpm add ai @ai-sdk/openai zod
-
-# UI Components
-pnpm add @radix-ui/react-dialog @radix-ui/react-dropdown-menu @radix-ui/react-select @radix-ui/react-slider @radix-ui/react-tabs @radix-ui/react-tooltip
-
-# Animation
-pnpm add framer-motion
-
-# Icons
-pnpm add lucide-react
-
-# Forms
-pnpm add react-hook-form @hookform/resolvers
-
-# State Management
-pnpm add zustand
-
-# File Upload
-pnpm add react-dropzone
-
-# Utilities
-pnpm add date-fns nanoid class-variance-authority clsx tailwind-merge
-
-# Payments
-pnpm add stripe @stripe/stripe-js
-
-# Analytics
-pnpm add @vercel/analytics @vercel/speed-insights
+pnpm add @supabase/supabase-js @supabase/auth-helpers-nextjs ai @ai-sdk/openai zod @radix-ui/react-dialog @radix-ui/react-dropdown-menu @radix-ui/react-select @radix-ui/react-slider @radix-ui/react-tabs @radix-ui/react-tooltip framer-motion lucide-react react-hook-form @hookform/resolvers zustand react-dropzone date-fns nanoid class-variance-authority clsx tailwind-merge stripe @stripe/stripe-js @vercel/analytics @vercel/speed-insights
 ```
 
 ## Step 5: Setup shadcn/ui
