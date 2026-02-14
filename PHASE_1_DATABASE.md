@@ -537,7 +537,7 @@ verifyDatabase()
 Run it:
 
 ```bash
-npx tsx scripts/verify-database.ts
+npx tsx --env-file .env.local scripts/verify-database.ts
 ```
 
 ## Troubleshooting
