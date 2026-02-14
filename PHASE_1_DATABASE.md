@@ -400,10 +400,9 @@ export async function GET() {
     const supabase = createServerClient()
 
     // Test connection
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('stations')
-      .select('count')
-      .limit(1)
+      .select('id', { count: 'exact', head: true })
 
     if (error) throw error
 
