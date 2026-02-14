@@ -251,13 +251,14 @@ Supabase-specific files:
 ## Import Aliases
 
 ```typescript
-// tsconfig.json paths
+// tsconfig.json
 {
-  "@/*": ["./src/*"],
-  "@/components/*": ["./src/components/*"],
-  "@/lib/*": ["./src/lib/*"],
-  "@/hooks/*": ["./src/hooks/*"],
-  "@/types/*": ["./src/types/*"]
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
 }
 ```
 
