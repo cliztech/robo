@@ -36,7 +36,7 @@ Server behavior:
 1. Authenticate requester
 2. Verify station ownership
 3. Validate MIME type and file size
-4. Generate sanitized storage key
+4. Generate a new, unique storage key (e.g., using a UUID) to prevent path traversal issues.
 5. Return signed upload URL + object path
 
 ## Step 3: Upload from Client with Progress
