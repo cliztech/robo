@@ -399,7 +399,7 @@ export async function GET() {
     // Test connection
     const { data, error } = await supabase
       .from('stations')
-      .select('count')
+      .select('id')
       .limit(1)
 
     if (error) throw error
