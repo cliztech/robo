@@ -1,21 +1,97 @@
 # TODO v1.1 Companion Task Board (Must Items)
 
-This task board breaks out the v1.1 **Must** scope from `FEATURE_HEAVY_ROADMAP_TODO.md` into independently shippable slices.
+This board converts the v1.1 **Must** scope into an execution-ready TODO checklist with concrete completion criteria and validation steps.
 
-## v1.1 Must-only board
+## Active TODO checklist
 
-| Task | Owner role | Target date | Release flag (partial ship) | Definition of done (v1.1 exit-criteria linked) | Validation command / manual check path |
-|---|---|---|---|---|---|
-| Startup diagnostics panel (DB checks, key checks, audio device checks) | Runtime engineer | 2026-03-06 | `feature_startup_diagnostics` | Diagnostics panel runs during boot and reports pass/fail for DB connectivity, key presence/integrity, and audio device availability. On failure, operator gets actionable recovery guidance without app crash, supporting faster recovery from bad startup state toward the “recover in under 2 minutes” exit goal. | `python config/inspect_db.py` (DB readability) + launch via `./RoboDJ_Launcher.bat` and verify diagnostics statuses in startup UI/logs. |
-| Config validator on launch for `schedules.json` and `prompt_variables.json` | Config owner | 2026-03-08 | `feature_launch_config_validation` | Launch path blocks runtime start when config schema or references are invalid, with clear error messages naming file and key path. Valid configs continue startup normally. This directly satisfies the v1.1 requirement to block invalid JSON/config references before runtime failures. | `python config/validate_config.py` (expected pass/fail cases) + manual startup check through `./RoboDJ_Launcher.bat` to confirm boot blocking on invalid input. |
-| Crash-recovery flow with “restore last known good config” | Runtime engineer | 2026-03-12 | `feature_crash_recovery_restore_lkg` | After a forced bad config or crash scenario, operator can restore last known good config in one guided flow and return to ready state within 2 minutes. Restore action is logged and uses known backup path conventions. This maps directly to the v1.1 recovery-time exit criterion. | Manual path: simulate bad config in `config/schedules.json` or `config/prompt_variables.json` → run launcher → execute restore flow → verify app reaches ready state and logs restore event under `config/logs/`. |
-| One-click config backup snapshot (timestamped) | Config owner | 2026-03-04 | `feature_one_click_backup_snapshot` | Operator can trigger a one-click backup that writes timestamped snapshot artifacts to `config/backups/` without overwriting prior snapshots. Backup is callable pre-change and from recovery context, enabling safe rollback support for the under-2-minute recovery objective. | Manual path: trigger backup action in app/launcher flow, then verify newly created timestamped files in `config/backups/` and confirm snapshot is selectable by restore flow. |
+### 1) Startup diagnostics panel (`feature_startup_diagnostics`)
 
-## Partial-release sequencing (behind flags)
+- [ ] Add boot-time diagnostics runner for:
+  - [ ] SQLite connectivity checks (`settings.db`, `user_content.db`)
+  - [ ] Key presence/integrity checks (`secret.key`, `secret_v2.key`)
+  - [ ] Audio device availability checks
+- [ ] Render pass/fail state in startup UI and/or startup logs.
+- [ ] Provide operator-facing recovery hints for each failed diagnostic.
+- [ ] Ensure startup does not hard-crash on diagnostic failure.
 
-1. Ship `feature_one_click_backup_snapshot` first as low-risk safety baseline.
-2. Ship `feature_launch_config_validation` second to prevent bad-runtime starts.
-3. Ship `feature_startup_diagnostics` for faster failure triage.
-4. Ship `feature_crash_recovery_restore_lkg` after backup + diagnostics are stable.
+**Owner:** Runtime engineer  
+**Target date:** 2026-03-06  
+**Definition of done:** Diagnostics execute during boot, report actionable status, and support recovery toward the “recover in under 2 minutes” goal.
 
-Each item above is designed to be merged and released independently while preserving forward compatibility with the full v1.1 exit criteria.
+**Validation path**
+
+- `python config/inspect_db.py`
+- Launch with `./RoboDJ_Launcher.bat` and verify startup diagnostics status output.
+
+---
+
+### 2) Launch config validator (`feature_launch_config_validation`)
+
+- [ ] Validate `config/schedules.json` against schema and required references on launch.
+- [ ] Validate `config/prompt_variables.json` against schema and required references on launch.
+- [ ] Block runtime start when validation fails.
+- [ ] Print clear errors including file name and failing key path.
+- [ ] Allow normal startup when configs are valid.
+
+**Owner:** Config owner  
+**Target date:** 2026-03-08  
+**Definition of done:** Runtime launch is gated by config validity with actionable failures.
+
+**Validation path**
+
+- `python config/validate_config.py`
+- Launch with `./RoboDJ_Launcher.bat` and confirm bad configs block startup.
+
+---
+
+### 3) Crash recovery: restore last known good config (`feature_crash_recovery_restore_lkg`)
+
+- [ ] Add guided restore flow in launcher/runtime startup path.
+- [ ] Restore last known good `schedules.json` and `prompt_variables.json` from backup.
+- [ ] Log restore event under `config/logs/` with timestamp and source snapshot.
+- [ ] Verify post-restore readiness state can be reached in under 2 minutes.
+
+**Owner:** Runtime engineer  
+**Target date:** 2026-03-12  
+**Definition of done:** Operator can complete guided restore and return to ready state inside the v1.1 recovery SLA.
+
+**Validation path**
+
+- Manual scenario:
+  1. Corrupt `config/schedules.json` or `config/prompt_variables.json`.
+  2. Run `./RoboDJ_Launcher.bat`.
+  3. Execute restore flow.
+  4. Verify app reaches ready state and restore is logged.
+
+---
+
+### 4) One-click backup snapshot (`feature_one_click_backup_snapshot`)
+
+- [ ] Add one-click snapshot action in app/launcher flow.
+- [ ] Write timestamped backup artifacts into `config/backups/`.
+- [ ] Prevent overwrite of prior snapshots.
+- [ ] Ensure snapshots are immediately available to restore flow.
+
+**Owner:** Config owner  
+**Target date:** 2026-03-04  
+**Definition of done:** Operator can create deterministic timestamped backup snapshots for rollback safety.
+
+**Validation path**
+
+- Trigger backup action.
+- Confirm new timestamped files in `config/backups/`.
+- Confirm snapshot appears in restore flow selection.
+
+## Release order (partial ships behind flags)
+
+1. `feature_one_click_backup_snapshot`
+2. `feature_launch_config_validation`
+3. `feature_startup_diagnostics`
+4. `feature_crash_recovery_restore_lkg`
+
+## Exit criteria tracking (v1.1 Must)
+
+- [ ] Invalid config is blocked before runtime start.
+- [ ] Startup issues are visible with clear remediation.
+- [ ] Last known good restore is guided and logged.
+- [ ] End-to-end recovery path consistently completes in under 2 minutes.
