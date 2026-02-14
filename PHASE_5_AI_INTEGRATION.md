@@ -37,9 +37,13 @@ pnpm add ai @ai-sdk/openai zod
 Edit `.env.local`:
 
 ```env
+# WARNING: Do not commit your real API key to version control.
+# Store it securely, e.g., in a secret manager or a git-ignored .env.local file.
 OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxx
-AI_MAX_REQUESTS_PER_HOUR=100
-AI_COST_LIMIT_USD=50.00
+
+# AI cost and rate limits
+AI_REQUESTS_PER_HOUR_LIMIT=100
+AI_DAILY_COST_LIMIT_USD=50.00
 ```
 
 ### 1.3 Create AI Configuration
