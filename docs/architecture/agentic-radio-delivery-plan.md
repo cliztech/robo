@@ -104,7 +104,7 @@ Use this structure directly in Jira (Epic/Story/Sub-task) or Notion (Epic DB wit
 
 #### Story D3 — News and research assistant
 - [ ] Task: Build curated source ingestion connectors
-- [ ] Task: Add source triangulation + confidence score
+- [ ] Task: Add source triangulation, fact-checking, and confidence scoring
 - [ ] Task: Add bulletins (30s/2min/extended)
 - [ ] Task: Add fact cards for host assist during live segments
 
