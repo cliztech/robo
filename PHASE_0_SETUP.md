@@ -48,6 +48,7 @@ sudo apt install ffmpeg libopus-dev libmp3lame-dev libfdk-aac-dev
 ### Windows
 
 Download from: <https://ffmpeg.org/download.html>
+- Download from: https://ffmpeg.org/download.html
 
 Verify installation:
 
@@ -110,6 +111,19 @@ pnpm add stripe @stripe/stripe-js
 # Analytics
 pnpm add @vercel/analytics @vercel/speed-insights
 ```
+# Install all core dependencies at once
+pnpm add \
+  @supabase/supabase-js @supabase/auth-helpers-nextjs \
+  ai @ai-sdk/openai zod \
+  @radix-ui/react-dialog @radix-ui/react-dropdown-menu @radix-ui/react-select @radix-ui/react-slider @radix-ui/react-tabs @radix-ui/react-tooltip \
+  framer-motion \
+  lucide-react \
+  react-hook-form @hookform/resolvers \
+  zustand \
+  react-dropzone \
+  date-fns nanoid class-variance-authority clsx tailwind-merge \
+  stripe @stripe/stripe-js \
+  @vercel/analytics @vercel/speed-insights
 
 ## Step 5: Setup Shadcn/UI
 
@@ -123,7 +137,20 @@ pnpm dlx shadcn-ui@latest init
 # ✔ Would you like to use CSS variables for colors? Yes
 
 # Install commonly used components
-pnpm dlx shadcn-ui@latest add button input slider dialog dropdown-menu select card badge progress alert tabs label separator skeleton
+pnpm dlx shadcn-ui@latest add button
+pnpm dlx shadcn-ui@latest add input
+pnpm dlx shadcn-ui@latest add slider
+pnpm dlx shadcn-ui@latest add dialog
+pnpm dlx shadcn-ui@latest add dropdown-menu
+pnpm dlx shadcn-ui@latest add select
+pnpm dlx shadcn-ui@latest add card
+pnpm dlx shadcn-ui@latest add badge
+pnpm dlx shadcn-ui@latest add progress
+pnpm dlx shadcn-ui@latest add alert
+pnpm dlx shadcn-ui@latest add tabs
+pnpm dlx shadcn-ui@latest add label
+pnpm dlx shadcn-ui@latest add separator
+pnpm dlx shadcn-ui@latest add skeleton
 ```
 
 ## Step 6: Configure Tailwind CSS
@@ -494,6 +521,14 @@ export function slugify(text: string): string {
 ```
 
 ## Step 16: Setup package.json Scripts
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim()
+}
+```
+
+## Step 16: Setup `package.json` Scripts
 
 Edit `package.json` to add useful scripts:
 
@@ -568,12 +603,14 @@ pnpm format
 ```
 
 Visit <http://localhost:3000> to verify the app is running.
+Visit `http://localhost:3000` to verify the app is running.
 
 ## Step 19: Create Initial Commit
 
 ```bash
 git add .
 git commit -m "feat: initial project setup"
+git commit -m "chore: complete project setup and configuration"
 ```
 
 ## Step 20: Create GitHub Repository (Optional)
@@ -590,6 +627,7 @@ git push -u origin main
 ### Issue: pnpm not found
 
 **Solution**: Install pnpm globally.
+Solution: Install pnpm globally.
 
 ```bash
 npm install -g pnpm
@@ -598,6 +636,7 @@ npm install -g pnpm
 ### Issue: FFmpeg not in PATH
 
 **Solution**: Add FFmpeg to system PATH or use full path.
+Solution: Add FFmpeg to system PATH or use full path.
 
 ```bash
 # macOS/Linux
@@ -608,7 +647,7 @@ export PATH="/usr/local/bin:$PATH"
 
 ### Issue: Port 3000 already in use
 
-**Solution**: Use a different port.
+Solution: Use a different port.
 
 ```bash
 pnpm dev -p 3001
@@ -618,6 +657,7 @@ pnpm dev -p 3001
 
 **Solution**: Restart TypeScript server in VS Code.
 
+Solution: Restart TypeScript server in VS Code:  
 `Cmd/Ctrl + Shift + P → TypeScript: Restart TS Server`
 
 ## Verification Checklist

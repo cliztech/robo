@@ -16,6 +16,8 @@
 
 1. Go to <https://supabase.com/dashboard>
 2. Click "New Project"
+1. Go to https://supabase.com/dashboard
+2. Click **New Project**
 3. Fill in:
    - **Name**: `aetherradio-prod`
    - **Database Password**: Generate strong password (save securely!)
@@ -25,7 +27,7 @@
 
 ### 1.2: Get Project Credentials
 
-1. Go to Project Settings → API
+1. Go to **Project Settings → API**
 2. Copy the following:
    - **Project URL**: `https://xxx.supabase.co`
    - **Anon/Public Key**: `eyJhbGc...`
@@ -54,11 +56,16 @@ Copy the complete schema from `DATABASE_SCHEMA.md`.
 2. Click "New Query"
 3. Paste the entire schema
 4. Click "Run" (bottom right)
+1. Go to **Supabase Dashboard → SQL Editor**
+2. Click **New Query**
+3. Paste the entire schema
+4. Click **Run** (bottom right)
 5. Verify success message
 
 ### 2.3: Verify Tables Created
 
 Go to Table Editor and confirm these tables exist:
+Go to **Table Editor** and confirm these tables exist:
 
 - `profiles`
 - `stations`
@@ -78,6 +85,8 @@ Go to Table Editor and confirm these tables exist:
 Go to Storage → Create Bucket.
 
 Settings:
+Go to **Storage → Create Bucket** with settings:
+
 - **Name**: `tracks`
 - **Public**: Off (private)
 - **File size limit**: 500MB
@@ -86,6 +95,7 @@ Settings:
 ### 3.2: Create Artwork Bucket
 
 Create another bucket:
+
 - **Name**: `artwork`
 - **Public**: On (public)
 - **File size limit**: 10MB
@@ -94,6 +104,7 @@ Create another bucket:
 ### 3.3: Create Avatars Bucket
 
 Create bucket:
+
 - **Name**: `avatars`
 - **Public**: On (public)
 - **File size limit**: 2MB
@@ -103,9 +114,9 @@ Create bucket:
 
 ### 4.1: Tracks Bucket Policies
 
-Go to Storage → `tracks` → Policies:
+Go to **Storage → tracks → Policies**.
 
-**Policy 1: Users can upload to own stations**
+Policy 1: Users can upload to own stations
 
 ```sql
 CREATE POLICY "Users can upload tracks to own stations"
@@ -119,7 +130,7 @@ WITH CHECK (
 );
 ```
 
-**Policy 2: Users can view own tracks**
+Policy 2: Users can view own tracks
 
 ```sql
 CREATE POLICY "Users can view own tracks"
@@ -133,7 +144,7 @@ USING (
 );
 ```
 
-**Policy 3: Users can delete own tracks**
+Policy 3: Users can delete own tracks
 
 ```sql
 CREATE POLICY "Users can delete own tracks"
@@ -150,6 +161,7 @@ USING (
 ### 4.2: Artwork Bucket Policies
 
 **Policy 1: Anyone can view**
+Policy 1: Anyone can view
 
 ```sql
 CREATE POLICY "Anyone can view artwork"
@@ -157,7 +169,7 @@ ON storage.objects FOR SELECT
 USING (bucket_id = 'artwork');
 ```
 
-**Policy 2: Authenticated users can upload**
+Policy 2: Authenticated users can upload
 
 ```sql
 CREATE POLICY "Users can upload artwork"
@@ -212,6 +224,8 @@ supabase gen types typescript --project-id your-project-id > src/types/database.
 
 Or manually via Dashboard:
 1. Go to API Docs → TypeScript
+
+1. Go to **API Docs → TypeScript**
 2. Copy generated types
 3. Paste into `src/types/database.ts`
 
@@ -232,14 +246,20 @@ Settings:
 1. Create OAuth credentials in Google Cloud Console
 2. Copy Client ID and Client Secret
 3. In Supabase → Authentication → Providers → Google:
+#### Google
+
+1. Create OAuth credentials in Google Cloud Console
+2. Copy Client ID and Client Secret
+3. In Supabase → **Authentication → Providers → Google**:
    - Enable Google
    - Paste credentials
    - Save
 
-**GitHub:**
+#### GitHub
+
 1. Create OAuth App in GitHub Settings
 2. Copy Client ID and Client Secret
-3. In Supabase → Authentication → Providers → GitHub:
+3. In Supabase → **Authentication → Providers → GitHub**:
    - Enable GitHub
    - Paste credentials
    - Save
@@ -249,6 +269,9 @@ Settings:
 Go to Authentication → Email Templates.
 
 **Confirm Signup:**
+Go to **Authentication → Email Templates**.
+
+Confirm Signup:
 
 ```html
 <h2>Confirm your email</h2>
@@ -257,6 +280,7 @@ Go to Authentication → Email Templates.
 ```
 
 **Reset Password:**
+Reset Password:
 
 ```html
 <h2>Reset your password</h2>
@@ -271,6 +295,9 @@ All tables should have RLS enabled. Verify:
 1. Go to Table Editor
 2. For each table, click table name → RLS Policies
 3. Verify "Enable RLS" is checked
+1. Go to **Table Editor**
+2. For each table, click table name → **RLS Policies**
+3. Verify **Enable RLS** is checked
 4. Verify policies exist
 
 If policies are missing, run from SQL Editor:
@@ -395,10 +422,9 @@ export async function GET() {
     const supabase = createServerClient()
 
     // Test connection
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('stations')
-      .select('count')
-      .limit(1)
+      .select('id', { count: 'exact', head: true })
 
     if (error) throw error
 
@@ -446,6 +472,8 @@ Expected response:
 Go to Database → Replication.
 
 Enable replication for these tables:
+Go to **Database → Replication** and enable replication for these tables:
+
 - `stations`
 - `tracks`
 - `playlists`
@@ -453,6 +481,7 @@ Enable replication for these tables:
 - `notifications`
 
 ### 10.2: Setup pg_cron (Optional)
+### 10.2: Setup `pg_cron` (Optional)
 
 For scheduled tasks, enable `pg_cron` extension:
 
@@ -469,11 +498,14 @@ Then add scheduled tasks (see `DATABASE_SCHEMA.md`).
 
 1. Go to Database → Backups
 2. Click "Create Backup"
+1. Go to **Database → Backups**
+2. Click **Create Backup**
 3. Name: `initial-schema`
 
 ### 11.2: Setup Automated Backups
 
 1. Go to Database → Backups → Settings
+1. Go to **Database → Backups → Settings**
 2. Enable daily backups
 3. Retention: 7 days (free tier)
 
@@ -493,6 +525,8 @@ if (!supabaseUrl || !supabaseKey) {
   console.error('❌ Missing Supabase environment variables. Please check your .env file.')
   process.exit(1)
 }
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 const supabase = createClient(supabaseUrl, supabaseKey)
 
@@ -515,7 +549,7 @@ async function verifyDatabase() {
 
   for (const table of tables) {
     try {
-      const { error } = await supabase.from(table).select('count').limit(1)
+      const { error } = await supabase.from(table).select('id', { count: 'exact', head: true })
       if (error) throw error
       console.log(`✅ Table '${table}' exists`)
     } catch (error) {
@@ -531,6 +565,7 @@ async function verifyDatabase() {
   for (const bucket of buckets) {
     try {
       const { error } = await supabase.storage.getBucket(bucket)
+      const { data, error } = await supabase.storage.getBucket(bucket)
       if (error) throw error
       console.log(`✅ Bucket '${bucket}' exists`)
     } catch (error) {
@@ -547,7 +582,7 @@ verifyDatabase()
 Run it:
 
 ```bash
-npx tsx scripts/verify-database.ts
+npx tsx --env-file .env.local scripts/verify-database.ts
 ```
 
 ## Troubleshooting
@@ -567,9 +602,10 @@ ALTER TABLE your_table DISABLE ROW LEVEL SECURITY;
 
 ### Issue: Storage Upload Fails
 
-**Symptom**: 403 Forbidden on file upload.  
+**Symptom**: `403 Forbidden` on file upload.  
 **Solution**:
-- Check bucket policies in Storage → Policies
+
+- Check bucket policies in **Storage → Policies**
 - Verify authentication token is valid
 - Check file size limits
 
