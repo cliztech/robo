@@ -3,8 +3,7 @@
 build:
 	@test -f "RoboDJ_Launcher.bat"
 	@mkdir -p .artifacts
-	@set -- $$(find config -maxdepth 1 -type f \( -name "*.json" -o -name "*.signal" -o -name "*.lock" \)); \
-	if [ "$$#" -gt 0 ]; then tar -czf .artifacts/robodj-config.tgz "$$@"; else : > .artifacts/robodj-config.tgz; fi
+	@find config -maxdepth 1 -type f \( -name "*.json" -o -name "*.signal" -o -name "*.lock" \) -print0 | xargs -0 tar -czf .artifacts/robodj-config.tgz
 	@echo "Build complete: .artifacts/robodj-config.tgz"
 
 qa:
