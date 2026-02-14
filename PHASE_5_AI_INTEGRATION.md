@@ -2,6 +2,7 @@
 
 **Timeline:** Day 11-13  
 **Goal:** Implement OpenAI-powered track analysis for automatic genre, mood, and energy detection
+**Goal:** Implement OpenAI-powered track analysis for automatic genre, mood, and energy detection.
 
 ## Prerequisites
 
@@ -13,11 +14,18 @@
 ## Overview
 
 This phase implements intelligent track analysis using OpenAI's GPT-4o model to automatically classify tracks by:
+- [ ] Database `tracks` table populated
+
+## Overview
+
+This phase adds intelligent track analysis using OpenAI models to classify tracks by:
+
 - Genre & subgenre
 - Mood & emotion
 - Energy level (1-10)
 - Danceability (1-10)
 - BPM (beats per minute)
+- BPM
 - Key signature & scale
 - Vocal style & language
 - Optimal playback timing
@@ -32,6 +40,13 @@ pnpm add ai @ai-sdk/openai zod
 ```
 
 ### 1.2: Configure Environment
+### 1.1 Install dependencies
+
+```bash
+pnpm add ai @ai-sdk/openai zod p-queue
+```
+
+### 1.2 Configure environment
 
 Edit `.env.local`:
 
@@ -64,6 +79,22 @@ export const AI_CONFIG = {
   },
 
   // Rate limiting
+### 1.3 Add AI config
+
+Create `src/lib/ai/config.ts`:
+
+```ts
+export const AI_CONFIG = {
+  models: {
+    analysis: 'gpt-4o',
+    quick: 'gpt-4o-mini',
+    embedding: 'text-embedding-3-small',
+  },
+  costs: {
+    maxPerTrack: 0.05,
+    dailyLimit: 50.0,
+    monthlyLimit: 1000.0,
+  },
   rateLimit: {
     requestsPerMinute: 10,
     requestsPerHour: 100,
@@ -784,30 +815,98 @@ export function TrackAnalyzer({ stationId, trackCount, analyzedCount, onComplete
   )
 }
 ```
+  confidence: {
+    minimum: 0.7,
+    high: 0.85,
+  },
+} as const
+```
+
+## Step 2: Create Track Analyzer
+
+Create `src/lib/ai/analyze-track.ts` with:
+
+- Zod schema for analysis output
+- `analyzeTrack(...)` function using `generateObject`
+- Confidence threshold validation
+- Token and cost estimation
+- Structured decision logging
+
+> Reuse the schema and sample implementation from the design notes to cover genre, mood, energy, BPM, vocals, timing, tags, explicit flag, and confidence.
+
+## Step 3: Add AI Decision Logging
+
+Create `src/lib/ai/log-decision.ts`:
+
+- `logAIDecision(log: AIDecisionLog)` to insert into `ai_decisions`
+- `getAIDecisions(stationId, options)` for filtered history
+
+Track:
+
+- `decision_type`
+- `model_used`
+- `tokens_used`
+- `cost_usd`
+- `latency_ms`
+- `confidence_score`
+
+## Step 4: API Route for Single Track Analysis
+
+Create `src/app/api/ai/analyze-track/route.ts`:
+
+- Auth check
+- Ownership check for `trackId`
+- Skip if already analyzed
+- Call `analyzeTrack(...)`
+- Update `tracks` AI columns
+- Log decision
+- Return analysis + usage metadata
+
+## Step 5: Batch Analysis
+
+Create `src/lib/ai/batch-analyzer.ts`:
+
+- Query unanalyzed tracks by `station_id`
+- Process with bounded concurrency via `PQueue`
+- Update each analyzed track
+- Emit progress callbacks
+- Aggregate usage and cost totals
+
+## Step 6: UI Component
+
+Create `src/components/ai/TrackAnalyzer.tsx` with:
+
+- Pending/complete counts
+- Progress bar
+- Analyze button
+- In-flight state
+- Summary of success/fail and total cost
 
 ## Verification Checklist
 
 - [ ] OpenAI API key configured
-- [ ] Track analysis returns valid results
+- [ ] Track analysis returns valid schema output
 - [ ] Confidence scores above threshold
-- [ ] Cost tracking working
+- [ ] Cost tracking works
 - [ ] Batch analysis processes multiple tracks
-- [ ] AI decisions logged to database
-- [ ] Analysis UI displays progress
-- [ ] Track metadata updated correctly
+- [ ] AI decisions are logged to database
+- [ ] UI displays progress and final summary
+- [ ] Track metadata columns updated correctly
 
 ## Cost Management Tips
 
-1. Cache analysis results - never re-analyze same track.
-2. Use GPT-4o-mini - for simple re-checks (~90% cheaper).
-3. Batch processing - reduce API overhead.
-4. Set daily limits - prevent runaway costs.
-5. Monitor token usage - track per-station costs.
+- Cache analysis results (never re-analyze unchanged tracks)
+- Use `gpt-4o-mini` for lightweight re-checks
+- Use batch processing for throughput and queue control
+- Enforce daily/monthly cost limits
+- Monitor per-station token usage
 
 ## Next Steps
 
-Proceed to **Phase 6: Playlist Generation** to use AI analysis for intelligent playlist creation.
+Proceed to **Phase 6: Playlist Generation** to use analysis features for intelligent sequencing and transitions.
 
-- **Estimated Time:** 6-8 hours
-- **Estimated Cost:** $5-10 for 100 track analysis
-- **Last Updated:** February 14, 2026
+---
+
+**Estimated Time:** 6-8 hours  
+**Estimated Cost:** $5-10 for ~100 track analyses  
+**Last Updated:** February 14, 2026
