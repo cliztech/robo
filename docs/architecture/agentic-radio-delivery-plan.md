@@ -94,7 +94,7 @@ Use this structure directly in Jira (Epic/Story/Sub-task) or Notion (Epic DB wit
 - [ ] Task: Define persona model (tone, pacing, energy)
 - [ ] Task: Build show-format presets (morning/drive/late-night)
 - [ ] Task: Add contextual grounding (song metadata, time, weather, events)
-- [ ] Task: Add anti-repetition controls for banter quality
+- [ ] Task: Add advanced anti-repetition controls (semantic diversity, topic memory)
 
 #### Story D2 — TTS and voice pipeline
 - [ ] Task: Integrate voice provider abstraction
