@@ -397,7 +397,7 @@ export class AudioEngine extends EventEmitter {
       this.nextGain.gain.setValueAtTime(0, this.context.currentTime)
     }
 
-    this.startTime = this.context.currentTime
+    this.startTime = this.crossfadeStartTime - (this.currentTrack?.startAt || 0)
     this.crossfading = false
     this.emit('crossfade-completed', { track: this.currentTrack })
 
