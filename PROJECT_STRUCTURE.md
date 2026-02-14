@@ -47,7 +47,7 @@ aetherradio/
 ## Naming Conventions
 
 - Components: `PascalCase.tsx`
-- Utilities/services: `kebab-case.ts` or `camelCase.ts`
+- Utilities/services: kebab-case.ts
 - Hooks: `useX.ts`
 - API route folders: lowercase paths
 
