@@ -17,7 +17,7 @@ This repository is the runtime distribution for **DGN-DJ by DGNradio**, an AI-po
 ## Commands
 
 | Action | Command | Notes |
-|--------|---------|-------|
+| ------ | ------- | ----- |
 | **Run app** | `.\RoboDJ_Launcher.bat` | Portable path resolution; elevated when needed |
 | **Run directly** | `.\RoboDJ Automation.exe` | Skips launcher wrapper |
 | **Inspect DB** | `python config/inspect_db.py` | Read-only schema inspection |

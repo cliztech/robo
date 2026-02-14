@@ -10,7 +10,7 @@ These instructions apply to the entire repository unless a deeper `AGENTS.md` ov
 ## Tech Stack
 
 | Layer | Technology | Notes |
-|-------|-----------|-------|
+| ----- | ---------- | ----- |
 | Runtime | Python 3.x (bundled via PyInstaller) | Compiled `.exe` distribution |
 | Data | SQLite (`settings.db`, `user_content.db`) | Read-only for agents |
 | Config | JSON (`schedules.json`, `prompt_variables.json`) | Editable with backup |
@@ -22,7 +22,7 @@ These instructions apply to the entire repository unless a deeper `AGENTS.md` ov
 > ⚡ Put commands early — agents reference these often.
 
 | Action | Command | Notes |
-|--------|---------|-------|
+| ------ | ------- | ----- |
 | **Run app** | `.\RoboDJ_Launcher.bat` | Resolves paths relative to launcher; elevated when needed |
 | **Run directly** | `.\RoboDJ Automation.exe` | Skips launcher wrapper |
 | **Inspect DB** | `cd config && python inspect_db.py` | Read-only schema inspection |
@@ -32,7 +32,7 @@ These instructions apply to the entire repository unless a deeper `AGENTS.md` ov
 
 ## Project Structure & Module Organization
 
-```
+```text
 robo/
 ├── RoboDJ Automation.exe          # Main executable (DO NOT EDIT)
 ├── RoboDJ_Launcher.bat            # Launcher script
@@ -154,7 +154,7 @@ Use this stage-gated flow for all requests:
 ## Route Selection
 
 | Route | Purpose | Agent Behavior |
-|-------|---------|---------------|
+| ----- | ------- | -------------- |
 | **QA** | Read-only inspection | No file edits; findings + task stubs only |
 | **Change** | Apply scoped edits | Small commits; avoid binaries; backup first |
 | **Proposal** | Design/spec output | Documentation only; no implementation unless asked |
