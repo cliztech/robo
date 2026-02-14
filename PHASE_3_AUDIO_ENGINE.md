@@ -1044,7 +1044,7 @@ export function AudioPlayer({ playlist, autoPlay = false, className }: AudioPlay
   }
 
   const currentPlaylistTrack = playlist[currentIndex]
-  const progress = metrics ? (metrics.currentTime / metrics.duration) * 100 : 0
+  const progress = metrics && metrics.duration > 0 ? (metrics.currentTime / metrics.duration) * 100 : 0
 
   return (
     <div className={cn('bg-zinc-900 rounded-lg p-6 space-y-4', className)}>
