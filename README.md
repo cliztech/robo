@@ -78,7 +78,7 @@ git clone <repository-url>
 cd aetherradio
 pnpm install
 cp .env.example .env.local
-pnpm supabase db push
+pnpm supabase db reset
 pnpm dev
 ```
 
