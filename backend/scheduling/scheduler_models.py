@@ -225,6 +225,70 @@ class ScheduleEnvelope(BaseModel):
     schedules: list[ScheduleRecord] = Field(default_factory=list)
 
 
+class ScheduleBlock(BaseModel):
+    day_of_week: Literal[
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday",
+    ]
+    start_time: str = Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
+    end_time: str = Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
+    overnight: bool = False
+
+    @model_validator(mode="after")
+    def validate_block_window(self) -> "ScheduleBlock":
+        start_obj = time.fromisoformat(self.start_time)
+        end_obj = time.fromisoformat(self.end_time)
+        if end_obj < start_obj and not self.overnight:
+            raise ValueError("end_time must be after start_time unless overnight=true")
+        return self
+
+
+class ScheduleTemplatePrimitive(BaseModel):
+    template: str
+    blocks: list[ScheduleBlock] = Field(default_factory=list)
+
+
+class TemplateType(str, Enum):
+    weekday = "weekday"
+    weekend = "weekend"
+    overnight = "overnight"
+
+
+class TemplateApplyRequest(BaseModel):
+    template: TemplateType
+    timezone: str
+    content_refs: list[ContentRef] = Field(min_length=1)
+    start_window: ScheduleWindow = Field(default_factory=lambda: ScheduleWindow(value="1970-01-01T00:00:00Z"))
+    end_window: ScheduleWindow = Field(default_factory=lambda: ScheduleWindow(value="9999-12-31T23:59:59Z"))
+
+
+class PreviewRequest(BaseModel):
+    day_of_week: Literal[
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday",
+    ]
+    start_time: str = Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
+    end_time: str = Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
+    timezone: str
+    start_date: str = Field(pattern=r"^\d{4}-\d{2}-\d{2}$")
+
+
+class ScheduleSpecPreview(BaseModel):
+    one_off: str
+    rrule: str
+    cron: str
+
+
 class TimelineBlock(BaseModel):
     schedule_id: str
     day_of_week: Literal["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
@@ -253,12 +317,6 @@ class ScheduleConflict(BaseModel):
     schedule_ids: list[str]
     message: str
     suggestions: list[ConflictSuggestion] = Field(default_factory=list)
-
-
-class SchedulerUiState(BaseModel):
-    schedule_file: ScheduleEnvelope
-    timeline_blocks: list[TimelineBlock]
-    conflicts: list[ScheduleConflict]
 
 
 class SchedulerUiStateUpdate(BaseModel):

@@ -191,9 +191,9 @@ def _detect_timeline_overlaps(timeline: list[TimelineBlock], schedules: list[Sch
 
     conflicts: list[ScheduleConflict] = []
     for day, segments in by_day.items():
-        ordered = sorted(segments, key=lambda seg: (seg.start_minute, seg.end_minute, seg.schedule_id))
-        for idx, left in enumerate(ordered):
-            for right in ordered[idx + 1 :]:
+        ordered = sorted(segments, key=lambda item: (item.start_minute, item.end_minute, item.schedule_id))
+        for index, left in enumerate(ordered):
+            for right in ordered[index + 1 :]:
                 if right.start_minute >= left.end_minute:
                     break
                 if left.schedule_id == right.schedule_id:

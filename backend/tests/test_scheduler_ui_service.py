@@ -13,6 +13,8 @@ from backend.scheduling.scheduler_models import (
 )
 from backend.scheduling.scheduler_ui_service import SchedulerUiService
 
+BASE_CONTENT = [ContentRef(type="script", ref_id="script:top_hour", weight=100)]
+
 
 def _schedule(
     schedule_id: str,
@@ -30,14 +32,13 @@ def _schedule(
         priority=priority,
         start_window=ScheduleWindow(value="2026-01-01T00:00:00Z"),
         end_window=ScheduleWindow(value="2026-12-31T23:59:59Z"),
-        content_refs=[ContentRef(type="script", ref_id=f"script:{schedule_id}")],
+        content_refs=BASE_CONTENT,
         schedule_spec=ScheduleSpec(mode="cron", cron=cron),
     )
 
 
 def test_template_primitives_cover_expected_days() -> None:
     service = SchedulerUiService()
-
     primitives = service.template_primitives()
 
     assert len(primitives[TemplateType.weekday].blocks) == 5
