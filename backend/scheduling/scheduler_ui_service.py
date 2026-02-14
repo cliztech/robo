@@ -56,7 +56,10 @@ class SchedulerUiService:
             messages = "; ".join(conflict.message for conflict in conflicts[:3])
             raise ValueError(f"Cannot save schedules while conflicts exist: {messages}")
 
-        self.schedules_path.write_text(envelope.model_dump_json(indent=2), encoding="utf-8")
+        temp_path = self.schedules_path.with_suffix(".tmp")
+        temp_path.write_text(envelope.model_dump_json(indent=2), encoding="utf-8")
+        import os
+        os.replace(temp_path, self.schedules_path)
         return SchedulerUiState(schedule_file=envelope, timeline_blocks=timeline, conflicts=[])
 
     def publish_schedules(self, schedules: list[ScheduleRecord]) -> dict[str, object]:
