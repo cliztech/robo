@@ -1,8 +1,8 @@
-# CLAUDE.md
+# GEMINI.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Gemini (Google AI) and Gemini Code when working with code in this repository.
 
-> For the full agent instruction set, see [`AGENTS.md`](AGENTS.md). This file provides Claude-specific guidance only.
+> For the full agent instruction set, see [`AGENTS.md`](AGENTS.md). This file provides Gemini-specific guidance only.
 
 ## Project Overview
 
@@ -26,8 +26,8 @@ This repository is the runtime distribution for **DGN-DJ by DGNradio**, an AI-po
 
 ## Key Rules
 
-1. **Read `AGENTS.md` first** — it defines the multi-agent pipeline, boundaries, and coding style.
-2. **Read `SKILLS.md`** — it defines reusable skill definitions with triggers and boundaries.
+1. **Read `AGENTS.md` first** — it defines the multi-agent pipeline, boundaries, agent teams, and coding style.
+2. **Read `SKILLS.md`** — it defines 14 reusable skill definitions with triggers and boundaries.
 3. **Never edit** `.exe`, `.db`, or `.key` files.
 4. **Always back up** config files before editing.
 5. **Use Conventional Commits** — `chore:`, `docs:`, `fix:`, `feat:`
@@ -48,7 +48,7 @@ Key directories:
 
 ## Team Dispatch Rules
 
-> When Claude receives a request, identify the relevant agent team(s) from `AGENTS.md` → **Agent Team Organization** before planning execution.
+> When Gemini receives a request, identify the relevant agent team(s) from `AGENTS.md` → **Agent Team Organization** before planning execution.
 
 ### Quick Dispatch Lookup
 
@@ -81,18 +81,29 @@ When a request spans multiple teams:
 
 ---
 
-## Claude-Specific Strengths
+## Gemini-Specific Strengths
 
-Claude excels at these team roles due to its analytical and reasoning capabilities:
+Gemini excels at these team roles due to its multi-modal and analytical capabilities:
 
 | Strength Area | Best-Fit Teams | Why |
 | ------------- | -------------- | --- |
-| **Deep code analysis** | Brutal Review, Bug, QA | Thorough line-by-line analysis and pattern recognition |
-| **Security reasoning** | SecOps | Ability to trace data flows and identify exposure patterns |
-| **Documentation quality** | Brutal Review (Doc Reviewer), Design | Strong markdown and technical writing skills |
-| **Root cause analysis** | Bug (Root Cause Analyst) | Systematic 5-whys reasoning and cross-reference tracing |
-| **Content generation rules** | AI Improvement, Content Moderation | Understanding of persona configurations and tone calibration |
-| **Strategic analysis** | Research, Radio Trend & Analysis | Structured analytical frameworks and competitive assessment |
+| **Multi-modal analysis** | Design (UI/UX), Radio Trend & Analysis | Native image/audio understanding for visual and content review |
+| **Large context research** | Research, Radio Trend & Analysis | Handling large document sets and producing structured analysis |
+| **Code generation & refactoring** | DevOps, QA (Test Generator) | Strong code synthesis and pattern-matching across codebases |
+| **Data analysis** | Monetization & Ads, Radio Trend & Analysis | Numerical reasoning for revenue optimization and analytics |
+| **Documentation synthesis** | Management, Brutal Review (Doc Reviewer) | Structured document generation with cross-referencing |
+| **Strategic reasoning** | Research (Competitive Intel), Management | Multi-factor analysis and strategic assessment |
+
+---
+
+## MCP Integration Notes
+
+When using MCP (Model Context Protocol) servers with this repository:
+
+- **GitHub MCP** — Use for PR creation, issue management, and repository operations per the `pr-writer` skill.
+- **Cloud Run MCP** — Use for deployment operations coordinated through the DevOps Team (Release Manager Agent).
+- All MCP operations must follow the boundaries in `AGENTS.md` — never bypass "Ask first" or "Never do" rules.
+- MCP tool outputs should be validated before acting on them (trust but verify).
 
 ---
 
