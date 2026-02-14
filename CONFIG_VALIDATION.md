@@ -1,5 +1,7 @@
 # Configuration Validation
 
+> Part of the **DGN-DJ by DGNradio** platform. See [`AGENTS.md`](AGENTS.md) for agent pipeline rules.
+
 Use the validator before any deployment or handoff to catch malformed configuration changes early.
 
 ## What it validates
