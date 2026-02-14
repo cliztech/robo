@@ -2,6 +2,14 @@
 
 This checklist converts the current product-readiness plan into a practical execution queue.
 
+
+## Autopilot Loop Helper
+
+Use the roadmap helper to continuously surface the next open tasks while you work:
+
+- `python scripts/roadmap_autopilot.py --limit 10`
+- `python scripts/roadmap_autopilot.py --loop --interval 60 --limit 10`
+
 ## P0 — Foundations (Start Here)
 
 - [ ] Create tracked issues for all Track A/B/C/D tasks from `PRODUCT_READINESS_PLAN.md`.
