@@ -5,9 +5,11 @@ This module adds policy and schedule-editing APIs for AI autonomy and scheduling
 ## Policy Model
 
 Global modes:
-- `manual`
-- `assisted`
-- `autonomous`
+- `manual_assist`
+- `semi_auto`
+- `auto_with_human_override`
+- `full_auto_guardrailed`
+- `lights_out_overnight`
 
 Decision permissions matrix covers:
 - `track_selection`
@@ -40,6 +42,8 @@ Persistence:
 - `GET /api/v1/autonomy-policy` - read policy
 - `PUT /api/v1/autonomy-policy` - update policy
 - `GET /api/v1/autonomy-policy/effective?show_id=...&timeslot_id=...` - evaluate effective policy using override precedence
+- `GET /api/v1/autonomy-policy/mode-definitions` - mode labels/summaries/tooltips sourced from `docs/autonomy_modes.md`
+- `GET /api/v1/autonomy-policy/control-center` - autonomy control center UI
 - `POST /api/v1/autonomy-policy/audit-events` - write event marking AI vs human-directed decision
 - `GET /api/v1/autonomy-policy/audit-events?limit=100` - list recent audit events
 
