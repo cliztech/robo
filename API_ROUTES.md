@@ -98,7 +98,7 @@ Deletes station (or soft-delete).
 
 ## Track Routes
 
-### `GET /api/tracks?station_id=:stationId`
+### `GET /api/tracks?station_id=<stationId>`
 
 Lists tracks for a station.
 
