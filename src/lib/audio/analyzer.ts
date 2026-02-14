@@ -78,6 +78,6 @@ export class AudioAnalyzer {
   }
 
   static detectClipping(waveformData: Uint8Array, threshold = 0.99): boolean {
-    return this.calculatePeak(waveformData) >= threshold;
+    return AudioAnalyzer.calculatePeak(waveformData) >= threshold;
   }
 }
