@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AudioEngine, AudioMetrics, Track } from '@/lib/audio/engine';
+import { AudioEngine, type AudioMetrics, type EQBand, type Track } from '../lib/audio/engine';
 
 export interface UseAudioEngineReturn {
   engine: AudioEngine | null;
@@ -16,7 +16,7 @@ export interface UseAudioEngineReturn {
   pause: () => void;
   resume: () => Promise<void>;
   setVolume: (level: number) => void;
-  setEQ: (band: 'low' | 'lowMid' | 'mid' | 'highMid' | 'high', gain: number) => void;
+  setEQ: (band: EQBand, gain: number) => void;
   error: Error | null;
 }
 
@@ -33,7 +33,7 @@ export function useAudioEngine(): UseAudioEngineReturn {
 
     try {
       const engine = new AudioEngine({
-        sampleRate: 48000,
+        sampleRate: 48_000,
         latencyHint: 'interactive',
         autoResume: true,
       });
@@ -43,8 +43,9 @@ export function useAudioEngine(): UseAudioEngineReturn {
       setIsInitialized(true);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error(String(err)));
-      throw err;
+      const typedError = err instanceof Error ? err : new Error('Unknown audio engine initialization error');
+      setError(typedError);
+      throw typedError;
     }
   }, []);
 
@@ -60,18 +61,15 @@ export function useAudioEngine(): UseAudioEngineReturn {
     const handleTrackEnded = () => setIsPlaying(false);
     const handlePaused = () => setIsPlaying(false);
     const handleResumed = () => setIsPlaying(true);
-
     const handleStopped = () => {
       setCurrentTrack(null);
       setIsPlaying(false);
     };
 
-    const handleMetricsUpdate = (newMetrics: AudioMetrics) => {
-      setMetrics(newMetrics);
-    };
+    const handleMetricsUpdate = (nextMetrics: AudioMetrics) => setMetrics(nextMetrics);
 
-    const handleError = ({ error: err }: { error: Error }) => {
-      setError(err);
+    const handleError = ({ error: nextError }: { error: unknown }) => {
+      setError(nextError instanceof Error ? nextError : new Error('Unknown audio engine error'));
     };
 
     engine.on('track-started', handleTrackStarted);
@@ -96,7 +94,7 @@ export function useAudioEngine(): UseAudioEngineReturn {
   useEffect(
     () => () => {
       if (engineRef.current) {
-        engineRef.current.destroy();
+        void engineRef.current.destroy();
         engineRef.current = null;
       }
     },
@@ -129,7 +127,7 @@ export function useAudioEngine(): UseAudioEngineReturn {
     engineRef.current?.setVolume(level);
   }, []);
 
-  const setEQ = useCallback((band: 'low' | 'lowMid' | 'mid' | 'highMid' | 'high', gain: number) => {
+  const setEQ = useCallback((band: EQBand, gain: number) => {
     engineRef.current?.setEQ(band, gain);
   }, []);
 

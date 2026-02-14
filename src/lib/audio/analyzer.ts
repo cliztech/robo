@@ -9,7 +9,7 @@ export interface FrequencyBands {
 }
 
 export class AudioAnalyzer {
-  static analyzeFrequencyBands(frequencyData: Uint8Array, sampleRate = 48000): FrequencyBands {
+  static analyzeFrequencyBands(frequencyData: Uint8Array, sampleRate = 48_000): FrequencyBands {
     const nyquist = sampleRate / 2;
     const binWidth = nyquist / frequencyData.length;
 
@@ -19,7 +19,6 @@ export class AudioAnalyzer {
 
       let sum = 0;
       let count = 0;
-
       for (let i = startBin; i < endBin && i < frequencyData.length; i += 1) {
         sum += frequencyData[i];
         count += 1;
@@ -39,7 +38,7 @@ export class AudioAnalyzer {
     };
   }
 
-  static calculateSpectralCentroid(frequencyData: Uint8Array, sampleRate = 48000): number {
+  static calculateSpectralCentroid(frequencyData: Uint8Array, sampleRate = 48_000): number {
     let weightedSum = 0;
     let sum = 0;
 
@@ -62,26 +61,23 @@ export class AudioAnalyzer {
       const normalized = (waveformData[i] - 128) / 128;
       sum += normalized * normalized;
     }
-
     return sum / waveformData.length;
   }
 
   static calculateRMS(waveformData: Uint8Array): number {
-    return Math.sqrt(this.calculateEnergy(waveformData));
+    return Math.sqrt(AudioAnalyzer.calculateEnergy(waveformData));
   }
 
   static calculatePeak(waveformData: Uint8Array): number {
     let peak = 0;
     for (let i = 0; i < waveformData.length; i += 1) {
       const normalized = Math.abs((waveformData[i] - 128) / 128);
-      if (normalized > peak) peak = normalized;
+      peak = Math.max(peak, normalized);
     }
-
     return peak;
   }
 
   static detectClipping(waveformData: Uint8Array, threshold = 0.99): boolean {
-    const peak = this.calculatePeak(waveformData);
-    return peak >= threshold;
+    return AudioAnalyzer.calculatePeak(waveformData) >= threshold;
   }
 }
