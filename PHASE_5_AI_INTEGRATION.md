@@ -6,6 +6,9 @@
 
 ## Prerequisites
 
+- [ ] Phase 0–4 completed
+- [ ] OpenAI API key obtained
+- [ ] At least 5 test tracks uploaded
 - [ ] Phase 0-4 completed
 - [ ] OpenAI API key obtained
 - [ ] At least 5 test tracks uploaded
@@ -33,12 +36,14 @@ This phase adds intelligent track analysis using OpenAI models to classify track
 
 ## Step 1: Setup OpenAI Integration
 
+### 1.1 Install AI SDK
 ### 1.1: Install AI SDK
 
 ```bash
 pnpm add ai @ai-sdk/openai zod
 ```
 
+### 1.2 Configure Environment
 ### 1.2: Configure Environment
 ### 1.1 Install dependencies
 
@@ -51,6 +56,16 @@ pnpm add ai @ai-sdk/openai zod p-queue
 Edit `.env.local`:
 
 ```env
+# WARNING: Do not commit your real API key to version control.
+# Store it securely, e.g., in a secret manager or a git-ignored .env.local file.
+OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxx
+
+# AI cost and rate limits
+AI_REQUESTS_PER_HOUR_LIMIT=100
+AI_DAILY_COST_LIMIT_USD=50.00
+```
+
+### 1.3 Create AI Configuration
 OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxx
 
 # Optional: Rate limiting
