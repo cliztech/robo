@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Autonomy Control Center</title>
+  <style>
+    :root {
+      --bg: #070b16;
+      --panel: #0f172a;
+      --panel-alt: #111c34;
+      --text: #e5eefc;
+      --muted: #93a8cf;
+      --border: #2a3a59;
+      --accent: #22d3ee;
+      --good: #10b981;
+      --warn: #f59e0b;
+      --high: #ef4444;
+      --shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background: radial-gradient(1200px 600px at 20% -20%, #12316b66, transparent), var(--bg);
+    }
+
+    .wrap { max-width: 1240px; margin: 0 auto; padding: 24px; }
+
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    h1 { font-size: 28px; margin: 0 0 8px; }
+    h2 { margin: 0 0 10px; font-size: 18px; }
+
+    .sub { color: var(--muted); margin: 0; max-width: 860px; }
+    .live-pill {
+      border: 1px solid #1f9159;
+      background: #082f21;
+      color: #86efac;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .layout { display: grid; grid-template-columns: 1.45fr 1fr; gap: 16px; }
+    .stack { display: grid; gap: 16px; }
+
+    .panel {
+      background: linear-gradient(180deg, #0e1930, #0b1426);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .status-strip {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .badge {
+      border: 1px solid var(--border);
+      background: #0b1730;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .modes { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-top: 14px; }
+    .mode-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      background: #0a1428;
+      transition: 120ms ease;
+      cursor: pointer;
+      position: relative;
+    }
+    .mode-card:hover { border-color: #4e77b8; transform: translateY(-1px); }
+    .mode-card.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+
+    .risk { font-size: 11px; font-weight: 600; border-radius: 999px; padding: 4px 8px; text-transform: uppercase; letter-spacing: .04em; }
+    .risk.low { color: #a7f3d0; background: #064e3b; }
+    .risk.moderate { color: #fcd34d; background: #5b3b06; }
+    .risk.elevated { color: #fdba74; background: #5a2b0e; }
+    .risk.high { color: #fecaca; background: #5f1721; }
+
+    .mode-title { display: flex; align-items: center; justify-content: space-between; margin: 8px 0 6px; gap: 6px; }
+    .mode-title h3 { margin: 0; font-size: 16px; }
+    .mode-summary { margin: 0 0 10px; color: #c5d3ee; font-size: 13px; line-height: 1.35; }
+
+    .doc-link {
+      font-size: 12px;
+      color: #86d6ff;
+      text-decoration: none;
+      border-bottom: 1px dashed #4ea6d8;
+    }
+
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+
+    button {
+      border: 1px solid #3b5179;
+      color: var(--text);
+      background: #17243e;
+      border-radius: 10px;
+      padding: 9px 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { border-color: #75a6e9; }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+
+    .primary { background: linear-gradient(180deg, #0ea5e9, #0e7490); border-color: #22d3ee; }
+    .warn { background: linear-gradient(180deg, #f59e0b, #b45309); border-color: #f59e0b; }
+    .danger { background: linear-gradient(180deg, #ef4444, #991b1b); border-color: #ef4444; }
+
+    .table-wrap { overflow: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 580px; }
+    th, td { border-bottom: 1px solid #2d4368; text-align: left; vertical-align: top; padding: 10px; }
+    th { color: #bdd3f6; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; }
+
+    .approval-list { margin: 0; padding-left: 18px; color: #c0d0ee; }
+    .approval-list li { margin-bottom: 4px; }
+
+    .fields { display: grid; grid-template-columns: repeat(2, minmax(160px, 1fr)) auto; gap: 8px; margin-bottom: 8px; }
+    input, select {
+      width: 100%;
+      background: #0a1428;
+      border: 1px solid #314769;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 9px 10px;
+    }
+    label { color: #bdd3f6; font-size: 12px; display: grid; gap: 6px; }
+
+    .effective-summary { display: grid; gap: 8px; margin-top: 8px; }
+    .summary-row { display: grid; grid-template-columns: 120px 1fr; gap: 8px; font-size: 13px; }
+    .summary-row b { color: #c9ddff; }
+
+    .permissions { margin-top: 10px; display: grid; gap: 6px; }
+    .perm { display: flex; justify-content: space-between; gap: 8px; padding: 8px; border-radius: 8px; border: 1px solid #2f476b; background: #0b1730; font-size: 12px; }
+
+    .timeline { max-height: 560px; overflow: auto; display: grid; gap: 10px; margin-top: 10px; }
+    .event {
+      border: 1px solid #314769;
+      border-left: 4px solid #3b82f6;
+      border-radius: 10px;
+      padding: 10px;
+      background: #0a1428;
+    }
+    .event.human { border-left-color: #22c55e; }
+    .event.ai { border-left-color: #f59e0b; }
+    .event-head { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: #bad3ff; }
+    .event-notes { color: #d7e5ff; margin-top: 6px; font-size: 13px; }
+
+    .muted { color: var(--muted); font-size: 12px; }
+    .flash {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: #0b2a22;
+      color: #86efac;
+      border: 1px solid #1a6e4c;
+      border-radius: 10px;
+      padding: 10px 12px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: 180ms ease;
+      pointer-events: none;
+    }
+    .flash.show { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 1024px) { .layout { grid-template-columns: 1fr; } }
+    @media (max-width: 680px) {
+      .topbar { flex-direction: column; }
+      .fields { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="topbar">
+      <div>
+        <h1>Autonomy Control Center</h1>
+        <p class="sub">Manage operational autonomy modes, verify what requires human approval, monitor effective policy resolution, and track human/AI interventions in one place.</p>
+      </div>
+      <div class="live-pill">Live policy endpoint: <code>/api/v1/autonomy-policy/effective</code></div>
+    </header>
+
+    <div class="layout">
+      <div class="stack">
+        <section class="panel">
+          <h2>Mode Selector</h2>
+          <div class="muted">Select a station default mode. Risk and behavior definitions are linked to mode spec sections.</div>
+          <div id="statusStrip" class="status-strip"></div>
+          <div id="modeCards" class="modes"></div>
+          <div class="actions">
+            <button id="saveMode" class="primary">Apply Selected Mode</button>
+            <button id="safeModeBtn" class="warn">One-click Safe Mode</button>
+            <button id="overrideBtn" class="danger">Pause with Human Override</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>What Requires Approval</h2>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Mode</th><th>Risk</th><th>Approval-required Actions</th></tr></thead>
+              <tbody id="approvalMatrix"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Real-time Effective Policy</h2>
+          <div class="fields">
+            <label>show_id
+              <input id="showId" placeholder="morning_show" />
+            </label>
+            <label>timeslot_id
+              <input id="timeslotId" placeholder="overnight_weekdays" />
+            </label>
+            <label>Refresh
+              <button id="refreshEffective">Fetch Effective Policy</button>
+            </label>
+          </div>
+          <div id="effectiveSummary" class="effective-summary"></div>
+          <div id="permissions" class="permissions"></div>
+        </section>
+      </div>
+
+      <section class="panel">
+        <h2>Audit Event Timeline</h2>
+        <div class="muted">Stream of recent events from <code>/audit-events</code>. Includes mode/source and notes.</div>
+        <div class="fields" style="grid-template-columns: 1fr auto; margin-top:10px;">
+          <label>Origin filter
+            <select id="originFilter">
+              <option value="all">All</option>
+              <option value="human">Human</option>
+              <option value="ai">AI</option>
+            </select>
+          </label>
+          <label>Refresh
+            <button id="refreshTimeline">Refresh Timeline</button>
+          </label>
+        </div>
+        <div id="timeline" class="timeline"></div>
+      </section>
+    </div>
+  </div>
+
+  <div id="flash" class="flash"></div>
+
+  <script>
+    const base = '/api/v1/autonomy-policy';
+    const modeCardsEl = document.getElementById('modeCards');
+    const approvalMatrixEl = document.getElementById('approvalMatrix');
+    const statusStripEl = document.getElementById('statusStrip');
+    const effectiveSummaryEl = document.getElementById('effectiveSummary');
+    const permissionsEl = document.getElementById('permissions');
+    const timelineEl = document.getElementById('timeline');
+    const originFilterEl = document.getElementById('originFilter');
+    const flashEl = document.getElementById('flash');
+
+    const decisionLabelMap = {
+      track_selection: 'Track Selection',
+      script_generation: 'Script Generation',
+      voice_persona_selection: 'Voice/Persona Selection',
+      caller_simulation_usage: 'Caller Simulation Usage',
+      breaking_news_weather_interruption: 'Breaking News/Weather Interruption',
+    };
+
+    const authorityLabelMap = {
+      human_only: 'Human only',
+      human_with_ai_assist: 'Human w/ AI assist',
+      ai_with_human_approval: 'AI with human approval',
+      ai_autonomous: 'AI autonomous',
+    };
+
+    const state = {
+      definitions: [],
+      policy: null,
+      selectedMode: null,
+      timeline: [],
+    };
+
+    function flash(message) {
+      flashEl.textContent = message;
+      flashEl.classList.add('show');
+      setTimeout(() => flashEl.classList.remove('show'), 2000);
+    }
+
+    function escapeHTML(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function titleCase(value) {
+      return String(value || '').replaceAll('_', ' ').replace(/\b\w/g, (m) => m.toUpperCase());
+    }
+
+    function getRisk(mode) {
+      const entry = state.definitions.find((item) => item.mode === mode);
+      return entry ? entry.risk : 'moderate';
+    }
+
+    function renderStatusStrip() {
+      if (!state.policy) return;
+      statusStripEl.innerHTML = [
+        `<span class="badge">Current default: <b>${escapeHTML(titleCase(state.policy.station_default_mode))}</b></span>`,
+        `<span class="badge">Selected: <b>${escapeHTML(titleCase(state.selectedMode))}</b></span>`,
+        `<span class="badge">Conflict resolution: <b>${escapeHTML(state.policy.conflict_resolution)}</b></span>`,
+      ].join('');
+    }
+
+    function renderModes() {
+      modeCardsEl.innerHTML = '';
+      state.definitions.forEach((mode) => {
+        const card = document.createElement('article');
+        card.className = `mode-card ${state.selectedMode === mode.mode ? 'selected' : ''}`;
+        card.setAttribute('tabindex', '0');
+        card.innerHTML = `
+          <span class="risk ${escapeHTML(mode.risk)}">${escapeHTML(mode.risk)} risk</span>
+          <div class="mode-title">
+            <h3>${escapeHTML(mode.label)}</h3>
+            <input type="radio" name="mode" ${state.selectedMode === mode.mode ? 'checked' : ''} aria-label="Select ${escapeHTML(mode.label)}" />
+          </div>
+          <p class="mode-summary">${escapeHTML(mode.summary)}</p>
+          <a class="doc-link" href="${escapeHTML(mode.anchor)}" target="_blank" title="Definition source: ${escapeHTML(mode.anchor)}">Mode definition</a>
+        `;
+        const selectMode = () => {
+          state.selectedMode = mode.mode;
+          renderStatusStrip();
+          renderModes();
+        };
+        card.addEventListener('click', selectMode);
+        card.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            selectMode();
+          }
+        });
+        modeCardsEl.appendChild(card);
+      });
+    }
+
+    function renderApprovalMatrix() {
+      approvalMatrixEl.innerHTML = '';
+      state.definitions.forEach((mode) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td><strong>${escapeHTML(mode.label)}</strong></td>
+          <td><span class="risk ${escapeHTML(mode.risk)}">${escapeHTML(mode.risk)}</span></td>
+          <td><ul class="approval-list">${mode.requires_approval.map((item) => `<li>${escapeHTML(item)}</li>`).join('')}</ul></td>
+        `;
+        approvalMatrixEl.appendChild(row);
+      });
+    }
+
+    function renderEffectivePolicy(data) {
+      effectiveSummaryEl.innerHTML = `
+        <div class="summary-row"><b>Resolved mode</b><span>${escapeHTML(titleCase(data.mode))}</span></div>
+        <div class="summary-row"><b>Risk</b><span><span class="risk ${escapeHTML(getRisk(data.mode))}">${escapeHTML(getRisk(data.mode))}</span></span></div>
+        <div class="summary-row"><b>Source</b><span>${escapeHTML(titleCase(data.source))}</span></div>
+        <div class="summary-row"><b>show_id</b><span>${escapeHTML(data.show_id || '—')}</span></div>
+        <div class="summary-row"><b>timeslot_id</b><span>${escapeHTML(data.timeslot_id || '—')}</span></div>
+      `;
+
+      const entries = Object.entries(data.permissions || {});
+      permissionsEl.innerHTML = entries
+        .map(([decision, authority]) => `<div class="perm"><span>${escapeHTML(decisionLabelMap[decision] || titleCase(decision))}</span><strong>${escapeHTML(authorityLabelMap[authority] || titleCase(authority))}</strong></div>`)
+        .join('');
+    }
+
+    function renderTimeline() {
+      const filter = originFilterEl.value;
+      const events = [...state.timeline].reverse().filter((event) => filter === 'all' || event.origin === filter);
+      if (!events.length) {
+        timelineEl.innerHTML = '<div class="muted">No audit events for this filter.</div>';
+        return;
+      }
+      timelineEl.innerHTML = events.map((event) => `
+        <article class="event ${escapeHTML(event.origin)}">
+          <div class="event-head">
+            <span>${escapeHTML(new Date(event.timestamp).toLocaleString())}</span>
+            <span>${escapeHTML(titleCase(event.origin))} • ${escapeHTML(titleCase(event.mode))} • ${escapeHTML(titleCase(event.source))}</span>
+          </div>
+          <div class="event-notes">${escapeHTML(event.notes || 'No notes provided.')}</div>
+          <div class="muted" style="margin-top:6px;">Decision: ${escapeHTML(titleCase(event.decision_type))}${event.show_id ? ` • show_id: ${escapeHTML(event.show_id)}` : ''}${event.timeslot_id ? ` • timeslot_id: ${escapeHTML(event.timeslot_id)}` : ''}</div>
+        </article>
+      `).join('');
+    }
+
+    async function fetchJSON(url, options) {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`${response.status} ${response.statusText}: ${text}`);
+      }
+      return response.json();
+    }
+
+    async function applyMode(mode, notes) {
+      const payload = { ...state.policy, station_default_mode: mode };
+      const updated = await fetchJSON(base, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      await fetchJSON(`${base}/audit-events?decision_type=mode_change&origin=human&notes=${encodeURIComponent(notes)}`, { method: 'POST' });
+      state.policy = updated;
+      state.selectedMode = updated.station_default_mode;
+      renderStatusStrip();
+      renderModes();
+      await refreshEffectivePolicy();
+      await refreshTimeline();
+      flash(`Mode applied: ${titleCase(mode)}`);
+    }
+
+    async function refreshEffectivePolicy() {
+      const showId = document.getElementById('showId').value.trim();
+      const timeslotId = document.getElementById('timeslotId').value.trim();
+      const query = new URLSearchParams();
+      if (showId) query.set('show_id', showId);
+      if (timeslotId) query.set('timeslot_id', timeslotId);
+      const data = await fetchJSON(`${base}/effective?${query.toString()}`);
+      renderEffectivePolicy(data);
+    }
+
+    async function refreshTimeline() {
+      state.timeline = await fetchJSON(`${base}/audit-events?limit=50`);
+      renderTimeline();
+    }
+
+    async function init() {
+      try {
+        const defs = await fetchJSON(`${base}/mode-definitions`);
+        state.definitions = defs.modes;
+        state.policy = await fetchJSON(base);
+        state.selectedMode = state.policy.station_default_mode;
+
+        renderStatusStrip();
+        renderModes();
+        renderApprovalMatrix();
+        await refreshEffectivePolicy();
+        await refreshTimeline();
+
+        document.getElementById('saveMode').addEventListener('click', () => applyMode(state.selectedMode, `Station default mode changed to ${state.selectedMode}`));
+        document.getElementById('safeModeBtn').addEventListener('click', () => applyMode('manual_assist', 'One-click safe mode engaged'));
+        document.getElementById('overrideBtn').addEventListener('click', () => applyMode('semi_auto', 'Human override paused full autonomy'));
+        document.getElementById('refreshEffective').addEventListener('click', refreshEffectivePolicy);
+        document.getElementById('refreshTimeline').addEventListener('click', refreshTimeline);
+        originFilterEl.addEventListener('change', renderTimeline);
+
+        setInterval(() => refreshEffectivePolicy().catch(console.error), 8000);
+        setInterval(() => refreshTimeline().catch(console.error), 10000);
+      } catch (error) {
+        console.error(error);
+        flash('Failed to load control center data.');
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
