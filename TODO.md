@@ -36,6 +36,6 @@ This checklist converts the roadmap into a single execution board with clear pri
 ## Operational checks per completed item
 
 - [ ] Run `git status --short` and `git diff --name-only` before commit.
-- [ ] Run validation for touched JSON: `python -m json.tool <file>`.
+- [ ] Run validation for touched JSON: `python -m json.tool <file> > /dev/null`.
 - [ ] Run config validation when config behavior changes: `python config/validate_config.py`.
 - [ ] Update release notes/checklists when acceptance criteria are met.
