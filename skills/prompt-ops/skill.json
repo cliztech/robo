@@ -1,0 +1,8 @@
+{
+  "name": "prompt-ops",
+  "version": "1.0.0",
+  "description": "Maintain prompt variables and scripted prompt assets.",
+  "entrypoint": "README.md",
+  "tags": ["prompting", "content", "ops"],
+  "owner": "dgn-dj"
+}

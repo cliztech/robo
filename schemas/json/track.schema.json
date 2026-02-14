@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robodj/contracts/track.schema.json",
+  "title": "Track",
+  "description": "Canonical metadata for an audio track that can be scheduled on-air.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artist": {
+      "type": "string",
+      "minLength": 1
+    },
+    "duration_seconds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "intro_duration_seconds": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "outro_duration_seconds": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "file_uri": {
+      "type": "string",
+      "minLength": 1
+    },
+    "bpm": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "energy": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "title",
+    "artist",
+    "duration_seconds",
+    "file_uri"
+  ]
+}

@@ -32,21 +32,10 @@ If build assets are introduced later, add build workflows in a separate pull req
 2. Why the new workflow is now required.
 3. How the workflow maps to this repository's structure.
 
-## Commit & PR Standards
+## Release / deployment handoff requirements
 
-- Use **Conventional Commits**: `chore:`, `docs:`, `fix:`, `feat:`
-- Keep commits scoped to configuration, documentation, or scripts
-- PR bodies should include: summary, files touched, validation commands run
-- Follow the three-tier boundary system defined in `AGENTS.md`
+To avoid process drift, follow the same release gate in deployment and handoff activities:
 
-## Key Documentation
-
-| Document | Purpose |
-|----------|---------|
-| [`AGENTS.md`](AGENTS.md) | Agent pipeline, boundaries, coding style |
-| [`SKILLS.md`](SKILLS.md) | Reusable skill definitions |
-| [`PERSONA_OPS.md`](PERSONA_OPS.md) | AI host persona management |
-| [`docs/autonomy_modes.md`](docs/autonomy_modes.md) | 5-level autonomy operating modes |
-| [`docs/conversation_orchestrator_spec.md`](docs/conversation_orchestrator_spec.md) | Conversation orchestration model |
-| [`contracts/redaction_rules.md`](contracts/redaction_rules.md) | Frontend data redaction rules |
-| [`CONFIG_VALIDATION.md`](CONFIG_VALIDATION.md) | Config validation procedures |
+- Run `python config/validate_config.py`.
+- Do not proceed unless output includes: `Configuration validation passed for schedules.json and prompt_variables.json.`
+- For risky configuration changes, archive backup snapshots in `config/backups/` and include them with release/deployment artifacts.

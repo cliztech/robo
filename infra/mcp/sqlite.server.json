@@ -1,0 +1,17 @@
+{
+  "id": "sqlite",
+  "name": "SQLite MCP Server",
+  "transport": "stdio",
+  "package": "@modelcontextprotocol/server-sqlite",
+  "runtime": "npx",
+  "args": [
+    "-y",
+    "@modelcontextprotocol/server-sqlite",
+    "--db-path",
+    "/workspace/robo/config/settings.db",
+    "--db-path",
+    "/workspace/robo/config/user_content.db"
+  ],
+  "capabilities": ["tools"],
+  "purpose": "Read-only DB introspection/query support for runtime content and settings"
+}

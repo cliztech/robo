@@ -2,43 +2,63 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://robodj.local/schema/schedules.schema.json",
   "title": "RoboDJ schedules configuration",
-  "type": "array",
-  "items": {
-    "type": "object",
-    "properties": {
-      "id": { "type": "string" },
-      "name": { "type": "string" },
-      "enabled": { "type": "boolean" },
-      "schedule_type": {
-        "type": "string",
-        "enum": ["daily", "weekly", "monthly", "one_time", "interval"]
-      },
-      "start_time": {
-        "type": "string",
-        "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$"
-      },
-      "timezone": { "type": "string" },
-      "days_of_week": {
-        "type": "array",
-        "items": {
-          "type": "string",
-          "enum": [
-            "monday",
-            "tuesday",
-            "wednesday",
-            "thursday",
-            "friday",
-            "saturday",
-            "sunday"
-          ]
+  "type": "object",
+  "required": ["schema_version", "schedules"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "integer", "const": 2 },
+    "schedules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "enabled"],
+        "additionalProperties": true,
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "name": { "type": "string", "minLength": 1 },
+          "enabled": { "type": "boolean" },
+          "timezone": { "type": "string" },
+          "ui_state": { "type": "string", "enum": ["draft", "active", "paused", "archived"] },
+          "priority": { "type": "integer", "minimum": 0, "maximum": 100 },
+          "start_window": {
+            "type": "object",
+            "required": ["type", "value"],
+            "properties": {
+              "type": { "type": "string", "const": "datetime" },
+              "value": { "type": "string" }
+            }
+          },
+          "end_window": {
+            "type": "object",
+            "required": ["type", "value"],
+            "properties": {
+              "type": { "type": "string", "const": "datetime" },
+              "value": { "type": "string" }
+            }
+          },
+          "template_ref": {
+            "type": "object",
+            "required": ["id", "version"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "version": { "type": "integer", "minimum": 1 }
+            }
+          },
+          "overrides": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "timezone": { "type": "string" },
+              "ui_state": { "type": "string", "enum": ["draft", "active", "paused", "archived"] },
+              "priority": { "type": "integer", "minimum": 0, "maximum": 100 },
+              "start_window": { "type": "object" },
+              "end_window": { "type": "object" },
+              "content_refs": { "type": "array" },
+              "schedule_spec": { "type": "object" }
+            }
+          }
         }
-      },
-      "day_of_month": { "type": "integer", "minimum": 1, "maximum": 31 },
-      "prompt_id": { "type": "string" },
-      "notes": { "type": "string" },
-      "metadata": { "type": "object" }
-    },
-    "required": ["id", "name", "enabled"],
-    "additionalProperties": false
+      }
+    }
   }
 }

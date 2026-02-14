@@ -1,0 +1,10 @@
+{
+  "id": "time",
+  "name": "Time MCP Server",
+  "transport": "stdio",
+  "package": "@modelcontextprotocol/server-time",
+  "runtime": "npx",
+  "args": ["-y", "@modelcontextprotocol/server-time"],
+  "capabilities": ["tools"],
+  "purpose": "Date/time normalization and timezone-safe scheduling for DJ automation"
+}
