@@ -69,6 +69,7 @@ This implementation guide is split into multiple files:
 - Node.js 20.x LTS
 - pnpm (recommended) or npm
 - Docker Desktop (for local Supabase)
+- Supabase CLI (see [official docs](https://supabase.com/docs/guides/cli) for installation)
 - FFmpeg with libopus, libmp3lame, libfdk-aac
 - Supabase account
 - OpenAI API key
