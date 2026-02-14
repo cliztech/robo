@@ -36,7 +36,7 @@ Create API route `src/app/api/upload/sign/route.ts`:
 
 - Validate authenticated user
 - Validate station ownership
-- Generate path format: `tracks/<station_id>/<track_id>/<filename>`
+- Generate path format: `tracks/<station_id>/<track_id>/<uuid>.<extension>`
 - Return signed URL + expiry
 
 ## Step 4: Perform Direct Uploads to Storage
