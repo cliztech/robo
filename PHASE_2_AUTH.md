@@ -1,25 +1,31 @@
-# Phase 2: Authentication System Implementation
+# Phase 2: Authentication & Session Management
 
 **Timeline**: Day 4-5  
-**Goal**: Implement secure authentication flows with Supabase Auth and protected routes
+**Goal**: Implement secure authentication, protected routing, and first-login profile provisioning
 
 ## Prerequisites
 
-- [ ] Phase 0 setup completed
-- [ ] Phase 1 database setup completed
-- [ ] Supabase project configured
-- [ ] Auth providers enabled in Supabase dashboard
-- [ ] Environment variables set in `.env.local`
+Before starting, verify:
 
-## Step 1: Install Auth Dependencies
+- [ ] Phase 0 and Phase 1 are complete
+- [ ] Supabase project credentials are configured in `.env.local`
+- [ ] `profiles` and `stations` tables exist with RLS enabled
+- [ ] App runs locally with `pnpm dev`
+
+## Step 1: Confirm Environment Variables
+
+Ensure these are set in `.env.local`:
 
 ```bash
-pnpm add @supabase/auth-helpers-nextjs @supabase/supabase-js
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
-## Step 2: Create Supabase Auth Clients
+## Step 2: Implement Supabase Client Helpers
 
-Create `src/lib/supabase/client.ts`:
+Create client helper: `src/lib/supabase/client.ts`
 
 ```ts
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
@@ -30,11 +36,11 @@ export function createClient() {
 }
 ```
 
-Create `src/lib/supabase/server.ts`:
+Create server helper: `src/lib/supabase/server.ts`
 
 ```ts
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import { cookies } from 'next/headers'
+import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
 import type { Database } from '@/types/database'
 
 export function createServerClient() {
@@ -42,149 +48,165 @@ export function createServerClient() {
 }
 ```
 
-## Step 3: Add Auth Middleware
+## Step 3: Build Auth Callback Route
+
+Create `src/app/auth/callback/route.ts`:
+
+```ts
+import { NextResponse } from 'next/server'
+import { createServerClient } from '@/lib/supabase/server'
+
+export async function GET(request: Request) {
+  const requestUrl = new URL(request.url)
+  const code = requestUrl.searchParams.get('code')
+  const next = requestUrl.searchParams.get('next') ?? '/dashboard'
+
+  if (code) {
+    const supabase = createServerClient()
+    await supabase.auth.exchangeCodeForSession(code)
+  }
+
+  return NextResponse.redirect(new URL(next, requestUrl.origin))
+}
+```
+
+## Step 4: Create Login and Signup Pages
+
+Create:
+
+- `src/app/login/page.tsx`
+- `src/app/signup/page.tsx`
+
+Minimum requirements:
+
+- Email/password sign up
+- Email/password sign in
+- Optional Google/GitHub OAuth buttons
+- Loading state and error handling
+- Links between login and signup
+
+## Step 5: Add Session Gate Utility
+
+Create `src/lib/auth/require-user.ts`:
+
+```ts
+import { redirect } from 'next/navigation'
+import { createServerClient } from '@/lib/supabase/server'
+
+export async function requireUser() {
+  const supabase = createServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect('/login')
+  }
+
+  return user
+}
+```
+
+Use this in server pages/actions that require auth.
+
+## Step 6: Protect Routes with Middleware
 
 Create `src/middleware.ts`:
 
 ```ts
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 
-const PROTECTED_PATHS = ['/dashboard', '/station', '/upload', '/settings']
+const PROTECTED_PREFIXES = ['/dashboard', '/stations', '/library', '/billing']
 
-export async function middleware(req: NextRequest) {
-  const res = NextResponse.next()
-  const supabase = createMiddlewareClient({ req, res })
+export function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
+  const isProtected = PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix))
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-
-  const isProtectedPath = PROTECTED_PATHS.some((path) => req.nextUrl.pathname === path || req.nextUrl.pathname.startsWith(path + '/'))
-
-  if (isProtectedPath && !session) {
-    const redirectUrl = req.nextUrl.clone()
-    redirectUrl.pathname = '/login'
-    redirectUrl.searchParams.set('redirectTo', req.nextUrl.pathname)
-    return NextResponse.redirect(redirectUrl)
+  if (!isProtected) {
+    return NextResponse.next()
   }
 
-  if (session && req.nextUrl.pathname === '/login') {
-    return NextResponse.redirect(new URL('/dashboard', req.url))
+  // Keep this aligned with your auth helper/session cookie configuration.
+  const hasAuthCookie =
+    request.cookies.has('sb-access-token') ||
+    request.cookies.has('sb-access-token.0') ||
+    request.cookies.has('supabase-auth-token')
+
+  if (!hasAuthCookie) {
+    const loginUrl = new URL('/login', request.url)
+    loginUrl.searchParams.set('next', pathname)
+    return NextResponse.redirect(loginUrl)
   }
 
-  return res
+  return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/station/:path*', '/upload/:path*', '/settings/:path*', '/login'],
+  matcher: ['/dashboard/:path*', '/stations/:path*', '/library/:path*', '/billing/:path*'],
 }
 ```
 
-## Step 4: Create Auth Actions
+## Step 7: Add First-Login Profile Bootstrap
 
-Create `src/app/(auth)/actions.ts`:
+Create `src/lib/auth/ensure-profile.ts`:
 
 ```ts
-'use server'
-
-import { redirect } from 'next/navigation'
 import { createServerClient } from '@/lib/supabase/server'
 
-export async function signInWithEmail(formData: FormData) {
-  const email = String(formData.get('email') || '')
-  const password = String(formData.get('password') || '')
-
+export async function ensureProfile(userId: string, email?: string | null) {
   const supabase = createServerClient()
-  const { error } = await supabase.auth.signInWithPassword({ email, password })
 
-  if (error) {
-    return { error: error.message }
-  }
+  const { data: existing, error: selectError } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('id', userId)
+    .maybeSingle()
 
-  redirect('/dashboard')
-}
+  if (selectError) throw selectError
+  if (existing) return
 
-export async function signUpWithEmail(formData: FormData) {
-  const email = String(formData.get('email') || '')
-  const password = String(formData.get('password') || '')
+  const fallbackName = email?.split('@')[0] ?? 'New User'
+  const { error: insertError } = await supabase.from('profiles').insert({
+    id: userId,
+    display_name: fallbackName,
+  })
 
-  const supabase = createServerClient()
-  const { error } = await supabase.auth.signUp({ email, password })
-
-  if (error) {
-    return { error: error.message }
-  }
-
-  return { success: true, message: 'Check your email to confirm your account.' }
-}
-
-export async function signOut() {
-  const supabase = createServerClient()
-  await supabase.auth.signOut()
-  redirect('/login')
+  if (insertError) throw insertError
 }
 ```
 
-## Step 5: Build Auth Pages
+Call this once after successful sign-in/callback.
 
-Create routes:
+## Step 8: Add Logout Endpoint/Action
 
-- `src/app/(auth)/login/page.tsx`
-- `src/app/(auth)/register/page.tsx`
-- `src/app/(auth)/forgot-password/page.tsx`
-- `src/app/(auth)/reset-password/page.tsx`
-
-Include:
-
-- Email/password forms with validation
-- Clear error and success states
-- Links between auth pages
-- Redirect handling after login
-
-## Step 6: Add OAuth Providers
-
-In login page, add OAuth buttons:
+Create `src/app/api/auth/logout/route.ts`:
 
 ```ts
-await supabase.auth.signInWithOAuth({
-  provider: 'google',
-  options: {
-    redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback`,
-  },
-})
+import { NextResponse } from 'next/server'
+import { createServerClient } from '@/lib/supabase/server'
+
+export async function POST() {
+  const supabase = createServerClient()
+  await supabase.auth.signOut()
+  return NextResponse.json({ success: true })
+}
 ```
 
-Create callback route: `src/app/auth/callback/route.ts`.
+## Step 9: Configure Auth Providers in Supabase
 
-## Step 7: Implement Session-aware Layout
+Go to **Authentication → Providers**:
 
-Create protected layout: `src/app/(protected)/layout.tsx`.
+- Enable **Email**
+- Enable **Google** (optional)
+- Enable **GitHub** (optional)
 
-Requirements:
+Set redirect URLs:
 
-- Fetch current user via server client
-- Redirect unauthenticated users to `/login`
-- Provide user context to child components
+- `http://localhost:3000/auth/callback`
+- `https://your-domain.com/auth/callback`
 
-## Step 8: Create User Profile Bootstrap
-
-On first successful login, insert/update `profiles` row:
-
-- `id` = `auth.users.id`
-- `email`
-- `display_name` (default from email prefix)
-- `created_at` and `updated_at`
-
-## Step 9: Add Route Guards for APIs
-
-For protected API routes:
-
-- Read session using server client
-- Return `401` for missing session
-- Return `403` for ownership violations
-
-## Step 10: Verification
+## Step 10: Verify Authentication Flow
 
 Run:
 
@@ -194,32 +216,72 @@ pnpm type-check
 pnpm lint
 ```
 
-Manual checks:
+Manual verification checklist:
 
-- [ ] Register works and sends confirmation email
-- [ ] Login works with valid credentials
-- [ ] Invalid login shows helpful error
-- [ ] Protected routes redirect unauthenticated users
-- [ ] Sign out clears session and redirects
-- [ ] OAuth login succeeds (if configured)
+- [ ] New user can sign up
+- [ ] Existing user can sign in
+- [ ] Callback route exchanges session code
+- [ ] Protected pages redirect unauthenticated users
+- [ ] Logout clears auth state
+- [ ] Profile row is created on first login
 
 ## Troubleshooting
 
-### Issue: `Auth session missing`
+### Issue: OAuth error `redirect_uri_mismatch`
 
-**Solution:** Ensure middleware matcher includes all protected routes and callback route behavior is correct.
+**Fix:** Ensure provider redirect URL exactly matches `/auth/callback` for local and production domains.
 
-### Issue: OAuth redirect mismatch
+### Issue: Infinite redirects on protected pages
 
-**Solution:** Add exact callback URL in provider settings and Supabase Auth URL configuration.
+**Fix:** Verify protected matcher excludes public routes and that expected auth cookies are present.
 
-### Issue: User can access protected page after logout
+### Issue: `getUser()` returns null after login
 
-**Solution:** Clear cookies/session and avoid stale client-side caches.
+**Fix:** Confirm callback exchange runs, cookies are persisted, and auth helper packages are version-compatible.
 
-## Next Steps
+## Exit Criteria
 
-Proceed to `PHASE_3_AUDIO_ENGINE.md` for FFmpeg processing and audio pipeline implementation.
+Before moving to Phase 3:
 
-**Estimated Time:** 4-6 hours  
-**Last Updated:** February 14, 2026
+- [ ] Auth providers configured
+- [ ] Login/signup/callback work end-to-end
+- [ ] Protected routes enforce authentication
+- [ ] First-login profile bootstrap implemented
+
+## Next Step
+
+Proceed to **PHASE_3_AUDIO_ENGINE.md**.
+# Phase 2 - Authentication (Day 4)
+
+## Goal
+
+Implement secure sign-up/sign-in flows with protected routes and role-aware access.
+
+## Scope
+
+- Supabase Auth integration
+- Session management in App Router
+- Route protection via middleware
+- Basic profile onboarding
+
+## Implementation Steps
+
+1. Add auth callback route.
+2. Create login/signup/forgot-password pages.
+3. Add middleware redirect logic for protected dashboard routes.
+4. Create profile row on first login.
+5. Add logout action and session refresh behavior.
+
+## Security Notes
+
+- Never expose service role key on client.
+- Validate redirect URLs.
+- Use HTTP-only cookies for session tokens where applicable.
+
+## Validation
+
+- User can sign up, verify email, and sign in.
+- Unauthorized users are redirected from dashboard routes.
+- Authorized users can only access owned station resources.
+
+Last Updated: February 14, 2026

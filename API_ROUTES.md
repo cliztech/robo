@@ -1,245 +1,308 @@
-# API Routes Reference
+# API Routes: Contract and Implementation Checklist
 
-**Version:** v1  
-**Updated:** February 14, 2026
+**Goal**: Define route groups, request/response contracts, auth expectations, and validation rules for initial platform development.
 
-## Base Principles
+## API Conventions
 
-- All protected endpoints require authentication.
-- Use consistent JSON envelopes for success and error responses.
-- Use HTTP status codes semantically (`200`, `201`, `400`, `401`, `403`, `404`, `409`, `422`, `500`).
-- Include request IDs in logs and error payloads for debugging.
+- Base path: `/api`
+- Content type: `application/json`
+- Authenticated routes require active session
+- Mutating routes (`POST`, `PATCH`, `DELETE`) require ownership checks
 
-## Response Shapes
-
-### Success
+### Success Response Shape
 
 ```json
 {
   "success": true,
   "data": {},
-  "meta": {
-    "request_id": "req_123",
-    "timestamp": "2026-02-14T12:00:00.000Z"
-  }
+  "error": null
 }
 ```
 
-### Error
+### Error Response Shape
 
 ```json
 {
   "success": false,
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Invalid payload",
-    "details": {}
-  },
-  "meta": {
-    "request_id": "req_123",
-    "timestamp": "2026-02-14T12:00:00.000Z"
-  }
+  "data": null,
+    "details": { "slug": "This slug is already in use." }
 }
 ```
 
-## Health & Diagnostics
-
-### `GET /api/health`
-
-Returns service health summary.
-
-### `GET /api/test-db`
-
-Runs lightweight database connectivity check.
-
 ## Auth Routes
 
-### `POST /api/auth/sign-in`
+### `GET /api/auth/session`
 
-Signs in user using email/password.
+Returns current authenticated user + session metadata.
 
-### `POST /api/auth/sign-up`
+### `POST /api/auth/logout`
 
-Creates account and triggers verification flow.
-
-### `POST /api/auth/sign-out`
-
-Revokes current session.
-
-### `POST /api/auth/forgot-password`
-
-Sends password reset email.
-
-### `POST /api/auth/reset-password`
-
-Finalizes password reset with token.
+Invalidates active session and clears cookies.
 
 ## Station Routes
 
 ### `GET /api/stations`
 
-Returns stations for current user.
+List stations owned by authenticated user.
 
 ### `POST /api/stations`
 
-Creates a new station.
+Create station.
 
-### `GET /api/stations/:stationId`
+Validation highlights:
 
-Fetches one station by ID.
+- Required: `name`, `slug`
+- Slug unique per platform
 
-### `PATCH /api/stations/:stationId`
+### `GET /api/stations/:id`
 
-Updates station properties.
+Get station details + current runtime status.
 
-### `DELETE /api/stations/:stationId`
+### `PATCH /api/stations/:id`
 
-Deletes station (or soft-delete).
+Update editable station fields.
+
+### `DELETE /api/stations/:id`
+
+Soft-delete or archive station (recommended over hard delete in production).
 
 ## Track Routes
 
-### `GET /api/tracks?station_id=<stationId>`
+### `GET /api/tracks?stationId=...`
 
-Lists tracks for a station.
+List tracks by station with pagination and filters.
 
-### `POST /api/tracks`
+### `GET /api/tracks/:id`
 
-Creates initial track record before upload.
+Get single track details + processing state.
 
-### `GET /api/tracks/:trackId`
+### `PATCH /api/tracks/:id`
 
-Fetches track details + processing state.
+Update track metadata (title, tags, publish state).
 
-### `PATCH /api/tracks/:trackId`
+### `DELETE /api/tracks/:id`
 
-Updates editable metadata.
-
-### `DELETE /api/tracks/:trackId`
-
-Deletes track + related storage objects.
+Delete track record and related storage object(s).
 
 ## Upload Routes
 
-### `POST /api/upload/sign`
+### `POST /api/upload/signed-url`
 
-Generates signed upload URL after ownership checks.
+Generate one-time signed upload URL.
 
-**Input**:
+Expected request fields:
 
-```json
-{
-  "station_id": "uuid",
-  "filename": "intro-track.wav",
-  "mime_type": "audio/wav",
-  "size": 12345678
-}
-```
+- `stationId`
+- `filename`
+- `contentType`
+- `sizeBytes`
 
-### `POST /api/upload/confirm`
+### `POST /api/upload/finalize`
 
-Confirms object upload and transitions record status.
+Confirm upload object and create `tracks` row.
 
-### `POST /api/upload/cancel`
+Expected request fields:
 
-Cancels pending upload and cleans temporary references.
+- `stationId`
+- `objectPath`
+- `originalFilename`
+- `idempotencyKey`
 
-## Audio Processing Routes
+### `POST /api/upload/artwork`
 
-### `POST /api/audio/process`
-
-Starts audio processing for a track.
-
-### `GET /api/audio/process/:jobId`
-
-Gets processing job status.
+Upload station/track artwork image and return public URL.
 
 ## Playlist Routes
 
-### `GET /api/playlists?station_id=:stationId`
+### `GET /api/playlists?stationId=...`
 
-Lists playlists.
+List playlists for a station.
 
 ### `POST /api/playlists`
 
-Creates playlist.
+Create playlist.
 
-### `PATCH /api/playlists/:playlistId`
+### `PATCH /api/playlists/:id`
 
-Updates playlist metadata.
+Update playlist metadata/order settings.
 
-### `DELETE /api/playlists/:playlistId`
+### `DELETE /api/playlists/:id`
 
-Deletes playlist.
+Delete playlist.
 
-### `POST /api/playlists/:playlistId/tracks`
+## Broadcast Routes
 
-Adds track(s) to playlist.
+### `POST /api/broadcast/start`
 
-### `DELETE /api/playlists/:playlistId/tracks/:trackId`
+Start stream session for station.
 
-Removes track from playlist.
+### `POST /api/broadcast/stop`
 
-## Broadcast & Queue Routes
+Stop active stream session.
 
-### `GET /api/queue/current?station_id=:stationId`
+### `GET /api/broadcast/status?stationId=...`
 
-Returns current playout queue.
+Return live status (online/offline/current track/listeners).
 
-### `POST /api/queue/rebuild`
+## AI Routes
 
-Rebuilds queue from scheduling + fallback rules.
+### `POST /api/ai/generate-segment`
 
-### `GET /api/broadcast/history?station_id=:stationId`
+Generate DJ/script segment from prompt + station context.
 
-Returns play history with pagination.
+### `POST /api/ai/schedule-suggestion`
 
-## Analytics Routes
+Generate playlist/scheduling recommendations.
 
-### `POST /api/analytics/events`
+## Billing Routes
 
-Ingests client analytics events.
+### `POST /api/billing/create-checkout-session`
 
-### `GET /api/analytics/summary?station_id=:stationId`
+Create Stripe Checkout session.
 
-Returns aggregated dashboard metrics.
+### `POST /api/billing/webhook`
 
-## Notifications Routes
+Receive Stripe webhook events (signature verification required).
 
-### `GET /api/notifications`
+### `GET /api/billing/subscription`
 
-Lists user notifications.
+Return current plan/subscription status.
 
-### `PATCH /api/notifications/:notificationId/read`
+## Health & Diagnostics Routes
 
-Marks notification as read.
+### `GET /api/health`
 
-## Error Codes (Suggested)
+Basic liveness/readiness response.
 
-- `UNAUTHORIZED`
-- `FORBIDDEN`
-- `VALIDATION_ERROR`
-- `NOT_FOUND`
-- `CONFLICT`
-- `RATE_LIMITED`
-- `UPLOAD_FAILED`
-- `PROCESSING_FAILED`
-- `INTERNAL_ERROR`
+### `GET /api/test-db`
 
-## Validation Recommendations
+Database connectivity smoke test endpoint.
 
-- Use `zod` schemas for every request payload.
-- Return field-level validation issues in `error.details`.
-- Reject unknown keys to avoid silent misuse.
+## Validation & Security Requirements
 
-## Security Recommendations
+Apply to all implemented routes:
 
-- Enforce ownership checks in every station-scoped endpoint.
-- Do not trust client-supplied user IDs.
-- Apply rate limiting on auth and upload routes.
-- Redact sensitive tokens/secrets in logs.
+- Zod schema validation for body/query/params
+- Ownership checks (station/track/playlists)
+- Rate limiting for auth, upload, and AI endpoints
+- Structured logs with request ID, actor ID, route, latency
+- Safe error handling (no secrets in responses)
 
-## Implementation Notes
+## Recommended HTTP Status Codes
 
-- Keep endpoint handlers small and delegate logic to `src/lib/*` services.
-- Prefer server-side Supabase clients for trusted operations.
-- Use idempotency keys for retry-prone write endpoints.
+- `200` OK
+- `201` Created
+- `400` Bad Request
+- `401` Unauthorized
+- `403` Forbidden
+- `404` Not Found
+- `409` Conflict
+- `422` Unprocessable Entity
+- `429` Too Many Requests
+- `500` Internal Server Error
+
+## Suggested Implementation Order
+
+1. Auth/session routes
+2. Station CRUD routes
+3. Signed upload + finalize routes
+4. Track CRUD + processing routes
+5. Broadcast status/control routes
+6. Billing routes
+7. AI routes
+
+## Verification Checklist
+
+Before moving to frontend integration:
+
+- [ ] Route stubs exist for each group
+- [ ] Validation schemas added per route
+- [ ] Ownership checks implemented for mutating endpoints
+- [ ] Error shape standardized across all routes
+- [ ] Integration tests added for happy/error paths
+
+## Next Step
+
+After route stubs are implemented, proceed with integration tests and frontend API client wiring.
+# AetherRadio - API Routes Reference
+
+## Conventions
+
+- Base path: `/api`
+- JSON request/response
+- Auth required unless explicitly public
+- Standard error shape: `{ error: string, code?: string }`
+
+## Auth
+
+### `GET /api/auth/callback`
+
+Handles OAuth/email-link callback and session bootstrap.
+
+## Tracks
+
+### `POST /api/tracks/upload`
+
+Create upload URL or direct upload transaction.
+
+**Body**
+
+```json
+{
+  "stationId": "uuid",
+  "filename": "song.mp3",
+  "contentType": "audio/mpeg",
+  "sizeBytes": 10485760
+}
+```
+
+### `POST /api/tracks/analyze`
+
+Runs FFprobe + AI enrichment.
+
+### `GET /api/tracks/:id`
+
+Fetch track metadata.
+
+### `PATCH /api/tracks/:id`
+
+Update editable metadata fields.
+
+### `DELETE /api/tracks/:id`
+
+Soft-delete or archive a track.
+
+## AI
+
+### `POST /api/ai/analyze-track`
+
+Returns genre/mood/energy/tag predictions.
+
+### `POST /api/ai/generate-playlist`
+
+Builds an ordered playlist using station constraints.
+
+## Streaming
+
+### `GET /api/stream/:slug`
+
+Returns stream endpoint metadata or signed stream URL.
+
+## Webhooks
+
+### `POST /api/webhooks/stripe`
+
+Processes billing events and updates entitlements.
+
+## Health and Ops (Recommended)
+
+- `GET /api/health`
+- `GET /api/version`
+
+## Validation Expectations
+
+- Zod schema validation on all mutable endpoints.
+- Role checks for station ownership.
+- Request logging with correlation IDs.
+
+Last Updated: February 14, 2026
