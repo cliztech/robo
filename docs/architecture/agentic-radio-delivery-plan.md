@@ -140,7 +140,7 @@ Use this structure directly in Jira (Epic/Story/Sub-task) or Notion (Epic DB wit
 
 #### Story F1 — Content compliance controls
 - [ ] Task: Add prohibited-topic policy checks
-- [ ] Task: Add profanity/safety scoring pre-air
+- [ ] Task: Add profanity/safety scoring and mandatory disclosure checks
 - [ ] Task: Add hard stop/replace workflow for unsafe output
 
 #### Story F2 — Rights and royalties
