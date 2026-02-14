@@ -1,32 +1,46 @@
 {
-  "station_default_mode": "assisted",
+  "station_default_mode": "semi_auto",
   "mode_permissions": {
-    "manual": {
+    "manual_assist": {
       "track_selection": "human_only",
       "script_generation": "human_with_ai_assist",
       "voice_persona_selection": "human_only",
       "caller_simulation_usage": "human_only",
       "breaking_news_weather_interruption": "human_only"
     },
-    "assisted": {
-      "track_selection": "human_with_ai_assist",
+    "semi_auto": {
+      "track_selection": "ai_with_human_approval",
       "script_generation": "ai_with_human_approval",
-      "voice_persona_selection": "human_with_ai_assist",
+      "voice_persona_selection": "ai_with_human_approval",
       "caller_simulation_usage": "ai_with_human_approval",
       "breaking_news_weather_interruption": "ai_with_human_approval"
     },
-    "autonomous": {
+    "auto_with_human_override": {
       "track_selection": "ai_autonomous",
       "script_generation": "ai_autonomous",
       "voice_persona_selection": "ai_autonomous",
       "caller_simulation_usage": "ai_autonomous",
+      "breaking_news_weather_interruption": "ai_with_human_approval"
+    },
+    "full_auto_guardrailed": {
+      "track_selection": "ai_autonomous",
+      "script_generation": "ai_autonomous",
+      "voice_persona_selection": "ai_autonomous",
+      "caller_simulation_usage": "ai_autonomous",
+      "breaking_news_weather_interruption": "ai_autonomous"
+    },
+    "lights_out_overnight": {
+      "track_selection": "ai_autonomous",
+      "script_generation": "ai_autonomous",
+      "voice_persona_selection": "ai_autonomous",
+      "caller_simulation_usage": "ai_with_human_approval",
       "breaking_news_weather_interruption": "ai_with_human_approval"
     }
   },
   "show_overrides": [
     {
       "show_id": "morning_show",
-      "mode": "assisted"
+      "mode": "semi_auto"
     }
   ],
   "timeslot_overrides": [
@@ -35,7 +49,7 @@
       "day_of_week": "monday",
       "start_time": "00:00",
       "end_time": "05:59",
-      "mode": "autonomous"
+      "mode": "lights_out_overnight"
     }
   ],
   "conflict_resolution": "timeslot_override > show_override > station_default",

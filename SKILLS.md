@@ -1,6 +1,6 @@
 # Skills Registry
 
-This file defines reusable, trigger-based skills for the DGN-AirWaves repository.
+This file defines reusable, trigger-based skills for the DGN-DJ repository.
 Skills follow the [SKILL.md convention](https://code.visualstudio.com/docs/copilot/customization/agent-skills) with frontmatter metadata for agent discovery.
 
 ## Usage Rules

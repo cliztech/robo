@@ -7,30 +7,38 @@ from backend.scheduling.scheduler_models import (
     ScheduleRecord,
     ScheduleSpec,
     ScheduleWindow,
+    TemplateApplyRequest,
     TemplateType,
     UiState,
 )
 from backend.scheduling.scheduler_ui_service import SchedulerUiService
 
+BASE_CONTENT = [ContentRef(type="script", ref_id="script:top_hour", weight=100)]
 
-def _base_schedule(schedule_id: str, name: str, cron: str = "0 9 * * 1") -> ScheduleRecord:
+
+def _schedule(
+    schedule_id: str,
+    name: str,
+    cron: str = "0 9 * * 1",
+    *,
+    priority: int = 50,
+) -> ScheduleRecord:
     return ScheduleRecord(
         id=schedule_id,
         name=name,
         enabled=True,
         timezone="UTC",
         ui_state=UiState.active,
-        priority=50,
+        priority=priority,
         start_window=ScheduleWindow(value="2026-01-01T00:00:00Z"),
         end_window=ScheduleWindow(value="2026-12-31T23:59:59Z"),
-        content_refs=[ContentRef(type="script", ref_id=f"script:{schedule_id}")],
+        content_refs=BASE_CONTENT,
         schedule_spec=ScheduleSpec(mode="cron", cron=cron),
     )
 
 
-def test_template_primitives_cover_expected_days():
+def test_template_primitives_cover_expected_days() -> None:
     service = SchedulerUiService()
-
     primitives = service.template_primitives()
 
     assert len(primitives[TemplateType.weekday].blocks) == 5
@@ -38,96 +46,53 @@ def test_template_primitives_cover_expected_days():
     assert len(primitives[TemplateType.overnight].blocks) == 7
 
 
-def test_validate_schedules_reports_duplicate_name_deterministically():
+def test_conflicts_are_deterministic_and_actionable() -> None:
     service = SchedulerUiService()
     schedules = [
-        _base_schedule("sch_alpha", "Morning Show"),
-        _base_schedule("sch_beta", "morning show"),
-import pytest
-
-from backend.scheduling.scheduler_models import ScheduleRecord, TemplateApplyRequest
-from backend.scheduling.scheduler_ui_service import SchedulerUiService
-
-
-BASE_CONTENT = [{"type": "script", "ref_id": "script:top_hour", "weight": 100}]
-
-
-def _standalone_schedule(schedule_id: str, name: str, day: str, start: str, duration: int = 60) -> ScheduleRecord:
-    day_map = {
-        "monday": "MO",
-        "tuesday": "TU",
-        "wednesday": "WE",
-        "thursday": "TH",
-        "friday": "FR",
-        "saturday": "SA",
-        "sunday": "SU",
-    }
-    return ScheduleRecord.model_validate(
-        {
-            "id": schedule_id,
-            "name": name,
-            "enabled": True,
-            "timezone": "UTC",
-            "ui_state": "active",
-            "priority": 50,
-            "start_window": {"type": "datetime", "value": "2026-01-01T00:00:00Z"},
-            "end_window": {"type": "datetime", "value": "2026-12-31T23:59:59Z"},
-            "content_refs": BASE_CONTENT,
-            "schedule_spec": {
-                "mode": "rrule",
-                "rrule": (
-                    f"FREQ=WEEKLY;INTERVAL=1;BYDAY={day_map[day]};"
-                    f"BYHOUR={int(start.split(':')[0])};BYMINUTE={int(start.split(':')[1])};"
-                    f"BYSECOND=0;DURATION_MINUTES={duration}"
-                ),
-            },
-        }
-    )
-
-
-def test_detect_conflict_messages_are_actionable():
-    service = SchedulerUiService()
-    schedules = [
-        _standalone_schedule("sch_a", "Morning A", "monday", "09:00", duration=120),
-        _standalone_schedule("sch_b", "Morning B", "monday", "10:00", duration=120),
+        _schedule("sch_a", "Morning Show", cron="0 9 * * 1", priority=50),
+        _schedule("sch_b", "morning show", cron="0 9 * * 1", priority=50),
     ]
 
     conflicts = service.validate_schedules(schedules)
 
-    assert [c.conflict_type.value for c in conflicts] == ["duplicate_name", "ambiguous_active"]
-
-
-def test_update_schedules_blocks_publish_on_conflict(tmp_path):
-    service = SchedulerUiService(schedules_path=tmp_path / "schedules.json")
-    schedules = [
-        _base_schedule("sch_a", "Block A", cron="0 9 * * 1"),
-        _base_schedule("sch_b", "Block B", cron="0 9 * * 1"),
+    assert [item.conflict_type.value for item in conflicts] == [
+        "ambiguous_dispatch",
+        "duplicate_name",
+        "overlap",
     ]
-
-    with pytest.raises(ValueError, match="Cannot save schedules while conflicts exist"):
-        service.update_schedules(schedules)
-    assert conflicts
-    assert any(conflict.conflict_type.value == "overlap" for conflict in conflicts)
-    overlap = next(conflict for conflict in conflicts if conflict.conflict_type.value == "overlap")
-    assert overlap.suggestions
-    assert any("Move one block" in suggestion.message for suggestion in overlap.suggestions)
+    assert all(item.suggestions for item in conflicts)
 
 
-def test_update_schedules_blocks_save_when_conflicts_exist(tmp_path):
+def test_update_schedules_blocks_save_when_conflicts_exist(tmp_path) -> None:
     service = SchedulerUiService(schedules_path=tmp_path / "schedules.json")
-    schedules = [
-        _standalone_schedule("sch_a", "Morning A", "monday", "09:00", duration=120),
-        _standalone_schedule("sch_b", "Morning B", "monday", "10:00", duration=120),
-    ]
 
     with pytest.raises(ValueError, match="Cannot save/publish schedules"):
-        service.update_schedules(schedules)
+        service.update_schedules(
+            [
+                _schedule("sch_a", "Block A", cron="0 9 * * 1"),
+                _schedule("sch_b", "Block B", cron="0 9 * * 1"),
+            ]
+        )
 
 
-def test_publish_schedules_passes_for_template_primitive(tmp_path):
+def test_update_schedules_validates_schema_before_write(tmp_path) -> None:
+    service = SchedulerUiService(schedules_path=tmp_path / "schedules.json")
+
+    bad = _schedule("sch_schema", "Schema Fail")
+    bad.id = ""
+
+    with pytest.raises(ValueError):
+        service.update_schedules([bad])
+
+
+def test_publish_schedules_passes_for_template_primitive(tmp_path) -> None:
     service = SchedulerUiService(schedules_path=tmp_path / "schedules.json")
     template_schedules = service.apply_template(
-        TemplateApplyRequest(template="weekday", timezone="UTC", content_refs=BASE_CONTENT)
+        TemplateApplyRequest(
+            template=TemplateType.weekday,
+            timezone="UTC",
+            content_refs=[ContentRef(type="script", ref_id="script:top_hour", weight=100)],
+        )
     )
 
     result = service.publish_schedules(template_schedules)
