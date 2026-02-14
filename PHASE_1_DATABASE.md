@@ -17,7 +17,7 @@
 1. Go to <https://supabase.com/dashboard>
 2. Click **New Project**
 3. Fill in:
-   - **Name**: `aetherradio-prod`
+   - **Name**: `aetherradio-dev`
    - **Database Password**: Generate strong password (save securely!)
    - **Region**: Select closest to your users
    - **Plan**: Free tier (for development)
