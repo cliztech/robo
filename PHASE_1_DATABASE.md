@@ -511,7 +511,7 @@ async function verifyDatabase() {
 
   for (const table of tables) {
     try {
-      const { error } = await supabase.from(table).select('count').limit(1)
+      const { error } = await supabase.from(table).select('id', { count: 'exact', head: true })
       if (error) throw error
       console.log(`✅ Table '${table}' exists`)
     } catch (error) {
