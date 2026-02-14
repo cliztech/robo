@@ -1,41 +1,55 @@
 # RoboDJ TODO List
 
-This checklist converts the roadmap into a single execution board with clear priorities.
+This checklist converts the current product-readiness plan into a practical execution queue.
 
-## Now (current focus)
 
-- [ ] Build v1.1 startup diagnostics panel (DB, key integrity, audio device checks).
-- [ ] Enforce launch-time config validation for `config/schedules.json` and `config/prompt_variables.json`.
-- [ ] Implement crash recovery with a guided "restore last known good" flow.
-- [ ] Add one-click timestamped config backup snapshots in `config/backups/`.
+## Autopilot Loop Helper
 
-## Next (after v1.1 stability)
+Use the roadmap helper to continuously surface the next open tasks while you work:
 
-### v1.2 Scheduler UX & Control
-- [ ] Implement visual weekly scheduler timeline with drag/drop blocks.
-- [ ] Surface conflict detection with actionable suggestions.
-- [ ] Provide reusable schedule templates (`weekday`, `weekend`, `overnight`).
-- [ ] Add holiday/special-event override calendar.
-- [ ] Add per-show profile presets (voice, pacing, bed defaults).
-- [ ] Add keyboard-first schedule editing workflow.
+- `python scripts/roadmap_autopilot.py --limit 10`
+- `python scripts/roadmap_autopilot.py --loop --interval 60 --limit 10`
 
-### v1.3 Prompt Intelligence & Content Quality
-- [ ] Build prompt template manager with version history and rollback.
-- [ ] Add prompt variable preview/render tool with sample data.
-- [ ] Add content guardrails (tone rules, banned terms, compliance checks).
-- [ ] Add A/B prompt testing workflow with side-by-side scoring.
-- [ ] Add persona library (station voice packs and tone presets).
-- [ ] Add keyboard-first prompt approval workflow.
+## P0 — Foundations (Start Here)
 
-## Later (stretch goals)
+- [ ] Create tracked issues for all Track A/B/C/D tasks from `PRODUCT_READINESS_PLAN.md`.
+- [ ] Add a versioned readiness scorecard in `docs/` and define update cadence.
+- [ ] Publish runtime/deployment matrix (`dev`, `staging`, `prod`) with compatibility constraints.
+- [ ] Define API/config contract versioning policy and breaking-change checklist.
+- [ ] Create a release checklist with hard gates for security, contracts, and rollback docs.
 
-- [ ] Add bulk schedule edit mode (copy/paste between days).
-- [ ] Add continuity memory for recurring segments.
-- [ ] Add advanced publish preflight insights and optimization hints.
+## P1 — Security & Compliance
 
-## Operational checks per completed item
+- [ ] Add role-aware settings visibility model (`admin`, `operator`, `viewer`).
+- [ ] Implement idle timeout + re-auth requirements for sensitive actions.
+- [ ] Implement key-rotation workflow CLI + operator checklist integration.
+- [ ] Add redaction policy contract tests for logs/API responses.
+- [ ] Add a pre-release security gate in release documentation.
 
-- [ ] Run `git status --short` and `git diff --name-only` before commit.
-- [ ] Run validation for touched JSON: `python -m json.tool <file> > /dev/null`.
-- [ ] Run config validation when config behavior changes: `python config/validate_config.py`.
-- [ ] Update release notes/checklists when acceptance criteria are met.
+## P1 — Reliability & Observability
+
+- [ ] Define SLOs for schedule success, latency, and autonomy throughput.
+- [ ] Add alert thresholds and escalation policy documentation.
+- [ ] Publish incident runbook + postmortem template.
+
+## P2 — UX & Operator Experience
+
+- [ ] Build stage timeline UI (Intake → Plan → Execute → Verify → Handoff).
+- [ ] Add human-in-the-loop checkpoints for high-impact decisions.
+- [ ] Add task route templates (QA / Change / Proposal).
+- [ ] Add one-click rollback assistant for config-level changes.
+- [ ] Add guided troubleshooting for schedules/personas/autonomy policies.
+
+## P2 — Productization
+
+- [ ] Publish operator guides by persona (Admin, Producer, Reviewer).
+- [ ] Build runbook index for common failures.
+- [ ] Define support triage workflow + SLA targets.
+- [ ] Document packaging tiers and feature-gate boundaries.
+- [ ] Define telemetry ethics + opt-in policy.
+
+## Tracking Cadence
+
+- [ ] Weekly: update readiness percentages by category.
+- [ ] Bi-weekly: remove blocked items or split oversized tasks.
+- [ ] Monthly: reassess roadmap variation (Security-first, UX-first, Scale-first, Balanced).

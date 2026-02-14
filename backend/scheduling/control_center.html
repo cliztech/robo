@@ -302,6 +302,16 @@
       setTimeout(() => flashEl.classList.remove('show'), 2000);
     }
 
+    function escapeHTML(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     function titleCase(value) {
       return String(value || '').replaceAll('_', ' ').replace(/\b\w/g, (m) => m.toUpperCase());
     }
@@ -314,9 +324,9 @@
     function renderStatusStrip() {
       if (!state.policy) return;
       statusStripEl.innerHTML = [
-        `<span class="badge">Current default: <b>${titleCase(state.policy.station_default_mode)}</b></span>`,
-        `<span class="badge">Selected: <b>${titleCase(state.selectedMode)}</b></span>`,
-        `<span class="badge">Conflict resolution: <b>${state.policy.conflict_resolution}</b></span>`,
+        `<span class="badge">Current default: <b>${escapeHTML(titleCase(state.policy.station_default_mode))}</b></span>`,
+        `<span class="badge">Selected: <b>${escapeHTML(titleCase(state.selectedMode))}</b></span>`,
+        `<span class="badge">Conflict resolution: <b>${escapeHTML(state.policy.conflict_resolution)}</b></span>`,
       ].join('');
     }
 
@@ -327,13 +337,13 @@
         card.className = `mode-card ${state.selectedMode === mode.mode ? 'selected' : ''}`;
         card.setAttribute('tabindex', '0');
         card.innerHTML = `
-          <span class="risk ${mode.risk}">${mode.risk} risk</span>
+          <span class="risk ${escapeHTML(mode.risk)}">${escapeHTML(mode.risk)} risk</span>
           <div class="mode-title">
-            <h3>${mode.label}</h3>
-            <input type="radio" name="mode" ${state.selectedMode === mode.mode ? 'checked' : ''} aria-label="Select ${mode.label}" />
+            <h3>${escapeHTML(mode.label)}</h3>
+            <input type="radio" name="mode" ${state.selectedMode === mode.mode ? 'checked' : ''} aria-label="Select ${escapeHTML(mode.label)}" />
           </div>
-          <p class="mode-summary">${mode.summary}</p>
-          <a class="doc-link" href="${mode.anchor}" target="_blank" title="Definition source: ${mode.anchor}">Mode definition</a>
+          <p class="mode-summary">${escapeHTML(mode.summary)}</p>
+          <a class="doc-link" href="${escapeHTML(mode.anchor)}" target="_blank" title="Definition source: ${escapeHTML(mode.anchor)}">Mode definition</a>
         `;
         const selectMode = () => {
           state.selectedMode = mode.mode;
@@ -356,9 +366,9 @@
       state.definitions.forEach((mode) => {
         const row = document.createElement('tr');
         row.innerHTML = `
-          <td><strong>${mode.label}</strong></td>
-          <td><span class="risk ${mode.risk}">${mode.risk}</span></td>
-          <td><ul class="approval-list">${mode.requires_approval.map((item) => `<li>${item}</li>`).join('')}</ul></td>
+          <td><strong>${escapeHTML(mode.label)}</strong></td>
+          <td><span class="risk ${escapeHTML(mode.risk)}">${escapeHTML(mode.risk)}</span></td>
+          <td><ul class="approval-list">${mode.requires_approval.map((item) => `<li>${escapeHTML(item)}</li>`).join('')}</ul></td>
         `;
         approvalMatrixEl.appendChild(row);
       });
@@ -366,16 +376,16 @@
 
     function renderEffectivePolicy(data) {
       effectiveSummaryEl.innerHTML = `
-        <div class="summary-row"><b>Resolved mode</b><span>${titleCase(data.mode)}</span></div>
-        <div class="summary-row"><b>Risk</b><span><span class="risk ${getRisk(data.mode)}">${getRisk(data.mode)}</span></span></div>
-        <div class="summary-row"><b>Source</b><span>${titleCase(data.source)}</span></div>
-        <div class="summary-row"><b>show_id</b><span>${data.show_id || '—'}</span></div>
-        <div class="summary-row"><b>timeslot_id</b><span>${data.timeslot_id || '—'}</span></div>
+        <div class="summary-row"><b>Resolved mode</b><span>${escapeHTML(titleCase(data.mode))}</span></div>
+        <div class="summary-row"><b>Risk</b><span><span class="risk ${escapeHTML(getRisk(data.mode))}">${escapeHTML(getRisk(data.mode))}</span></span></div>
+        <div class="summary-row"><b>Source</b><span>${escapeHTML(titleCase(data.source))}</span></div>
+        <div class="summary-row"><b>show_id</b><span>${escapeHTML(data.show_id || '—')}</span></div>
+        <div class="summary-row"><b>timeslot_id</b><span>${escapeHTML(data.timeslot_id || '—')}</span></div>
       `;
 
       const entries = Object.entries(data.permissions || {});
       permissionsEl.innerHTML = entries
-        .map(([decision, authority]) => `<div class="perm"><span>${decisionLabelMap[decision] || titleCase(decision)}</span><strong>${authorityLabelMap[authority] || titleCase(authority)}</strong></div>`)
+        .map(([decision, authority]) => `<div class="perm"><span>${escapeHTML(decisionLabelMap[decision] || titleCase(decision))}</span><strong>${escapeHTML(authorityLabelMap[authority] || titleCase(authority))}</strong></div>`)
         .join('');
     }
 
@@ -387,13 +397,13 @@
         return;
       }
       timelineEl.innerHTML = events.map((event) => `
-        <article class="event ${event.origin}">
+        <article class="event ${escapeHTML(event.origin)}">
           <div class="event-head">
-            <span>${new Date(event.timestamp).toLocaleString()}</span>
-            <span>${titleCase(event.origin)} • ${titleCase(event.mode)} • ${titleCase(event.source)}</span>
+            <span>${escapeHTML(new Date(event.timestamp).toLocaleString())}</span>
+            <span>${escapeHTML(titleCase(event.origin))} • ${escapeHTML(titleCase(event.mode))} • ${escapeHTML(titleCase(event.source))}</span>
           </div>
-          <div class="event-notes">${event.notes || 'No notes provided.'}</div>
-          <div class="muted" style="margin-top:6px;">Decision: ${titleCase(event.decision_type)}${event.show_id ? ` • show_id: ${event.show_id}` : ''}${event.timeslot_id ? ` • timeslot_id: ${event.timeslot_id}` : ''}</div>
+          <div class="event-notes">${escapeHTML(event.notes || 'No notes provided.')}</div>
+          <div class="muted" style="margin-top:6px;">Decision: ${escapeHTML(titleCase(event.decision_type))}${event.show_id ? ` • show_id: ${escapeHTML(event.show_id)}` : ''}${event.timeslot_id ? ` • timeslot_id: ${escapeHTML(event.timeslot_id)}` : ''}</div>
         </article>
       `).join('');
     }
