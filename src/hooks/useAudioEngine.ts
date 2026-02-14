@@ -43,7 +43,7 @@ export function useAudioEngine(): UseAudioEngineReturn {
       setIsInitialized(true);
       setError(null);
     } catch (err) {
-      setError(err as Error);
+      setError(err instanceof Error ? err : new Error(String(err)));
       throw err;
     }
   }, []);
