@@ -200,7 +200,7 @@ export class AudioEngine extends EventEmitter {
         return;
       }
 
-      const response = await fetch(track.url);
+      const response = await fetch(track.url, { credentials: 'omit' });
       if (!response.ok) throw new Error(`Failed to fetch track: ${response.statusText}`);
 
       const arrayBuffer = await response.arrayBuffer();
