@@ -65,7 +65,7 @@ export class AudioAnalyzer {
   }
 
   static calculateRMS(waveformData: Uint8Array): number {
-    return Math.sqrt(this.calculateEnergy(waveformData));
+    return Math.sqrt(AudioAnalyzer.calculateEnergy(waveformData));
   }
 
   static calculatePeak(waveformData: Uint8Array): number {
