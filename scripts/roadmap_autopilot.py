@@ -122,8 +122,12 @@ def resolve_files(raw_files: list[str]) -> list[Path]:
 
     resolved: list[Path] = []
     for raw in raw_files:
-        candidate = (ROOT / raw).resolve() if not Path(raw).is_absolute() else Path(raw)
-        resolved.append(candidate)
+        candidate = (ROOT / raw).resolve()
+        try:
+            candidate.relative_to(ROOT)
+            resolved.append(candidate)
+        except ValueError:
+            print(f"error: file outside project root: {raw}", file=sys.stderr)
     return resolved
 
 
