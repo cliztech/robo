@@ -14,6 +14,8 @@
 
 ### 1.1: Create Project via Dashboard
 
+1. Go to <https://supabase.com/dashboard>
+2. Click "New Project"
 1. Go to https://supabase.com/dashboard
 2. Click **New Project**
 3. Fill in:
@@ -50,6 +52,10 @@ Copy the complete schema from `DATABASE_SCHEMA.md`.
 
 ### 2.2: Apply Migration via Dashboard
 
+1. Go to Supabase Dashboard → SQL Editor
+2. Click "New Query"
+3. Paste the entire schema
+4. Click "Run" (bottom right)
 1. Go to **Supabase Dashboard → SQL Editor**
 2. Click **New Query**
 3. Paste the entire schema
@@ -58,6 +64,7 @@ Copy the complete schema from `DATABASE_SCHEMA.md`.
 
 ### 2.3: Verify Tables Created
 
+Go to Table Editor and confirm these tables exist:
 Go to **Table Editor** and confirm these tables exist:
 
 - `profiles`
@@ -75,6 +82,9 @@ Go to **Table Editor** and confirm these tables exist:
 
 ### 3.1: Create Tracks Bucket
 
+Go to Storage → Create Bucket.
+
+Settings:
 Go to **Storage → Create Bucket** with settings:
 
 - **Name**: `tracks`
@@ -150,6 +160,7 @@ USING (
 
 ### 4.2: Artwork Bucket Policies
 
+**Policy 1: Anyone can view**
 Policy 1: Anyone can view
 
 ```sql
@@ -212,6 +223,7 @@ supabase gen types typescript --project-id your-project-id > src/types/database.
 ```
 
 Or manually via Dashboard:
+1. Go to API Docs → TypeScript
 
 1. Go to **API Docs → TypeScript**
 2. Copy generated types
@@ -221,16 +233,19 @@ Or manually via Dashboard:
 
 ### 6.1: Enable Email Authentication
 
-Go to **Authentication → Providers** and enable Email.
+Go to Authentication → Providers → Enable Email.
 
 Settings:
-
 - Enable email confirmations: **Yes** (for production)
 - Enable email confirmations: **No** (for development)
 - Secure email change: **Yes**
 
 ### 6.2: Enable OAuth Providers (Optional)
 
+**Google:**
+1. Create OAuth credentials in Google Cloud Console
+2. Copy Client ID and Client Secret
+3. In Supabase → Authentication → Providers → Google:
 #### Google
 
 1. Create OAuth credentials in Google Cloud Console
@@ -251,6 +266,9 @@ Settings:
 
 ### 6.3: Configure Email Templates
 
+Go to Authentication → Email Templates.
+
+**Confirm Signup:**
 Go to **Authentication → Email Templates**.
 
 Confirm Signup:
@@ -261,6 +279,7 @@ Confirm Signup:
 <p><a href="{{ .ConfirmationURL }}">Confirm your email</a></p>
 ```
 
+**Reset Password:**
 Reset Password:
 
 ```html
@@ -273,6 +292,9 @@ Reset Password:
 
 All tables should have RLS enabled. Verify:
 
+1. Go to Table Editor
+2. For each table, click table name → RLS Policies
+3. Verify "Enable RLS" is checked
 1. Go to **Table Editor**
 2. For each table, click table name → **RLS Policies**
 3. Verify **Enable RLS** is checked
@@ -447,6 +469,9 @@ Expected response:
 
 ### 10.1: Enable Realtime
 
+Go to Database → Replication.
+
+Enable replication for these tables:
 Go to **Database → Replication** and enable replication for these tables:
 
 - `stations`
@@ -455,6 +480,7 @@ Go to **Database → Replication** and enable replication for these tables:
 - `broadcast_history`
 - `notifications`
 
+### 10.2: Setup pg_cron (Optional)
 ### 10.2: Setup `pg_cron` (Optional)
 
 For scheduled tasks, enable `pg_cron` extension:
@@ -470,23 +496,35 @@ Then add scheduled tasks (see `DATABASE_SCHEMA.md`).
 
 ### 11.1: Manual Backup
 
+1. Go to Database → Backups
+2. Click "Create Backup"
 1. Go to **Database → Backups**
 2. Click **Create Backup**
 3. Name: `initial-schema`
 
 ### 11.2: Setup Automated Backups
 
+1. Go to Database → Backups → Settings
 1. Go to **Database → Backups → Settings**
 2. Enable daily backups
 3. Retention: 7 days (free tier)
 
 ## Step 12: Verify Installation
 
+Run this verification script.
+
 Create file: `scripts/verify-database.ts`
 
 ```ts
 import { createClient } from '@supabase/supabase-js'
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+if (!supabaseUrl || !supabaseKey) {
+  console.error('❌ Missing Supabase environment variables. Please check your .env file.')
+  process.exit(1)
+}
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
@@ -526,6 +564,7 @@ async function verifyDatabase() {
 
   for (const bucket of buckets) {
     try {
+      const { error } = await supabase.storage.getBucket(bucket)
       const { data, error } = await supabase.storage.getBucket(bucket)
       if (error) throw error
       console.log(`✅ Bucket '${bucket}' exists`)

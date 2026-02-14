@@ -47,6 +47,7 @@ sudo apt install ffmpeg libopus-dev libmp3lame-dev libfdk-aac-dev
 
 ### Windows
 
+Download from: <https://ffmpeg.org/download.html>
 - Download from: https://ffmpeg.org/download.html
 
 Verify installation:
@@ -76,6 +77,40 @@ cd aetherradio
 
 ## Step 4: Install Core Dependencies
 
+```bash
+# Supabase
+pnpm add @supabase/supabase-js @supabase/auth-helpers-nextjs
+
+# AI
+pnpm add ai @ai-sdk/openai zod
+
+# UI Components
+pnpm add @radix-ui/react-dialog @radix-ui/react-dropdown-menu @radix-ui/react-select @radix-ui/react-slider @radix-ui/react-tabs @radix-ui/react-tooltip
+
+# Animation
+pnpm add framer-motion
+
+# Icons
+pnpm add lucide-react
+
+# Forms
+pnpm add react-hook-form @hookform/resolvers
+
+# State Management
+pnpm add zustand
+
+# File Upload
+pnpm add react-dropzone
+
+# Utilities
+pnpm add date-fns nanoid class-variance-authority clsx tailwind-merge
+
+# Payments
+pnpm add stripe @stripe/stripe-js
+
+# Analytics
+pnpm add @vercel/analytics @vercel/speed-insights
+```
 # Install all core dependencies at once
 pnpm add \
   @supabase/supabase-js @supabase/auth-helpers-nextjs \
@@ -477,6 +512,15 @@ export function formatDuration(seconds: number): string {
 export function slugify(text: string): string {
   return text
     .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+    .replace(/-+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+```
+
+## Step 16: Setup package.json Scripts
     .replace(/[^a-z0-9\s-]/g, '')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
@@ -558,12 +602,14 @@ pnpm lint
 pnpm format
 ```
 
+Visit <http://localhost:3000> to verify the app is running.
 Visit `http://localhost:3000` to verify the app is running.
 
 ## Step 19: Create Initial Commit
 
 ```bash
 git add .
+git commit -m "feat: initial project setup"
 git commit -m "chore: complete project setup and configuration"
 ```
 
@@ -580,6 +626,7 @@ git push -u origin main
 
 ### Issue: pnpm not found
 
+**Solution**: Install pnpm globally.
 Solution: Install pnpm globally.
 
 ```bash
@@ -588,6 +635,7 @@ npm install -g pnpm
 
 ### Issue: FFmpeg not in PATH
 
+**Solution**: Add FFmpeg to system PATH or use full path.
 Solution: Add FFmpeg to system PATH or use full path.
 
 ```bash
@@ -606,6 +654,8 @@ pnpm dev -p 3001
 ```
 
 ### Issue: TypeScript errors
+
+**Solution**: Restart TypeScript server in VS Code.
 
 Solution: Restart TypeScript server in VS Code:  
 `Cmd/Ctrl + Shift + P → TypeScript: Restart TS Server`
