@@ -534,7 +534,7 @@ export class AudioEngine extends EventEmitter {
     const frequencyData = new Uint8Array(this.analyser.frequencyBinCount)
     this.analyser.getByteFrequencyData(frequencyData)
 
-    const waveformData = new Uint8Array(this.analyser.frequencyBinCount)
+    const waveformData = new Uint8Array(this.analyser.fftSize)
     this.analyser.getByteTimeDomainData(waveformData)
 
     this.meterAnalyser.getByteTimeDomainData(this.meterDataArray)
