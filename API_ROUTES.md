@@ -25,11 +25,7 @@
 {
   "success": false,
   "data": null,
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Input is invalid",
-    "details": {}
-  }
+    "details": { "slug": "This slug is already in use." }
 }
 ```
 
