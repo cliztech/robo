@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import threading
 from pathlib import Path
 from typing import Optional
 
@@ -16,8 +17,17 @@ router = APIRouter(prefix="/api/v1/autonomy-policy", tags=["autonomy-policy"])
 # enters degraded-mode handlers after scheduler/runtime crash detection.
 
 
+_service_instance: Optional[AutonomyPolicyService] = None
+_service_lock = threading.Lock()
+
+
 def get_policy_service() -> AutonomyPolicyService:
-    return AutonomyPolicyService()
+    global _service_instance
+    if _service_instance is None:
+        with _service_lock:
+            if _service_instance is None:
+                _service_instance = AutonomyPolicyService()
+    return _service_instance
 
 
 @router.get("", response_model=AutonomyPolicy)
