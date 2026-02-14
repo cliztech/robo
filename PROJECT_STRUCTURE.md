@@ -242,7 +242,7 @@ Supabase-specific files:
 ## File Naming Conventions
 
 - **Components**: PascalCase (e.g., `AudioPlayer.tsx`)
-- **Utilities**: camelCase (e.g., `upload-service.ts`)
+- **Utilities**: kebab-case (e.g., `upload-service.ts`)
 - **Hooks**: camelCase with `use` prefix (e.g., `useAudioEngine.ts`)
 - **Types**: PascalCase (e.g., `AudioMetrics`)
 - **Constants**: UPPER_SNAKE_CASE
