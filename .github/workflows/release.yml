@@ -1,0 +1,58 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+    paths:
+      - 'RoboDJ_Launcher.bat'
+      - 'RoboDJ Automation.exe'
+      - 'config/**'
+      - '.github/workflows/release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    name: Publish tagged release artifacts
+    runs-on: windows-latest
+    if: ${{ startsWith(github.ref, 'refs/tags/v') && hashFiles('RoboDJ_Launcher.bat', 'config/prompt_variables.json') != '' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create release bundle
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path release -Force | Out-Null
+          Copy-Item 'RoboDJ_Launcher.bat' release/
+          if (Test-Path 'RoboDJ Automation.exe') { Copy-Item 'RoboDJ Automation.exe' release/ }
+          if (Test-Path 'config') { Copy-Item 'config' release/config -Recurse }
+          Compress-Archive -Path release/* -DestinationPath robodj-${{ github.ref_name }}-windows.zip -Force
+
+      - name: Generate release checksums
+        shell: pwsh
+        run: |
+          Get-FileHash robodj-${{ github.ref_name }}-windows.zip -Algorithm SHA256 | ForEach-Object {
+            "$($_.Hash.ToLower())  $($_.Path | Split-Path -Leaf)"
+          } | Out-File -FilePath robodj-${{ github.ref_name }}-windows.sha256 -Encoding ascii
+
+      - name: Upload workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: robodj-release-${{ github.ref_name }}
+          path: |
+            robodj-${{ github.ref_name }}-windows.zip
+            robodj-${{ github.ref_name }}-windows.sha256
+          retention-days: 90
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            robodj-${{ github.ref_name }}-windows.zip
+            robodj-${{ github.ref_name }}-windows.sha256
+          generate_release_notes: true

@@ -1,12 +1,15 @@
 # Persona Ops for Hosts/Presenters
 
-This document defines a practical operations model for managing AI host personas end-to-end in RoboDJ-style radio automation.
+> Part of the **DGN-DJ by DGNradio** platform. See [`AGENTS.md`](AGENTS.md) for agent pipeline rules.
+
+This document defines a practical operations model for managing AI host personas end-to-end in DGN-DJ radio automation.
 
 ## 1) Persona Schema
 
 Each persona is represented as a structured object with creative constraints and voice settings.
 
 ### Required fields
+
 - `persona_id`: Stable identifier for the presenter persona.
 - `display_name`: On-air presenter name.
 - `tone`: One or more tone presets (e.g., `warm`, `energetic`, `conversational`).
@@ -17,6 +20,7 @@ Each persona is represented as a structured object with creative constraints and
 - `fallback_voice`: Backup provider/model/voice ID.
 
 ### Example
+
 ```json
 {
   "persona_id": "host_ava",
@@ -48,16 +52,19 @@ Each persona is represented as a structured object with creative constraints and
 ## 2) Versioning + Rollback
 
 Personas use lifecycle states:
+
 - `draft`: Editable working copy.
 - `approved`: Editorially approved candidate.
 - `live`: Active production version.
 
 ### Version model
+
 - `version_id` is immutable and semver-like (e.g., `1.3.0`).
 - `parent_version_id` links lineage for traceability.
 - Every transition writes an audit event with `actor`, `timestamp`, and `reason`.
 
 ### Rollback model
+
 - Rollback means repointing `live_pointer` to a prior approved/live version.
 - Rollback never mutates history; it appends a new `rollback` event.
 - Optional `rollback_policy` can auto-rollback when KPI guardrails are violated.
@@ -65,10 +72,12 @@ Personas use lifecycle states:
 ## 3) A/B Testing by Daypart or Audience Segment
 
 Experiment routing supports:
+
 - **Daypart routing**: morning/afternoon/drive/evening/overnight.
 - **Audience segment routing**: e.g., `new_listeners`, `loyal_weekday`, `gen_z_pop`.
 
 ### Routing rules
+
 - Experiments are attached to persona versions, not mutable persona drafts.
 - Split allocation can be weighted (e.g., `A=70%, B=30%`).
 - A deterministic hash (`listener_id` + date) keeps listeners in the same variant for consistency.
@@ -77,17 +86,20 @@ Experiment routing supports:
 ## 4) Quality Rubric Scoring
 
 Each generated break/script gets rubric scores (1-5) with optional model + human review:
+
 - `warmth`
 - `clarity`
 - `authenticity`
 - `brand_fit`
 
 ### Composite score
+
 ```text
 composite = 0.25*warmth + 0.25*clarity + 0.25*authenticity + 0.25*brand_fit
 ```
 
 ### Guardrails
+
 - Hard fail if any dimension <= 2.
 - Candidate persona versions require a rolling composite >= 4.0 during trial windows.
 
@@ -96,11 +108,13 @@ composite = 0.25*warmth + 0.25*clarity + 0.25*authenticity + 0.25*brand_fit
 Feedback is captured against the active persona variant for each aired segment.
 
 ### Input channels
+
 - Thumbs up/down in player UI.
 - Optional sentiment extracted from comments/messages.
 - Skip/retention proxy metrics (e.g., session drop within 60s of talk break).
 
 ### Data linkage
+
 - Every feedback event links to:
   - `persona_id`
   - `persona_version_id`
@@ -109,6 +123,7 @@ Feedback is captured against the active persona variant for each aired segment.
   - `audience_segment`
 
 ### Iteration loop
+
 1. Aggregate rubric + listener feedback weekly.
 2. Detect underperforming dimensions by daypart/segment.
 3. Create new `draft` with targeted changes (tone, pace, lexicon, or voice).
@@ -124,6 +139,7 @@ Feedback is captured against the active persona variant for each aired segment.
 ## 7) Implementation Artifact
 
 A concrete configuration artifact is provided in `config/persona_ops.json` with:
+
 - schema definition,
 - versioned persona records,
 - experiment routing,

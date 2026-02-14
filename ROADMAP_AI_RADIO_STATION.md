@@ -323,3 +323,105 @@
 - **MVP:** Scheduler, AI Hosts (core), Observability (core), Compliance (baseline), User Control (minimal), Ad Stack (static/semi-dynamic).
 - **Beta:** Adds Calls/Guests, Ad Stack (dynamic), AI Hosts (advanced contextual), Compliance (reporting depth), Observability (incident automation).
 - **Production:** All epics at full reliability/commercial scale with hardened rollback and governance controls.
+
+---
+
+## 5) KPI Instrumentation, Correlation, and Reporting
+
+### 5.1 KPI Metric Collection Sources
+
+| KPI | Control-Plane Sources | Generation Sources | Playout Sources | Moderation Sources |
+|---|---|---|---|---|
+| Latency | Scheduler API request/ack timestamps; override/reflow event timings | LLM request start/end, TTS render durations, asset packaging completion | Queue commit timestamp, deck-load timestamp, on-air marker emit time | Pre-air moderation enqueue/dequeue timings; policy decision latency |
+| Uptime | Health-check success rates for scheduler/config/routing services | Generation worker availability and job timeout/error rates | Encoder/stream heartbeat, silence detector alarms, playout engine process health | Moderation service availability and fail-closed activation events |
+| Audio Quality | Control actions that alter gain/processing presets (with reason code) | TTS output metadata (sample rate/bit depth), normalization stage pass/fail | Real-time loudness meter (LUFS), peak clipping counters, continuity gap events | Post-moderation audio redaction/replacement events and fallback audio triggers |
+| Moderation | Policy version deployment events; ruleset activation/rollback logs | Prompt + model policy tags attached to generated segment metadata | On-air release gate decisions and manual override actions | Classifier scores, pass/fail decision, reviewer disposition, exception workflow artifacts |
+| Logs | API gateway structured logs, scheduler decisions, control actions | Generation pipeline structured events (request, transform, synthesize, publish) | Playout structured events (queue, start, end, failover, recovery) | Moderation policy/evaluation structured events, appeal/review audit logs |
+
+### 5.2 Structured Correlation ID Standard
+
+Adopt a shared correlation contract across scheduler -> generation -> playout:
+
+- `trace_id`: Global request lineage ID created at scheduler ingress (UUIDv7).
+- `segment_id`: Stable segment identity used across retries/reflows.
+- `run_id`: Unique execution attempt for each segment lifecycle.
+- `airchain_id`: Playout-chain instance linking queue slot, deck action, and encoder state.
+- `policy_eval_id`: Moderation evaluation run ID tied to `segment_id` and policy version.
+
+**Required propagation path**
+- Scheduler emits `trace_id`, `segment_id`, `run_id` at plan/create/reflow events.
+- Generation consumes upstream IDs and appends `generation_stage` (`prompt`, `llm`, `tts`, `postprocess`).
+- Playout consumes upstream IDs and appends `airchain_id`, `playout_state` (`queued`, `loaded`, `on_air`, `completed`, `failed`).
+- Moderation binds `policy_eval_id` and must reference parent `trace_id` + `segment_id`.
+
+**Minimum structured log payload fields (all services)**
+- `timestamp_utc`, `service`, `environment`, `trace_id`, `segment_id`, `run_id`, `event_type`, `event_state`, `status`, `latency_ms`, `error_code`, `operator_id` (when human action exists).
+
+### 5.3 Dashboard and Reporting Definitions
+
+#### A) Latency Dashboard (P50/P95)
+- **Views**
+  - End-to-end segment latency: scheduler accept -> playout ready.
+  - Stage latency: scheduler decision, generation, moderation gate, playout load.
+- **Aggregations**
+  - P50 and P95 by 5-minute, 1-hour, and 24-hour windows.
+  - Sliced by daypart, show, autonomy level, and content type (music intro, ad read, call segment).
+- **Alert thresholds**
+  - MVP: P50 > 1500 ms for 3 consecutive 5-minute buckets.
+  - Beta: P95 > 2500 ms for 2 consecutive 15-minute buckets.
+  - Production: control-plane P95 > 1000 ms for 2 consecutive 5-minute buckets.
+
+#### B) Uptime Dashboard (Windowed SLA/SLO)
+- **Views**
+  - Rolling playout availability for 24h, 7d, 30d, and 90d windows.
+  - Service contribution heatmap (control-plane, generation, playout, moderation) to downtime budget.
+- **Availability formula**
+  - `uptime_percent = (total_window_seconds - confirmed_downtime_seconds) / total_window_seconds * 100`.
+  - Confirmed downtime excludes scheduled maintenance windows tagged in incident metadata.
+- **Alert thresholds**
+  - MVP: projected 30-day uptime drops below 99.5%.
+  - Beta: projected 30-day uptime drops below 99.8%.
+  - Production: projected 90-day uptime drops below 99.95%.
+
+### 5.4 QA Sampling Workflow (Audio Quality + Moderation Evidence)
+
+1. **Sampling schedule**
+   - Randomly sample at least 2% of daily AI-generated segments, stratified by daypart and show type.
+   - Force-include all segments with moderation confidence near threshold or any failover/recovery events.
+2. **Audio quality review**
+   - Automated checks: LUFS compliance, peak clipping count, continuity/silence gap detection.
+   - Human review panel (weekly): MOS and transition coherence rubric.
+3. **Moderation review**
+   - Record automated pass/fail result, classifier confidence, triggered policy categories.
+   - Human adjudication on sampled passes + all fails with final disposition (`confirmed_pass`, `false_positive`, `false_negative`).
+4. **Evidence capture**
+   - Persist evidence bundle per sampled segment: audio excerpt reference, transcript snapshot, policy result, reviewer notes, and correlation IDs.
+   - Store bundles under retention policy with exportable audit packet format.
+5. **Escalation and closure**
+   - Any `false_negative` or severe audio defect creates corrective action ticket with owner + ETA.
+   - Weekly QA report summarizes pass/fail rates, defect taxonomy, and remediation status.
+
+### 5.5 Observable Done Criteria (KPI-Gated)
+
+Use the following as release gate evidence for each milestone; each item is complete only when metric threshold + dashboard proof + log evidence are present.
+
+**MVP Done Gates**
+- [ ] Latency: P50 end-to-end <= 1500 ms over rolling 7 days, visible in latency dashboard.
+- [ ] Uptime: >= 99.5% over rolling 30 days from uptime dashboard formula.
+- [ ] Audio Quality: >= 98% sampled segments pass LUFS/clipping/continuity checks and weekly human QA rubric.
+- [ ] Moderation: 100% AI segments receive pre-air policy decision; sampled false-negative rate <= 0.5%.
+- [ ] Logs: >= 99% critical events include `trace_id`, `segment_id`, and `run_id` across scheduler/generation/playout.
+
+**Beta Done Gates**
+- [ ] Latency: P95 end-to-end <= 2500 ms over rolling 14 days.
+- [ ] Uptime: >= 99.8% over rolling 30 days.
+- [ ] Audio Quality: >= 99% sampled segments pass automated checks and MOS target in weekly blind review.
+- [ ] Moderation: false-negative rate <= agreed risk ceiling and all fails have reviewer disposition evidence.
+- [ ] Logs: End-to-end correlation query from scheduler -> moderation -> playout succeeds for >= 99% sampled traces.
+
+**Production Done Gates**
+- [ ] Latency: P95 control-plane actions <= 1000 ms over rolling 30 days.
+- [ ] Uptime: >= 99.95% over rolling 90 days.
+- [ ] Audio Quality: >= 99% combined automated + human QA pass rate across stratified samples.
+- [ ] Moderation: policy compliance SLO met with documented exception workflow and closure times within SLA.
+- [ ] Logs: retention/redaction/audit exports validated with successful drill outputs tied to correlation IDs.

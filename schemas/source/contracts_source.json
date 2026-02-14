@@ -1,0 +1,134 @@
+{
+  "entities": {
+    "track": {
+      "description": "Canonical metadata for an audio track that can be scheduled on-air.",
+      "schema_version": "1.0.0",
+      "properties": {
+        "schema_version": { "type": "string", "const": "1.0.0" },
+        "id": { "type": "string", "format": "uuid" },
+        "title": { "type": "string", "minLength": 1 },
+        "artist": { "type": "string", "minLength": 1 },
+        "duration_seconds": { "type": "integer", "minimum": 1 },
+        "intro_duration_seconds": { "type": "integer", "minimum": 0 },
+        "outro_duration_seconds": { "type": "integer", "minimum": 0 },
+        "file_uri": { "type": "string", "minLength": 1 },
+        "bpm": { "type": "integer", "minimum": 1 },
+        "energy": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "required": [
+        "schema_version",
+        "id",
+        "title",
+        "artist",
+        "duration_seconds",
+        "file_uri"
+      ]
+    },
+    "broadcast_queue_item": {
+      "description": "A normalized queue item for track playout, voice links, or jingles.",
+      "schema_version": "1.0.0",
+      "properties": {
+        "schema_version": { "type": "string", "const": "1.0.0" },
+        "id": { "type": "string", "format": "uuid" },
+        "scheduled_time": { "type": "string", "format": "date-time" },
+        "item_type": { "type": "string", "enum": ["track", "voice_link", "jingle"] },
+        "item_id": { "type": "string", "format": "uuid" },
+        "status": { "type": "string", "enum": ["pending", "playing", "played", "failed"] },
+        "priority": { "type": "integer", "minimum": 0 },
+        "estimated_duration_seconds": { "type": "integer", "minimum": 1 }
+      },
+      "required": [
+        "schema_version",
+        "id",
+        "scheduled_time",
+        "item_type",
+        "item_id",
+        "status"
+      ]
+    },
+    "schedule": {
+      "description": "Programming ruleset that controls what content should air in a time window.",
+      "schema_version": "1.0.0",
+      "properties": {
+        "schema_version": { "type": "string", "const": "1.0.0" },
+        "id": { "type": "string", "format": "uuid" },
+        "name": { "type": "string", "minLength": 1 },
+        "timezone": { "type": "string", "minLength": 1 },
+        "start_time": { "type": "string", "format": "date-time" },
+        "end_time": { "type": "string", "format": "date-time" },
+        "clock_wheel": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "offset_seconds": { "type": "integer", "minimum": 0 },
+              "slot_type": { "type": "string", "enum": ["station_id", "track", "voice_link", "ad", "jingle"] },
+              "target": { "type": "string", "minLength": 1 }
+            },
+            "required": ["offset_seconds", "slot_type"]
+          }
+        },
+        "active": { "type": "boolean" }
+      },
+      "required": [
+        "schema_version",
+        "id",
+        "name",
+        "timezone",
+        "clock_wheel",
+        "active"
+      ]
+    },
+    "prompt_variable_config": {
+      "description": "Typed prompt variable definitions available to DJ script templates.",
+      "schema_version": "1.0.0",
+      "properties": {
+        "schema_version": { "type": "string", "const": "1.0.0" },
+        "station_id": { "type": "string", "minLength": 1 },
+        "variables": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+              "value_type": { "type": "string", "enum": ["string", "number", "boolean", "json"] },
+              "required": { "type": "boolean" },
+              "default_value": { "type": ["string", "number", "boolean", "object", "array", "null"] },
+              "description": { "type": "string" }
+            },
+            "required": ["name", "value_type", "required"]
+          }
+        }
+      },
+      "required": ["schema_version", "station_id", "variables"]
+    },
+    "now_playing": {
+      "description": "Realtime frontend payload that represents what's on-air and what's next.",
+      "schema_version": "1.0.0",
+      "properties": {
+        "schema_version": { "type": "string", "const": "1.0.0" },
+        "station_id": { "type": "string", "minLength": 1 },
+        "stream_status": { "type": "string", "enum": ["online", "offline", "degraded"] },
+        "started_at": { "type": "string", "format": "date-time" },
+        "current_item": { "$ref": "broadcast_queue_item" },
+        "current_track": { "$ref": "track" },
+        "up_next": {
+          "type": "array",
+          "maxItems": 10,
+          "items": { "$ref": "broadcast_queue_item" }
+        },
+        "listener_count": { "type": "integer", "minimum": 0 }
+      },
+      "required": [
+        "schema_version",
+        "station_id",
+        "stream_status",
+        "current_item",
+        "up_next"
+      ]
+    }
+  }
+}

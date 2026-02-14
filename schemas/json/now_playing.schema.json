@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robodj/contracts/now_playing.schema.json",
+  "title": "NowPlaying",
+  "description": "Realtime frontend payload that represents what's on-air and what's next.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "station_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stream_status": {
+      "type": "string",
+      "enum": [
+        "online",
+        "offline",
+        "degraded"
+      ]
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "current_item": {
+      "$ref": "./broadcast_queue_item.schema.json"
+    },
+    "current_track": {
+      "$ref": "./track.schema.json"
+    },
+    "up_next": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "$ref": "./broadcast_queue_item.schema.json"
+      }
+    },
+    "listener_count": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "schema_version",
+    "station_id",
+    "stream_status",
+    "current_item",
+    "up_next"
+  ]
+}

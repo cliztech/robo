@@ -29,3 +29,41 @@ services:
     pids_limit: 256
 
     restart: unless-stopped
+
+  builder:
+    build:
+      context: .
+      dockerfile: infra/docker/builder.Dockerfile
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+      - builder_pip_cache:/root/.cache/pip
+      - builder_apt_cache:/var/cache/apt
+    command: ["make", "build"]
+
+  qa:
+    build:
+      context: .
+      dockerfile: infra/docker/qa.Dockerfile
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+      - qa_pip_cache:/root/.cache/pip
+      - qa_apt_cache:/var/cache/apt
+    command: ["make", "qa"]
+
+  runtime:
+    profiles: ["smoke"]
+    build:
+      context: .
+      dockerfile: infra/docker/runtime.Dockerfile
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace:ro
+    command: []
+
+volumes:
+  builder_pip_cache:
+  builder_apt_cache:
+  qa_pip_cache:
+  qa_apt_cache:

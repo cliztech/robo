@@ -13,6 +13,13 @@ from .autonomy_policy import (
     GlobalMode,
     PolicyAuditEvent,
 )
+from .conflict_detection import PolicyConflict, detect_policy_conflicts
+
+
+class PolicyValidationError(ValueError):
+    def __init__(self, conflicts: List[PolicyConflict]) -> None:
+        super().__init__("Autonomy policy contains conflicting overrides.")
+        self.conflicts = conflicts
 
 
 LEGACY_MODE_MAP = {
@@ -34,50 +41,38 @@ class AutonomyPolicyService:
         self.audit_log_path.parent.mkdir(parents=True, exist_ok=True)
 
     def get_policy(self) -> AutonomyPolicy:
+        # TODO(observability): emit scheduler.startup_validation.succeeded/failed
+        # during scheduler bootstrap policy/config validation.
         if not self.policy_path.exists():
             default_policy = AutonomyPolicy()
             self.update_policy(default_policy)
             return default_policy
 
-        raw_payload = self.policy_path.read_text(encoding="utf-8")
-        try:
-            return AutonomyPolicy.model_validate_json(raw_payload)
-        except ValidationError:
-            migrated = self._migrate_legacy_policy(json.loads(raw_payload))
-            policy = AutonomyPolicy.model_validate(migrated)
-            self.update_policy(policy)
-            return policy
-
-    def _migrate_legacy_policy(self, payload: dict) -> dict:
-        station_mode = payload.get("station_default_mode")
-        if station_mode in LEGACY_MODE_MAP:
-            payload["station_default_mode"] = LEGACY_MODE_MAP[station_mode]
-
-        mode_permissions = payload.get("mode_permissions", {})
-        payload["mode_permissions"] = {
-            LEGACY_MODE_MAP.get(mode, mode): permissions
-            for mode, permissions in mode_permissions.items()
-        }
-
-        for show_override in payload.get("show_overrides", []):
-            mode = show_override.get("mode")
-            if mode in LEGACY_MODE_MAP:
-                show_override["mode"] = LEGACY_MODE_MAP[mode]
-
-        for timeslot_override in payload.get("timeslot_overrides", []):
-            mode = timeslot_override.get("mode")
-            if mode in LEGACY_MODE_MAP:
-                timeslot_override["mode"] = LEGACY_MODE_MAP[mode]
-
-        return payload
+        policy = AutonomyPolicy.model_validate_json(self.policy_path.read_text(encoding="utf-8"))
+        self.validate_policy(policy)
+        return policy
 
     def update_policy(self, policy: AutonomyPolicy) -> AutonomyPolicy:
+        self.validate_policy(policy)
+        # TODO(observability): emit scheduler.schedule_parse.failed when policy/schedule
+        # JSON parse or validation raises, with file path and parser details.
+        return AutonomyPolicy.model_validate_json(self.policy_path.read_text(encoding="utf-8"))
+
+    def update_policy(self, policy: AutonomyPolicy) -> AutonomyPolicy:
+        # TODO(observability): emit scheduler.backup.created before write and
+        # scheduler.backup.restored on rollback/restore workflows.
         payload = policy.model_copy(update={"updated_at": datetime.utcnow().isoformat() + "Z"})
         self.policy_path.write_text(
             payload.model_dump_json(indent=2),
             encoding="utf-8",
         )
         return payload
+
+    def validate_policy(self, policy: AutonomyPolicy) -> List[PolicyConflict]:
+        conflicts = detect_policy_conflicts(policy)
+        if conflicts:
+            raise PolicyValidationError(conflicts)
+        return conflicts
 
     def resolve_effective_policy(
         self,

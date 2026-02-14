@@ -1,0 +1,8 @@
+{
+  "name": "dj-schedule-manager",
+  "version": "1.0.0",
+  "description": "Edit and validate show clock/schedule configuration for RoboDJ.",
+  "entrypoint": "README.md",
+  "tags": ["scheduling", "automation", "config"],
+  "owner": "dgn-dj"
+}
