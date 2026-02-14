@@ -60,7 +60,7 @@ export async function middleware(req: NextRequest) {
     data: { session },
   } = await supabase.auth.getSession()
 
-  const isProtectedPath = PROTECTED_PATHS.some((path) => req.nextUrl.pathname.startsWith(path))
+  const isProtectedPath = PROTECTED_PATHS.some((path) => req.nextUrl.pathname === path || req.nextUrl.pathname.startsWith(path + '/'))
 
   if (isProtectedPath && !session) {
     const redirectUrl = req.nextUrl.clone()
