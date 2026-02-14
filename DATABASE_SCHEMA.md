@@ -157,10 +157,10 @@ create table if not exists public.schedule_rules (
 create table if not exists public.play_history (
   id uuid primary key default gen_random_uuid(),
   station_id uuid not null references public.stations(id) on delete cascade,
-  track_id uuid not null references public.tracks(id),
+  track_id uuid not null references public.tracks(id) on delete restrict,
   started_at timestamptz not null,
   ended_at timestamptz,
-  transition_from_track_id uuid references public.tracks(id),
+  transition_from_track_id uuid references public.tracks(id) on delete set null,
   listener_count integer default 0,
   skipped boolean default false,
   created_at timestamptz default now()
