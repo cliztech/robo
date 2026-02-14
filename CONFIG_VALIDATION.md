@@ -1,5 +1,7 @@
 # Configuration Validation
 
+> Part of the **DGN-DJ by DGNradio** platform. See [`AGENTS.md`](AGENTS.md) for agent pipeline rules.
+
 Use the validator before any deployment or handoff to catch malformed configuration changes early.
 
 > **Hard gate:** Deployment/handoff must not proceed unless the validator command has been run and the required success line is present in output.
