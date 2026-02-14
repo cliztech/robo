@@ -18,7 +18,7 @@ Boot a working local dev environment with app runtime, database, and quality che
 pnpm install
 cp .env.example .env.local
 pnpm supabase start
-pnpm supabase db push
+pnpm supabase db reset
 pnpm dev
 ```
 
