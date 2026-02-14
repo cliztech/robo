@@ -573,7 +573,7 @@ Visit <http://localhost:3000> to verify the app is running.
 
 ```bash
 git add .
-git commit -m "chore: complete project setup and configuration"
+git commit -m "feat: initial project setup"
 ```
 
 ## Step 20: Create GitHub Repository (Optional)
