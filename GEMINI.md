@@ -1,10 +1,12 @@
-# Quick chat (Codex needs a git repo!)
+# GEMINI.md
+
+## Quick chat (Codex needs a git repo!)
 
 SCRATCH=$(mktemp -d) && cd $SCRATCH && git init && codex exec "Your prompt here"
 
-# Or in a real project - with PTY
+## Or in a real project - with PTY
 
-bash pty:true workdir:~/Projects/myproject command:"codex exec 'Add error handling to the API calls'"claude# GEMINI.md
+bash pty:true workdir:~/Projects/myproject command:"codex exec 'Add error handling to the API calls'"
 
 This file provides guidance to Gemini (Google AI) and Gemini Code when working with code in this repository.
 
