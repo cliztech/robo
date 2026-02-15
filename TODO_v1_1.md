@@ -13,7 +13,7 @@ This board converts the v1.1 **Must** scope into an execution-ready TODO checkli
   - [x] Key presence/integrity checks (`secret.key`, `secret_v2.key`)
   - [x] Audio device availability checks
 - [x] Render pass/fail state in startup UI and/or startup logs.
-- [ ] Provide operator-facing recovery hints for each failed diagnostic.
+- [x] Provide operator-facing recovery hints for each failed diagnostic.
 - [x] Ensure startup does not hard-crash on diagnostic failure.
 
 **Owner:** Runtime engineer  
@@ -50,7 +50,7 @@ This board converts the v1.1 **Must** scope into an execution-ready TODO checkli
 
 - [ ] Add guided restore flow in launcher/runtime startup path.
 - [x] Restore last known good `schedules.json` and `prompt_variables.json` from backup.
-- [ ] Log restore event under `config/logs/` with timestamp and source snapshot.
+- [x] Log restore event under `config/logs/` with timestamp and source snapshot.
 - [ ] Verify post-restore readiness state can be reached in under 2 minutes.
 
 **Owner:** Runtime engineer  
@@ -94,6 +94,6 @@ This board converts the v1.1 **Must** scope into an execution-ready TODO checkli
 ## Exit criteria tracking (v1.1 Must)
 
 - [x] Invalid config is blocked before runtime start.
-- [ ] Startup issues are visible with clear remediation.
+- [x] Startup issues are visible with clear remediation.
 - [ ] Last known good restore is guided and logged.
 - [ ] End-to-end recovery path consistently completes in under 2 minutes.
