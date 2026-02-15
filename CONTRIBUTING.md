@@ -8,6 +8,7 @@
 2. Read [`SKILLS.md`](SKILLS.md) — defines reusable skill definitions with triggers and guardrails.
 3. Read [`CONFIG_VALIDATION.md`](CONFIG_VALIDATION.md) — how to validate config changes before submitting.
 4. Read [`docs/development/git_worktree_workflow.md`](docs/development/git_worktree_workflow.md) — standard workflow for parallel branch development with `git worktree`.
+5. Read [`docs/development/agent_team_operating_playbook.md`](docs/development/agent_team_operating_playbook.md) — expanded team/manager/sub-agent operating model, tools, skills, references, and self-healing loops.
 
 ## Repository Nature
 
