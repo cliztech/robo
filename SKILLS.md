@@ -109,6 +109,7 @@ description: Route requests into QA, Change, or Proposal pipeline modes
 - **Purpose:** Classify incoming requests and assign them to the correct pipeline.
 - **Trigger:** New request received or scope changes mid-execution.
 - **Depends on:** `scope-resolver` (must run first)
+- **Normative source:** [`docs/operations/subagent_execution_playbook.md`](docs/operations/subagent_execution_playbook.md) for spawn/queue/task-packet rules.
 
 #### intake-router: When to Use
 
@@ -166,6 +167,7 @@ description: Report actionable issues with implementation task stubs
 - **Purpose:** Produce structured, actionable findings with attached implementation stubs.
 - **Trigger:** QA review requests, code inspections, or audit tasks.
 - **Depends on:** `intake-router` (must be routed to QA mode)
+- **Normative source:** [`docs/operations/subagent_execution_playbook.md`](docs/operations/subagent_execution_playbook.md) for evidence format, confidence ranking, and escalation handling.
 
 #### qa-issue-emitter: When to Use
 
