@@ -59,10 +59,14 @@ docker compose down
 
 CI workflow files live in `.github/workflows/` and are executed automatically when pushed to GitHub.
 
-Current workflows in this repo:
-- `c-cpp.yml`
-- `cmake-multi-platform.yml`
-- `msbuild.yml`
+Current workflows in this repo include:
+- `ci-validate.yml`
+- `config-validation.yml`
+- `skills-validate.yml`
+- `build-windows.yml`
+- `distribution-validation.yml`
+- `release.yml`
+- `codex-ralph-loop.yml` (configurable loop that repeatedly runs build and validation checks)
 
 ## Notes
 

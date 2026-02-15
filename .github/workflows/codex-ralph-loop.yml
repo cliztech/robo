@@ -1,0 +1,87 @@
+name: codex-ralph-loop
+
+on:
+  workflow_dispatch:
+    inputs:
+      iterations:
+        description: "Number of loop iterations"
+        required: false
+        default: "5"
+      sleep_seconds:
+        description: "Pause between iterations in seconds"
+        required: false
+        default: "15"
+  schedule:
+    - cron: '*/30 * * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  ralph-loop-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Resolve loop configuration
+        id: cfg
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            iterations="${{ github.event.inputs.iterations }}"
+            sleep_seconds="${{ github.event.inputs.sleep_seconds }}"
+          else
+            iterations="4"
+            sleep_seconds="10"
+          fi
+
+          if ! [[ "$iterations" =~ ^[1-9][0-9]*$ ]]; then
+            echo "Invalid iterations value: $iterations" >&2
+            exit 1
+          fi
+
+          if ! [[ "$sleep_seconds" =~ ^[0-9]+$ ]]; then
+            echo "Invalid sleep_seconds value: $sleep_seconds" >&2
+            exit 1
+          fi
+
+          echo "iterations=$iterations" >> "$GITHUB_OUTPUT"
+          echo "sleep_seconds=$sleep_seconds" >> "$GITHUB_OUTPUT"
+
+      - name: Ralph Wiggum coding loop (build + validate)
+        shell: bash
+        run: |
+          set -euo pipefail
+          iterations='${{ steps.cfg.outputs.iterations }}'
+          sleep_seconds='${{ steps.cfg.outputs.sleep_seconds }}'
+
+          echo "Starting loop with iterations=$iterations sleep_seconds=$sleep_seconds"
+
+          for ((i=1; i<=iterations; i++)); do
+            echo "=== Iteration $i/$iterations ==="
+
+            python -m compileall backend dgn-airwaves/src dgn-robo-rippa/src
+
+            if [[ -f config/prompt_variables.json ]]; then
+              python -m json.tool config/prompt_variables.json > /dev/null
+            fi
+
+            if [[ -f config/schedules.json ]]; then
+              python -m json.tool config/schedules.json > /dev/null
+            fi
+
+            python scripts/validate_skills_and_mcp.py
+
+            if (( i < iterations )); then
+              echo "Sleeping for $sleep_seconds seconds before next iteration"
+              sleep "$sleep_seconds"
+            fi
+          done
