@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional
 from uuid import uuid4
@@ -39,6 +39,8 @@ class AutonomyPolicyService:
         self.audit_log_path = audit_log_path
         self.policy_path.parent.mkdir(parents=True, exist_ok=True)
         self.audit_log_path.parent.mkdir(parents=True, exist_ok=True)
+        self._cached_policy: Optional[AutonomyPolicy] = None
+        self._last_mtime: Optional[float] = None
 
     def get_policy(self) -> AutonomyPolicy:
         # TODO(observability): emit scheduler.startup_validation.succeeded/failed
@@ -48,24 +50,45 @@ class AutonomyPolicyService:
             self.update_policy(default_policy)
             return default_policy
 
+        try:
+            mtime = self.policy_path.stat().st_mtime
+            if self._cached_policy is not None and self._last_mtime == mtime:
+                return self._cached_policy
+        except OSError:
+            # Handle cases where file is inaccessible or deleted between calls
+            pass
+
         policy = AutonomyPolicy.model_validate_json(self.policy_path.read_text(encoding="utf-8"))
         self.validate_policy(policy)
-        return policy
 
-    def update_policy(self, policy: AutonomyPolicy) -> AutonomyPolicy:
-        self.validate_policy(policy)
-        # TODO(observability): emit scheduler.schedule_parse.failed when policy/schedule
-        # JSON parse or validation raises, with file path and parser details.
-        return AutonomyPolicy.model_validate_json(self.policy_path.read_text(encoding="utf-8"))
+        # Update cache
+        self._cached_policy = policy
+        try:
+            self._last_mtime = self.policy_path.stat().st_mtime
+        except OSError:
+            self._last_mtime = None
+
+        return policy
 
     def update_policy(self, policy: AutonomyPolicy) -> AutonomyPolicy:
         # TODO(observability): emit scheduler.backup.created before write and
         # scheduler.backup.restored on rollback/restore workflows.
-        payload = policy.model_copy(update={"updated_at": datetime.utcnow().isoformat() + "Z"})
+        self.validate_policy(policy)
+        payload = policy.model_copy(
+            update={"updated_at": datetime.now(timezone.utc).isoformat()}
+        )
         self.policy_path.write_text(
             payload.model_dump_json(indent=2),
             encoding="utf-8",
         )
+
+        # Proactively update cache after successful write
+        self._cached_policy = payload
+        try:
+            self._last_mtime = self.policy_path.stat().st_mtime
+        except OSError:
+            self._last_mtime = None
+
         return payload
 
     def validate_policy(self, policy: AutonomyPolicy) -> List[PolicyConflict]:

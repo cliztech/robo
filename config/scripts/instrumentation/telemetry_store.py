@@ -7,6 +7,15 @@ from typing import Any, Dict, List, Optional, Tuple
 SCRIPT_DIR = Path(__file__).resolve().parent
 DEFAULT_DB = SCRIPT_DIR / "telemetry.db"
 DEFAULT_SCHEMA = SCRIPT_DIR / "schema.sql"
+VALID_LEVELS = {"debug", "info", "warning", "error", "critical"}
+SCHEDULER_EVENT_REQUIRED_METADATA: Dict[str, Tuple[str, ...]] = {
+    "scheduler.startup_validation.succeeded": ("validation_target", "validation_stage", "duration_ms"),
+    "scheduler.startup_validation.failed": ("validation_target", "validation_stage", "duration_ms"),
+    "scheduler.schedule_parse.failed": ("schedule_path", "error_type", "error_excerpt"),
+    "scheduler.backup.created": ("backup_path", "source_path", "backup_size_bytes"),
+    "scheduler.backup.restored": ("backup_path", "restore_target", "initiator"),
+    "scheduler.crash_recovery.activated": ("trigger", "recovery_plan", "last_known_checkpoint"),
+}
 
 
 def db_connect(db_path: Path) -> sqlite3.Connection:
@@ -56,8 +65,10 @@ def insert_playout_decision(db_path: Path, payload: Dict[str, Any]) -> int:
 
 
 def insert_system_event(db_path: Path, payload: Dict[str, Any]) -> int:
-    # TODO(observability): enforce event_name/event_version/component/correlation_id
-    # fields from docs/scheduling_alert_events.md before writing scheduler events.
+    normalized_level = normalize_level(payload.get("severity", "info"))
+    metadata = build_event_metadata(payload, normalized_level)
+    validate_scheduler_event_payload(payload["event_type"], metadata)
+
     sql = """
     INSERT INTO system_events (
         event_ts,
@@ -72,12 +83,52 @@ def insert_system_event(db_path: Path, payload: Dict[str, Any]) -> int:
             (
                 payload["event_ts"],
                 payload["event_type"],
-                payload.get("severity", "info"),
-                json.dumps(payload.get("metadata", {}), ensure_ascii=False),
+                normalized_level,
+                json.dumps(metadata, ensure_ascii=False),
             ),
         )
         conn.commit()
         return int(cursor.lastrowid)
+
+
+def normalize_level(raw_level: str) -> str:
+    level = (raw_level or "info").strip().lower()
+    if level not in VALID_LEVELS:
+        valid_levels = ", ".join(sorted(VALID_LEVELS))
+        raise ValueError(f"Invalid severity/level '{raw_level}'. Use one of: {valid_levels}")
+    return level
+
+
+def build_event_metadata(payload: Dict[str, Any], level: str) -> Dict[str, Any]:
+    metadata = dict(payload.get("metadata", {}))
+    metadata["event_name"] = payload["event_type"]
+    metadata["event_version"] = payload["event_version"]
+    metadata["component"] = payload["component"]
+    metadata["message"] = payload["message"]
+    metadata["level"] = level
+    if payload.get("correlation_id"):
+        metadata["correlation_id"] = payload["correlation_id"]
+    return metadata
+
+
+def validate_scheduler_event_payload(event_type: str, metadata: Dict[str, Any]) -> None:
+    if not event_type.startswith("scheduler."):
+        return
+
+    required_envelope_fields = ("event_name", "event_version", "component", "message", "level")
+    missing_envelope = [field for field in required_envelope_fields if not metadata.get(field)]
+    if missing_envelope:
+        raise ValueError(
+            "Scheduler events require fields in metadata: " + ", ".join(missing_envelope)
+        )
+
+    required_metadata = SCHEDULER_EVENT_REQUIRED_METADATA.get(event_type, ())
+    missing_context = [field for field in required_metadata if field not in metadata]
+    if missing_context:
+        raise ValueError(
+            f"Scheduler event '{event_type}' is missing required metadata keys: "
+            + ", ".join(missing_context)
+        )
 
 
 def insert_transition_score(db_path: Path, payload: Dict[str, Any]) -> int:
@@ -266,9 +317,11 @@ def build_parser() -> argparse.ArgumentParser:
     event_p.add_argument("--event-ts", required=True)
     event_p.add_argument("--event-type", required=True)
     event_p.add_argument("--severity", default="info")
+    event_p.add_argument("--event-version", default="v1")
+    event_p.add_argument("--component", default="config.scripts.instrumentation")
+    event_p.add_argument("--correlation-id")
+    event_p.add_argument("--message", required=True)
     event_p.add_argument("--metadata-json", default="{}")
-    # TODO(observability): add --event-version/--component/--correlation-id flags and
-    # normalize levels to debug|info|warning|error|critical for alert routing.
 
     transition_p = sub.add_parser("log-transition", help="Log transition quality")
     transition_p.add_argument("--scored-ts", required=True)
@@ -340,6 +393,10 @@ def main() -> None:
                 "event_ts": args.event_ts,
                 "event_type": args.event_type,
                 "severity": args.severity,
+                "event_version": args.event_version,
+                "component": args.component,
+                "correlation_id": args.correlation_id,
+                "message": args.message,
                 "metadata": parse_json_argument(args.metadata_json),
             },
         )

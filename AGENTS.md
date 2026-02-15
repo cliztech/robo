@@ -61,6 +61,8 @@ robo/
 
 Use this stage-gated flow for all requests:
 
+> **Normative execution source:** [`docs/operations/subagent_execution_playbook.md`](docs/operations/subagent_execution_playbook.md). Use it for subagent spawn decisions, queue limits, task packet schema, reconciliation, and escalation.
+
 ### 1. Intake Agent
 
 - **Role:** Classify and route incoming requests
@@ -147,6 +149,7 @@ Use this stage-gated flow for all requests:
 | [`PERSONA_OPS.md`](PERSONA_OPS.md) | AI host persona schema, versioning, A/B testing, KPIs |
 | [`docs/autonomy_modes.md`](docs/autonomy_modes.md) | 5-level autonomy operating modes (Manual → Lights-Out) |
 | [`docs/conversation_orchestrator_spec.md`](docs/conversation_orchestrator_spec.md) | Conversation orchestration, turn-taking, energy curves |
+| [`docs/operations/subagent_execution_playbook.md`](docs/operations/subagent_execution_playbook.md) | Normative rules for roadmap-to-execution subagent orchestration |
 | [`contracts/redaction_rules.md`](contracts/redaction_rules.md) | Frontend data redaction denylist and enforcement |
 | [`CONFIG_VALIDATION.md`](CONFIG_VALIDATION.md) | JSON schema validation procedures |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Contribution guidelines, CI scope, PR standards |

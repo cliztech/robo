@@ -18,13 +18,10 @@ This folder adds an operational telemetry layer around the compiled RoboDJ runti
    - Ad delivery completion
 4. **Searchable timeline** query for “what happened on-air at minute X”.
 5. **SLO support** through uptime and decision-latency tracking in metrics data.
-
-## TODO: scheduler alert/event coverage
-
-- TODO: Emit `scheduler.startup_validation.succeeded` and `scheduler.startup_validation.failed` via `log-event` using the schema in `docs/scheduling_alert_events.md`.
-- TODO: Emit `scheduler.schedule_parse.failed` when schedule JSON loading/parsing fails, including `schedule_path` and parser details in metadata.
-- TODO: Emit `scheduler.backup.created` and `scheduler.backup.restored` for backup lifecycle actions.
-- TODO: Emit `scheduler.crash_recovery.activated` as a `critical` level event whenever crash recovery logic is entered.
+6. **Structured scheduler-event validation** for `scheduler.*` event names, including:
+   - normalized levels (`debug|info|warning|error|critical`)
+   - required envelope fields (`event_name`, `event_version`, `component`, `message`, optional `correlation_id`)
+   - required event-specific metadata keys from `docs/scheduling_alert_events.md`
 
 ## Files
 
@@ -53,14 +50,25 @@ python telemetry_store.py log-decision \
   --decision-latency-ms 420
 ```
 
-Log dead-air and script rejection examples:
+Log dead-air and scheduler event examples:
 
 ```bash
 python telemetry_store.py log-event \
   --event-ts "2026-02-12 14:35:10" \
   --event-type "dead_air" \
   --severity "critical" \
+  --message "Dead-air monitor detected silence > 4s" \
   --metadata-json '{"duration_seconds":4.1}'
+
+python telemetry_store.py log-event \
+  --event-ts "2026-02-12 14:36:00" \
+  --event-type "scheduler.schedule_parse.failed" \
+  --severity "error" \
+  --event-version "v1" \
+  --component "backend.scheduling" \
+  --correlation-id "sched-20260212-143600" \
+  --message "Failed to parse schedules.json" \
+  --metadata-json '{"schedule_path":"config/schedules.json","error_type":"JSONDecodeError","error_excerpt":"Expecting property name enclosed in double quotes"}'
 
 python telemetry_store.py log-script-outcome \
   --outcome-ts "2026-02-12 14:35:30" \

@@ -2,13 +2,21 @@
 
 This checklist converts the current product-readiness plan into a practical execution queue.
 
+
+## Autopilot Loop Helper
+
+Use the roadmap helper to continuously surface the next open tasks while you work:
+
+- `python scripts/roadmap_autopilot.py --limit 10`
+- `python scripts/roadmap_autopilot.py --loop --interval 60 --limit 10`
+
 ## P0 — Foundations (Start Here)
 
 - [ ] Create tracked issues for all Track A/B/C/D tasks from `PRODUCT_READINESS_PLAN.md`.
-- [ ] Add a versioned readiness scorecard in `docs/` and define update cadence.
-- [ ] Publish runtime/deployment matrix (`dev`, `staging`, `prod`) with compatibility constraints.
-- [ ] Define API/config contract versioning policy and breaking-change checklist.
-- [ ] Create a release checklist with hard gates for security, contracts, and rollback docs.
+- [x] Add a versioned readiness scorecard in `docs/` and define update cadence.
+- [x] Publish runtime/deployment matrix (`dev`, `staging`, `prod`) with compatibility constraints.
+- [x] Define API/config contract versioning policy and breaking-change checklist.
+- [x] Create a release checklist with hard gates for security, contracts, and rollback docs.
 
 ## P1 — Security & Compliance
 
@@ -20,9 +28,9 @@ This checklist converts the current product-readiness plan into a practical exec
 
 ## P1 — Reliability & Observability
 
-- [ ] Define SLOs for schedule success, latency, and autonomy throughput.
-- [ ] Add alert thresholds and escalation policy documentation.
-- [ ] Publish incident runbook + postmortem template.
+- [x] Define SLOs for schedule success, latency, and autonomy throughput.
+- [x] Add alert thresholds and escalation policy documentation.
+- [x] Publish incident runbook + postmortem template.
 
 ## P2 — UX & Operator Experience
 
