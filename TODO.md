@@ -13,10 +13,10 @@ Use the roadmap helper to continuously surface the next open tasks while you wor
 ## P0 — Foundations (Start Here)
 
 - [ ] Create tracked issues for all Track A/B/C/D tasks from `PRODUCT_READINESS_PLAN.md`.
-- [ ] Add a versioned readiness scorecard in `docs/` and define update cadence.
-- [ ] Publish runtime/deployment matrix (`dev`, `staging`, `prod`) with compatibility constraints.
-- [ ] Define API/config contract versioning policy and breaking-change checklist.
-- [ ] Create a release checklist with hard gates for security, contracts, and rollback docs.
+- [x] Add a versioned readiness scorecard in `docs/` and define update cadence.
+- [x] Publish runtime/deployment matrix (`dev`, `staging`, `prod`) with compatibility constraints.
+- [x] Define API/config contract versioning policy and breaking-change checklist.
+- [x] Create a release checklist with hard gates for security, contracts, and rollback docs.
 
 ## P1 — Security & Compliance
 
@@ -28,9 +28,9 @@ Use the roadmap helper to continuously surface the next open tasks while you wor
 
 ## P1 — Reliability & Observability
 
-- [ ] Define SLOs for schedule success, latency, and autonomy throughput.
-- [ ] Add alert thresholds and escalation policy documentation.
-- [ ] Publish incident runbook + postmortem template.
+- [x] Define SLOs for schedule success, latency, and autonomy throughput.
+- [x] Add alert thresholds and escalation policy documentation.
+- [x] Publish incident runbook + postmortem template.
 
 ## P2 — UX & Operator Experience
 
