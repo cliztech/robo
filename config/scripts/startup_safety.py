@@ -24,6 +24,7 @@ sys.path.insert(0, str(REPO_ROOT / "config"))
 from validate_config import TARGETS, ValidationError, validate_target
 CONFIG_DIR = REPO_ROOT / "config"
 BACKUP_DIR = CONFIG_DIR / "backups"
+LOG_DIR = CONFIG_DIR / "logs"
 SNAPSHOT_PREFIX = "config_snapshot_"
 SNAPSHOT_FILES = [
     "schedules.json",
@@ -39,6 +40,7 @@ class CheckResult:
     ok: bool
     detail: str
     warning: bool = False
+    recovery_hint: str | None = None
 
 
 def _print_result(result: CheckResult) -> None:
@@ -49,11 +51,18 @@ def _print_result(result: CheckResult) -> None:
     else:
         status = "FAIL"
     print(f"[{status}] {result.name}: {result.detail}")
+    if result.recovery_hint:
+        print(f"  ↳ Recovery hint: {result.recovery_hint}")
 
 
 def _check_db_readable(db_path: Path) -> CheckResult:
     if not db_path.exists():
-        return CheckResult(f"DB {db_path.name}", False, "file not found")
+        return CheckResult(
+            f"DB {db_path.name}",
+            False,
+            "file not found",
+            recovery_hint="Verify install integrity and restore the DB from a known-good backup.",
+        )
 
     uri = f"file:{db_path.as_posix()}?mode=ro"
     try:
@@ -63,22 +72,42 @@ def _check_db_readable(db_path: Path) -> CheckResult:
         finally:
             conn.close()
     except sqlite3.Error as exc:
-        return CheckResult(f"DB {db_path.name}", False, f"unreadable: {exc}")
+        return CheckResult(
+            f"DB {db_path.name}",
+            False,
+            f"unreadable: {exc}",
+            recovery_hint="Close other apps that may lock the DB, then rerun launcher or restore backup.",
+        )
 
     return CheckResult(f"DB {db_path.name}", True, "readable")
 
 
 def _check_key_file(key_path: Path) -> CheckResult:
     if not key_path.exists():
-        return CheckResult(f"Key {key_path.name}", False, "missing")
+        return CheckResult(
+            f"Key {key_path.name}",
+            False,
+            "missing",
+            recovery_hint="Restore missing key file from config/backups or reinstall protected key material.",
+        )
 
     try:
         size = key_path.stat().st_size
     except OSError as exc:
-        return CheckResult(f"Key {key_path.name}", False, f"unable to stat: {exc}")
+        return CheckResult(
+            f"Key {key_path.name}",
+            False,
+            f"unable to stat: {exc}",
+            recovery_hint="Check file permissions and ensure launcher has access to the config directory.",
+        )
 
     if size < 16:
-        return CheckResult(f"Key {key_path.name}", False, f"size too small ({size} bytes)")
+        return CheckResult(
+            f"Key {key_path.name}",
+            False,
+            f"size too small ({size} bytes)",
+            recovery_hint="Key file appears corrupted; restore from the latest known-good snapshot.",
+        )
 
     return CheckResult(f"Key {key_path.name}", True, f"present ({size} bytes)")
 
@@ -90,10 +119,20 @@ def _check_audio_devices() -> CheckResult:
 
             count = ctypes.windll.winmm.waveOutGetNumDevs()  # type: ignore[attr-defined]
             if count < 1:
-                return CheckResult("Audio devices", False, "no output devices detected")
+                return CheckResult(
+                    "Audio devices",
+                    False,
+                    "no output devices detected",
+                    recovery_hint="Connect/enable an output device and set it as default before relaunch.",
+                )
             return CheckResult("Audio devices", True, f"{count} output device(s) detected")
         except Exception as exc:  # best-effort diagnostics
-            return CheckResult("Audio devices", False, f"probe failed: {exc}")
+            return CheckResult(
+                "Audio devices",
+                False,
+                f"probe failed: {exc}",
+                recovery_hint="Verify audio drivers are installed and rerun startup diagnostics.",
+            )
 
     try:
         import sounddevice as sd  # type: ignore[import-not-found]
@@ -101,7 +140,12 @@ def _check_audio_devices() -> CheckResult:
         devices = sd.query_devices()
         outputs = [d for d in devices if d.get("max_output_channels", 0) > 0]
         if not outputs:
-            return CheckResult("Audio devices", False, "no output devices detected")
+            return CheckResult(
+                "Audio devices",
+                False,
+                "no output devices detected",
+                recovery_hint="Attach an output device or configure virtual audio output, then relaunch.",
+            )
         return CheckResult("Audio devices", True, f"{len(outputs)} output device(s) detected")
     except Exception:
         return CheckResult(
@@ -109,7 +153,21 @@ def _check_audio_devices() -> CheckResult:
             True,
             "audio probe unavailable in this runtime (startup warning only)",
             warning=True,
+            recovery_hint="Install optional sounddevice dependency to enable deep audio diagnostics.",
         )
+
+
+def _append_event_log(event_type: str, payload: dict[str, object]) -> Path:
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
+    event_path = LOG_DIR / "startup_safety_events.jsonl"
+    event = {
+        "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+        "event_type": event_type,
+        **payload,
+    }
+    with event_path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(event, ensure_ascii=False) + "\n")
+    return event_path
 
 
 def run_startup_diagnostics() -> bool:
@@ -182,6 +240,10 @@ def restore_last_known_good_config() -> bool:
     snapshot_dir = _latest_snapshot_dir()
     if snapshot_dir is None:
         print("No snapshot found in config/backups/.")
+        _append_event_log(
+            "restore_last_known_good",
+            {"status": "failed", "reason": "no_snapshot"},
+        )
         return False
 
     restored_files: list[str] = []
@@ -193,9 +255,26 @@ def restore_last_known_good_config() -> bool:
 
     if not restored_files:
         print(f"Snapshot {snapshot_dir} did not contain restorable files.")
+        _append_event_log(
+            "restore_last_known_good",
+            {
+                "status": "failed",
+                "reason": "empty_snapshot",
+                "snapshot": snapshot_dir.name,
+            },
+        )
         return False
 
     print(f"Restored last-known-good files from {snapshot_dir.name}: {', '.join(restored_files)}")
+    log_path = _append_event_log(
+        "restore_last_known_good",
+        {
+            "status": "success",
+            "snapshot": snapshot_dir.name,
+            "restored_files": restored_files,
+        },
+    )
+    print(f"Restore event logged to: {log_path}")
     return True
 
 
