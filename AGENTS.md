@@ -38,6 +38,7 @@ robo/
 ├── RoboDJ_Launcher.bat            # Launcher script
 ├── AGENTS.md                      # This file (repo-wide agent rules)
 ├── SKILLS.md                      # Reusable skill definitions
+├── .agent/                        # Operational artifacts (plans, handoffs, verification)
 ├── backend/                       # Python source modules
 │   ├── content_engine.py          # AI content generation
 │   ├── agents/                    # Multi-agent system
@@ -143,6 +144,7 @@ Use this stage-gated flow for all requests:
 | Document | Purpose |
 | -------- | ------- |
 | [`SKILLS.md`](SKILLS.md) | Reusable skill definitions with triggers and boundaries |
+| [`docs/operations/artifacts.md`](docs/operations/artifacts.md) | Agent artifact paths, naming, ownership, and retention policy |
 | [`CLAUDE.md`](CLAUDE.md) | Claude Code-specific guidance |
 | [`PERSONA_OPS.md`](PERSONA_OPS.md) | AI host persona schema, versioning, A/B testing, KPIs |
 | [`docs/autonomy_modes.md`](docs/autonomy_modes.md) | 5-level autonomy operating modes (Manual → Lights-Out) |
