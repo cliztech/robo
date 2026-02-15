@@ -22,7 +22,6 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "config"))
-from validate_config import TARGETS, ValidationError, validate_target
 CONFIG_DIR = REPO_ROOT / "config"
 BACKUP_DIR = CONFIG_DIR / "backups"
 SNAPSHOT_PREFIX = "config_snapshot_"
@@ -49,6 +48,24 @@ class CheckResult:
     ok: bool
     detail: str
     warning: bool = False
+
+
+def _load_config_validator() -> tuple[list[dict], type[Exception], object] | tuple[None, None, None]:
+    """Load config validation symbols lazily so non-validation paths remain usable."""
+    try:
+        from validate_config import TARGETS, ValidationError, validate_target
+    except Exception as exc:
+        print(f"[WARN] Config validator unavailable: {exc}")
+        _log_event(
+            "startup_validator_error",
+            {
+                "created_at_utc": datetime.now(timezone.utc).isoformat(),
+                "error": str(exc),
+            },
+        )
+        return None, None, None
+
+    return TARGETS, ValidationError, validate_target
 
 
 def _log_event(filename_prefix: str, payload: dict) -> None:
@@ -168,10 +185,17 @@ def run_startup_diagnostics() -> bool:
 
 def validate_launch_config() -> list[str]:
     errors: list[str] = []
-    for target in TARGETS:
+    targets, validation_error, validate_target = _load_config_validator()
+    if targets is None or validation_error is None or validate_target is None:
+        return [
+            "[launch_config_validation] Validator could not be loaded. "
+            "Fix validator dependencies/imports before launch."
+        ]
+
+    for target in targets:
         try:
             errors.extend(validate_target(target["name"], target["config"], target["schema"]))
-        except ValidationError as exc:
+        except validation_error as exc:  # type: ignore[misc]
             errors.append(f"[{target['name']}] {exc}")
     return errors
 
