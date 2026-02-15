@@ -58,7 +58,8 @@ This implementation guide is split into multiple files:
 6. [PHASE_2_AUTH.md](PHASE_2_AUTH.md) - Authentication system (Day 4)
 7. [PHASE_3_AUDIO_ENGINE.md](PHASE_3_AUDIO_ENGINE.md) - Audio engine (Day 5-7)
 8. [PHASE_4_FILE_UPLOAD.md](PHASE_4_FILE_UPLOAD.md) - File upload system (Day 8-10)
-9. [API_ROUTES.md](API_ROUTES.md) - API endpoints reference
+9. [docs/aetherradio/PHASE_5_AI_INTEGRATION.md](docs/aetherradio/PHASE_5_AI_INTEGRATION.md) - AI integration and track intelligence (Day 11-13)
+10. [API_ROUTES.md](API_ROUTES.md) - API endpoints reference
 
 ## 🚀 Quick Start
 
@@ -125,8 +126,11 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 ### Week 4: Media Management (Phase 4)
 - Day 8-10: File upload and storage
 
-### Week 5-8: AI & Features
-- AI track analysis
+### Week 5: AI Integration (Phase 5)
+- AI track analysis and metadata enrichment
+- Confidence-scored tag generation
+
+### Week 6-8: Feature Buildout
 - Playlist generation
 - Broadcasting system
 - Dashboard UI

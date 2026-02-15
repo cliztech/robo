@@ -56,7 +56,8 @@ AetherRadio is an AI-powered radio automation platform for running 24/7 internet
 6. [PHASE_2_AUTH.md](./PHASE_2_AUTH.md)
 7. [PHASE_3_AUDIO_ENGINE.md](./PHASE_3_AUDIO_ENGINE.md)
 8. [PHASE_4_FILE_UPLOAD.md](./PHASE_4_FILE_UPLOAD.md)
-9. [API_ROUTES.md](./API_ROUTES.md)
+9. [PHASE_5_AI_INTEGRATION.md](./PHASE_5_AI_INTEGRATION.md)
+10. [API_ROUTES.md](./API_ROUTES.md)
 
 ## Quick Start
 
@@ -98,7 +99,8 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 - Week 1–2: setup, database, authentication
 - Week 3: audio engine implementation
 - Week 4: upload/storage pipeline
-- Week 5–8: AI features, playlist automation, analytics
+- Week 5: AI integration and track intelligence
+- Week 6–8: playlist automation, broadcasting, analytics
 - Week 9–10: hardening, QA, launch prep
 
 ## Team Workflow
