@@ -319,6 +319,12 @@ class ScheduleConflict(BaseModel):
     suggestions: list[ConflictSuggestion] = Field(default_factory=list)
 
 
+class SchedulerUiState(BaseModel):
+    schedule_file: ScheduleEnvelope
+    timeline_blocks: list[TimelineBlock]
+    conflicts: list[ScheduleConflict]
+
+
 class SchedulerUiStateUpdate(BaseModel):
     schedules: list[ScheduleRecord]
 
