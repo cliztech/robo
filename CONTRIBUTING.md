@@ -7,6 +7,7 @@
 1. Read [`AGENTS.md`](AGENTS.md) — defines the multi-agent pipeline, three-tier boundaries, and coding style.
 2. Read [`SKILLS.md`](SKILLS.md) — defines reusable skill definitions with triggers and guardrails.
 3. Read [`CONFIG_VALIDATION.md`](CONFIG_VALIDATION.md) — how to validate config changes before submitting.
+4. Read [`docs/operations/agent_execution_commands.md`](docs/operations/agent_execution_commands.md) — runnable workflows for planning, parallel analysis, draft PRs, and worktrees.
 
 ## Repository Nature
 
