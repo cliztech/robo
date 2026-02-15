@@ -2,17 +2,19 @@
 
 This board converts the v1.1 **Must** scope into an execution-ready TODO checklist with concrete completion criteria and validation steps.
 
+> Implementation note (current): `config/scripts/startup_safety.py` is now wired into `RoboDJ_Launcher.bat` as the launch gate for diagnostics, config validation, auto-restore attempt, and snapshot creation.
+
 ## Active TODO checklist
 
 ### 1) Startup diagnostics panel (`feature_startup_diagnostics`)
 
-- [ ] Add boot-time diagnostics runner for:
-  - [ ] SQLite connectivity checks (`settings.db`, `user_content.db`)
-  - [ ] Key presence/integrity checks (`secret.key`, `secret_v2.key`)
-  - [ ] Audio device availability checks
-- [ ] Render pass/fail state in startup UI and/or startup logs.
+- [x] Add boot-time diagnostics runner for:
+  - [x] SQLite connectivity checks (`settings.db`, `user_content.db`)
+  - [x] Key presence/integrity checks (`secret.key`, `secret_v2.key`)
+  - [x] Audio device availability checks
+- [x] Render pass/fail state in startup UI and/or startup logs.
 - [ ] Provide operator-facing recovery hints for each failed diagnostic.
-- [ ] Ensure startup does not hard-crash on diagnostic failure.
+- [x] Ensure startup does not hard-crash on diagnostic failure.
 
 **Owner:** Runtime engineer  
 **Target date:** 2026-03-06  
@@ -27,11 +29,11 @@ This board converts the v1.1 **Must** scope into an execution-ready TODO checkli
 
 ### 2) Launch config validator (`feature_launch_config_validation`)
 
-- [ ] Validate `config/schedules.json` against schema and required references on launch.
-- [ ] Validate `config/prompt_variables.json` against schema and required references on launch.
-- [ ] Block runtime start when validation fails.
-- [ ] Print clear errors including file name and failing key path.
-- [ ] Allow normal startup when configs are valid.
+- [x] Validate `config/schedules.json` against schema and required references on launch.
+- [x] Validate `config/prompt_variables.json` against schema and required references on launch.
+- [x] Block runtime start when validation fails.
+- [x] Print clear errors including file name and failing key path.
+- [x] Allow normal startup when configs are valid.
 
 **Owner:** Config owner  
 **Target date:** 2026-03-08  
@@ -47,7 +49,7 @@ This board converts the v1.1 **Must** scope into an execution-ready TODO checkli
 ### 3) Crash recovery: restore last known good config (`feature_crash_recovery_restore_lkg`)
 
 - [ ] Add guided restore flow in launcher/runtime startup path.
-- [ ] Restore last known good `schedules.json` and `prompt_variables.json` from backup.
+- [x] Restore last known good `schedules.json` and `prompt_variables.json` from backup.
 - [ ] Log restore event under `config/logs/` with timestamp and source snapshot.
 - [ ] Verify post-restore readiness state can be reached in under 2 minutes.
 
@@ -67,10 +69,10 @@ This board converts the v1.1 **Must** scope into an execution-ready TODO checkli
 
 ### 4) One-click backup snapshot (`feature_one_click_backup_snapshot`)
 
-- [ ] Add one-click snapshot action in app/launcher flow.
-- [ ] Write timestamped backup artifacts into `config/backups/`.
-- [ ] Prevent overwrite of prior snapshots.
-- [ ] Ensure snapshots are immediately available to restore flow.
+- [x] Add one-click snapshot action in app/launcher flow.
+- [x] Write timestamped backup artifacts into `config/backups/`.
+- [x] Prevent overwrite of prior snapshots.
+- [x] Ensure snapshots are immediately available to restore flow.
 
 **Owner:** Config owner  
 **Target date:** 2026-03-04  
@@ -91,7 +93,7 @@ This board converts the v1.1 **Must** scope into an execution-ready TODO checkli
 
 ## Exit criteria tracking (v1.1 Must)
 
-- [ ] Invalid config is blocked before runtime start.
+- [x] Invalid config is blocked before runtime start.
 - [ ] Startup issues are visible with clear remediation.
 - [ ] Last known good restore is guided and logged.
 - [ ] End-to-end recovery path consistently completes in under 2 minutes.
