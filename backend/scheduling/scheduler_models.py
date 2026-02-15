@@ -238,8 +238,8 @@ class ScheduleTemplatePrimitive(BaseModel):
 
 class TemplateApplyRequest(BaseModel):
     template: TemplateType
-    timezone: str = "UTC"
     content_refs: list[ContentRef] = Field(min_length=1)
+    timezone: str = "UTC"
     start_window: ScheduleWindow = Field(default_factory=lambda: ScheduleWindow(value="1970-01-01T00:00:00Z"))
     end_window: ScheduleWindow = Field(default_factory=lambda: ScheduleWindow(value="9999-12-31T23:59:59Z"))
 
@@ -247,9 +247,8 @@ class TemplateApplyRequest(BaseModel):
 class PreviewRequest(BaseModel):
     day_of_week: Literal["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
     start_time: str = Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
-    end_time: str = Field(pattern=r"^([01]\d|2[0-3]):[0-5]\d$")
-    timezone: str = "UTC"
     start_date: str = Field(description="ISO date, e.g. 2026-01-01")
+    timezone: str = "UTC"
 
     @field_validator("start_date")
     @classmethod
