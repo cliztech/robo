@@ -107,19 +107,24 @@ def summarize_phases(tasks: list[OpenTask]) -> dict[str, int]:
 
 def identify_next_phase(phase_totals: dict[str, int]) -> str | None:
     phased_entries: list[tuple[int, str]] = []
-    fallback_label: str | None = None
+    unphased_labels: list[str] = []
 
     for phase_label in phase_totals:
         match = PHASE_PATTERN.search(phase_label)
         if match:
             phased_entries.append((int(match.group(1)), phase_label))
-        elif fallback_label is None:
-            fallback_label = phase_label
+        else:
+            unphased_labels.append(phase_label)
 
     if phased_entries:
         phased_entries.sort(key=lambda item: item[0])
         return phased_entries[0][1]
-    return fallback_label
+
+    if unphased_labels:
+        unphased_labels.sort()
+        return unphased_labels[0]
+
+    return None
 
 
 def render_phase_summary(phase_totals: dict[str, int]) -> str:
