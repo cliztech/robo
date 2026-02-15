@@ -24,6 +24,7 @@ DEFAULT_TODO_FILES = [
 
 HEADER_PATTERN = re.compile(r"^(#{1,6})\s+(.*\S)\s*$")
 TASK_PATTERN = re.compile(r"^\s*[-*]\s+\[\s\]\s+(.*\S)\s*$")
+PHASE_PATTERN = re.compile(r"\bP(\d+)\b", re.IGNORECASE)
 
 
 @dataclass(frozen=True)
@@ -33,6 +34,7 @@ class OpenTask:
     source: Path
     line_number: int
     section: str
+    phase: str
     text: str
 
 
@@ -42,6 +44,7 @@ def collect_open_tasks(markdown_path: Path) -> list[OpenTask]:
         return []
 
     current_section = "(root)"
+    current_phase = "Unphased"
     open_tasks: list[OpenTask] = []
 
     for line_number, raw_line in enumerate(
@@ -51,6 +54,10 @@ def collect_open_tasks(markdown_path: Path) -> list[OpenTask]:
         header_match = HEADER_PATTERN.match(raw_line)
         if header_match:
             current_section = header_match.group(2)
+            phase_match = PHASE_PATTERN.search(current_section)
+            current_phase = (
+                f"P{int(phase_match.group(1))}" if phase_match else "Unphased"
+            )
             continue
 
         task_match = TASK_PATTERN.match(raw_line)
@@ -60,6 +67,7 @@ def collect_open_tasks(markdown_path: Path) -> list[OpenTask]:
                     source=markdown_path,
                     line_number=line_number,
                     section=current_section,
+                    phase=current_phase,
                     text=task_match.group(1),
                 )
             )
@@ -72,15 +80,63 @@ def render_queue(tasks: list[OpenTask], limit: int) -> str:
     if not tasks:
         return "No open tasks found in the selected roadmap files."
 
+    phase_totals = summarize_phases(tasks)
+    next_phase = identify_next_phase(phase_totals)
+
     lines: list[str] = [f"Open task queue ({min(limit, len(tasks))}/{len(tasks)} shown):"]
+    if next_phase:
+        lines.append(f"Next unfinished phase: {next_phase}")
+    lines.append(render_phase_summary(phase_totals))
+
     for index, task in enumerate(tasks[:limit], start=1):
         rel_source = task.source.relative_to(ROOT)
         lines.append(
             f"{index:>2}. [{rel_source}:{task.line_number}] "
-            f"{task.section} -> {task.text}"
+            f"{task.phase} | {task.section} -> {task.text}"
         )
 
     return "\n".join(lines)
+
+
+def summarize_phases(tasks: list[OpenTask]) -> dict[str, int]:
+    phase_totals: dict[str, int] = {}
+    for task in tasks:
+        phase_totals[task.phase] = phase_totals.get(task.phase, 0) + 1
+    return phase_totals
+
+
+def identify_next_phase(phase_totals: dict[str, int]) -> str | None:
+    phased_entries: list[tuple[int, str]] = []
+    fallback_label: str | None = None
+
+    for phase_label in phase_totals:
+        match = PHASE_PATTERN.search(phase_label)
+        if match:
+            phased_entries.append((int(match.group(1)), phase_label))
+        elif fallback_label is None:
+            fallback_label = phase_label
+
+    if phased_entries:
+        phased_entries.sort(key=lambda item: item[0])
+        return phased_entries[0][1]
+    return fallback_label
+
+
+def render_phase_summary(phase_totals: dict[str, int]) -> str:
+    if not phase_totals:
+        return "Open tasks by phase: n/a"
+
+    def sort_key(item: tuple[str, int]) -> tuple[int, str]:
+        label, _ = item
+        match = PHASE_PATTERN.search(label)
+        if match:
+            return (int(match.group(1)), label)
+        return (999, label)
+
+    summary_bits = [
+        f"{label}={count}" for label, count in sorted(phase_totals.items(), key=sort_key)
+    ]
+    return "Open tasks by phase: " + ", ".join(summary_bits)
 
 
 def parse_args() -> argparse.Namespace:
