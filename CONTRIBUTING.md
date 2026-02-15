@@ -139,3 +139,74 @@ Typical workflow:
    - `python scripts/draft_pr_metadata.py --metadata draft_pr_metadata.json`
 
 If your team prefers a different automation approach, keep the same section headings and output structure defined in this guide.
+
+## Large Change Delivery
+
+For high-impact work, break delivery into explicit milestones instead of one long-running implementation branch.
+
+### Milestone slicing thresholds
+
+Milestone slicing is required when **any one** of these thresholds is met:
+
+- **File count threshold:** expected changes across **10 or more files**.
+- **Risk threshold:** change has **moderate/high delivery risk** (migration paths, production defaults, scheduler/orchestration behavior, or rollback complexity).
+- **Subsystem threshold:** work spans **3 or more subsystems** (for example: `backend/`, `config/`, docs, scripts, CI).
+
+When thresholds are met, split the effort into reviewable milestones with clear acceptance goals.
+
+### Draft PR per milestone (required)
+
+Each milestone must have its **own Draft PR** with explicit checkpoint goals.
+
+Required milestone PR elements:
+
+1. **Milestone Goal**
+   - The checkpoint objective and acceptance criteria for this slice.
+2. **In Scope / Out of Scope**
+   - Exactly what this milestone includes, and what is deferred.
+3. **Checkpoint Goals**
+   - Numbered, verifiable outcomes reviewers can validate in this PR.
+4. **Validation + Rollback**
+   - Evidence collected for this checkpoint and rollback approach if regressions are found.
+
+For consistent formatting and wording, align milestone PR outputs with the [`pr-writer` skill in `SKILLS.md`](SKILLS.md#pr-writer).
+
+### Checkpoint update template
+
+Post this update in the Draft PR description (or timeline update) at each checkpoint:
+
+```md
+## Checkpoint Update: <milestone/checkpoint name>
+
+### What changed
+-
+
+### What remains
+-
+
+### Blockers
+- None | <describe blocker + owner + next action>
+
+### Risk update
+- Current risk level: Low | Medium | High
+- New/changed risks:
+- Mitigation and rollback adjustments:
+
+### Validation evidence
+- ✅ `<command>` — <result>
+- ✅ `<command>` — <result>
+
+### Rollback notes
+- Rollback trigger(s):
+- Rollback steps:
+- Data/config restoration notes:
+```
+
+### Checkpoint evidence requirements
+
+Every checkpoint must include:
+
+- **Validation evidence:** concrete command output, test results, or artifact references that prove the checkpoint objective is met.
+- **Rollback notes:** explicit rollback triggers, rollback steps, and any data/config restoration implications.
+
+Checkpoints without both validation evidence and rollback notes are incomplete and must not be marked done.
