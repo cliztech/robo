@@ -107,6 +107,32 @@ Use this stage-gated flow for all requests:
   - Generate PR body if applicable
 - **Completion gate:** User request explicitly answered
 
+## Workflow Quality Gates
+
+Use these gates before moving work from planning to execution and from draft PR to Ready-for-Review.
+
+### Numeric Thresholds (Hard Gates)
+
+1. **Plan completeness score** (scope, constraints, rollback, verification) must be **100%**.
+2. **Subagent evidence completeness** (all required fields present) must be **100%**.
+3. **Draft PR maturity checklist** must be fully passed before marking a PR **Ready-for-Review**.
+4. **Worktree hygiene checks** must pass: no stale branches and no detached worktree merges.
+
+### Reviewer Checklist Template
+
+> Copy this block into PR reviews for consistent gate validation.
+
+```md
+## Workflow Quality Gate Checklist
+
+- [ ] Plan completeness = 100% (scope + constraints + rollback + verification)
+- [ ] Subagent evidence completeness = 100% (all required fields present)
+- [ ] Draft PR maturity checklist passed before Ready-for-Review
+- [ ] Worktree hygiene passed (no stale branches, no detached worktree merges)
+- [ ] Validation commands and outputs are documented in the PR
+- [ ] Follow-up actions (if any) are explicitly tracked
+```
+
 ## Boundaries
 
 > 🛡️ Three-tier boundary system — the most effective pattern from [2,500+ repos](https://github.blog/ai-and-ml/github-copilot/how-to-write-a-great-agents-md-lessons-from-over-2500-repositories/).
