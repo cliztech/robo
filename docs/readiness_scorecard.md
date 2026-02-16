@@ -29,6 +29,20 @@ This scorecard provides a versioned, repeatable way to track progress from roadm
 3. Add one log entry in the history table below.
 4. Mark blocked tracks with explicit owner and unblock date.
 
+## UX instrumentation baselines and targets (Track B)
+
+| Metric | Baseline (2026.02) | MVP target (B1.1/B1.2) | Collection source | Owner |
+| --- | ---: | ---: | --- | --- |
+| Workflow completion time (median) | 14m 30s | <= 10m 00s | `ux_workflow_started` + `ux_workflow_completed` | Backend Observability (aggregation), Frontend Telemetry (events) |
+| Workflow completion time (p95) | 31m 00s | <= 20m 00s | `ux_workflow_started` + `ux_workflow_completed` | Backend Observability (aggregation), Frontend Telemetry (events) |
+| Intervention rate | 28% | 15–22% (healthy checkpoint usage band) | `ux_checkpoint_presented` + `ux_checkpoint_decision` | Backend Workflow Analytics |
+| Rollback rate | 12% | <= 7% | `ux_rollback_initiated` + `ux_rollback_completed`/`ux_rollback_failed` | Backend Reliability Analytics |
+
+Notes:
+- Baselines are initial planning assumptions and become measured values once Track B telemetry is live.
+- Targets are considered passing when maintained for 2 consecutive weekly reporting windows.
+- Event schema and collection-point ownership are defined in `PRODUCT_READINESS_PLAN.md` (Track B4).
+
 ## Monthly governance review
 
 - Revalidate category weights against business goals.
