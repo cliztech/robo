@@ -226,8 +226,9 @@ Exit criteria:
 Mandatory verification before production rollout:
 - Functional checks: transport control, queue ordering, scheduler sync, routing apply/rollback
 - Reliability checks: fallback behavior, reconnect logic, stale state detection
-- UX checks: keyboard-only operation, focus order, reduced-motion compatibility
+- UX checks: keyboard-only operation, deterministic focus order (top strip → deck and mixer canvas → context rail → bottom workspace), reduced-motion compatibility
 - Accessibility checks: contrast and screen-reader labels for critical controls
+- Keyboard shortcut checks: document and verify seek controls (`Left/Right`, `Shift+Left/Right`, `Home`, `End`), cue-point jump actions, and on-air/alert toggle announcements
 - Performance checks: waveform + meters + table scrolling under load
 
 ## 11) Immediate Next Actions (Execution Starter)
