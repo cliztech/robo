@@ -14,7 +14,7 @@ export default function App() {
     fetch(`${apiUrl}/requests`)
       .then((r) => r.json())
       .then(setRequests)
-      .catch(() => {});
+      .catch((err) => console.error("Failed to fetch requests:", err));
     const ws = new WebSocket(wsUrl);
     ws.onmessage = (ev) => {
       const msg = JSON.parse(ev.data);
