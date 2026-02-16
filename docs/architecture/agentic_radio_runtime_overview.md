@@ -1,49 +1,37 @@
 # Agentic Radio Runtime Overview (MVP)
 
-This document captures the proposed happy-path runtime model, event bus contracts, state machines, and MVP scaffolding for a modular AI radio stack.
+This document captures a practical MVP architecture for an event-driven, multi-service radio runtime using NATS, Redis, Postgres, and Icecast-compatible streaming.
 
-## 1) Runtime model (happy path)
+## Runtime model (happy path)
 
-1. **library** ingests local/uploaded audio, stores track metadata, emits `track.added`.
-2. **automation** maintains rotations/clocks and requests the next playout candidate via `playout.next_requested`.
-3. **agent-dj** listens for `playout.next_requested`, applies policy + memory + separation/request matching, emits `playout.enqueue` (and optional `tts.enqueue` later).
-4. **audio-engine** runs deck/queue logic, emits `now_playing`, and writes PCM into a FIFO/pipe.
-5. **streaming-gateway** reads FIFO PCM, encodes/pushes to Icecast/Shoutcast-compatible mount, and updates metadata.
-6. **requests** exposes Ask-the-DJ inbox (REST + WebSocket) and emits `request.created`.
-7. **console-web / remote-web** render operator/mobile views (now playing, queue, requests, emergency controls).
+1. `library` ingests audio files (local folder or upload), stores metadata in Postgres, emits `track.added`.
+2. `automation` maintains rotations/clocks and requests the next selection by emitting `playout.next_requested`.
+3. `agent-dj` handles `playout.next_requested`, applies policy + memory + separation/request logic, then emits `playout.enqueue` (and optional `tts.enqueue` later).
+4. `audio-engine` maintains deck and playout state, emits `now_playing`, and writes PCM output into an audio FIFO/pipe.
+5. `streaming-gateway` reads the FIFO/pipe, transcodes via `ffmpeg`, streams to Icecast (or Shoutcast-compatible endpoints), and updates metadata hooks.
+6. `requests` powers the "Ask the DJ" inbox (REST + WebSocket), emits `request.created`.
+7. `console-web` and `remote-web` display runtime state (now playing, queue, requests, controls).
 
-## 2) Internal event bus
+## Internal event bus
 
-- **Bus:** NATS
-- **Core topics:**
-  - `track.added`
-  - `track.analyzed`
-  - `request.created`
-  - `playout.next_requested`
-  - `playout.enqueue`
-  - `tts.enqueue` (optional)
-  - `now_playing`
-  - `system.health`
+NATS topics for MVP:
 
-A typed event envelope should be used for every publish/subscribe path:
+- `track.added`
+- `track.analyzed`
+- `request.created`
+- `playout.next_requested`
+- `playout.enqueue`
+- `tts.enqueue` (optional, later)
+- `now_playing`
+- `system.health`
 
-```ts
-export type EventEnvelope<T> = {
-  id: string;
-  event_type: EventName;
-  ts: string;
-  module: string;
-  data: T;
-};
-```
-
-## 3) State machines
+## State machines
 
 ### DeckController (per deck A/B/C/D)
 
-`IDLE -> LOADING -> READY -> PLAYING -> STOPPING -> IDLE` (+ error transitions)
+`IDLE -> LOADING -> READY -> PLAYING -> STOPPING -> IDLE` (with error transitions)
 
-### Playout engine
+### Playout
 
 `WAITING -> QUEUED -> PLAYING -> TRANSITIONING -> PLAYING -> ...`
 
@@ -51,63 +39,153 @@ export type EventEnvelope<T> = {
 
 `TICK -> SELECT CATEGORY -> APPLY RULES -> EMIT NEXT_REQUESTED`
 
-## 4) Failure modes and recovery behavior
+## Failure modes and recovery
 
-- **streaming-gateway fails:** other services continue; gateway restarts and reconnects to FIFO.
-- **audio-engine fails:** gateway can switch to dead-air fallback loop when FIFO ends.
-- **agent-dj fails:** automation can enqueue directly from rotation fallback.
-- **Postgres/Redis unavailable:** degrade to in-memory mode while event loop stays alive.
+- If `streaming-gateway` dies: core system can continue emitting `now_playing`; gateway reconnects to FIFO and resumes mount output.
+- If `audio-engine` dies: gateway input drops; dead-air protection can loop a fallback file in gateway.
+- If `agent-dj` dies: `automation` can switch to direct enqueue from rotations (fallback mode).
+- If Postgres/Redis are unavailable: services degrade to in-memory operation for MVP and keep event loops alive.
 
-## 5) Monorepo scaffolding (proposed)
+## Monorepo scaffolding
 
 ```text
 radio-agentic/
+  package.json
+  pnpm-workspace.yaml
+  tsconfig.base.json
+  docker-compose.yml
+  .env.example
+
   shared/
+    package.json
+    src/
+      events.ts
+      nats.ts
+      types.ts
+      ws.ts
+
   services/
     library/
+      package.json
+      prisma/
+        schema.prisma
+      src/
+        index.ts
+        ingest.ts
+
     automation/
+      package.json
+      src/
+        index.ts
+        scheduler.ts
+        rules.ts
+
     agent-dj/
+      package.json
+      src/
+        index.ts
+        policy.ts
+        memory.ts
+
     requests/
+      package.json
+      prisma/
+        schema.prisma
+      src/
+        index.ts
+        ws.ts
+
     audio-engine/
+      package.json
+      src/
+        index.ts
+        deck.ts
+        audioGraph.ts
+        playout.ts
+
     streaming-gateway/
+      package.json
+      src/
+        index.ts
+        icecast.ts
+        fallback.ts
+
   apps/
     console-web/
+      package.json
+      src/
+        main.tsx
+        App.tsx
+        api.ts
+
     remote-web/
+      package.json
+      src/
+        main.tsx
+        App.tsx
+        api.ts
+
   infra/
     icecast/
+      icecast.xml
 ```
 
-## 6) Shared primitives to keep stable
+## Core shared primitives
 
-- Typed event names and envelope helpers (`events.ts`)
-- NATS wrapper (`nats.ts`) with typed publish/subscribe helpers
-- Shared domain types (`types.ts`) for `Track`, `RequestMsg`, `NowPlaying`
-- Interface contracts for:
-  - audio graph/deck control
-  - transition planning and analysis
-  - stems/ad insertion
-  - agent policy + memory store
+### `shared/src/events.ts`
 
-## 7) MVP execution notes
+- Define `EventName` union for all bus topics.
+- Define `EventEnvelope<T>`: `{ id, name, ts, source, data }`.
+- Provide `mkEvent` helper to construct consistent envelopes.
 
-- Start with sequential playout and crossfade hooks before full beatmatching.
-- Keep Icecast metadata updates optional in MVP (log first, then admin endpoint/libshout).
-- Use a simple NATS-to-WS bridge to expose `now_playing` to web apps.
-- Keep service containers minimal (`node:20-alpine`, `ffmpeg`, `bash`) and iterate to full TS builds later.
+### `shared/src/nats.ts`
 
-## 8) End-to-end smoke path
+- `createBus(url)` returns `{ publish, subscribe, close }`.
+- `publish` writes JSON payloads keyed by event name.
+- `subscribe` handles async iteration and typed event decoding.
 
-1. Add sample audio files to `./music`.
-2. Run `docker compose up --build`.
-3. Trigger ingest (`POST /ingest`).
-4. Submit an Ask-the-DJ request (`POST /requests`).
-5. Verify `now_playing` emissions and Icecast mount playback.
+### `shared/src/types.ts`
 
-## 9) Intentional MVP stubs
+Include shared interfaces for:
 
-- Beatmatching/harmonic transition logic
-- Stem rendering pipeline
-- Icecast metadata update integration
-- Waveform rendering in console UI
-- Multi-bitrate encoder outputs
+- Domain types (`Track`, `RequestMsg`, `NowPlaying`)
+- Audio abstractions (`AudioGraph`, `DeckController`, `TransitionPlanner`)
+- Analysis/rendering (`TrackAnalyzer`, `StemRenderer`, `AdInserter`)
+- Agent behavior (`AgentPolicy`, `MemoryStore`)
 
+## Service responsibilities (critical files)
+
+- **Library**: ingest folder/upload and emit `track.added`.
+- **Requests**: `POST /requests`, WebSocket fanout, emit `request.created`.
+- **Agent DJ**: maintain request/memory context and choose next track on `playout.next_requested`.
+- **Automation**: scheduler loop to emit `playout.next_requested` at regular intervals.
+- **Audio engine**: queue + deck handling, emit `now_playing`, write PCM to FIFO.
+- **Streaming gateway**: consume FIFO PCM, transcode/stream to Icecast, metadata hooks.
+
+## Docker and runtime notes
+
+- Compose includes `nats`, `redis`, `icecast`, plus each service.
+- Share `/tmp` volume between `audio-engine` and `streaming-gateway` for FIFO handoff.
+- Mount `./music` into ingest/playout services.
+- Ensure service images include `ffmpeg` and shell support for FIFO creation/processing.
+
+## End-to-end runbook (MVP)
+
+1. Put audio files in `./music/` (`.mp3`, `.wav`, `.m4a`, etc.).
+2. Start stack: `docker compose up --build`
+3. Ingest tracks: `curl -X POST http://localhost:4001/ingest`
+4. Listen to stream: `http://localhost:8000/stream`
+5. Create a request:
+   - `curl -X POST http://localhost:4002/requests -H "content-type: application/json" -d '{"name":"May","message":"play rihanna"}'`
+
+Expected flow:
+
+`Library -> Automation -> Agent-DJ -> Audio Engine -> Streaming Gateway -> Icecast`
+
+## Intentionally deferred (interfaces in place)
+
+- Real beatmatching/harmonic transition planning
+- Stem rendering + per-stem mixing runtime
+- Icecast metadata mutation API integration
+- Console waveform rendering and deck visuals
+- Multi-bitrate output mounts
