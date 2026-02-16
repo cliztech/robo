@@ -106,10 +106,10 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 ## 🧪 Testing
 
 ```bash
-pnpm test
-pnpm test:e2e
-pnpm type-check
-pnpm lint
+npm run test:ui      # fast deterministic DJ UI component tests
+npm run test         # same UI suite for CI-friendly runs
+npm run test:watch   # watch mode while iterating on DJ UI modules
+npm run lint
 ```
 
 ## 📦 Deployment
