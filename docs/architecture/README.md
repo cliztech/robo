@@ -4,6 +4,7 @@ This folder defines shared contracts for module-to-module integration across `dg
 
 ## Artifacts
 - `agentic_radio_runtime_model.md` — end-to-end MVP runtime flow, topics, state machines, and scaffold.
+- `agentic_radio_runtime_overview.md` — end-to-end MVP runtime flow, events, state machines, and deployment runbook.
 - `interface-contracts.md` — high-level API and dependency constraints.
 - `event-schema.json` — JSON Schema for cross-module event payloads.
 
