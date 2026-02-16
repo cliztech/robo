@@ -113,6 +113,8 @@ export function DegenTransport({
             <div className="flex items-center gap-1 px-3 shrink-0">
                 <button
                     onClick={() => setShuffle(!shuffle)}
+                    aria-label="Toggle shuffle"
+                    aria-pressed={shuffle}
                     className={cn(
                         'p-1.5 rounded transition-all',
                         shuffle ? 'text-lime-400' : 'text-zinc-600 hover:text-zinc-300'
@@ -122,6 +124,7 @@ export function DegenTransport({
                 </button>
                 <button
                     onClick={onPrev}
+                    aria-label="Previous track"
                     className="p-1.5 rounded text-zinc-400 hover:text-white transition-colors"
                 >
                     <SkipBack size={14} fill="currentColor" />
@@ -130,6 +133,8 @@ export function DegenTransport({
                 {/* Play/Pause — large ring button */}
                 <button
                     onClick={onPlayPause}
+                    aria-label={isPlaying ? 'Pause playback' : 'Start playback'}
+                    aria-pressed={isPlaying}
                     className={cn(
                         'relative w-10 h-10 rounded-full flex items-center justify-center transition-all',
                         isPlaying
@@ -147,12 +152,15 @@ export function DegenTransport({
 
                 <button
                     onClick={onNext}
+                    aria-label="Next track"
                     className="p-1.5 rounded text-zinc-400 hover:text-white transition-colors"
                 >
                     <SkipForward size={14} fill="currentColor" />
                 </button>
                 <button
                     onClick={() => setRepeat(!repeat)}
+                    aria-label="Toggle repeat"
+                    aria-pressed={repeat}
                     className={cn(
                         'p-1.5 rounded transition-all',
                         repeat ? 'text-purple-400' : 'text-zinc-600 hover:text-zinc-300'
@@ -188,6 +196,7 @@ export function DegenTransport({
                         step={0.001}
                         value={progress}
                         onChange={(e) => setProgress(parseFloat(e.target.value))}
+                        aria-label="Track progress"
                         className="absolute inset-x-0 h-7 w-full opacity-0 cursor-pointer z-10"
                     />
                     {/* Thumb dot */}
@@ -236,6 +245,8 @@ export function DegenTransport({
             <div className="flex items-center gap-2 px-3 w-36 shrink-0 border-l border-white/[0.04]">
                 <button
                     onClick={() => setIsMuted(!isMuted)}
+                    aria-label={isMuted ? 'Unmute output' : 'Mute output'}
+                    aria-pressed={isMuted}
                     className={cn(
                         'p-1 rounded transition-colors',
                         isMuted ? 'text-red-400' : 'text-zinc-500 hover:text-zinc-300'
@@ -259,6 +270,7 @@ export function DegenTransport({
                             setVolume(parseInt(e.target.value));
                             if (isMuted) setIsMuted(false);
                         }}
+                        aria-label="Output volume"
                         className="absolute inset-0 w-full opacity-0 cursor-pointer"
                     />
                 </div>

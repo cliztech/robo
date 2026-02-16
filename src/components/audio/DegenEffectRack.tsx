@@ -63,6 +63,8 @@ export function DegenEffectRack({ title, deck, controls, isActive = true }: Dege
                 <div className="flex items-center gap-1">
                     <button
                         onClick={() => setIsLocked(!isLocked)}
+                        aria-label={isLocked ? 'Unlock effect controls' : 'Lock effect controls'}
+                        aria-pressed={isLocked}
                         className={cn(
                             'p-1 rounded transition-all',
                             isLocked
@@ -75,6 +77,7 @@ export function DegenEffectRack({ title, deck, controls, isActive = true }: Dege
                     </button>
                     <button
                         onClick={handleReset}
+                        aria-label="Reset effect controls"
                         className="p-1 rounded text-zinc-600 hover:text-zinc-400 hover:bg-white/[0.03] transition-all"
                         title="Reset"
                     >

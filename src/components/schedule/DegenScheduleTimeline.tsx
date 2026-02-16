@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { cn } from '../../lib/utils';
 import { Clock, Radio, Mic2, Music2, Megaphone, Newspaper, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -71,6 +71,19 @@ export function DegenScheduleTimeline({
     const nowPercent = ((currentHour - viewStart) / viewHours) * 100;
     const showNow = currentHour >= viewStart && currentHour <= viewEnd;
 
+    const selectSegmentByOffset = useCallback(
+        (segmentId: string, offset: number) => {
+            const segmentIndex = visibleSegments.findIndex((segment) => segment.id === segmentId);
+            if (segmentIndex === -1) return;
+
+            const target = visibleSegments[segmentIndex + offset];
+            if (target) {
+                setSelectedSegment(target);
+            }
+        },
+        [visibleSegments]
+    );
+
     return (
         <div className={cn('glass-panel overflow-hidden flex flex-col', className)}>
             {/* Header */}
@@ -82,6 +95,7 @@ export function DegenScheduleTimeline({
                 <div className="flex items-center gap-1">
                     <button
                         onClick={() => setViewStart(Math.max(0, viewStart - 6))}
+                        aria-label="Show earlier schedule window"
                         className="p-1 rounded text-zinc-600 hover:text-zinc-300 hover:bg-white/[0.04] transition-colors"
                     >
                         <ChevronLeft size={12} />
@@ -91,6 +105,7 @@ export function DegenScheduleTimeline({
                     </span>
                     <button
                         onClick={() => setViewStart(Math.min(18, viewStart + 6))}
+                        aria-label="Show later schedule window"
                         className="p-1 rounded text-zinc-600 hover:text-zinc-300 hover:bg-white/[0.04] transition-colors"
                     >
                         <ChevronRight size={12} />
@@ -143,10 +158,11 @@ export function DegenScheduleTimeline({
                         const isSelected = selectedSegment?.id === seg.id;
 
                         return (
-                            <div
+                            <button
                                 key={seg.id}
+                                type="button"
                                 className={cn(
-                                    'absolute rounded-md cursor-pointer transition-all duration-150 group/seg border overflow-hidden',
+                                    'absolute rounded-md cursor-pointer transition-all duration-150 group/seg border overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-offset-black',
                                     isActive && 'ring-1',
                                     isSelected && 'ring-1'
                                 )}
@@ -162,6 +178,19 @@ export function DegenScheduleTimeline({
                                     ...(isSelected ? { ringColor: cfg.color } : {}),
                                 }}
                                 onClick={() => setSelectedSegment(seg)}
+                                onKeyDown={(event) => {
+                                    if (event.key === 'ArrowRight') {
+                                        event.preventDefault();
+                                        selectSegmentByOffset(seg.id, 1);
+                                    }
+
+                                    if (event.key === 'ArrowLeft') {
+                                        event.preventDefault();
+                                        selectSegmentByOffset(seg.id, -1);
+                                    }
+                                }}
+                                aria-label={`${seg.title}, ${cfg.label}, starts ${formatHour(seg.startHour)}, duration ${seg.durationMinutes} minutes`}
+                                aria-pressed={isSelected}
                             >
                                 {/* Glow bar at top */}
                                 <div
@@ -186,7 +215,7 @@ export function DegenScheduleTimeline({
                                         </span>
                                     )}
                                 </div>
-                            </div>
+                            </button>
                         );
                     })}
                 </div>

@@ -197,6 +197,8 @@ function ChannelStrip({
             <div className="flex gap-1">
                 <button
                     onClick={() => onStateChange({ mute: !state.mute })}
+                    aria-label={`${channel.label} mute`}
+                    aria-pressed={state.mute}
                     className={cn(
                         'text-[7px] font-black w-6 h-5 flex items-center justify-center rounded-sm border transition-all',
                         state.mute
@@ -209,6 +211,8 @@ function ChannelStrip({
                 {!isMaster && (
                     <button
                         onClick={() => onStateChange({ solo: !state.solo })}
+                        aria-label={`${channel.label} solo`}
+                        aria-pressed={state.solo}
                         className={cn(
                             'text-[7px] font-black w-6 h-5 flex items-center justify-center rounded-sm border transition-all',
                             state.solo

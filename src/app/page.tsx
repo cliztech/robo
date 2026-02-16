@@ -58,6 +58,8 @@ function SidebarIcon({
         <button
             onClick={onClick}
             title={label}
+            aria-label={label}
+            aria-pressed={active}
             className={cn(
                 'relative w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 group',
                 active
@@ -642,7 +644,10 @@ export default function StudioPage() {
 
                     <div className="flex items-center gap-4">
                         {/* Alerts placeholder */}
-                        <button className="relative p-1.5 text-zinc-600 hover:text-zinc-300 transition-colors">
+                        <button
+                            className="relative p-1.5 text-zinc-600 hover:text-zinc-300 transition-colors"
+                            aria-label="View alerts"
+                        >
                             <AlertTriangle size={13} />
                             <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-lime-500 rounded-full" />
                         </button>
@@ -650,6 +655,8 @@ export default function StudioPage() {
                         {/* On-Air toggle */}
                         <button
                             onClick={() => setIsOnAir(!isOnAir)}
+                            aria-label={isOnAir ? 'Turn off on-air mode' : 'Turn on on-air mode'}
+                            aria-pressed={isOnAir}
                             className={cn(
                                 'relative flex items-center gap-2 px-3 py-1.5 rounded-md border text-[9px] font-black uppercase tracking-[0.2em] transition-all duration-300',
                                 isOnAir
