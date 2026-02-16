@@ -4,6 +4,21 @@ Version: `v0.1.0`
 Status: Planning draft for implementation kickoff  
 Owner: Design + Product + Engineering
 
+## Execution Status Tracker
+
+- Current phase: Phase 0 — Discovery and Contracting
+- Owner: Design + Product + Engineering
+- Last updated: 2026-02-16
+- Release target: DGN-DJ Operator Console v1.0
+- Rollout status source of truth: This document (see [Execution Status Source of Truth](#execution-status-source-of-truth)).
+
+## Execution Status Source of Truth
+
+This document is the canonical rollout tracker for the operator UI program. Update status here first, then synchronize summary-only deltas to:
+
+- [`docs/ui/radio_operator_ui_delivery_plan.md`](radio_operator_ui_delivery_plan.md)
+- [`docs/ui/dj_console_ui_research_plan.md`](dj_console_ui_research_plan.md)
+
 ## 1) Goal and Scope
 
 Build fully operational, production-ready interfaces (not static mockups) for DGN-DJ by DGNradio using the attached DJ-style references as **visual and interaction inspiration**.
@@ -197,63 +212,65 @@ The work should follow a staged handoff pipeline.
 
 ## 9) Delivery Phases
 
-## Phase 0 — Discovery and Contracting
+### Phase 0 — Discovery and Contracting
 
-- Confirm operator personas and mission-critical workflows
-- Freeze core data contracts for live state and automation events
-- Define acceptance criteria per screen
+- [ ] Confirm operator personas and mission-critical workflows.
+- [ ] Freeze core data contracts for live state and automation events.
+- [ ] Define acceptance criteria per screen.
 
-Deliverables:
+Objective completion criteria:
 
-- Functional requirements matrix
-- UI data contract matrix
-- Risk register and mitigation owner list
+- [ ] Functional requirements matrix is approved and versioned.
+- [ ] UI data contract matrix has named owners for every feed.
+- [ ] Risk register includes mitigation owners and escalation path.
 
-## Phase 1 — Foundation
+### Phase 1 — Foundation
 
-- Implement tokenized primitives and base layout shell
-- Build global top strip + system status model
-- Wire command palette and base shortcuts
+- [ ] Implement tokenized primitives and base layout shell.
+- [ ] Build global top strip + system status model.
+- [ ] Wire command palette and base shortcuts.
 
-Deliverables:
+Objective completion criteria:
 
-- UI foundation package
-- Keyboard map v1
-- Baseline accessibility checks
+- [ ] UI foundation package is merged behind a feature flag.
+- [ ] Keyboard map v1 is published and validated in smoke tests.
+- [ ] Baseline accessibility checks pass for top strip and navigation.
 
-## Phase 2 — Core Console
+### Phase 2 — Core Console
 
-- Implement dual-deck console + master strip + queue
-- Add library browser with metadata table and drag/drop
-- Add first version of automation timeline panel
+- [ ] Implement dual-deck console + master strip + queue.
+- [ ] Add library browser with metadata table and drag/drop.
+- [ ] Add first version of automation timeline panel.
 
-Deliverables:
+Objective completion criteria:
 
-- Usable end-to-end studio MVP
-- Smoke-tested loading/playback transitions
+- [ ] End-to-end studio MVP is usable for real operator drills.
+- [ ] Loading/playback transitions are smoke-tested and documented.
+- [ ] Queue integrity checks pass for manual and automated insertions.
 
-## Phase 3 — Advanced Ops
+### Phase 3 — Advanced Ops
 
-- Add sampler/hotcue/FX modules
-- Add advanced routing and input matrix
-- Add performance layout presets (Essentials/Performance/Pro-4)
+- [ ] Add sampler/hotcue/FX modules.
+- [ ] Add advanced routing and input matrix.
+- [ ] Add performance layout presets (Essentials/Performance/Pro-4).
 
-Deliverables:
+Objective completion criteria:
 
-- Advanced operator toolkit
-- Preset layout manager
+- [ ] Advanced operator toolkit is validated in failure drills.
+- [ ] Preset layout manager persists/reloads without state drift.
+- [ ] Routing rollback path is tested with diagnostic logs captured.
 
-## Phase 4 — Hardening & Launch Readiness
+### Phase 4 — Hardening & Launch Readiness
 
-- Full keyboard and accessibility audit
-- Incident and failure-state drills
-- Final regression + performance + reliability signoff
+- [ ] Run full keyboard and accessibility audit.
+- [ ] Execute incident and failure-state drills.
+- [ ] Complete final regression + performance + reliability signoff.
 
-Deliverables:
+Objective completion criteria:
 
-- Release readiness report
-- Operator onboarding guide
-- Known limitations + deferred backlog
+- [ ] Release readiness report is approved by Management, QA, and Design.
+- [ ] Operator onboarding guide and known limitations are published.
+- [ ] Deferred backlog is triaged with owner and target release.
 
 ## 10) Success Metrics
 
@@ -276,7 +293,24 @@ Quality metrics:
 - Accessibility acceptance matrix pass rate
 - Critical incident escape defects (target: zero)
 
-## 11) Immediate Next Steps (Week 1)
+## 11) Quality Gate Evidence
+
+- Implemented modules (current baseline):
+  - [`src/components/audio/DegenWaveform.tsx`](../../src/components/audio/DegenWaveform.tsx)
+  - [`src/components/audio/DegenVUMeter.tsx`](../../src/components/audio/DegenVUMeter.tsx)
+  - [`src/components/shell/topbar.tsx`](../../src/components/shell/topbar.tsx)
+- Tests and validation references:
+  - [`docs/visual_regression_token_checklist.md`](../visual_regression_token_checklist.md)
+  - [`docs/ui/design_system_implementation_checklist.md`](design_system_implementation_checklist.md)
+  - [`docs/command_palette_and_shortcuts_spec.md`](../command_palette_and_shortcuts_spec.md)
+- Screenshot evidence linkage:
+  - Attach milestone captures to PRs and reference them from this section using phase-prefixed filenames.
+- Validation command set (log outputs each phase):
+  - `pnpm lint`
+  - `pnpm test`
+  - `pnpm playwright test`
+
+## 12) Immediate Next Steps (Week 1)
 
 1. Approve this execution plan and lock scope for Phase 0/1
 2. Produce "Live Studio Console" low-fidelity interaction map
@@ -291,3 +325,5 @@ If you want, next I can convert this into:
 - a milestone-based sprint board,
 - a screen-by-screen component inventory,
 - and a detailed acceptance checklist for each panel (Console, Browser, Timeline, Sampler, Routing, Health).
+
+For status synchronization, update this source-of-truth document first and then mirror concise updates to [`docs/ui/radio_operator_ui_delivery_plan.md`](radio_operator_ui_delivery_plan.md) and [`docs/ui/dj_console_ui_research_plan.md`](dj_console_ui_research_plan.md).

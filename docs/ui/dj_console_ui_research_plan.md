@@ -4,6 +4,14 @@ Status: draft
 Audience: product/design/frontend/audio teams  
 Goal: reproduce the look-and-feel of the reference DJ images (VirtualDJ-like density and performance) while fitting the DGN-DJ stack and accessibility commitments.
 
+## Execution Status Tracker
+
+- Current phase: Phase 1 — Theme + shell scaffolding
+- Owner: Design + Frontend
+- Last updated: 2026-02-16
+- Release target: UI Console Alpha (Phase 2 handoff)
+- Rollout status source of truth: [`docs/ui/radio_broadcasting_ui_execution_plan.md`](radio_broadcasting_ui_execution_plan.md#execution-status-source-of-truth)
+
 ## 1. Target Experience (What the references are doing)
 
 The references consistently use these patterns:
@@ -253,31 +261,71 @@ Extend it with DJ-specific snapshots:
 
 ## 12. Execution Phases
 
-Phase 1: Theme + shell scaffolding (1-2 sprints)
+### Phase 1: Theme + shell scaffolding (1-2 sprints)
 
-- implement DJ token extension in `src/styles/tokens.css`
-- build `app-shell`, `waveform-rail`, `deck/mixer/browser` containers
-- ship static layout with placeholder data
+- [ ] Implement DJ token extension in `src/styles/tokens.css`.
+- [ ] Build `app-shell`, `waveform-rail`, `deck/mixer/browser` containers.
+- [ ] Ship static layout with placeholder data.
 
-Phase 2: Interactive controls (1-2 sprints)
+Objective completion criteria:
 
-- faders/knobs/hotcues/pads controls
-- keyboard shortcuts
-- state wiring and deterministic focus order
+- [ ] Tokens for deck accents and waveform roles are available in `src/styles/tokens.css`.
+- [ ] Shell renders top/deck/browser regions without layout overlap at 1280x720 and 1920x1080.
+- [ ] Static scaffold is reviewable in a feature-flagged route.
 
-Phase 3: Waveform + audio integration (2-3 sprints)
+### Phase 2: Interactive controls (1-2 sprints)
 
-- high-performance waveform renderer
-- meter bridge, cue markers, sync indicators
-- connect to `useAudioEngine` and engine telemetry
+- [ ] Deliver faders/knobs/hotcues/pads controls.
+- [ ] Add keyboard shortcuts for critical transport/library actions.
+- [ ] Wire state and deterministic focus order.
 
-Phase 4: hardening and presets (1-2 sprints)
+Objective completion criteria:
 
-- accessibility profiles and reduced-motion parity
-- visual regression + interaction tests
-- latency/perf tuning and release checklist
+- [ ] Pointer and keyboard controls update visible state in <100ms for transport actions.
+- [ ] Focus order and shortcut map are documented and test-covered.
+- [ ] Operator can complete a cue → play → load-next loop without pointer-only fallbacks.
 
-## 13. Immediate Next Tasks (Recommended)
+### Phase 3: Waveform + audio integration (2-3 sprints)
+
+- [ ] Implement high-performance waveform renderer.
+- [ ] Integrate meter bridge, cue markers, and sync indicators.
+- [ ] Connect to `useAudioEngine` and engine telemetry.
+
+Objective completion criteria:
+
+- [ ] Waveform lane sustains 60 FPS on target hardware profile.
+- [ ] Cue markers and sync state match engine telemetry within one render frame.
+- [ ] Audio engine reconnect/degraded states have visible operator guidance.
+
+### Phase 4: Hardening and presets (1-2 sprints)
+
+- [ ] Finalize accessibility profiles and reduced-motion parity.
+- [ ] Add visual regression + interaction tests.
+- [ ] Complete latency/perf tuning and release checklist.
+
+Objective completion criteria:
+
+- [ ] WCAG AA contrast and keyboard-critical flows pass across dark/high-contrast presets.
+- [ ] Visual regression coverage includes waveform rail, dual deck, and browser density states.
+- [ ] Release checks and rollback instructions are logged in the rollout source-of-truth document.
+
+## 13. Quality Gate Evidence
+
+- Implemented modules (current baseline):
+  - [`src/components/audio/DegenWaveform.tsx`](../../src/components/audio/DegenWaveform.tsx)
+  - [`src/components/audio/DegenTransport.tsx`](../../src/components/audio/DegenTransport.tsx)
+  - [`src/components/shell/topbar.tsx`](../../src/components/shell/topbar.tsx)
+- Test and validation references:
+  - [`docs/visual_regression_token_checklist.md`](../visual_regression_token_checklist.md)
+  - [`docs/ui/design_system_implementation_checklist.md`](design_system_implementation_checklist.md)
+- Screenshot evidence linkage:
+  - Attach phase-tagged captures to implementation PRs and reference them from this section.
+- Validation command log (append pass/fail output per phase):
+  - `pnpm lint`
+  - `pnpm test`
+  - `pnpm playwright test`
+
+## 14. Immediate Next Tasks (Recommended)
 
 1. Approve one visual direction variant:
    - `industrial dark` (closest to references)
@@ -288,7 +336,7 @@ Phase 4: hardening and presets (1-2 sprints)
 4. Build a static mock page with fake deck/mixer/library data to validate information hierarchy before wiring live audio.
 5. Add baseline screenshots for dark/light/high-contrast/reduced-motion profiles.
 
-## 14. Acceptance Summary
+## 15. Acceptance Summary
 
 If the plan above is executed, DGN-DJ will match the reference style in:
 
@@ -302,4 +350,3 @@ while still preserving:
 - product branding
 - accessibility requirements
 - maintainable token/component architecture.
-

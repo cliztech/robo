@@ -4,6 +4,14 @@ Status: Proposed
 Owner: Design + DevOps + QA + AI Improvement + Management
 Primary reference style: user-provided DJ/radio console mockups (dark, high-density, deck-centric)
 
+## Execution Status Tracker
+
+- Current phase: Phase 0 — Foundations
+- Owner: Design + DevOps + QA + AI Improvement + Management
+- Last updated: 2026-02-16
+- Release target: Operator UI Beta (Phase 2 complete)
+- Rollout status source of truth: [`docs/ui/radio_broadcasting_ui_execution_plan.md`](radio_broadcasting_ui_execution_plan.md#execution-status-source-of-truth)
+
 ## 1) Outcome
 
 Design and implement **fully operational** operator interfaces (not static images) for the DGN-DJ radio platform by translating the visual language of the provided mockups into a production-ready interaction system.
@@ -182,44 +190,54 @@ From `SKILLS.md`, recommended stack:
 ## 9) Phased Delivery Plan (From Spec to Working UI)
 
 ### Phase 0 — Foundations
-- Finalize IA + component taxonomy
-- Lock design tokens and contrast profiles
-- Define keyboard command map and ARIA landmarks
+- [ ] Finalize IA + component taxonomy.
+- [ ] Lock design tokens and contrast profiles.
+- [ ] Define keyboard command map and ARIA landmarks.
 
-Exit criteria:
-- Approved spec package with acceptance criteria per module
+Objective completion criteria:
+- [ ] Approved spec package includes acceptance criteria per module.
+- [ ] Token and contrast decisions are mapped to implementation owners.
+- [ ] Keyboard map covers all critical console actions with no conflicts.
 
 ### Phase 1 — Console Core (Functional)
-- Implement deck, waveform, transport, mixer, meter bridge
-- Integrate live state feeds (read + control)
-- Add fail-safe indicators and transport confirmations
+- [ ] Implement deck, waveform, transport, mixer, and meter bridge.
+- [ ] Integrate live state feeds (read + control).
+- [ ] Add fail-safe indicators and transport confirmations.
 
-Exit criteria:
-- End-to-end control of A/B playout in dev/staging with deterministic state sync
+Objective completion criteria:
+- [ ] End-to-end control of A/B playout works in dev/staging with deterministic state sync.
+- [ ] Transport confirmations and alert states are visible and keyboard-accessible.
+- [ ] Smoke tests cover load, play, pause, cue, and stop paths.
 
 ### Phase 2 — Browser + Queue + Scheduler Integration
-- Implement media browser and queue operations
-- Integrate scheduler overlay and conflict handling
-- Add now/next and break-window intelligence
+- [ ] Implement media browser and queue operations.
+- [ ] Integrate scheduler overlay and conflict handling.
+- [ ] Add now/next and break-window intelligence.
 
-Exit criteria:
-- Operator can run a full hour with mixed manual and automated transitions
+Objective completion criteria:
+- [ ] Operator can run a full hour with mixed manual and automated transitions.
+- [ ] Conflict badges include remediation actions and clear ownership.
+- [ ] Queue/scheduler actions are auditable in validation logs.
 
 ### Phase 3 — FX/Sampler + Routing + Diagnostics
-- Add FX/sampler module with safety locks and reset semantics
-- Add routing/device settings with apply/test/rollback
-- Integrate diagnostics command center
+- [ ] Add FX/sampler module with safety locks and reset semantics.
+- [ ] Add routing/device settings with apply/test/rollback flow.
+- [ ] Integrate diagnostics command center.
 
-Exit criteria:
-- Failure drills pass (routing change rollback, stream fallback, incident mode)
+Objective completion criteria:
+- [ ] Failure drills pass: routing rollback, stream fallback, incident mode.
+- [ ] Safety lock states prevent accidental destructive triggers.
+- [ ] Diagnostics quick actions include recoverable outcomes and logs.
 
 ### Phase 4 — Hardening + Release Readiness
-- Performance tuning for real-time visual updates
-- Accessibility and keyboard completion
-- Full QA regression, release checklist, and operator training aids
+- [ ] Tune performance for real-time visual updates.
+- [ ] Complete accessibility and keyboard coverage.
+- [ ] Finish full QA regression, release checklist, and operator training aids.
 
-Exit criteria:
-- Release candidate passes all quality gates in `PRE_RELEASE_CHECKLIST.md`
+Objective completion criteria:
+- [ ] Release candidate passes all quality gates in `PRE_RELEASE_CHECKLIST.md`.
+- [ ] Accessibility presets pass contrast, focus, and reduced-motion checks.
+- [ ] Performance budget signoff is captured in the rollout source-of-truth document.
 
 ## 10) Verification and Quality Gates
 
@@ -230,7 +248,23 @@ Mandatory verification before production rollout:
 - Accessibility checks: contrast and screen-reader labels for critical controls
 - Performance checks: waveform + meters + table scrolling under load
 
-## 11) Immediate Next Actions (Execution Starter)
+## 11) Quality Gate Evidence
+
+- Implemented modules (current baseline):
+  - [`src/components/audio/AudioPlayer.tsx`](../../src/components/audio/AudioPlayer.tsx)
+  - [`src/components/audio/DegenMixer.tsx`](../../src/components/audio/DegenMixer.tsx)
+  - [`src/components/shell/workspace.tsx`](../../src/components/shell/workspace.tsx)
+- Tests and checklists:
+  - [`docs/visual_regression_token_checklist.md`](../visual_regression_token_checklist.md)
+  - [`docs/ui/design_system_implementation_checklist.md`](design_system_implementation_checklist.md)
+- Screenshot evidence policy:
+  - Capture milestone UI states and attach in PRs using the naming format `ui-phase-<phase>-<screen>.png`.
+- Validation commands to record each phase:
+  - `pnpm lint`
+  - `pnpm test`
+  - `pnpm playwright test`
+
+## 12) Immediate Next Actions (Execution Starter)
 
 1. Approve this delivery plan as the working UI program charter.
 2. Produce two detailed specs next:
@@ -242,3 +276,5 @@ Mandatory verification before production rollout:
 ---
 
 This plan intentionally treats the provided images as **style inspiration**, while the deliverable remains a fully operational, testable, and maintainable broadcast UI system.
+
+For rollout status updates, always update the source-of-truth tracker in [`docs/ui/radio_broadcasting_ui_execution_plan.md`](radio_broadcasting_ui_execution_plan.md#execution-status-source-of-truth) first, then mirror summary deltas here.
