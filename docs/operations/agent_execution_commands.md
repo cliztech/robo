@@ -144,7 +144,7 @@ gh pr create \
   --body-file .github/pull_request_template.md
 
 # 2) Update draft checkpoints after each milestone
-gh pr edit <pr-number> --body-file /tmp/pr-body-updated.md
+gh pr edit <pr-number> --body-file ./pr-body-updated.md
 gh pr comment <pr-number> --body "Checkpoint: completed validation pass and updated risks section."
 
 # 3) Verify checks + reviewers before promotion
