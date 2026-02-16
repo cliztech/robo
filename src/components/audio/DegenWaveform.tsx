@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { cn } from '../../lib/utils';
+import { createDeterministicWaveform } from '../../lib/degenDataAdapters';
 
 interface CuePoint {
     position: number; // 0-1
@@ -17,22 +18,8 @@ interface DegenWaveformProps {
     onSeek?: (position: number) => void;
     trackTitle?: string;
     isPlaying?: boolean;
+    beatMarkers?: number[];
     className?: string;
-}
-
-function generateDefaultWaveform(length = 250): number[] {
-    const data: number[] = [];
-    for (let i = 0; i < length; i++) {
-        const t = i / length;
-        const base = 0.25 + Math.random() * 0.35;
-        const envelope =
-            Math.sin(t * Math.PI) * 0.25 +
-            Math.sin(t * Math.PI * 3.7) * 0.12 +
-            Math.sin(t * Math.PI * 7.3) * 0.08 +
-            Math.sin(t * Math.PI * 13.1) * 0.05;
-        data.push(Math.min(1, Math.max(0.04, base + envelope)));
-    }
-    return data;
 }
 
 export function DegenWaveform({
@@ -43,6 +30,7 @@ export function DegenWaveform({
     onSeek,
     trackTitle,
     isPlaying = false,
+    beatMarkers = [0.25, 0.5, 0.75],
     className,
 }: DegenWaveformProps) {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -50,7 +38,7 @@ export function DegenWaveform({
     const [isDragging, setIsDragging] = useState(false);
 
     const data = useMemo(
-        () => waveformData || generateDefaultWaveform(250),
+        () => waveformData || createDeterministicWaveform(250),
         [waveformData]
     );
 
@@ -297,7 +285,7 @@ export function DegenWaveform({
                 ))}
 
                 {/* Beat grid markers */}
-                {[0.25, 0.5, 0.75].map((pos) => (
+                {beatMarkers.map((pos) => (
                     <div
                         key={pos}
                         className="absolute top-0 bottom-0 w-[1px] bg-white/[0.04] pointer-events-none"

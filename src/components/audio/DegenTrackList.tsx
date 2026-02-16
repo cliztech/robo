@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { cn } from '../../lib/utils';
+import { TrackLibraryTrack, resolveTrackLibraryData } from '../../lib/degenDataAdapters';
 import {
     Search,
     Filter,
@@ -14,47 +15,24 @@ import {
     ChevronDown,
 } from 'lucide-react';
 
-interface Track {
-    id: string;
-    title: string;
-    artist: string;
-    bpm: number;
-    key: string;
-    duration: number;
-    genre: string;
-    energy: number;
-}
-
 interface DegenTrackListProps {
-    tracks?: Track[];
-    onTrackSelect?: (track: Track) => void;
-    onTrackLoad?: (track: Track, deck: 'A' | 'B') => void;
+    tracks?: TrackLibraryTrack[];
+    onTrackSelect?: (track: TrackLibraryTrack) => void;
+    onTrackLoad?: (track: TrackLibraryTrack, deck: 'A' | 'B') => void;
     className?: string;
 }
-
-const DEMO_TRACKS: Track[] = [
-    { id: '1', title: 'Neural Drift v2.1', artist: 'SynthKong', bpm: 128, key: 'Am', duration: 234, genre: 'Deep House', energy: 7 },
-    { id: '2', title: 'Bass Gorilla', artist: 'DJ DegenApe', bpm: 140, key: 'Fm', duration: 198, genre: 'DnB', energy: 9 },
-    { id: '3', title: 'Quantum Entanglement', artist: 'PixelVault', bpm: 124, key: 'Cm', duration: 312, genre: 'Techno', energy: 6 },
-    { id: '4', title: 'Zero Knowledge Proof', artist: 'HashRate', bpm: 132, key: 'Gm', duration: 276, genre: 'Electro', energy: 8 },
-    { id: '5', title: 'Liquidation Event', artist: 'Margin Call', bpm: 138, key: 'Dm', duration: 186, genre: 'DnB', energy: 10 },
-    { id: '6', title: 'Smart Contract', artist: 'Eth Gardener', bpm: 120, key: 'Bbm', duration: 298, genre: 'Deep House', energy: 5 },
-    { id: '7', title: 'Fork This', artist: 'GitPush', bpm: 126, key: 'Em', duration: 204, genre: 'Tech House', energy: 7 },
-    { id: '8', title: 'Block Height', artist: 'MinerBot', bpm: 136, key: 'Ab', duration: 245, genre: 'Techno', energy: 8 },
-    { id: '9', title: 'Rug Pull Blues', artist: 'Sad Pepe', bpm: 118, key: 'Eb', duration: 190, genre: 'Lo-Fi', energy: 3 },
-    { id: '10', title: 'Diamond Hands', artist: 'HODL Gang', bpm: 145, key: 'Fm', duration: 222, genre: 'Hardstyle', energy: 10 },
-];
 
 const GENRES = ['All', 'Deep House', 'DnB', 'Techno', 'Electro', 'Tech House', 'Lo-Fi', 'Hardstyle'];
 
 type SortField = 'title' | 'artist' | 'bpm' | 'key' | 'duration' | 'energy';
 
 export function DegenTrackList({
-    tracks = DEMO_TRACKS,
+    tracks,
     onTrackSelect,
     onTrackLoad,
     className,
 }: DegenTrackListProps) {
+    const trackLibrary = useMemo(() => resolveTrackLibraryData(tracks), [tracks]);
     const [search, setSearch] = useState('');
     const [genre, setGenre] = useState('All');
     const [sortField, setSortField] = useState<SortField>('title');
@@ -68,7 +46,7 @@ export function DegenTrackList({
     };
 
     const filtered = useMemo(() => {
-        let list = [...tracks];
+        let list = [...trackLibrary];
         if (search) {
             const q = search.toLowerCase();
             list = list.filter(
@@ -83,7 +61,7 @@ export function DegenTrackList({
             return sortAsc ? cmp : -cmp;
         });
         return list;
-    }, [tracks, search, genre, sortField, sortAsc]);
+    }, [trackLibrary, search, genre, sortField, sortAsc]);
 
     const formatDur = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
