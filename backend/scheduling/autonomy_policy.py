@@ -153,3 +153,46 @@ class PolicyAuditEvent(BaseModel):
     show_id: Optional[str] = None
     timeslot_id: Optional[str] = None
     notes: Optional[str] = None
+
+MODE_DEFINITIONS = [
+    {
+        "mode": "manual_assist",
+        "label": "Manual Assist",
+        "risk": "low",
+        "summary": "AI suggests, human approves everything. Safest mode for new operators.",
+        "anchor": "#1-manual-assist",
+        "requires_approval": ["Playlist writes", "Live TTS", "Ad insertion", "Caller simulation"],
+    },
+    {
+        "mode": "semi_auto",
+        "label": "Semi-Auto",
+        "risk": "moderate",
+        "summary": "AI generates scripts and plans, human reviews before promotion to live.",
+        "anchor": "#2-semi-auto-user-approved-scripts",
+        "requires_approval": ["Script promotion", "Playlist commits", "Ad finalization"],
+    },
+    {
+        "mode": "auto_with_human_override",
+        "label": "Auto with Override",
+        "risk": "elevated",
+        "summary": "AI runs autonomously within guardrails. Human can override anytime.",
+        "anchor": "#3-auto-with-human-override",
+        "requires_approval": ["Guardrail breaches", "New campaigns", "Policy edits"],
+    },
+    {
+        "mode": "full_auto_guardrailed",
+        "label": "Full Auto Guardrailed",
+        "risk": "high",
+        "summary": "AI manages end-to-end with automated guardrail enforcement.",
+        "anchor": "#4-full-auto-guardrailed",
+        "requires_approval": ["Policy changes", "Unapproved assets"],
+    },
+    {
+        "mode": "lights_out_overnight",
+        "label": "Lights-Out Overnight",
+        "risk": "high",
+        "summary": "Fully autonomous operation optimized for unattended overnight slots.",
+        "anchor": "#5-lights-out-overnight",
+        "requires_approval": ["Outside window ops", "High sensitivity content"],
+    },
+]
