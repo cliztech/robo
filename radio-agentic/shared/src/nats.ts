@@ -24,7 +24,7 @@ export async function createBus(url: string): Promise<NatsBus> {
         const parsed = JSON.parse(sc.decode(msg.data)) as EventEnvelope<T>;
         await handler(parsed);
       }
-    })().catch(() => {});
+    })().catch((err) => console.error(`Error in NATS subscription for topic "${name}":`, err));
     return sub;
   }
 
