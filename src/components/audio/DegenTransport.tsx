@@ -1,41 +1,35 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { cn } from '../../lib/utils';
-import { DegenButton } from '../primitives/DegenButton';
+import { DegenVUMeter, DegenStereoMeter } from './DegenVUMeter';
 import {
     Play,
     Pause,
-    SkipForward,
     SkipBack,
-    Repeat,
+    SkipForward,
     Shuffle,
+    Repeat,
+    Radio,
     Volume2,
     VolumeX,
-    Radio,
-    Mic2,
+    Volume1,
 } from 'lucide-react';
-import { DegenVUMeter } from './DegenVUMeter';
-
-interface TransportTrack {
-    title: string;
-    artist: string;
-    duration: number;
-    bpm?: number;
-    key?: string;
-}
 
 interface DegenTransportProps {
-    currentTrack?: TransportTrack;
+    currentTrack?: {
+        title: string;
+        artist: string;
+        album?: string;
+        bpm?: number;
+        key?: string;
+        duration?: number;
+    };
     isPlaying?: boolean;
-    progress?: number; // 0-1
-    volume?: number; // 0-100
     isOnAir?: boolean;
     onPlayPause?: () => void;
     onNext?: () => void;
     onPrev?: () => void;
-    onVolumeChange?: (v: number) => void;
-    onSeek?: (pos: number) => void;
     className?: string;
 }
 
@@ -43,94 +37,85 @@ export function DegenTransport({
     currentTrack = {
         title: 'Neural Drift v2.1',
         artist: 'SynthKong',
-        duration: 234,
+        album: 'Quantum Bass EP',
         bpm: 128,
         key: 'Am',
+        duration: 234,
     },
     isPlaying = true,
-    progress = 0.35,
-    volume = 75,
     isOnAir = true,
     onPlayPause,
     onNext,
     onPrev,
-    onVolumeChange,
-    onSeek,
     className,
 }: DegenTransportProps) {
-    const [localProgress, setLocalProgress] = useState(progress);
+    const [progress, setProgress] = useState(0.42);
+    const [volume, setVolume] = useState(85);
     const [isMuted, setIsMuted] = useState(false);
-    const [isRepeat, setIsRepeat] = useState(false);
-    const [isShuffle, setIsShuffle] = useState(false);
-    const [vuLeft, setVuLeft] = useState(65);
-    const [vuRight, setVuRight] = useState(58);
+    const [repeat, setRepeat] = useState(false);
+    const [shuffle, setShuffle] = useState(false);
+    const [vuLeft, setVuLeft] = useState(0.72);
+    const [vuRight, setVuRight] = useState(0.68);
 
-    useEffect(() => setLocalProgress(progress), [progress]);
-
-    // Simulate VU meter movement
+    // Simulated VU animation
     useEffect(() => {
         if (!isPlaying) return;
         const id = setInterval(() => {
-            setVuLeft(55 + Math.random() * 30);
-            setVuRight(50 + Math.random() * 35);
-        }, 100);
+            setVuLeft((prev) => Math.max(0.1, Math.min(1, prev + (Math.random() - 0.5) * 0.12)));
+            setVuRight((prev) => Math.max(0.1, Math.min(1, prev + (Math.random() - 0.5) * 0.12)));
+        }, 80);
         return () => clearInterval(id);
     }, [isPlaying]);
 
-    const formatTime = (s: number) => {
-        const m = Math.floor(s / 60);
-        const sec = Math.floor(s % 60);
-        return `${m}:${sec.toString().padStart(2, '0')}`;
+    const formatTime = (seconds: number) => {
+        const m = Math.floor(seconds / 60);
+        const s = Math.floor(seconds % 60);
+        return `${m}:${s.toString().padStart(2, '0')}`;
     };
 
-    const elapsed = localProgress * currentTrack.duration;
-    const remaining = currentTrack.duration - elapsed;
+    const elapsed = progress * (currentTrack.duration || 0);
+    const remaining = (currentTrack.duration || 0) - elapsed;
+
+    const VolumeIcon = isMuted ? VolumeX : volume < 40 ? Volume1 : Volume2;
 
     return (
         <div
             className={cn(
-                'bg-zinc-950 border-t border-zinc-800 flex items-center gap-4 px-4 py-2',
+                'h-16 bg-black/60 backdrop-blur-xl border-t border-white/[0.04] flex items-center gap-0 px-0 shrink-0 z-20',
+                'shadow-[0_-4px_20px_rgba(0,0,0,0.3)]',
                 className
             )}
         >
-            {/* On Air indicator */}
-            <div className="flex items-center gap-2 min-w-[80px]">
+            {/* ── On-Air Indicator ─── */}
+            <div className="w-14 h-full flex items-center justify-center shrink-0 border-r border-white/[0.04]">
                 {isOnAir ? (
-                    <div className="flex items-center gap-1.5 px-2 py-1 bg-red-600/20 border border-red-600/30 rounded">
-                        <Radio size={10} className="text-red-500" />
-                        <span className="text-[9px] font-black uppercase tracking-widest text-red-500 animate-pulse">
-                            On Air
-                        </span>
+                    <div className="relative">
+                        <div className="w-3 h-3 rounded-full bg-red-500" style={{ boxShadow: '0 0 10px rgba(239,68,68,0.5)' }} />
+                        <div className="absolute inset-0 w-3 h-3 rounded-full bg-red-500 animate-ping opacity-30" />
                     </div>
                 ) : (
-                    <div className="flex items-center gap-1.5 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded">
-                        <Mic2 size={10} className="text-zinc-500" />
-                        <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">
-                            Off Air
-                        </span>
-                    </div>
+                    <div className="w-3 h-3 rounded-full bg-zinc-700" />
                 )}
             </div>
 
-            {/* Track info */}
-            <div className="flex flex-col min-w-[140px]">
-                <span className="text-xs font-bold text-white truncate">
+            {/* ── Track Info ─── */}
+            <div className="w-52 px-4 shrink-0 border-r border-white/[0.04]">
+                <div className="text-[11px] font-bold text-white truncate tracking-wide">
                     {currentTrack.title}
-                </span>
-                <span className="text-[10px] text-zinc-500 truncate">
+                </div>
+                <div className="text-[10px] text-zinc-500 truncate">
                     {currentTrack.artist}
-                </span>
+                    {currentTrack.album && <span className="text-zinc-700"> · {currentTrack.album}</span>}
+                </div>
             </div>
 
-            {/* Transport controls */}
-            <div className="flex items-center gap-1">
+            {/* ── Transport Controls ─── */}
+            <div className="flex items-center gap-1 px-3 shrink-0">
                 <button
-                    onClick={() => setIsShuffle(!isShuffle)}
+                    onClick={() => setShuffle(!shuffle)}
                     className={cn(
-                        'p-1.5 rounded transition-colors',
-                        isShuffle
-                            ? 'text-lime-500'
-                            : 'text-zinc-600 hover:text-zinc-300'
+                        'p-1.5 rounded transition-all',
+                        shuffle ? 'text-lime-400' : 'text-zinc-600 hover:text-zinc-300'
                     )}
                 >
                     <Shuffle size={12} />
@@ -139,122 +124,146 @@ export function DegenTransport({
                     onClick={onPrev}
                     className="p-1.5 rounded text-zinc-400 hover:text-white transition-colors"
                 >
-                    <SkipBack size={14} />
+                    <SkipBack size={14} fill="currentColor" />
                 </button>
+
+                {/* Play/Pause — large ring button */}
                 <button
                     onClick={onPlayPause}
                     className={cn(
-                        'p-2 rounded-md transition-all',
+                        'relative w-10 h-10 rounded-full flex items-center justify-center transition-all',
                         isPlaying
-                            ? 'bg-lime-500 text-black shadow-[0_0_12px_rgba(170,255,0,0.4)]'
-                            : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                            ? 'bg-lime-500/15 border border-lime-500/30 text-lime-400 hover:bg-lime-500/25'
+                            : 'bg-white/5 border border-white/10 text-white hover:bg-white/10'
                     )}
+                    style={isPlaying ? { boxShadow: '0 0 15px rgba(170,255,0,0.12)' } : {}}
                 >
-                    {isPlaying ? <Pause size={14} /> : <Play size={14} />}
+                    {isPlaying ? (
+                        <Pause size={16} fill="currentColor" />
+                    ) : (
+                        <Play size={16} fill="currentColor" className="ml-0.5" />
+                    )}
                 </button>
+
                 <button
                     onClick={onNext}
                     className="p-1.5 rounded text-zinc-400 hover:text-white transition-colors"
                 >
-                    <SkipForward size={14} />
+                    <SkipForward size={14} fill="currentColor" />
                 </button>
                 <button
-                    onClick={() => setIsRepeat(!isRepeat)}
+                    onClick={() => setRepeat(!repeat)}
                     className={cn(
-                        'p-1.5 rounded transition-colors',
-                        isRepeat
-                            ? 'text-purple-500'
-                            : 'text-zinc-600 hover:text-zinc-300'
+                        'p-1.5 rounded transition-all',
+                        repeat ? 'text-purple-400' : 'text-zinc-600 hover:text-zinc-300'
                     )}
                 >
                     <Repeat size={12} />
                 </button>
             </div>
 
-            {/* Progress bar */}
-            <div className="flex-1 flex items-center gap-2">
-                <span className="text-[10px] font-mono text-zinc-500 w-8 text-right tabular-nums">
+            {/* ── Progress Bar ─── */}
+            <div className="flex-1 flex items-center gap-3 px-4 min-w-0">
+                <span className="text-[10px] font-mono text-zinc-500 tabular-nums w-9 text-right shrink-0">
                     {formatTime(elapsed)}
                 </span>
-                <div className="relative flex-1 group">
+                <div className="flex-1 group relative h-7 flex items-center">
+                    {/* Track background */}
+                    <div className="absolute inset-x-0 h-[3px] rounded-full bg-white/[0.06] overflow-hidden">
+                        {/* Played fill */}
+                        <div
+                            className="h-full rounded-full transition-[width] duration-100"
+                            style={{
+                                width: `${progress * 100}%`,
+                                background: 'linear-gradient(90deg, hsl(82,100%,50%), hsl(82,80%,45%))',
+                                boxShadow: '0 0 8px rgba(170,255,0,0.3)',
+                            }}
+                        />
+                    </div>
+                    {/* Hover expand */}
                     <input
                         type="range"
                         min={0}
-                        max={1000}
-                        value={localProgress * 1000}
-                        onChange={(e) => {
-                            const pos = Number(e.target.value) / 1000;
-                            setLocalProgress(pos);
-                            onSeek?.(pos);
-                        }}
-                        className="w-full h-1 appearance-none bg-zinc-800 rounded-full cursor-pointer
-                            [&::-webkit-slider-thumb]:appearance-none
-                            [&::-webkit-slider-thumb]:w-2.5
-                            [&::-webkit-slider-thumb]:h-2.5
-                            [&::-webkit-slider-thumb]:bg-lime-500
-                            [&::-webkit-slider-thumb]:rounded-full
-                            [&::-webkit-slider-thumb]:shadow-[0_0_6px_rgba(170,255,0,0.5)]
-                            [&::-webkit-slider-thumb]:cursor-pointer
-                            [&::-webkit-slider-thumb]:opacity-0
-                            group-hover:[&::-webkit-slider-thumb]:opacity-100
-                            [&::-webkit-slider-thumb]:transition-opacity"
-                        aria-label="Track progress"
+                        max={1}
+                        step={0.001}
+                        value={progress}
+                        onChange={(e) => setProgress(parseFloat(e.target.value))}
+                        className="absolute inset-x-0 h-7 w-full opacity-0 cursor-pointer z-10"
                     />
+                    {/* Thumb dot */}
                     <div
-                        className="absolute top-0 left-0 h-1 bg-lime-500/80 rounded-full pointer-events-none"
-                        style={{ width: `${localProgress * 100}%` }}
+                        className="absolute w-3 h-3 rounded-full bg-lime-400 border-2 border-lime-500/50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+                        style={{
+                            left: `calc(${progress * 100}% - 6px)`,
+                            boxShadow: '0 0 8px rgba(170,255,0,0.4)',
+                        }}
                     />
                 </div>
-                <span className="text-[10px] font-mono text-zinc-500 w-8 tabular-nums">
+                <span className="text-[10px] font-mono text-zinc-600 tabular-nums w-9 shrink-0">
                     -{formatTime(remaining)}
                 </span>
             </div>
 
-            {/* BPM / KEY */}
-            <div className="flex gap-2 items-center">
-                {currentTrack.bpm && (
-                    <div className="px-1.5 py-0.5 bg-zinc-900 border border-zinc-800 rounded text-[9px] font-mono text-zinc-400">
-                        {currentTrack.bpm} BPM
-                    </div>
-                )}
-                {currentTrack.key && (
-                    <div className="px-1.5 py-0.5 bg-zinc-900 border border-zinc-800 rounded text-[9px] font-mono text-purple-400">
-                        {currentTrack.key}
-                    </div>
-                )}
+            {/* ── BPM / Key ─── */}
+            <div className="flex items-center gap-2 px-3 shrink-0 border-l border-white/[0.04]">
+                <div className="flex flex-col items-center px-2 py-1 rounded bg-white/[0.02]">
+                    <span className="text-[8px] text-zinc-600 uppercase font-bold tracking-widest">BPM</span>
+                    <span className="text-[12px] font-mono font-black text-zinc-300 tabular-nums">
+                        {currentTrack.bpm || '—'}
+                    </span>
+                </div>
+                <div className="flex flex-col items-center px-2 py-1 rounded bg-purple-500/[0.06] border border-purple-500/[0.08]">
+                    <span className="text-[8px] text-zinc-600 uppercase font-bold tracking-widest">Key</span>
+                    <span className="text-[12px] font-mono font-black text-purple-400 tabular-nums">
+                        {currentTrack.key || '—'}
+                    </span>
+                </div>
             </div>
 
-            {/* VU Meters */}
-            <div className="flex gap-0.5 items-end">
-                <DegenVUMeter level={vuLeft} peak={vuLeft + 5} orientation="vertical" size="sm" showDb={false} label="L" />
-                <DegenVUMeter level={vuRight} peak={vuRight + 5} orientation="vertical" size="sm" showDb={false} label="R" />
+            {/* ── VU Meters ─── */}
+            <div className="px-3 shrink-0 border-l border-white/[0.04]">
+                <DegenStereoMeter
+                    leftLevel={vuLeft}
+                    rightLevel={vuRight}
+                    leftPeak={Math.min(1, vuLeft + 0.08)}
+                    rightPeak={Math.min(1, vuRight + 0.08)}
+                    size="sm"
+                    showDb
+                />
             </div>
 
-            {/* Volume */}
-            <div className="flex items-center gap-1 min-w-[100px]">
+            {/* ── Volume ─── */}
+            <div className="flex items-center gap-2 px-3 w-36 shrink-0 border-l border-white/[0.04]">
                 <button
                     onClick={() => setIsMuted(!isMuted)}
-                    className="p-1 text-zinc-500 hover:text-zinc-300 transition-colors"
+                    className={cn(
+                        'p-1 rounded transition-colors',
+                        isMuted ? 'text-red-400' : 'text-zinc-500 hover:text-zinc-300'
+                    )}
                 >
-                    {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+                    <VolumeIcon size={14} />
                 </button>
-                <input
-                    type="range"
-                    min={0}
-                    max={100}
-                    value={isMuted ? 0 : volume}
-                    onChange={(e) => onVolumeChange?.(Number(e.target.value))}
-                    className="flex-1 h-1 appearance-none bg-zinc-800 rounded-full cursor-pointer
-                        [&::-webkit-slider-thumb]:appearance-none
-                        [&::-webkit-slider-thumb]:w-2
-                        [&::-webkit-slider-thumb]:h-2
-                        [&::-webkit-slider-thumb]:bg-white
-                        [&::-webkit-slider-thumb]:rounded-full
-                        [&::-webkit-slider-thumb]:cursor-pointer"
-                    aria-label="Master volume"
-                />
-                <span className="text-[9px] font-mono text-zinc-500 w-6 text-right tabular-nums">
-                    {isMuted ? 0 : volume}
+                <div className="flex-1 relative group">
+                    <div className="h-[3px] rounded-full bg-white/[0.06] overflow-hidden">
+                        <div
+                            className="h-full rounded-full bg-zinc-400 transition-[width] duration-75"
+                            style={{ width: `${isMuted ? 0 : volume}%` }}
+                        />
+                    </div>
+                    <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        value={isMuted ? 0 : volume}
+                        onChange={(e) => {
+                            setVolume(parseInt(e.target.value));
+                            if (isMuted) setIsMuted(false);
+                        }}
+                        className="absolute inset-0 w-full opacity-0 cursor-pointer"
+                    />
+                </div>
+                <span className="text-[9px] font-mono text-zinc-600 tabular-nums w-6 text-right">
+                    {isMuted ? '0' : volume}
                 </span>
             </div>
         </div>

@@ -1,44 +1,53 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { cn } from '../../lib/utils';
-import { DegenButton } from '../primitives/DegenButton';
-import { Search, ListFilter, ChevronDown, Music, Disc, Clock, Zap } from 'lucide-react';
+import {
+    Search,
+    Filter,
+    ArrowUpDown,
+    Play,
+    Plus,
+    Music2,
+    Clock,
+    Zap,
+    ChevronDown,
+} from 'lucide-react';
 
-interface LibraryTrack {
+interface Track {
     id: string;
     title: string;
     artist: string;
+    bpm: number;
+    key: string;
     duration: number;
-    bpm?: number;
-    key?: string;
-    genre?: string;
-    energy?: number; // 0-100
-    mood?: string;
-    addedAt?: string;
+    genre: string;
+    energy: number;
 }
 
 interface DegenTrackListProps {
-    tracks?: LibraryTrack[];
-    onTrackSelect?: (track: LibraryTrack) => void;
-    onTrackLoad?: (track: LibraryTrack, deck: 'A' | 'B') => void;
+    tracks?: Track[];
+    onTrackSelect?: (track: Track) => void;
+    onTrackLoad?: (track: Track, deck: 'A' | 'B') => void;
     className?: string;
 }
 
-const DEMO_TRACKS: LibraryTrack[] = [
-    { id: '1', title: 'Neural Drift v2.1', artist: 'SynthKong', duration: 234, bpm: 128, key: 'Am', genre: 'Electronic', energy: 78, mood: 'Dark' },
-    { id: '2', title: 'Bass Gorilla', artist: 'DJ DegenApe', duration: 198, bpm: 140, key: 'Fm', genre: 'DnB', energy: 92, mood: 'Hype' },
-    { id: '3', title: 'Acid Rain Protocol', artist: 'ZeroDay', duration: 312, bpm: 130, key: 'Cm', genre: 'Techno', energy: 85, mood: 'Dark' },
-    { id: '4', title: 'Moonlight Serenade AI', artist: 'AetherBot', duration: 276, bpm: 95, key: 'Dm', genre: 'Lo-fi', energy: 35, mood: 'Chill' },
-    { id: '5', title: 'Electric Primate', artist: 'KongBass', duration: 185, bpm: 174, key: 'Em', genre: 'DnB', energy: 95, mood: 'Energetic' },
-    { id: '6', title: 'Quantum Breaks', artist: 'SynthKong', duration: 245, bpm: 126, key: 'Gm', genre: 'House', energy: 72, mood: 'Groovy' },
-    { id: '7', title: 'Void Walker', artist: 'DegenNodes', duration: 290, bpm: 138, key: 'Bbm', genre: 'Techno', energy: 88, mood: 'Dark' },
-    { id: '8', title: 'Sunset Frequencies', artist: 'AetherBot', duration: 210, bpm: 110, key: 'C', genre: 'Deep House', energy: 55, mood: 'Chill' },
-    { id: '9', title: 'Binary Stars', artist: 'KongBass', duration: 168, bpm: 150, key: 'Am', genre: 'Trance', energy: 80, mood: 'Uplifting' },
-    { id: '10', title: 'GlitchHop Manifesto', artist: 'DJ DegenApe', duration: 195, bpm: 108, key: 'Eb', genre: 'Glitch Hop', energy: 65, mood: 'Experimental' },
+const DEMO_TRACKS: Track[] = [
+    { id: '1', title: 'Neural Drift v2.1', artist: 'SynthKong', bpm: 128, key: 'Am', duration: 234, genre: 'Deep House', energy: 7 },
+    { id: '2', title: 'Bass Gorilla', artist: 'DJ DegenApe', bpm: 140, key: 'Fm', duration: 198, genre: 'DnB', energy: 9 },
+    { id: '3', title: 'Quantum Entanglement', artist: 'PixelVault', bpm: 124, key: 'Cm', duration: 312, genre: 'Techno', energy: 6 },
+    { id: '4', title: 'Zero Knowledge Proof', artist: 'HashRate', bpm: 132, key: 'Gm', duration: 276, genre: 'Electro', energy: 8 },
+    { id: '5', title: 'Liquidation Event', artist: 'Margin Call', bpm: 138, key: 'Dm', duration: 186, genre: 'DnB', energy: 10 },
+    { id: '6', title: 'Smart Contract', artist: 'Eth Gardener', bpm: 120, key: 'Bbm', duration: 298, genre: 'Deep House', energy: 5 },
+    { id: '7', title: 'Fork This', artist: 'GitPush', bpm: 126, key: 'Em', duration: 204, genre: 'Tech House', energy: 7 },
+    { id: '8', title: 'Block Height', artist: 'MinerBot', bpm: 136, key: 'Ab', duration: 245, genre: 'Techno', energy: 8 },
+    { id: '9', title: 'Rug Pull Blues', artist: 'Sad Pepe', bpm: 118, key: 'Eb', duration: 190, genre: 'Lo-Fi', energy: 3 },
+    { id: '10', title: 'Diamond Hands', artist: 'HODL Gang', bpm: 145, key: 'Fm', duration: 222, genre: 'Hardstyle', energy: 10 },
 ];
 
-type SortKey = 'title' | 'artist' | 'bpm' | 'duration' | 'energy';
+const GENRES = ['All', 'Deep House', 'DnB', 'Techno', 'Electro', 'Tech House', 'Lo-Fi', 'Hardstyle'];
+
+type SortField = 'title' | 'artist' | 'bpm' | 'key' | 'duration' | 'energy';
 
 export function DegenTrackList({
     tracks = DEMO_TRACKS,
@@ -47,165 +56,208 @@ export function DegenTrackList({
     className,
 }: DegenTrackListProps) {
     const [search, setSearch] = useState('');
-    const [sortBy, setSortBy] = useState<SortKey>('title');
+    const [genre, setGenre] = useState('All');
+    const [sortField, setSortField] = useState<SortField>('title');
     const [sortAsc, setSortAsc] = useState(true);
     const [selectedId, setSelectedId] = useState<string | null>(null);
-    const [genreFilter, setGenreFilter] = useState<string | null>(null);
+    const [hoveredId, setHoveredId] = useState<string | null>(null);
 
-    const genres = Array.from(new Set(tracks.map((t) => t.genre).filter(Boolean)));
+    const handleSort = (field: SortField) => {
+        if (sortField === field) setSortAsc(!sortAsc);
+        else { setSortField(field); setSortAsc(true); }
+    };
 
-    const filtered = tracks
-        .filter((t) => {
+    const filtered = useMemo(() => {
+        let list = [...tracks];
+        if (search) {
             const q = search.toLowerCase();
-            const matchSearch =
-                !q ||
-                t.title.toLowerCase().includes(q) ||
-                t.artist.toLowerCase().includes(q) ||
-                (t.genre && t.genre.toLowerCase().includes(q));
-            const matchGenre = !genreFilter || t.genre === genreFilter;
-            return matchSearch && matchGenre;
-        })
-        .sort((a, b) => {
-            const mul = sortAsc ? 1 : -1;
-            if (sortBy === 'title') return mul * a.title.localeCompare(b.title);
-            if (sortBy === 'artist') return mul * a.artist.localeCompare(b.artist);
-            if (sortBy === 'bpm') return mul * ((a.bpm || 0) - (b.bpm || 0));
-            if (sortBy === 'duration') return mul * (a.duration - b.duration);
-            if (sortBy === 'energy') return mul * ((a.energy || 0) - (b.energy || 0));
-            return 0;
-        });
-
-    const toggleSort = (key: SortKey) => {
-        if (sortBy === key) setSortAsc(!sortAsc);
-        else {
-            setSortBy(key);
-            setSortAsc(true);
+            list = list.filter(
+                (t) => t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q)
+            );
         }
+        if (genre !== 'All') list = list.filter((t) => t.genre === genre);
+        list.sort((a, b) => {
+            const av = a[sortField];
+            const bv = b[sortField];
+            const cmp = typeof av === 'string' ? (av as string).localeCompare(bv as string) : (av as number) - (bv as number);
+            return sortAsc ? cmp : -cmp;
+        });
+        return list;
+    }, [tracks, search, genre, sortField, sortAsc]);
+
+    const formatDur = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
+
+    const energyBar = (e: number) => {
+        const colors = e >= 8 ? '#ff4444' : e >= 6 ? '#ffaa00' : e >= 4 ? '#aaff00' : '#00bfff';
+        return (
+            <div className="flex items-center gap-1.5 w-16">
+                <div className="flex-1 h-[3px] rounded-full bg-white/[0.04] overflow-hidden">
+                    <div
+                        className="h-full rounded-full transition-all duration-300"
+                        style={{ width: `${e * 10}%`, backgroundColor: colors }}
+                    />
+                </div>
+                <span className="text-[8px] font-mono text-zinc-600 tabular-nums w-3 text-right">{e}</span>
+            </div>
+        );
     };
 
-    const formatTime = (s: number) => {
-        const m = Math.floor(s / 60);
-        const sec = Math.floor(s % 60);
-        return `${m}:${sec.toString().padStart(2, '0')}`;
-    };
+    const SortHeader = ({ field, label, width }: { field: SortField; label: string; width: string }) => (
+        <button
+            onClick={() => handleSort(field)}
+            className={cn(
+                'flex items-center gap-1 text-[8px] font-black uppercase tracking-[0.12em] transition-colors',
+                sortField === field ? 'text-lime-400' : 'text-zinc-600 hover:text-zinc-400'
+            )}
+            style={{ width }}
+        >
+            {label}
+            {sortField === field && (
+                <ArrowUpDown size={8} className={sortAsc ? '' : 'rotate-180'} />
+            )}
+        </button>
+    );
 
     return (
-        <div className={cn('bg-zinc-950 border border-zinc-800 rounded-lg overflow-hidden flex flex-col', className)}>
+        <div className={cn(
+            'glass-panel overflow-hidden flex flex-col',
+            className
+        )}>
             {/* Header */}
-            <div className="flex items-center justify-between px-3 py-1.5 bg-zinc-800/40 border-b border-zinc-800">
+            <div className="panel-header">
                 <div className="flex items-center gap-2">
-                    <Music size={12} className="text-lime-500" />
-                    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-300">
-                        Track Library
-                    </span>
-                    <span className="text-[9px] text-zinc-600 font-mono">{filtered.length} tracks</span>
+                    <Music2 size={12} className="text-lime-500/70" />
+                    <span className="panel-header-title">Track Library</span>
                 </div>
+                <span className="text-[9px] font-mono text-zinc-600">{filtered.length} tracks</span>
             </div>
 
             {/* Search & filters */}
-            <div className="px-3 py-2 flex gap-2 border-b border-zinc-800/50">
+            <div className="px-3 py-2.5 flex gap-2 border-b border-white/[0.03]">
                 <div className="relative flex-1">
-                    <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-600" />
+                    <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-600" />
                     <input
                         type="text"
-                        placeholder="Search tracks..."
+                        placeholder="Search tracks, artists..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="w-full bg-zinc-900 border border-zinc-800 rounded pl-7 pr-2 py-1 text-[11px] text-zinc-300 placeholder-zinc-600 focus:outline-none focus:border-lime-500/40 transition-colors"
+                        className="w-full bg-black/30 border border-white/[0.05] rounded-md pl-8 pr-3 py-2 text-[11px] text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-lime-500/20 transition-colors"
                     />
                 </div>
                 <div className="relative">
                     <select
-                        value={genreFilter || ''}
-                        onChange={(e) => setGenreFilter(e.target.value || null)}
-                        className="appearance-none bg-zinc-900 border border-zinc-800 rounded px-2 py-1 pr-6 text-[10px] text-zinc-400 cursor-pointer focus:outline-none focus:border-lime-500/40"
+                        value={genre}
+                        onChange={(e) => setGenre(e.target.value)}
+                        className="appearance-none bg-black/30 border border-white/[0.05] rounded-md pl-3 pr-7 py-2 text-[10px] text-zinc-300 focus:outline-none focus:border-lime-500/20 cursor-pointer"
                     >
-                        <option value="">All Genres</option>
-                        {genres.map((g) => (
-                            <option key={g} value={g!}>{g}</option>
+                        {GENRES.map((g) => (
+                            <option key={g} value={g}>{g}</option>
                         ))}
                     </select>
-                    <ChevronDown size={10} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" />
+                    <ChevronDown size={10} className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" />
                 </div>
             </div>
 
             {/* Column headers */}
-            <div className="grid grid-cols-[1fr_1fr_50px_40px_40px_60px] gap-1 px-3 py-1 text-[8px] font-black uppercase tracking-widest text-zinc-600 border-b border-zinc-800/30">
-                <button onClick={() => toggleSort('title')} className="text-left hover:text-zinc-400 transition-colors">
-                    Title {sortBy === 'title' && (sortAsc ? '↑' : '↓')}
-                </button>
-                <button onClick={() => toggleSort('artist')} className="text-left hover:text-zinc-400 transition-colors">
-                    Artist {sortBy === 'artist' && (sortAsc ? '↑' : '↓')}
-                </button>
-                <button onClick={() => toggleSort('bpm')} className="text-right hover:text-zinc-400 transition-colors">
-                    BPM {sortBy === 'bpm' && (sortAsc ? '↑' : '↓')}
-                </button>
-                <div className="text-center">Key</div>
-                <button onClick={() => toggleSort('energy')} className="text-center hover:text-zinc-400 transition-colors">
-                    <Zap size={8} className="inline" /> {sortBy === 'energy' && (sortAsc ? '↑' : '↓')}
-                </button>
-                <button onClick={() => toggleSort('duration')} className="text-right hover:text-zinc-400 transition-colors">
-                    <Clock size={8} className="inline" /> {sortBy === 'duration' && (sortAsc ? '↑' : '↓')}
-                </button>
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-white/[0.03] bg-white/[0.01]">
+                <div className="w-7" /> {/* play icon space */}
+                <SortHeader field="title" label="Title / Artist" width="flex-1" />
+                <SortHeader field="bpm" label="BPM" width="3rem" />
+                <SortHeader field="key" label="Key" width="2.5rem" />
+                <SortHeader field="energy" label="Energy" width="4.5rem" />
+                <SortHeader field="duration" label="Time" width="2.5rem" />
+                <div className="w-16" /> {/* load buttons */}
             </div>
 
             {/* Track rows */}
             <div className="flex-1 overflow-y-auto custom-scrollbar">
-                {filtered.map((track) => (
-                    <div
-                        key={track.id}
-                        onClick={() => {
-                            setSelectedId(track.id);
-                            onTrackSelect?.(track);
-                        }}
-                        onDoubleClick={() => onTrackLoad?.(track, 'A')}
-                        className={cn(
-                            'grid grid-cols-[1fr_1fr_50px_40px_40px_60px] gap-1 px-3 py-1.5 cursor-pointer transition-colors group',
-                            selectedId === track.id
-                                ? 'bg-lime-500/10 border-l-2 border-lime-500'
-                                : 'hover:bg-zinc-900/60 border-l-2 border-transparent'
-                        )}
-                    >
-                        <div className="flex items-center gap-1.5 min-w-0">
-                            <Disc size={10} className="text-zinc-700 shrink-0" />
-                            <span className="text-[11px] text-white truncate font-medium">{track.title}</span>
-                        </div>
-                        <span className="text-[11px] text-zinc-500 truncate">{track.artist}</span>
-                        <span className="text-[10px] font-mono text-zinc-400 text-right">{track.bpm || '—'}</span>
-                        <span className="text-[10px] font-mono text-purple-400/70 text-center">{track.key || '—'}</span>
-                        <div className="flex items-center justify-center">
-                            <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
-                                <div
-                                    className={cn(
-                                        'h-full rounded-full',
-                                        (track.energy || 0) > 80 ? 'bg-red-500' :
-                                            (track.energy || 0) > 50 ? 'bg-lime-500' :
-                                                'bg-blue-500'
-                                    )}
-                                    style={{ width: `${track.energy || 0}%` }}
-                                />
+                {filtered.length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-12 text-zinc-700">
+                        <Music2 size={24} className="mb-2 opacity-50" />
+                        <span className="text-[11px]">No tracks found</span>
+                    </div>
+                )}
+                {filtered.map((track, i) => {
+                    const isSelected = selectedId === track.id;
+                    const isHovered = hoveredId === track.id;
+                    return (
+                        <div
+                            key={track.id}
+                            className={cn(
+                                'flex items-center gap-2 px-3 py-2 cursor-pointer transition-all duration-100 group border-b border-white/[0.02]',
+                                isSelected
+                                    ? 'bg-lime-500/[0.04] border-l-2 border-l-lime-500'
+                                    : 'hover:bg-white/[0.02] border-l-2 border-l-transparent'
+                            )}
+                            onClick={() => {
+                                setSelectedId(track.id);
+                                onTrackSelect?.(track);
+                            }}
+                            onMouseEnter={() => setHoveredId(track.id)}
+                            onMouseLeave={() => setHoveredId(null)}
+                        >
+                            {/* Play preview */}
+                            <div className="w-7 flex items-center justify-center shrink-0">
+                                {isHovered ? (
+                                    <Play size={12} className="text-lime-400" fill="currentColor" />
+                                ) : (
+                                    <span className="text-[9px] font-mono text-zinc-700 tabular-nums">{i + 1}</span>
+                                )}
                             </div>
-                        </div>
-                        <div className="flex items-center justify-end gap-1">
-                            <span className="text-[10px] font-mono text-zinc-600">{formatTime(track.duration)}</span>
-                            {/* Load to deck buttons (visible on hover) */}
-                            <div className="opacity-0 group-hover:opacity-100 flex gap-0.5 transition-opacity">
+
+                            {/* Title & artist */}
+                            <div className="flex-1 min-w-0">
+                                <div className="text-[11px] font-semibold text-zinc-200 truncate leading-tight">
+                                    {track.title}
+                                </div>
+                                <div className="text-[9px] text-zinc-600 truncate">{track.artist}</div>
+                            </div>
+
+                            {/* BPM */}
+                            <div className="w-12 text-right shrink-0">
+                                <span className="text-[10px] font-mono text-zinc-400 tabular-nums">{track.bpm}</span>
+                            </div>
+
+                            {/* Key */}
+                            <div className="w-10 text-center shrink-0">
+                                <span className="text-[10px] font-mono text-purple-400/80 bg-purple-500/[0.06] px-1.5 py-0.5 rounded">
+                                    {track.key}
+                                </span>
+                            </div>
+
+                            {/* Energy */}
+                            <div className="w-[4.5rem] flex items-center justify-center shrink-0">
+                                {energyBar(track.energy)}
+                            </div>
+
+                            {/* Duration */}
+                            <div className="w-10 text-right shrink-0">
+                                <span className="text-[10px] font-mono text-zinc-600 tabular-nums">
+                                    {formatDur(track.duration)}
+                                </span>
+                            </div>
+
+                            {/* Load buttons */}
+                            <div className={cn(
+                                'flex gap-1 w-16 justify-end transition-opacity',
+                                isHovered || isSelected ? 'opacity-100' : 'opacity-0'
+                            )}>
                                 <button
                                     onClick={(e) => { e.stopPropagation(); onTrackLoad?.(track, 'A'); }}
-                                    className="text-[7px] font-black bg-lime-500/20 text-lime-500 border border-lime-500/30 px-1 rounded hover:bg-lime-500/30"
+                                    className="text-[7px] font-black px-2 py-1 rounded-sm border border-lime-500/20 text-lime-500 bg-lime-500/[0.06] hover:bg-lime-500/15 transition-colors"
                                 >
                                     A
                                 </button>
                                 <button
                                     onClick={(e) => { e.stopPropagation(); onTrackLoad?.(track, 'B'); }}
-                                    className="text-[7px] font-black bg-purple-500/20 text-purple-400 border border-purple-500/30 px-1 rounded hover:bg-purple-500/30"
+                                    className="text-[7px] font-black px-2 py-1 rounded-sm border border-purple-500/20 text-purple-500 bg-purple-500/[0.06] hover:bg-purple-500/15 transition-colors"
                                 >
                                     B
                                 </button>
                             </div>
                         </div>
-                    </div>
-                ))}
+                    );
+                })}
             </div>
         </div>
     );

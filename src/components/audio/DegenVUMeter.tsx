@@ -1,136 +1,137 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useMemo } from 'react';
 import { cn } from '../../lib/utils';
 
 interface DegenVUMeterProps {
-    level?: number; // 0-100
-    peak?: number; // 0-100
-    label?: string;
+    level?: number;          // 0-1
+    peak?: number;           // 0-1
     orientation?: 'vertical' | 'horizontal';
-    size?: 'sm' | 'md' | 'lg';
+    size?: 'xs' | 'sm' | 'md' | 'lg';
     showDb?: boolean;
+    label?: string;
     className?: string;
-}
-
-function levelToDb(level: number): string {
-    if (level <= 0) return '-∞';
-    const db = 20 * Math.log10(level / 100);
-    return db.toFixed(1);
 }
 
 export function DegenVUMeter({
     level = 0,
     peak = 0,
-    label,
     orientation = 'vertical',
-    size = 'md',
-    showDb = true,
+    size = 'sm',
+    showDb = false,
+    label,
     className,
 }: DegenVUMeterProps) {
-    const segments = orientation === 'vertical' ? 24 : 32;
-    const isVertical = orientation === 'vertical';
+    const isVert = orientation === 'vertical';
+    const segments = isVert ? 28 : 36;
 
-    const getSegmentColor = (index: number) => {
-        const pos = index / segments;
-        if (pos >= 0.85) return 'bg-red-500 shadow-[0_0_4px_rgba(239,68,68,0.6)]';
-        if (pos >= 0.7) return 'bg-yellow-500';
-        return 'bg-lime-500';
+    const sizeMap = {
+        xs: isVert ? 'w-2' : 'h-1.5',
+        sm: isVert ? 'w-3' : 'h-2',
+        md: isVert ? 'w-4' : 'h-3',
+        lg: isVert ? 'w-5' : 'h-4',
     };
 
-    const activeSegments = Math.floor((level / 100) * segments);
-    const peakSegment = Math.floor((peak / 100) * segments);
+    const heightMap = {
+        xs: isVert ? 'h-14' : '',
+        sm: isVert ? 'h-20' : '',
+        md: isVert ? 'h-24' : '',
+        lg: isVert ? 'h-32' : '',
+    };
 
-    const widths = { sm: 'w-2', md: 'w-3', lg: 'w-4' };
-    const heights = { sm: 'h-20', md: 'h-28', lg: 'h-40' };
+    const dbValue = useMemo(() => {
+        if (level <= 0) return '-∞';
+        const db = 20 * Math.log10(level);
+        return db > -0.5 ? '0.0' : db.toFixed(1);
+    }, [level]);
 
-    if (isVertical) {
-        return (
-            <div className={cn('flex flex-col items-center gap-1', className)}>
-                {showDb && (
-                    <span className="text-[8px] font-mono text-zinc-500 tabular-nums">
-                        {levelToDb(level)}dB
-                    </span>
-                )}
-                <div className={cn('relative flex flex-col-reverse gap-[1px]', heights[size], widths[size])}>
-                    {Array.from({ length: segments }).map((_, i) => {
-                        const isActive = i < activeSegments;
-                        const isPeak = i === peakSegment && peak > 0;
-                        return (
-                            <div
-                                key={i}
-                                className={cn(
-                                    'w-full rounded-[1px] transition-all duration-75',
-                                    isActive ? getSegmentColor(i) : 'bg-zinc-800/60',
-                                    isPeak && !isActive && 'bg-white/80',
-                                    size === 'sm' ? 'h-[2px]' : 'h-[3px]'
-                                )}
-                            />
-                        );
-                    })}
-                </div>
-                {label && (
-                    <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500">
-                        {label}
-                    </span>
-                )}
-            </div>
-        );
-    }
+    const activeSegments = Math.round(level * segments);
+    const peakSegment = Math.round(peak * segments);
 
     return (
-        <div className={cn('flex items-center gap-1', className)}>
+        <div className={cn('flex flex-col items-center gap-1', className)}>
             {label && (
-                <span className="text-[8px] font-bold uppercase tracking-wider text-zinc-500 w-6 text-right">
-                    {label}
-                </span>
+                <span className="text-[7px] font-bold uppercase tracking-widest text-zinc-600">{label}</span>
             )}
-            <div className="relative flex gap-[1px] flex-1 h-2">
+            <div
+                className={cn(
+                    'flex gap-[1px] rounded-sm overflow-hidden bg-black/40 p-[2px]',
+                    sizeMap[size],
+                    heightMap[size],
+                    isVert ? 'flex-col-reverse' : 'flex-row',
+                    'border border-white/[0.03]'
+                )}
+            >
                 {Array.from({ length: segments }).map((_, i) => {
                     const isActive = i < activeSegments;
-                    const isPeak = i === peakSegment && peak > 0;
+                    const isPeak = i === peakSegment - 1;
+                    const ratio = i / segments;
+
+                    // Color gradient: green -> yellow -> orange -> red
+                    let color: string;
+                    if (ratio < 0.6) color = isActive ? '#aaff00' : 'rgba(255,255,255,0.04)';
+                    else if (ratio < 0.8) color = isActive ? '#ffcc00' : 'rgba(255,255,255,0.04)';
+                    else if (ratio < 0.9) color = isActive ? '#ff8800' : 'rgba(255,255,255,0.04)';
+                    else color = isActive ? '#ff3333' : 'rgba(255,255,255,0.04)';
+
                     return (
                         <div
                             key={i}
-                            className={cn(
-                                'flex-1 rounded-[1px] transition-all duration-75',
-                                isActive ? getSegmentColor(i) : 'bg-zinc-800/60',
-                                isPeak && !isActive && 'bg-white/80'
-                            )}
+                            className="rounded-[1px] transition-colors duration-75"
+                            style={{
+                                flex: 1,
+                                backgroundColor: isPeak ? (ratio > 0.8 ? '#ff3333' : '#aaff00') : color,
+                                opacity: isPeak ? 0.9 : isActive ? (0.5 + ratio * 0.5) : 1,
+                                boxShadow: isActive && ratio > 0.85
+                                    ? '0 0 4px rgba(255,51,51,0.3)'
+                                    : isPeak
+                                        ? `0 0 4px ${ratio > 0.8 ? 'rgba(255,51,51,0.3)' : 'rgba(170,255,0,0.3)'}`
+                                        : 'none',
+                            }}
                         />
                     );
                 })}
             </div>
             {showDb && (
-                <span className="text-[8px] font-mono text-zinc-500 w-10 text-right tabular-nums">
-                    {levelToDb(level)}dB
+                <span className={cn(
+                    'text-[8px] font-mono tabular-nums',
+                    parseFloat(dbValue) >= -3 ? 'text-red-400' : 'text-zinc-600'
+                )}>
+                    {dbValue}
                 </span>
             )}
         </div>
     );
 }
 
-/* ── Stereo Meter pair ─────────────────────────────────── */
-
-interface DegenStereoMeterProps {
-    leftLevel?: number;
-    rightLevel?: number;
-    leftPeak?: number;
-    rightPeak?: number;
-    className?: string;
-}
-
+/* ── Stereo Pair ─────────── */
 export function DegenStereoMeter({
     leftLevel = 0,
     rightLevel = 0,
     leftPeak = 0,
     rightPeak = 0,
+    size = 'sm',
+    showDb = false,
     className,
-}: DegenStereoMeterProps) {
+}: {
+    leftLevel?: number;
+    rightLevel?: number;
+    leftPeak?: number;
+    rightPeak?: number;
+    size?: 'xs' | 'sm' | 'md' | 'lg';
+    showDb?: boolean;
+    className?: string;
+}) {
     return (
-        <div className={cn('flex gap-1 items-end', className)}>
-            <DegenVUMeter level={leftLevel} peak={leftPeak} label="L" orientation="vertical" size="md" />
-            <DegenVUMeter level={rightLevel} peak={rightPeak} label="R" orientation="vertical" size="md" />
+        <div className={cn('flex items-end gap-[3px]', className)}>
+            <div className="flex flex-col items-center">
+                <span className="text-[6px] font-bold text-zinc-700 mb-0.5">L</span>
+                <DegenVUMeter level={leftLevel} peak={leftPeak} size={size} showDb={showDb} />
+            </div>
+            <div className="flex flex-col items-center">
+                <span className="text-[6px] font-bold text-zinc-700 mb-0.5">R</span>
+                <DegenVUMeter level={rightLevel} peak={rightPeak} size={size} showDb={showDb} />
+            </div>
         </div>
     );
 }

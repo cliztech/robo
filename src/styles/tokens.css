@@ -1,58 +1,84 @@
 :root {
   color-scheme: dark;
 
-  /* Degen Design Tokens: Hard Dark & Acid Green */
+  /* ── Degen Design Tokens ── Hard Dark & Acid Green ── */
   --bg: 0 0% 2%;
+  --bg-elevated: 0 0% 4%;
   --surface: 0 0% 7%;
   --surface-2: 0 0% 12%;
-  --text: 0 0% 100%;
-  --text-muted: 0 0% 60%;
-  --accent: 82 100% 50%; /* Acid Green #aaff00 */
-  --accent-secondary: 285 100% 50%; /* Electric Purple #bf00ff */
-  
-  --glow-accent: 0 0 20px hsla(82, 100%, 50%, 0.3);
-  --glow-purple: 0 0 20px hsla(285, 100%, 50%, 0.3);
+  --surface-3: 0 0% 16%;
+  --text: 0 0% 95%;
+  --text-muted: 0 0% 55%;
+  --text-dim: 0 0% 30%;
+  --accent: 82 100% 50%;
+  /* Acid Green #aaff00 */
+  --accent-secondary: 270 100% 60%;
+  /* Electric Purple #9933ff */
+  --accent-tertiary: 195 100% 50%;
+  /* Cyber Cyan #00bfff */
+  --danger: 0 72% 51%;
+  /* Alert Red */
+  --warning: 38 92% 50%;
+  /* Amber */
 
-  --radius-sm: 4px;
+  /* Glow tokens */
+  --glow-accent: 0 0 20px hsla(82, 100%, 50%, 0.25),
+    0 0 60px hsla(82, 100%, 50%, 0.08);
+  --glow-purple: 0 0 20px hsla(270, 100%, 60%, 0.25),
+    0 0 60px hsla(270, 100%, 60%, 0.08);
+  --glow-cyan: 0 0 20px hsla(195, 100%, 50%, 0.25),
+    0 0 60px hsla(195, 100%, 50%, 0.08);
+  --glow-danger: 0 0 20px hsla(0, 72%, 51%, 0.3),
+    0 0 60px hsla(0, 72%, 51%, 0.1);
+
+  /* Radii */
+  --radius-xs: 3px;
+  --radius-sm: 5px;
   --radius-md: 8px;
   --radius-lg: 12px;
+  --radius-xl: 16px;
 
+  /* Spacing */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
+  --space-5: 20px;
   --space-6: 24px;
+  --space-8: 32px;
 
+  /* Shadows — layered for depth */
+  --shadow-sm: 0 1px 2px hsl(0 0% 0% / 0.5);
+  --shadow-md: 0 4px 12px hsl(0 0% 0% / 0.4),
+    0 1px 3px hsl(0 0% 0% / 0.3);
+  --shadow-lg: 0 8px 30px hsl(0 0% 0% / 0.5),
+    0 2px 8px hsl(0 0% 0% / 0.3);
   --shadow-hard: 0 4px 0px hsl(0 0% 0%);
-  --shadow-glow: 0 0 15px hsla(82, 100%, 50%, 0.2);
+  --shadow-glow: 0 0 15px hsla(82, 100%, 50%, 0.15);
+  --shadow-soft: 0 2px 8px hsl(0 0 0% / 0.2);
+  --shadow-inset: inset 0 1px 4px hsl(0 0% 0% / 0.4);
+
+  /* Glass */
+  --glass-bg: hsla(0, 0%, 6%, 0.65);
+  --glass-border: hsla(0, 0%, 100%, 0.06);
+  --glass-blur: 16px;
 
   /* Semantic aliases */
   --color-bg: var(--bg);
+  --color-bg-elevated: var(--bg-elevated);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
   --color-text: var(--text);
   --color-text-muted: var(--text-muted);
+  --color-text-dim: var(--text-dim);
   --color-accent: var(--accent);
   --color-accent-2: var(--accent-secondary);
+  --color-accent-3: var(--accent-tertiary);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
 }
 
 [data-theme='dark'] {
   color-scheme: dark;
 }
-
-/* Base styles for the degenfeel */
-body {
-  background-color: hsl(var(--color-bg));
-  color: hsl(var(--color-text));
-  letter-spacing: -0.02em;
-}
-
-.glow-text {
-  text-shadow: 0 0 10px hsla(var(--color-accent), 0.5);
-}
-
-.border-glow {
-  border: 1px solid hsla(var(--color-accent), 0.3);
-  box-shadow: 0 0 10px hsla(var(--color-accent), 0.1);
-}
-
