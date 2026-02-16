@@ -30,9 +30,9 @@ A typed event envelope should be used for every publish/subscribe path:
 ```ts
 export type EventEnvelope<T> = {
   id: string;
-  name: EventName;
+  event_type: EventName;
   ts: string;
-  source: string;
+  module: string;
   data: T;
 };
 ```
