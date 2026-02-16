@@ -1,0 +1,29 @@
+<icecast>
+  <location>radio-agentic</location>
+  <admin>admin@localhost</admin>
+  <limits>
+    <clients>100</clients>
+    <sources>2</sources>
+    <queue-size>524288</queue-size>
+    <client-timeout>30</client-timeout>
+    <header-timeout>15</header-timeout>
+    <source-timeout>10</source-timeout>
+  </limits>
+  <authentication>
+    <source-password>hackme</source-password>
+    <relay-password>hackme</relay-password>
+    <admin-user>admin</admin-user>
+    <admin-password>hackme</admin-password>
+  </authentication>
+  <hostname>localhost</hostname>
+  <listen-socket>
+    <port>8000</port>
+  </listen-socket>
+  <paths>
+    <basedir>/usr/share/icecast</basedir>
+    <logdir>/var/log/icecast</logdir>
+    <webroot>/usr/share/icecast/web</webroot>
+    <adminroot>/usr/share/icecast/admin</adminroot>
+    <alias source="/" destination="/status.xsl"/>
+  </paths>
+</icecast>
