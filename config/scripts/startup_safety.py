@@ -15,6 +15,7 @@ import json
 import shutil
 import sqlite3
 import sys
+import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -236,8 +237,38 @@ def _latest_snapshot_dir() -> Path | None:
     return sorted(snapshots, key=lambda p: p.name)[-1]
 
 
-def restore_last_known_good_config() -> bool:
-    snapshot_dir = _latest_snapshot_dir()
+def _list_snapshot_dirs() -> list[Path]:
+    if not BACKUP_DIR.exists():
+        return []
+    snapshots = [
+        p for p in BACKUP_DIR.iterdir() if p.is_dir() and p.name.startswith(SNAPSHOT_PREFIX)
+    ]
+    return sorted(snapshots, key=lambda p: p.name, reverse=True)
+
+
+def _prompt_snapshot_selection(snapshots: list[Path]) -> Path | None:
+    print("Guided restore: choose a snapshot to restore.")
+    for index, snapshot in enumerate(snapshots, start=1):
+        print(f"  {index}. {snapshot.name}")
+
+    print("Enter a number to restore that snapshot, or press Enter to cancel.")
+    raw_selection = input("> ").strip()
+    if not raw_selection:
+        return None
+    if not raw_selection.isdigit():
+        print("Invalid selection. Please enter a number from the list.")
+        return None
+
+    selected_index = int(raw_selection)
+    if selected_index < 1 or selected_index > len(snapshots):
+        print("Selection out of range. No changes were made.")
+        return None
+
+    return snapshots[selected_index - 1]
+
+
+def restore_last_known_good_config(snapshot_dir: Path | None = None) -> bool:
+    snapshot_dir = snapshot_dir or _latest_snapshot_dir()
     if snapshot_dir is None:
         print("No snapshot found in config/backups/.")
         _append_event_log(
@@ -288,6 +319,7 @@ def launch_gate() -> int:
             print(f" - {error}")
         print("Attempting crash recovery using last-known-good snapshot...")
 
+        recovery_started = time.monotonic()
         restored = restore_last_known_good_config()
         if restored:
             post_restore_errors = validate_launch_config()
@@ -296,9 +328,16 @@ def launch_gate() -> int:
                 for error in post_restore_errors:
                     print(f" - {error}")
                 return 1
-            print("Recovery succeeded: restored config validates.")
+            elapsed = time.monotonic() - recovery_started
+            print(f"Recovery succeeded: restored config validates in {elapsed:.1f}s.")
+            if elapsed > 120:
+                print("Warning: restore completed outside the 2-minute recovery SLA target.")
         else:
             print("Recovery unavailable. Startup blocked to prevent runtime failure.")
+            print(
+                "Run guided restore manually: "
+                "python config/scripts/startup_safety.py --guided-restore"
+            )
             return 1
 
     if not diagnostics_ok:
@@ -321,6 +360,11 @@ def main() -> int:
         action="store_true",
         help="Restore latest snapshot from config/backups/ and exit",
     )
+    parser.add_argument(
+        "--guided-restore",
+        action="store_true",
+        help="Interactively choose a snapshot from config/backups/ and restore it",
+    )
     args = parser.parse_args()
 
     if args.create_backup:
@@ -328,6 +372,35 @@ def main() -> int:
         return 0
     if args.restore_last_known_good:
         return 0 if restore_last_known_good_config() else 1
+    if args.guided_restore:
+        snapshots = _list_snapshot_dirs()
+        if not snapshots:
+            print("No snapshot found in config/backups/.")
+            return 1
+
+        selected_snapshot = _prompt_snapshot_selection(snapshots)
+        if selected_snapshot is None:
+            print("Guided restore cancelled.")
+            return 1
+
+        print(f"Selected snapshot: {selected_snapshot.name}")
+        started = time.monotonic()
+        restored = restore_last_known_good_config(selected_snapshot)
+        if not restored:
+            return 1
+
+        errors = validate_launch_config()
+        if errors:
+            print("Restore completed, but configuration is still invalid:")
+            for error in errors:
+                print(f" - {error}")
+            return 1
+
+        elapsed = time.monotonic() - started
+        print(f"Guided restore succeeded and config validates in {elapsed:.1f}s.")
+        if elapsed > 120:
+            print("Warning: restore completed outside the 2-minute recovery SLA target.")
+        return 0
     if args.on_launch:
         return launch_gate()
 
