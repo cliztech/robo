@@ -113,8 +113,10 @@ export function DegenTransport({
             <div className="flex items-center gap-1 px-3 shrink-0">
                 <button
                     onClick={() => setShuffle(!shuffle)}
+                    aria-label="Toggle shuffle"
+                    aria-pressed={shuffle}
                     className={cn(
-                        'p-1.5 rounded transition-all',
+                        'p-1.5 rounded transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
                         shuffle ? 'text-lime-400' : 'text-zinc-600 hover:text-zinc-300'
                     )}
                 >
@@ -122,7 +124,8 @@ export function DegenTransport({
                 </button>
                 <button
                     onClick={onPrev}
-                    className="p-1.5 rounded text-zinc-400 hover:text-white transition-colors"
+                    aria-label="Previous track"
+                    className="p-1.5 rounded text-zinc-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                 >
                     <SkipBack size={14} fill="currentColor" />
                 </button>
@@ -130,8 +133,9 @@ export function DegenTransport({
                 {/* Play/Pause — large ring button */}
                 <button
                     onClick={onPlayPause}
+                    aria-label={isPlaying ? 'Pause playback' : 'Start playback'}
                     className={cn(
-                        'relative w-10 h-10 rounded-full flex items-center justify-center transition-all',
+                        'relative w-10 h-10 rounded-full flex items-center justify-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
                         isPlaying
                             ? 'bg-lime-500/15 border border-lime-500/30 text-lime-400 hover:bg-lime-500/25'
                             : 'bg-white/5 border border-white/10 text-white hover:bg-white/10'
@@ -147,14 +151,17 @@ export function DegenTransport({
 
                 <button
                     onClick={onNext}
-                    className="p-1.5 rounded text-zinc-400 hover:text-white transition-colors"
+                    aria-label="Next track"
+                    className="p-1.5 rounded text-zinc-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                 >
                     <SkipForward size={14} fill="currentColor" />
                 </button>
                 <button
                     onClick={() => setRepeat(!repeat)}
+                    aria-label="Toggle repeat"
+                    aria-pressed={repeat}
                     className={cn(
-                        'p-1.5 rounded transition-all',
+                        'p-1.5 rounded transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
                         repeat ? 'text-purple-400' : 'text-zinc-600 hover:text-zinc-300'
                     )}
                 >
@@ -182,6 +189,7 @@ export function DegenTransport({
                     </div>
                     {/* Hover expand */}
                     <input
+                        aria-label="Playback position"
                         type="range"
                         min={0}
                         max={1}
@@ -236,8 +244,10 @@ export function DegenTransport({
             <div className="flex items-center gap-2 px-3 w-36 shrink-0 border-l border-white/[0.04]">
                 <button
                     onClick={() => setIsMuted(!isMuted)}
+                    aria-label={isMuted ? 'Unmute output' : 'Mute output'}
+                    aria-pressed={isMuted}
                     className={cn(
-                        'p-1 rounded transition-colors',
+                        'p-1 rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
                         isMuted ? 'text-red-400' : 'text-zinc-500 hover:text-zinc-300'
                     )}
                 >
@@ -251,6 +261,7 @@ export function DegenTransport({
                         />
                     </div>
                     <input
+                        aria-label="Output volume"
                         type="range"
                         min={0}
                         max={100}

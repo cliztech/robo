@@ -58,8 +58,9 @@ function SidebarIcon({
         <button
             onClick={onClick}
             title={label}
+            aria-label={label}
             className={cn(
-                'relative w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 group',
+                'relative w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
                 active
                     ? 'bg-lime-500/10 text-lime-400 shadow-[0_0_15px_rgba(170,255,0,0.08)]'
                     : 'text-zinc-600 hover:text-zinc-200 hover:bg-white/[0.03]'
@@ -642,7 +643,10 @@ export default function StudioPage() {
 
                     <div className="flex items-center gap-4">
                         {/* Alerts placeholder */}
-                        <button className="relative p-1.5 text-zinc-600 hover:text-zinc-300 transition-colors">
+                        <button
+                            aria-label="Alerts"
+                            className="relative p-1.5 text-zinc-600 hover:text-zinc-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded"
+                        >
                             <AlertTriangle size={13} />
                             <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-lime-500 rounded-full" />
                         </button>
@@ -650,8 +654,10 @@ export default function StudioPage() {
                         {/* On-Air toggle */}
                         <button
                             onClick={() => setIsOnAir(!isOnAir)}
+                            aria-pressed={isOnAir}
+                            aria-label="On-air broadcast toggle"
                             className={cn(
-                                'relative flex items-center gap-2 px-3 py-1.5 rounded-md border text-[9px] font-black uppercase tracking-[0.2em] transition-all duration-300',
+                                'relative flex items-center gap-2 px-3 py-1.5 rounded-md border text-[9px] font-black uppercase tracking-[0.2em] transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
                                 isOnAir
                                     ? 'bg-red-600/15 border-red-500/25 text-red-400 pulse-ring'
                                     : 'bg-zinc-900/50 border-zinc-700/50 text-zinc-500 hover:border-zinc-600 hover:text-zinc-400'
