@@ -177,6 +177,7 @@ Use these gates before moving work from planning to execution and from draft PR 
 | [`PERSONA_OPS.md`](PERSONA_OPS.md) | AI host persona schema, versioning, A/B testing, KPIs |
 | [`docs/autonomy_modes.md`](docs/autonomy_modes.md) | 5-level autonomy operating modes (Manual → Lights-Out) |
 | [`docs/conversation_orchestrator_spec.md`](docs/conversation_orchestrator_spec.md) | Conversation orchestration, turn-taking, energy curves |
+| [`docs/operations/agent_execution_commands.md`](docs/operations/agent_execution_commands.md) | Runnable command playbook for planning, subagents, PRs, and worktrees |
 | [`docs/operations/subagent_execution_playbook.md`](docs/operations/subagent_execution_playbook.md) | Normative rules for roadmap-to-execution subagent orchestration |
 | [`contracts/redaction_rules.md`](contracts/redaction_rules.md) | Frontend data redaction denylist and enforcement |
 | [`CONFIG_VALIDATION.md`](CONFIG_VALIDATION.md) | JSON schema validation procedures |
