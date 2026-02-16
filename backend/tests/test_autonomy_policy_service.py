@@ -8,7 +8,7 @@ from backend.scheduling.autonomy_policy import (
     DecisionType,
     GlobalMode,
 )
-from backend.scheduling.autonomy_service import AutonomyPolicyService
+from backend.scheduling.autonomy_service import AutonomyPolicyService, PolicyValidationError
 
 
 def test_default_policy_bootstrap_when_missing(tmp_path):
@@ -123,3 +123,30 @@ def test_invalid_payload_rejection_paths_service(tmp_path):
             decision_type=DecisionType.track_selection,
             origin="not-valid-origin",
         )
+
+
+def test_update_policy_rejects_contradictory_show_timeslot_overrides(tmp_path):
+    service = AutonomyPolicyService(
+        policy_path=tmp_path / "autonomy_policy.json",
+        audit_log_path=tmp_path / "audit.jsonl",
+    )
+
+    contradictory_policy = AutonomyPolicy.model_validate(
+        {
+            "station_default_mode": "manual",
+            "show_overrides": [{"show_id": "show-1", "mode": "autonomous"}],
+            "timeslot_overrides": [
+                {
+                    "id": "slot-1",
+                    "day_of_week": "monday",
+                    "start_time": "09:00",
+                    "end_time": "10:00",
+                    "show_id": "show-1",
+                    "mode": "assisted",
+                }
+            ],
+        }
+    )
+
+    with pytest.raises(PolicyValidationError):
+        service.update_policy(contradictory_policy)
