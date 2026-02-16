@@ -22,6 +22,14 @@ This scorecard provides a versioned, repeatable way to track progress from roadm
 
 > Baseline values are sourced from `PRODUCT_READINESS_PLAN.md` and should be updated after each reporting cycle.
 
+## Reliability drill-down metrics
+
+| Metric | Target | Current | Evidence source | Owner |
+| --- | ---: | ---: | --- | --- |
+| Startup diagnostics pass rate | 100% | 100% | `config/scripts/startup_safety.py --on-launch` output archive | Runtime engineer |
+| Config validation block rate (invalid configs) | 100% | 100% | `config/validate_config.py` + launch gate logs | Config owner |
+| **Recovery SLA pass rate (`<=120s` launch gate to ready)** | **100% of documented runs** | **0% (0/1)** | `config/BACKUP_RECOVERY.md` evidence table + `config/logs/startup_safety_events.jsonl` | QA lead |
+
 ## Weekly update workflow
 
 1. Refresh category metrics from current artifacts (tests, runbooks, contracts, release checks).
@@ -39,4 +47,5 @@ This scorecard provides a versioned, repeatable way to track progress from roadm
 
 | Date (UTC) | Version | Weighted Total | Summary |
 | --- | --- | ---: | --- |
+| 2026-02-16 | 2026.02 | 62% | Added dedicated recovery SLA pass-rate metric and linked evidence source. |
 | 2026-02-15 | 2026.02 | 62% | Initial scorecard created from readiness baseline. |

@@ -48,10 +48,16 @@ This board converts the v1.1 **Must** scope into an execution-ready TODO checkli
 
 ### 3) Crash recovery: restore last known good config (`feature_crash_recovery_restore_lkg`)
 
-- [ ] Add guided restore flow in launcher/runtime startup path.
+- [x] **Subtask 3.1 — Guided restore flow wired to startup entrypoints**
+  - **Owner:** Runtime engineer
+  - **Due date:** 2026-03-10
+  - **Pass criteria (measurable):** `RoboDJ_Launcher.bat` executes `python config\\scripts\\startup_safety.py --on-launch`, and launch-gate validation failures trigger `restore_last_known_good_config()` with event logging in `config/logs/startup_safety_events.jsonl`.
 - [x] Restore last known good `schedules.json` and `prompt_variables.json` from backup.
 - [x] Log restore event under `config/logs/` with timestamp and source snapshot.
-- [ ] Verify post-restore readiness state can be reached in under 2 minutes.
+- [ ] **Subtask 3.2 — Recovery SLA run documented and passed**
+  - **Owner:** QA lead
+  - **Due date:** 2026-03-12
+  - **Pass criteria (measurable):** At least one deterministic manual run in `config/BACKUP_RECOVERY.md` records launch-gate start/ready-state stop timestamps with elapsed time `<= 120s`, plus matching restore success evidence in `config/logs/startup_safety_events.jsonl`.
 
 **Owner:** Runtime engineer  
 **Target date:** 2026-03-12  
@@ -59,11 +65,8 @@ This board converts the v1.1 **Must** scope into an execution-ready TODO checkli
 
 **Validation path**
 
-- Manual scenario:
-  1. Corrupt `config/schedules.json` or `config/prompt_variables.json`.
-  2. Run `./RoboDJ_Launcher.bat`.
-  3. Execute restore flow.
-  4. Verify app reaches ready state and restore is logged.
+- Follow `docs/recovery_manual_test_protocol.md`.
+- Record run evidence in `config/BACKUP_RECOVERY.md`.
 
 ---
 
@@ -95,5 +98,5 @@ This board converts the v1.1 **Must** scope into an execution-ready TODO checkli
 
 - [x] Invalid config is blocked before runtime start.
 - [x] Startup issues are visible with clear remediation.
-- [ ] Last known good restore is guided and logged.
+- [x] Last known good restore is guided and logged.
 - [ ] End-to-end recovery path consistently completes in under 2 minutes.
