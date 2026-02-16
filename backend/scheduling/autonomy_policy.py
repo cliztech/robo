@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Dict, List, Literal, Optional
@@ -103,7 +104,7 @@ class ShowOverride(PolicyOverride):
 class AutonomyPolicy(BaseModel):
     station_default_mode: GlobalMode = GlobalMode.semi_auto
     mode_permissions: Dict[GlobalMode, PermissionMatrix] = Field(
-        default_factory=lambda: dict(DEFAULT_MODE_PERMISSIONS)
+        default_factory=lambda: copy.deepcopy(DEFAULT_MODE_PERMISSIONS)
     )
     show_overrides: List[ShowOverride] = Field(default_factory=list)
     timeslot_overrides: List[TimeslotOverride] = Field(default_factory=list)
