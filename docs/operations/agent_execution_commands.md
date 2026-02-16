@@ -191,7 +191,7 @@ git fetch origin
 git rebase origin/main
 
 # 3) Finish work and remove worktree
-cd /workspace/robo
+cd - # Return to the original directory
 git worktree remove ../worktrees/<branch-name>
 
 # 4) Prune stale metadata
