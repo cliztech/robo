@@ -37,6 +37,7 @@ robo/
 ├── RoboDJ Automation.exe          # Main executable (DO NOT EDIT)
 ├── RoboDJ_Launcher.bat            # Launcher script
 ├── AGENTS.md                      # This file (repo-wide agent rules)
+├── ARCHITECTURE.md                # Top-level architecture entry point
 ├── SKILLS.md                      # Reusable skill definitions
 ├── .agent/                        # Operational artifacts (plans, handoffs, verification)
 ├── backend/                       # Python source modules
@@ -55,7 +56,19 @@ robo/
 │   ├── cache/                     # Temp cache
 │   └── backups/                   # Pre-edit backups
 ├── RoboDJ Automation.exe_extracted/  # PyInstaller extraction (REFERENCE ONLY)
-└── docs/                          # PDF/MD documentation
+└── docs/                          # Documentation workspace
+    ├── design-docs/               # Design rationale and history
+    ├── exec-plans/                # Active/completed execution plans
+    ├── generated/                 # Generated technical references
+    ├── product-specs/             # Product requirement and behavior specs
+    ├── references/                # External/tooling references for agents
+    ├── DESIGN.md                  # Design overview pointer
+    ├── FRONTEND.md                # Frontend architecture notes
+    ├── PLANS.md                   # Planning and execution index
+    ├── PRODUCT_SENSE.md           # Product heuristics and acceptance framing
+    ├── QUALITY_SCORE.md           # Quality scoring rubric entry point
+    ├── RELIABILITY.md             # Reliability standards and SLO guidance
+    └── SECURITY.md                # Security architecture overview
 ```
 
 ## Multi-Agent Pipeline
@@ -107,6 +120,21 @@ Use this stage-gated flow for all requests:
   - Summarize outcomes, touched files, validation done, and follow-ups
   - Generate PR body if applicable
 - **Completion gate:** User request explicitly answered
+
+## Agent Output Requirements
+
+All agents operating in this repository should produce and maintain artifacts that support delivery, operations, and traceability.
+
+### Agents produce
+
+- Product code and tests
+- CI configuration and release tooling
+- Internal developer tools
+- Documentation and design history
+- Evaluation harnesses
+- Review comments and responses
+- Scripts that manage the repository itself
+- Production dashboard definition files
 
 ## Workflow Quality Gates
 
