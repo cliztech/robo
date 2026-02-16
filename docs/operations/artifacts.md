@@ -1,0 +1,93 @@
+# Agent Artifact Convention
+
+This document defines standard artifact locations, filenames, required fields, ownership, and retention policy for agent execution records.
+
+## Directory Layout
+
+All operational artifacts live under `.agent/` at the repository root:
+
+- `.agent/plans/` — planning outputs and step-level execution plans
+- `.agent/handoffs/` — end-of-task summaries for the next agent/reviewer
+- `.agent/subagent_runs/` — raw structured logs/results from delegated runs
+- `.agent/verification/` — validation evidence, check outputs, and compliance confirmations
+
+## File Naming Standard
+
+Use this filename format for all artifacts:
+
+`YYYYMMDD-HHMM_<ticket>_<artifact>.md|json`
+
+Examples:
+
+- `20260215-0915_PROJ-182_plan.md`
+- `20260215-0921_PROJ-182_handoff.md`
+- `20260215-0925_PROJ-182_subagent_run.json`
+- `20260215-0932_PROJ-182_verification.md`
+
+### Naming Rules
+
+- `YYYYMMDD-HHMM` uses 24-hour local time, zero-padded.
+- `<ticket>` is required and should map to issue/PR/task ID (for ad-hoc work use `NO-TICKET`).
+- `<artifact>` is a short snake_case descriptor (`plan`, `handoff`, `subagent_run`, `verification`, or a more specific variant like `verification_jsonlint`).
+- Use `.md` for human-readable reports and `.json` for machine-readable structured output.
+
+## Minimum Required Fields
+
+All artifacts must include metadata at the top.
+
+### Markdown (`.md`) artifacts
+
+Include this front matter block:
+
+```yaml
+---
+artifact_type: plan|handoff|subagent_run|verification
+ticket: PROJ-123
+created_at: 2026-02-15T09:32:00Z
+owner_role: intake|planner|executor|verifier|handoff
+related_files:
+  - path/to/file
+status: draft|final
+---
+```
+
+### JSON (`.json`) artifacts
+
+Include these top-level keys:
+
+```json
+{
+  "artifact_type": "subagent_run",
+  "ticket": "PROJ-123",
+  "created_at": "2026-02-15T09:32:00Z",
+  "owner_role": "executor",
+  "related_files": ["path/to/file"],
+  "status": "final",
+  "payload": {}
+}
+```
+
+## Ownership Matrix
+
+| Artifact type | Primary owner | Purpose |
+| --- | --- | --- |
+| `plans` | Planner Agent | Track scoped execution plan and constraints |
+| `handoffs` | Handoff Agent | Summarize outcomes, validations, and next steps |
+| `subagent_runs` | Executor Agent | Capture delegated run data and tool outputs |
+| `verification` | Verifier Agent | Record checks, results, and pass/fail evidence |
+
+Management Team can audit all artifacts, but ownership remains with the primary role above.
+
+## Retention & Cleanup Policy
+
+- Keep artifacts for **30 days** by default.
+- Keep artifacts linked to open incidents/releases until closure, even if older than 30 days.
+- Weekly cleanup job (or manual cleanup) removes expired artifacts.
+- Cleanup must only delete files matching the naming standard in `.agent/` subdirectories.
+- Never delete artifacts referenced by active PRs, incident reports, or compliance audits.
+
+## Compliance Notes
+
+- Do not store secrets, API keys, or credentials in any artifact.
+- Verification artifacts should contain command outputs or summaries sufficient for reproducibility.
+- Handoff artifacts should link to verification artifacts when checks were run.

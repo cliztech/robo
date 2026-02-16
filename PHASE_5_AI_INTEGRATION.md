@@ -1,7 +1,6 @@
 # Phase 5: AI Integration & Track Analysis
 
 **Timeline:** Day 11-13  
-**Goal:** Implement OpenAI-powered track analysis for automatic genre, mood, and energy detection
 **Goal:** Implement OpenAI-powered track analysis for automatic genre, mood, and energy detection.
 
 ## Prerequisites
@@ -9,14 +8,6 @@
 - [ ] Phase 0–4 completed
 - [ ] OpenAI API key obtained
 - [ ] At least 5 test tracks uploaded
-- [ ] Phase 0-4 completed
-- [ ] OpenAI API key obtained
-- [ ] At least 5 test tracks uploaded
-- [ ] Database tracks table populated
-
-## Overview
-
-This phase implements intelligent track analysis using OpenAI's GPT-4o model to automatically classify tracks by:
 - [ ] Database `tracks` table populated
 
 ## Overview
@@ -28,7 +19,6 @@ This phase adds intelligent track analysis using OpenAI models to classify track
 - Energy level (1-10)
 - Danceability (1-10)
 - BPM (beats per minute)
-- BPM
 - Key signature & scale
 - Vocal style & language
 - Optimal playback timing
@@ -36,15 +26,6 @@ This phase adds intelligent track analysis using OpenAI models to classify track
 
 ## Step 1: Setup OpenAI Integration
 
-### 1.1 Install AI SDK
-### 1.1: Install AI SDK
-
-```bash
-pnpm add ai @ai-sdk/openai zod
-```
-
-### 1.2 Configure Environment
-### 1.2: Configure Environment
 ### 1.1 Install dependencies
 
 ```bash
@@ -65,35 +46,6 @@ AI_REQUESTS_PER_HOUR_LIMIT=100
 AI_DAILY_COST_LIMIT_USD=50.00
 ```
 
-### 1.3 Create AI Configuration
-OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxx
-
-# Optional: Rate limiting
-AI_MAX_REQUESTS_PER_HOUR=100
-AI_COST_LIMIT_USD=50.00
-```
-
-### 1.3: Create AI Configuration
-
-Create file: `src/lib/ai/config.ts`
-
-```ts
-export const AI_CONFIG = {
-  // Model selection
-  models: {
-    analysis: 'gpt-4o', // Complex track analysis
-    quick: 'gpt-4o-mini', // Quick checks
-    embedding: 'text-embedding-3-small', // Similarity
-  },
-
-  // Cost limits (USD)
-  costs: {
-    maxPerTrack: 0.05, // Max $0.05 per track
-    dailyLimit: 50.0, // Max $50/day
-    monthlyLimit: 1000.0, // Max $1000/month
-  },
-
-  // Rate limiting
 ### 1.3 Add AI config
 
 Create `src/lib/ai/config.ts`:
