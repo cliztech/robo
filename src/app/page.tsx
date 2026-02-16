@@ -12,7 +12,7 @@ import { DegenTrackList } from '../components/audio/DegenTrackList';
 import { DegenScheduleTimeline } from '../components/schedule/DegenScheduleTimeline';
 import { DegenAIHost } from '../components/ai/DegenAIHost';
 import { DegenButton } from '../components/primitives/DegenButton';
-import { GorillaLogo } from '../components/shell/GorillaLogo';
+import { GorillaLogo, Sidebar, TabStrip, Topbar, Workspace } from '../components/shell';
 import {
     Activity,
     Radio,
@@ -572,7 +572,7 @@ export default function StudioPage() {
     return (
         <div className="flex h-screen bg-[hsl(0,0%,3%)] text-white overflow-hidden ambient-bg">
             {/* ── SIDEBAR ──────────────────────────────── */}
-            <aside className="w-[56px] bg-black/40 border-r border-white/[0.04] flex flex-col items-center py-3 gap-0.5 shrink-0 backdrop-blur-md z-10">
+            <Sidebar width="compact" ariaLabel="Primary navigation">
                 {/* Logo */}
                 <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
@@ -614,13 +614,13 @@ export default function StudioPage() {
                     <SidebarIcon icon={Headphones} label="Monitor" />
                     <SidebarIcon icon={SettingsIcon} label="Settings" />
                 </div>
-            </aside>
+            </Sidebar>
 
             {/* ── MAIN AREA ────────────────────────────── */}
             <div className="flex-1 flex flex-col min-w-0 relative z-[1]">
                 {/* TOPBAR */}
-                <header className="h-11 bg-black/30 backdrop-blur-md border-b border-white/[0.04] flex items-center justify-between px-5 shrink-0 z-10">
-                    <div className="flex items-center gap-4">
+                <Topbar height="comfortable" ariaLabel="Studio top bar">
+                    <TabStrip ariaLabel="View context" region="secondary" align="start" className="pr-3">
                         <div className="flex items-center gap-2">
                             <span className="text-[11px] font-black uppercase tracking-[0.25em] text-zinc-400">
                                 DGN-DJ
@@ -635,10 +635,12 @@ export default function StudioPage() {
                             initial={{ opacity: 0, y: -4 }}
                             animate={{ opacity: 1, y: 0 }}
                             className="text-[10px] font-mono font-medium text-zinc-500 uppercase"
+                            role="status"
+                            aria-live="polite"
                         >
                             {currentView.replace('-', ' ')}
                         </motion.span>
-                    </div>
+                    </TabStrip>
 
                     <div className="flex items-center gap-4">
                         {/* Alerts placeholder */}
@@ -667,10 +669,15 @@ export default function StudioPage() {
                             <span className="text-[9px] font-mono text-zinc-500 tabular-nums">12%</span>
                         </div>
                     </div>
-                </header>
+                </Topbar>
 
                 {/* CONTENT */}
-                <main className="flex-1 overflow-y-auto p-5 custom-scrollbar relative">
+                <Workspace
+                    ariaLabel="Studio workspace"
+                    padding="comfortable"
+                    focusOnContentChange
+                    focusKey={currentView}
+                >
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={currentView}
@@ -701,7 +708,7 @@ export default function StudioPage() {
                             )}
                         </motion.div>
                     </AnimatePresence>
-                </main>
+                </Workspace>
 
                 {/* TRANSPORT BAR */}
                 <DegenTransport isOnAir={isOnAir} />
