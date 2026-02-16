@@ -580,7 +580,7 @@ export default function StudioPage() {
                     transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
                     className="mb-5 cursor-pointer hover:scale-110 transition-transform"
                 >
-                    <GorillaLogo />
+                    <GorillaLogo size={28} />
                 </motion.div>
 
                 {/* Separator */}
