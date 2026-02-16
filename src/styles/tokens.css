@@ -1,17 +1,21 @@
 :root {
   color-scheme: dark;
 
-  /* Design Tokens: dark baseline from blueprint */
-  --bg: 224 24% 7%;
-  --surface: 224 20% 11%;
-  --surface-2: 224 18% 14%;
-  --text: 220 20% 96%;
-  --text-muted: 220 12% 70%;
-  --accent: 199 98% 58%;
+  /* Degen Design Tokens: Hard Dark & Acid Green */
+  --bg: 0 0% 2%;
+  --surface: 0 0% 7%;
+  --surface-2: 0 0% 12%;
+  --text: 0 0% 100%;
+  --text-muted: 0 0% 60%;
+  --accent: 82 100% 50%; /* Acid Green #aaff00 */
+  --accent-secondary: 285 100% 50%; /* Electric Purple #bf00ff */
+  
+  --glow-accent: 0 0 20px hsla(82, 100%, 50%, 0.3);
+  --glow-purple: 0 0 20px hsla(285, 100%, 50%, 0.3);
 
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
 
   --space-1: 4px;
   --space-2: 8px;
@@ -19,59 +23,36 @@
   --space-4: 16px;
   --space-6: 24px;
 
-  --shadow-soft: 0 6px 20px hsl(0 0% 0% / 0.25);
+  --shadow-hard: 0 4px 0px hsl(0 0% 0%);
+  --shadow-glow: 0 0 15px hsla(82, 100%, 50%, 0.2);
 
-  /* Semantic aliases for component-level usage */
+  /* Semantic aliases */
   --color-bg: var(--bg);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
   --color-text: var(--text);
   --color-text-muted: var(--text-muted);
   --color-accent: var(--accent);
+  --color-accent-2: var(--accent-secondary);
 }
 
 [data-theme='dark'] {
   color-scheme: dark;
-  --bg: 224 24% 7%;
-  --surface: 224 20% 11%;
-  --surface-2: 224 18% 14%;
-  --text: 220 20% 96%;
-  --text-muted: 220 12% 70%;
-  --accent: 199 98% 58%;
 }
 
-[data-theme='light'] {
-  color-scheme: light;
-  --bg: 220 22% 97%;
-  --surface: 0 0% 100%;
-  --surface-2: 220 18% 94%;
-  --text: 224 24% 7%;
-  --text-muted: 224 10% 42%;
-  --accent: 199 90% 45%;
+/* Base styles for the degenfeel */
+body {
+  background-color: hsl(var(--color-bg));
+  color: hsl(var(--color-text));
+  letter-spacing: -0.02em;
 }
 
-[data-theme='auto'] {
-  color-scheme: light dark;
+.glow-text {
+  text-shadow: 0 0 10px hsla(var(--color-accent), 0.5);
 }
 
-@media (prefers-color-scheme: light) {
-  [data-theme='auto'] {
-    --bg: 220 22% 97%;
-    --surface: 0 0% 100%;
-    --surface-2: 220 18% 94%;
-    --text: 224 24% 7%;
-    --text-muted: 224 10% 42%;
-    --accent: 199 90% 45%;
-  }
+.border-glow {
+  border: 1px solid hsla(var(--color-accent), 0.3);
+  box-shadow: 0 0 10px hsla(var(--color-accent), 0.1);
 }
 
-@media (prefers-color-scheme: dark) {
-  [data-theme='auto'] {
-    --bg: 224 24% 7%;
-    --surface: 224 20% 11%;
-    --surface-2: 224 18% 14%;
-    --text: 220 20% 96%;
-    --text-muted: 220 12% 70%;
-    --accent: 199 98% 58%;
-  }
-}

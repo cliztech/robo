@@ -1,6 +1,10 @@
 @import './tokens.css';
 @import '../components/primitives/primitives.css';
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 * {
   box-sizing: border-box;
 }
@@ -10,4 +14,75 @@ body {
   background: hsl(var(--color-bg));
   color: hsl(var(--color-text));
   font-family: Inter, 'Segoe UI', sans-serif;
+}
+
+/* ── Custom scrollbar ─────────────────────────── */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: hsl(0 0% 20%);
+  border-radius: 2px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: hsl(0 0% 30%);
+}
+
+/* ── Vertical fader for mixer ─────────────────── */
+.fader-vertical::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 8px;
+  background: linear-gradient(to bottom, #555, #333);
+  border: 1px solid #666;
+  border-radius: 2px;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+
+.fader-vertical::-webkit-slider-runnable-track {
+  width: 4px;
+  background: hsl(0 0% 15%);
+  border-radius: 2px;
+}
+
+.fader-vertical::-moz-range-thumb {
+  width: 18px;
+  height: 8px;
+  background: linear-gradient(to bottom, #555, #333);
+  border: 1px solid #666;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.fader-vertical::-moz-range-track {
+  width: 4px;
+  background: hsl(0 0% 15%);
+  border-radius: 2px;
+}
+
+/* ── Selection color ──────────────────────────── */
+::selection {
+  background: hsla(82, 100%, 50%, 0.3);
+  color: white;
+}
+
+/* ── Focus ring for accessibility ─────────────── */
+:focus-visible {
+  outline: 2px solid hsl(var(--color-accent));
+  outline-offset: 2px;
+}
+
+/* ── Smooth transitions for interactive elements ── */
+button,
+input[type="range"],
+select {
+  transition: all 0.1s ease;
 }
