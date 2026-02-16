@@ -2,6 +2,43 @@
 
 Anchor document: `REACT_BROWSER_UI_TEAM_BLUEPRINT.md` (Objective, Team Model, Design Tokens, Delivery Plan, and Implementation Checklist sections).
 
+
+## Progress Summary (2026-02-16)
+
+Canonical status labels (use exactly): **Not Started / In Progress / Blocked / Done**.
+
+| Phase | Status | Notes |
+| --- | --- | --- |
+| Intake + Scope | Done | Scope and constraints are explicitly documented in this checklist. |
+| Stage-Gated Planning | Done | Intake/planner/executor/verifier/handoff stages are documented and completed for planning output. |
+| Minimal Token Set Adoption | In Progress | Token checklist exists; implementation evidence across surfaces is still pending. |
+| Operator Surface Migration | Not Started | Per-surface migration tasks are defined but not yet executed in UI source. |
+| Verification + Sign-Off | Not Started | Verification procedure is defined but has no run artifacts yet. |
+
+### Phase Ownership (Accountable Team/Agent)
+
+| Phase | Accountable team | Accountable agent |
+| --- | --- | --- |
+| Intake + Scope | Management Team | Project Coordinator Agent |
+| Stage-Gated Planning | Management Team | Sprint Planner Agent |
+| Minimal Token Set Adoption | Design Team | Brand Consistency Agent |
+| Operator Surface Migration | DevOps Team | Infrastructure Agent |
+| Verification + Sign-Off | QA Team | Performance Profiler Agent |
+
+### Completion Evidence (Checked Items)
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| Intake scope and out-of-scope boundaries documented | ✅ Done | `docs/ui/design_system_implementation_checklist.md#1-intake--scope` |
+| Stage-gated plan recorded with completed planning stages | ✅ Done | `docs/ui/design_system_implementation_checklist.md#2-stage-gated-plan-aligned-to-repository-agents-flow` |
+
+### Current Risks/Blockers
+
+- Blocked on implementation artifacts for tokenized surfaces; this checklist currently tracks planning-only progress.
+- Verification steps require runnable UI components and screenshots that are not yet present in this repository.
+
+**Next milestone date:** 2026-02-23 (first migrated surface evidence added to checklist)
+
 ## 1) Intake + Scope
 
 Request type: documentation + migration planning (no executable/binary modifications).
