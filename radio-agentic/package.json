@@ -1,0 +1,14 @@
+{
+  "name": "radio-agentic",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "shared",
+    "services/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "echo 'Start individual services with docker compose up --build'",
+    "lint": "echo 'lint placeholder'"
+  }
+}
