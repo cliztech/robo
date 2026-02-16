@@ -12,7 +12,7 @@ export class Scheduler {
         "playout.next_requested",
         mkEvent("playout.next_requested", "automation", { stationId: this.stationId })
       );
-    }, 10_000);
+    }, Number(process.env.AUTOMATION_INTERVAL_MS ?? 10_000));
   }
 
   stop() {
