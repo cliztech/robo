@@ -30,7 +30,7 @@ export function DegenKnob({
 
     const ratio = (value - min) / (max - min);
     const angle = ratio * 270 - 135;
-    const accentColor = color || '#aaff00';
+    const accentColor = color || 'hsl(var(--color-control-active))';
 
     const handleMouseDown = (e: React.MouseEvent) => {
         setIsDragging(true);
@@ -126,7 +126,7 @@ export function DegenKnob({
                             strokeWidth="4"
                             strokeLinecap="round"
                             opacity={0.8}
-                            style={{ filter: `drop-shadow(0 0 4px ${accentColor}50)` }}
+                            style={{ filter: `drop-shadow(0 0 2px ${accentColor})` }}
                         />
                     )}
 
