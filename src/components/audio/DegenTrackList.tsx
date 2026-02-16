@@ -88,7 +88,7 @@ export function DegenTrackList({
     const formatDur = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
     const energyBar = (e: number) => {
-        const colors = e >= 8 ? '#ff4444' : e >= 6 ? '#ffaa00' : e >= 4 ? '#aaff00' : '#00bfff';
+        const colors = e >= 8 ? 'hsl(var(--color-danger-bright))' : e >= 6 ? 'hsl(var(--color-warning))' : e >= 4 ? 'hsl(var(--color-deck-a))' : 'hsl(var(--color-deck-mic))';
         return (
             <div className="flex items-center gap-1.5 w-16">
                 <div className="flex-1 h-[3px] rounded-full bg-white/[0.04] overflow-hidden">
@@ -107,7 +107,7 @@ export function DegenTrackList({
             onClick={() => handleSort(field)}
             className={cn(
                 'flex items-center gap-1 text-[8px] font-black uppercase tracking-[0.12em] transition-colors',
-                sortField === field ? 'text-lime-400' : 'text-zinc-600 hover:text-zinc-400'
+                sortField === field ? 'text-[hsl(var(--color-deck-a))]' : 'text-zinc-600 hover:text-zinc-400'
             )}
             style={{ width }}
         >
@@ -126,7 +126,7 @@ export function DegenTrackList({
             {/* Header */}
             <div className="panel-header">
                 <div className="flex items-center gap-2">
-                    <Music2 size={12} className="text-lime-500/70" />
+                    <Music2 size={12} className="text-[hsla(var(--color-deck-a),0.7)]" />
                     <span className="panel-header-title">Track Library</span>
                 </div>
                 <span className="text-[9px] font-mono text-zinc-600">{filtered.length} tracks</span>

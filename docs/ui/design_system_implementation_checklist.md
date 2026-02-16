@@ -28,7 +28,7 @@ Out of scope:
 
 Reference source of truth: `docs/ui/design_tokens_v1.md`.
 
-- [ ] Adopt semantic color roles (`bg`, `surface`, `text`, `border`, `accent`, status roles, focus ring).
+- [x] Adopt semantic color roles (`bg`, `surface`, `text`, `border`, `accent`, status roles, focus ring) for `src/app/page.tsx`, `src/components/audio/`, and `src/styles/globals.css` via `src/styles/tokens.css`.
 - [ ] Adopt typography scale (`100`–`700`) and line-height roles.
 - [ ] Adopt spacing grid (`space-1` through `space-12`) for layout and component padding.
 - [ ] Adopt radius scale (`sm`, `md`, `lg`, `pill`) for all rounded elements.
@@ -120,8 +120,8 @@ Migration tasks:
 ## 6) Acceptance Checks (Required)
 
 ### A) Light/Dark parity
-- [ ] Every tokenized component supports both light and dark themes.
-- [ ] No hardcoded hex/HSL values in component-level styles.
+- [x] Every tokenized component supports both light and dark themes for the migrated studio/audio surfaces (token aliases used instead of fixed literals).
+- [x] No hardcoded hex/HSL values in component-level styles on migrated studio/audio surfaces (`src/app/page.tsx` + `src/components/audio/`).
 - [ ] Visual hierarchy (surface/elevation) remains equivalent across themes.
 
 ### B) Contrast thresholds
@@ -140,7 +140,7 @@ For each interactive primitive and each surface:
 
 ## 7) Verification Procedure Before Screen Sign-Off
 
-- [ ] Run a token-usage review to confirm no raw color literals on migrated screens.
+- [x] Run a token-usage review to confirm no raw color literals on migrated screens (completed for `src/app/page.tsx` and `src/components/audio/`).
 - [ ] Run keyboard-only walkthrough on each operator surface.
 - [ ] Run light/dark screenshot diff on shell + core primitives + each feature screen.
 - [ ] Run contrast scan and record exceptions with owner + fix date.

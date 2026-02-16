@@ -82,7 +82,7 @@ export function DegenTransport({
         <div
             className={cn(
                 'h-16 bg-black/60 backdrop-blur-xl border-t border-white/[0.04] flex items-center gap-0 px-0 shrink-0 z-20',
-                'shadow-[0_-4px_20px_rgba(0,0,0,0.3)]',
+                'shadow-[0_-4px_20px_hsl(var(--black-rgb)/0.3)]',
                 className
             )}
         >
@@ -90,8 +90,8 @@ export function DegenTransport({
             <div className="w-14 h-full flex items-center justify-center shrink-0 border-r border-white/[0.04]">
                 {isOnAir ? (
                     <div className="relative">
-                        <div className="w-3 h-3 rounded-full bg-red-500" style={{ boxShadow: '0 0 10px rgba(239,68,68,0.5)' }} />
-                        <div className="absolute inset-0 w-3 h-3 rounded-full bg-red-500 animate-ping opacity-30" />
+                        <div className="w-3 h-3 rounded-full bg-[hsl(var(--color-danger))] shadow-glow-danger" />
+                        <div className="absolute inset-0 w-3 h-3 rounded-full bg-[hsl(var(--color-danger))] animate-ping opacity-30" />
                     </div>
                 ) : (
                     <div className="w-3 h-3 rounded-full bg-zinc-700" />
@@ -115,7 +115,7 @@ export function DegenTransport({
                     onClick={() => setShuffle(!shuffle)}
                     className={cn(
                         'p-1.5 rounded transition-all',
-                        shuffle ? 'text-lime-400' : 'text-zinc-600 hover:text-zinc-300'
+                        shuffle ? 'text-[hsl(var(--color-deck-a))]' : 'text-zinc-600 hover:text-zinc-300'
                     )}
                 >
                     <Shuffle size={12} />
@@ -133,10 +133,10 @@ export function DegenTransport({
                     className={cn(
                         'relative w-10 h-10 rounded-full flex items-center justify-center transition-all',
                         isPlaying
-                            ? 'bg-lime-500/15 border border-lime-500/30 text-lime-400 hover:bg-lime-500/25'
+                            ? 'bg-deck-a-soft border border-deck-a-soft text-[hsl(var(--color-deck-a))] hover:bg-[hsla(var(--color-deck-a),0.2)]'
                             : 'bg-white/5 border border-white/10 text-white hover:bg-white/10'
                     )}
-                    style={isPlaying ? { boxShadow: '0 0 15px rgba(170,255,0,0.12)' } : {}}
+                    style={isPlaying ? { boxShadow: 'var(--glow-deck-a-ring)' } : {}}
                 >
                     {isPlaying ? (
                         <Pause size={16} fill="currentColor" />
@@ -155,7 +155,7 @@ export function DegenTransport({
                     onClick={() => setRepeat(!repeat)}
                     className={cn(
                         'p-1.5 rounded transition-all',
-                        repeat ? 'text-purple-400' : 'text-zinc-600 hover:text-zinc-300'
+                        repeat ? 'text-[hsl(var(--color-deck-b))]' : 'text-zinc-600 hover:text-zinc-300'
                     )}
                 >
                     <Repeat size={12} />
@@ -175,8 +175,8 @@ export function DegenTransport({
                             className="h-full rounded-full transition-[width] duration-100"
                             style={{
                                 width: `${progress * 100}%`,
-                                background: 'linear-gradient(90deg, hsl(82,100%,50%), hsl(82,80%,45%))',
-                                boxShadow: '0 0 8px rgba(170,255,0,0.3)',
+                                background: 'linear-gradient(90deg, hsl(var(--color-waveform-played-strong)), hsl(var(--color-waveform-played-mid)))',
+                                boxShadow: '0 0 8px hsla(var(--color-deck-a),0.3)',
                             }}
                         />
                     </div>
@@ -192,10 +192,10 @@ export function DegenTransport({
                     />
                     {/* Thumb dot */}
                     <div
-                        className="absolute w-3 h-3 rounded-full bg-lime-400 border-2 border-lime-500/50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+                        className="absolute w-3 h-3 rounded-full bg-[hsl(var(--color-deck-a))] border-2 border-deck-a-soft opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
                         style={{
                             left: `calc(${progress * 100}% - 6px)`,
-                            boxShadow: '0 0 8px rgba(170,255,0,0.4)',
+                            boxShadow: '0 0 8px hsla(var(--color-deck-a),0.4)',
                         }}
                     />
                 </div>
@@ -212,9 +212,9 @@ export function DegenTransport({
                         {currentTrack.bpm || '—'}
                     </span>
                 </div>
-                <div className="flex flex-col items-center px-2 py-1 rounded bg-purple-500/[0.06] border border-purple-500/[0.08]">
+                <div className="flex flex-col items-center px-2 py-1 rounded bg-[hsla(var(--color-deck-b),0.08)] border border-[hsla(var(--color-deck-b),0.15)]">
                     <span className="text-[8px] text-zinc-600 uppercase font-bold tracking-widest">Key</span>
-                    <span className="text-[12px] font-mono font-black text-purple-400 tabular-nums">
+                    <span className="text-[12px] font-mono font-black text-[hsl(var(--color-deck-b))] tabular-nums">
                         {currentTrack.key || '—'}
                     </span>
                 </div>
