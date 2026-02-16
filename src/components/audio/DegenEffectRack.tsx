@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import { DegenKnob } from './DegenKnob';
-import { DegenButton } from '../primitives/DegenButton';
 import { cn } from '../../lib/utils';
+import { Lock, Unlock, RotateCcw, Zap } from 'lucide-react';
 
 interface EffectControl {
     label: string;
@@ -22,9 +22,8 @@ interface DegenEffectRackProps {
 
 export function DegenEffectRack({ title, deck, controls, isActive = true }: DegenEffectRackProps) {
     const [values, setValues] = useState<Record<string, number>>(
-        controls.reduce((acc, ctrl) => ({ ...acc, [ctrl.key]: 60 }), {})
+        controls.reduce((acc, ctrl) => ({ ...acc, [ctrl.key]: 50 + Math.random() * 30 }), {})
     );
-
     const [isLocked, setIsLocked] = useState(false);
 
     const handleValueChange = (key: string, val: number) => {
@@ -32,81 +31,89 @@ export function DegenEffectRack({ title, deck, controls, isActive = true }: Dege
         setValues(prev => ({ ...prev, [key]: val }));
     };
 
+    const handleReset = () => {
+        if (isLocked) return;
+        setValues(controls.reduce((acc, ctrl) => ({ ...acc, [ctrl.key]: 50 }), {}));
+    };
+
+    const deckColor = deck === 'A' || deck === 'MST'
+        ? '#aaff00'
+        : deck === 'B'
+            ? '#9933ff'
+            : '#00bfff';
+
     return (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden shadow-2xl">
-            {/* Title Bar */}
-            <div className="bg-zinc-800/50 px-3 py-1.5 flex justify-between items-center border-b border-zinc-800">
+        <div className="glass-panel overflow-hidden">
+            {/* Header */}
+            <div className="panel-header">
                 <div className="flex items-center gap-2">
-                    <div className={cn(
-                        "w-2 h-2 rounded-full",
-                        isActive ? "bg-lime-500 shadow-[0_0_8px_rgba(170,255,0,0.6)]" : "bg-zinc-700"
-                    )} />
-                    <h4 className="text-[11px] font-bold uppercase tracking-widest text-zinc-300">
-                        {title} <span className="text-zinc-500">({deck})</span>
-                    </h4>
+                    <Zap size={10} style={{ color: isActive ? deckColor : '#555' }} />
+                    <span className="panel-header-title">{title}</span>
+                    <span
+                        className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded-sm tracking-wider"
+                        style={{
+                            color: deckColor,
+                            backgroundColor: `${deckColor}10`,
+                            border: `1px solid ${deckColor}15`,
+                        }}
+                    >
+                        {deck}
+                    </span>
                 </div>
-                <div className="flex gap-1">
-                    <button className="text-[10px] text-zinc-500 hover:text-zinc-300 px-1">#</button>
-                    <button className="text-[10px] text-zinc-500 hover:text-zinc-300 px-1">×</button>
+                <div className="flex items-center gap-1">
+                    <button
+                        onClick={() => setIsLocked(!isLocked)}
+                        className={cn(
+                            'p-1 rounded transition-all',
+                            isLocked
+                                ? 'text-yellow-500 bg-yellow-500/10'
+                                : 'text-zinc-600 hover:text-zinc-400 hover:bg-white/[0.03]'
+                        )}
+                        title={isLocked ? 'Unlock' : 'Lock'}
+                    >
+                        {isLocked ? <Lock size={10} /> : <Unlock size={10} />}
+                    </button>
+                    <button
+                        onClick={handleReset}
+                        className="p-1 rounded text-zinc-600 hover:text-zinc-400 hover:bg-white/[0.03] transition-all"
+                        title="Reset"
+                    >
+                        <RotateCcw size={10} />
+                    </button>
                 </div>
             </div>
 
-            {/* Main Content */}
-            <div className="p-4 grid grid-cols-3 gap-6 relative">
-                {/* Knobs Grid */}
-                <div className="col-span-1 grid grid-cols-1 gap-6">
-                    {controls.slice(0, 2).map((ctrl) => (
+            {/* Controls grid */}
+            <div className={cn(
+                'p-4 transition-opacity duration-200',
+                !isActive && 'opacity-40 pointer-events-none'
+            )}>
+                <div className="flex flex-wrap justify-center gap-4">
+                    {controls.map((ctrl) => (
                         <DegenKnob
                             key={ctrl.key}
                             label={ctrl.label}
-                            value={values[ctrl.key]}
-                            min={ctrl.min}
-                            max={ctrl.max}
+                            value={values[ctrl.key] ?? 50}
+                            min={ctrl.min ?? 0}
+                            max={ctrl.max ?? 100}
                             unit={ctrl.unit}
                             onChange={(val) => handleValueChange(ctrl.key, val)}
-                            size={50}
+                            size={48}
+                            color={deckColor}
                         />
                     ))}
                 </div>
 
-                {/* Center Section with Buttons */}
-                <div className="col-span-1 flex flex-col justify-center items-center gap-3">
-                    <DegenButton
-                        variant={isLocked ? "secondary" : "primary"}
-                        className="w-full"
-                        onClick={() => setIsLocked(!isLocked)}
-                    >
-                        {isLocked ? "Unlock" : "Lock"}
-                    </DegenButton>
-
-                    <DegenKnob
-                        label={controls[2]?.label || "Rate"}
-                        value={values[controls[2]?.key] || 50}
-                        onChange={(val) => controls[2] && handleValueChange(controls[2].key, val)}
-                        size={40}
-                    />
-
-                    <DegenButton variant="primary" className="w-full">Shape</DegenButton>
-                </div>
-
-                <div className="col-span-1 grid grid-cols-1 gap-6">
-                    {controls.slice(3, 5).map((ctrl) => (
-                        <DegenKnob
-                            key={ctrl.key}
-                            label={ctrl.label}
-                            value={values[ctrl.key]}
-                            min={ctrl.min}
-                            max={ctrl.max}
-                            unit={ctrl.unit}
-                            onChange={(val) => handleValueChange(ctrl.key, val)}
-                            size={50}
-                        />
+                {/* Preset bar */}
+                <div className="flex items-center justify-center gap-1 mt-3 pt-3 border-t border-white/[0.03]">
+                    {['Subtle', 'Warm', 'Heavy', 'Custom'].map((preset) => (
+                        <button
+                            key={preset}
+                            className="text-[7px] font-black uppercase tracking-wider px-2 py-1 rounded-sm border border-white/[0.04] text-zinc-600 bg-white/[0.01] hover:text-zinc-300 hover:bg-white/[0.03] transition-all"
+                        >
+                            {preset}
+                        </button>
                     ))}
-                </div>
-
-                {/* Reset Button floating bottom right */}
-                <div className="absolute bottom-4 right-4">
-                    <DegenButton variant="ghost" size="xs">Reset...</DegenButton>
                 </div>
             </div>
         </div>

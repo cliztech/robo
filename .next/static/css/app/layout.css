@@ -984,6 +984,9 @@ video {
 .mt-2{
   margin-top: 0.5rem;
 }
+.mt-px{
+  margin-top: 1px;
+}
 .line-clamp-2{
   overflow: hidden;
   display: -webkit-box;
@@ -1200,6 +1203,11 @@ video {
 }
 .rotate-180{
   --tw-rotate: 180deg;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+.scale-105{
+  --tw-scale-x: 1.05;
+  --tw-scale-y: 1.05;
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
 .scale-y-110{
@@ -2048,6 +2056,9 @@ video {
 .pr-7{
   padding-right: 1.75rem;
 }
+.pt-3{
+  padding-top: 0.75rem;
+}
 .text-left{
   text-align: left;
 }
@@ -2131,6 +2142,9 @@ video {
 }
 .leading-tight{
   line-height: 1.25;
+}
+.leading-none{
+  line-height: 1;
 }
 .tracking-\[0\.12em\]{
   letter-spacing: 0.12em;
@@ -2256,6 +2270,10 @@ video {
 .text-cyan-400\/80{
   color: rgb(34 211 238 / 0.8);
 }
+.text-yellow-500{
+  --tw-text-opacity: 1;
+  color: rgb(234 179 8 / var(--tw-text-opacity, 1));
+}
 .antialiased{
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -2293,6 +2311,9 @@ video {
 }
 .opacity-70{
   opacity: 0.7;
+}
+.opacity-40{
+  opacity: 0.4;
 }
 .shadow-2xl{
   --tw-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
@@ -2387,6 +2408,11 @@ video {
 .shadow-\[inset_0_1px_0_rgba\(255\2c 255\2c 255\2c 0\.03\)\]{
   --tw-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
   --tw-shadow-colored: inset 0 1px 0 var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+.shadow{
+  --tw-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --tw-shadow-colored: 0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
 }
 .outline{
