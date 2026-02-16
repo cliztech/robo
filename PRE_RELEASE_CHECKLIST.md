@@ -223,3 +223,23 @@ When launching via `RoboDJ_Launcher.bat`, startup now runs config validation bef
 - [ ] Verify zoom/reflow behavior at 200%+ with no blocked or clipped critical actions.
 - [ ] Enforce **No Ship** when custom interactive widgets (drag/drop, tab strip, timeline blocks) lack keyboard and ARIA equivalents.
 - [ ] Block release on any P0 accessibility failure; track and resolve any P1 accessibility failures before final approval.
+
+## Track A pre-release security gate (A3.2)
+
+> This gate is mandatory for readiness scoring and release approval.
+
+- [ ] **PASS/FAIL:** Redaction contract enforcement is verified.
+  - Command: `python config/spec_check_frontend_contracts.py`
+  - Pass criteria: command exits 0 and reports denylist checks passed for all files in `contracts/frontend_responses/*.schema.json`.
+  - Fail criteria: any denylisted key/path fragment is found, command errors, or coverage is incomplete.
+
+- [ ] **PASS/FAIL:** Redaction source-of-truth artifacts are unchanged or reviewed.
+  - Files: `contracts/redaction_rules.md`, `contracts/redaction_denylist.json`
+  - Command: `git diff --name-only -- contracts/redaction_rules.md contracts/redaction_denylist.json contracts/frontend_responses/*.schema.json`
+  - Pass criteria: any touched file has reviewer sign-off from SecOps Compliance Agent.
+  - Fail criteria: touched redaction artifacts lack security review sign-off.
+
+- [ ] **PASS/FAIL:** Security gate sign-off recorded.
+  - Required signers: **Release Manager Agent** and **SecOps Compliance Agent**
+  - Pass criteria: both signers are recorded with UTC timestamp before release candidate creation.
+  - Fail criteria: missing signer, missing timestamp, or sign-off captured after release candidate creation.
