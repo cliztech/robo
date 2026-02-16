@@ -6,6 +6,8 @@
 
 ## Purpose
 
+See [docs/operations/execution_index.md](operations/execution_index.md) for active track ownership, source-of-truth status mapping, and stale-status rules.
+
 This scorecard provides a versioned, repeatable way to track progress from roadmap execution to release readiness.
 
 ## Scoring model
