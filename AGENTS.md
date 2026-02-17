@@ -7,6 +7,25 @@
 
 These instructions apply to the entire repository unless a deeper `AGENTS.md` overrides them.
 
+## Project Startup Instruction Block (Codex/Gemini/Jules)
+
+> **Mandatory bootstrap for all new sessions in this repo**
+>
+> 1. Load `_bmad/_config/bmad-help.csv` before planning or execution.
+> 2. Treat `_bmad/` as the source of truth for BMAD agents, tasks, and workflows.
+> 3. Match incoming intent to BMAD commands/workflows first.
+> 4. If a matching BMAD workflow exists, execute that workflow path first.
+> 5. Only fall back to free-form execution when no BMAD workflow matches.
+
+### How to invoke BMAD workflows
+
+Use command-style prompts that map to entries in `_bmad/_config/bmad-help.csv`, for example:
+
+- `bmad-bmm-market-research`
+- `bmad-bmm-domain-research`
+- `bmad-bmm-create-prd`
+- `bmad-bmm-create-architecture`
+
 ## Tech Stack
 
 | Layer | Technology | Notes |
