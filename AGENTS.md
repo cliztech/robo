@@ -58,10 +58,24 @@ robo/
 ├── RoboDJ Automation.exe_extracted/  # PyInstaller extraction (REFERENCE ONLY)
 └── docs/                          # Documentation workspace
     ├── design-docs/               # Design rationale and history
+    │   ├── index.md
+    │   ├── core-beliefs.md
+    │   └── ...
     ├── exec-plans/                # Active/completed execution plans
+    │   ├── active/
+    │   ├── completed/
+    │   └── tech-debt-tracker.md
     ├── generated/                 # Generated technical references
+    │   └── db-schema.md
     ├── product-specs/             # Product requirement and behavior specs
+    │   ├── index.md
+    │   ├── new-user-onboarding.md
+    │   └── ...
     ├── references/                # External/tooling references for agents
+    │   ├── design-system-reference-llms.txt
+    │   ├── nixpacks-llms.txt
+    │   ├── uv-llms.txt
+    │   └── ...
     ├── DESIGN.md                  # Design overview pointer
     ├── FRONTEND.md                # Frontend architecture notes
     ├── PLANS.md                   # Planning and execution index
@@ -125,6 +139,9 @@ Use this stage-gated flow for all requests:
 
 All agents operating in this repository should produce and maintain artifacts that support delivery, operations, and traceability.
 
+The following outputs are mandatory deliverable categories for agents:
+
+### Agents produce
 ### Agents produce:
 
 - Product code and tests
