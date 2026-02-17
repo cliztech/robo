@@ -193,9 +193,16 @@ Exit criteria:
 - Implement deck, waveform, transport, mixer, meter bridge
 - Integrate live state feeds (read + control)
 - Add fail-safe indicators and transport confirmations
+- Add B1.1/B1.2 MVP workflow header: stage timeline + high-risk human checkpoint card in the main console view
 
 Exit criteria:
 - End-to-end control of A/B playout in dev/staging with deterministic state sync
+
+#### B1.1/B1.2 MVP UX definition (Phase 1 gate)
+- Timeline stages must match orchestration stages in `docs/conversation_orchestrator_spec.md`: Intake, Plan, Execute, Verify, Handoff.
+- Checkpoint triggers must map to escalation points defined in `docs/operations/subagent_execution_playbook.md`.
+- The operator must be able to identify stage, risk, and next action without changing views.
+- Checkpoint actions required in MVP: Approve, Request changes, Rollback, with explicit confirmation and rationale capture for non-approve paths.
 
 ### Phase 2 — Browser + Queue + Scheduler Integration
 - Implement media browser and queue operations
