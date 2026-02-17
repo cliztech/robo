@@ -2,6 +2,26 @@
 
 This document is the top-level architecture entry point for the repository.
 
+## Agent delivery contract
+
+Agents are expected to continuously produce and maintain the following artifact types:
+
+- Product code and tests
+- CI configuration and release tooling
+- Internal developer tools
+- Documentation and design history
+- Evaluation harnesses
+- Review comments and responses
+- Scripts that manage the repository itself
+- Production dashboard definition files
+
+Use this quick map when placing artifacts:
+
+- Product and runtime assets: `backend/`, `config/`, root launchers/binaries
+- Documentation and design history: `docs/design-docs/`, `docs/product-specs/`, `docs/exec-plans/`
+- Generated technical references and evaluation artifacts: `docs/generated/`, `docs/references/`
+- Planning, quality, reliability, and security controls: `docs/PLANS.md`, `docs/QUALITY_SCORE.md`, `docs/RELIABILITY.md`, `docs/SECURITY.md`
+
 ## Related docs
 
 - Product specs: `docs/product-specs/`
@@ -14,6 +34,8 @@ This document is the top-level architecture entry point for the repository.
 
 Agents working in this repository are expected to produce and maintain the
 following artifact categories:
+All implementation and planning agents should produce repository artifacts that support
+delivery, operations, and traceability. Outputs should include:
 
 - Product code and tests
 - CI configuration and release tooling
@@ -23,3 +45,5 @@ following artifact categories:
 - Review comments and responses
 - Scripts that manage the repository itself
 - Production dashboard definition files
+
+Reference: `AGENTS.md` → **Agent Output Requirements**.
