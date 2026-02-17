@@ -32,6 +32,7 @@ Use this quick map when placing artifacts:
 
 ## Agent deliverables
 
+All agents should produce or maintain one or more of the following artifact types:
 Agents working in this repository are expected to produce and maintain the
 following artifact categories:
 All implementation and planning agents should produce repository artifacts that support
@@ -46,4 +47,5 @@ delivery, operations, and traceability. Outputs should include:
 - Scripts that manage the repository itself
 - Production dashboard definition files
 
+5See `AGENTS.md` for the full stage-gated workflow, boundaries, and quality gates.
 Reference: `AGENTS.md` → **Agent Output Requirements**.
