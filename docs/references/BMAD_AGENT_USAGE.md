@@ -24,13 +24,25 @@ So the `_bmad/` directory alone does not force per-generation BMAD behavior in e
 
 ## How to make BMAD run consistently
 
-Use a startup instruction/profile per tool, for example:
+Use an explicit startup instruction/profile per tool.
 
-1. In each tool's global or project prompt, add:
-   - "Always load `_bmad/_config/bmad-help.csv` and route tasks using BMAD workflow commands."
-   - "Use BMAD workflows before free-form execution when an applicable workflow exists."
-2. Optionally define aliases/snippets that begin sessions with BMAD context loading.
-3. Keep this repository-local BMAD install as the source of truth for workflow definitions.
+### Suggested default instruction block
+
+Add this to each client's project-level startup prompt:
+
+> Use BMAD as the default execution framework for this repository.
+> Load `_bmad/_config/bmad-help.csv` at session start.
+> If a matching BMAD workflow exists, use that workflow first and only fall back to free-form execution when no workflow applies.
+> Treat `_bmad/` as the source of truth for available workflows, agents, and tasks.
+
+### Per-client setup checklist
+
+1. **Codex**: add the instruction block to your repo/project bootstrap prompt.
+2. **Gemini**: add the same block to workspace instructions or your reusable session template.
+3. **Jules**: add the same block to project context defaults or startup macro.
+4. Optionally create a shortcut command (for example, `start-bmad`) that injects the instruction block at the beginning of every session.
+
+Without this per-client setup, BMAD remains installed but optional.
 
 ## Practical expectation
 
