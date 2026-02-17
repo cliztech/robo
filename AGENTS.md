@@ -125,7 +125,7 @@ Use this stage-gated flow for all requests:
 
 All agents operating in this repository should produce and maintain artifacts that support delivery, operations, and traceability.
 
-### Agents produce
+### Agents produce:
 
 - Product code and tests
 - CI configuration and release tooling
