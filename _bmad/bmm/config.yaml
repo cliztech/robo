@@ -1,0 +1,13 @@
+# BMM Module Runtime Configuration
+# Canonical config for workflows in _bmad/bmm/workflows/**
+
+project_name: DGN-DJ by DGNradio
+user_name: Jocli
+communication_language: English
+document_output_language: English
+user_skill_level: intermediate
+
+output_folder: _bmad-output
+planning_artifacts: _bmad-output/planning
+implementation_artifacts: _bmad-output/implementation
+project_knowledge: _bmad-output/project-knowledge

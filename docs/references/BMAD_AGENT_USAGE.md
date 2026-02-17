@@ -48,3 +48,12 @@ Without this per-client setup, BMAD remains installed but optional.
 
 - **Installed now:** BMAD assets are present and ready.
 - **Still required:** per-client configuration (Codex/Gemini/Jules) so BMAD is applied by default every session/generation.
+
+## BMM workflow runtime config source
+
+For workflow execution under `_bmad/bmm/workflows/**`, runtime configuration is sourced from:
+
+- `_bmad/bmm/config.yaml`
+
+This file is the canonical BMM config and provides keys consumed by workflow variables such as `main_config`/`config_source` (`project_name`, `output_folder`, `planning_artifacts`, `implementation_artifacts`, `communication_language`, and related fields).
+
