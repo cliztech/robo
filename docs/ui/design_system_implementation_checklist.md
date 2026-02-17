@@ -29,8 +29,8 @@ Canonical status labels (use exactly): **Not Started / In Progress / Blocked / D
 
 | Item | Status | Evidence |
 | --- | --- | --- |
-| Intake scope and out-of-scope boundaries documented | ✅ Done | `docs/ui/design_system_implementation_checklist.md#1-intake--scope` |
-| Stage-gated plan recorded with completed planning stages | ✅ Done | `docs/ui/design_system_implementation_checklist.md#2-stage-gated-plan-aligned-to-repository-agents-flow` |
+| Intake scope and out-of-scope boundaries documented | ✅ Done | #1-intake--scope |
+| Stage-gated plan recorded with completed planning stages | ✅ Done | #2-stage-gated-plan-aligned-to-repository-agents-flow |
 
 ### Current Risks/Blockers
 
