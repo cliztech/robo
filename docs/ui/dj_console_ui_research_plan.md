@@ -39,6 +39,48 @@ Canonical status labels (use exactly): **Not Started / In Progress / Blocked / D
 
 **Next milestone date:** 2026-02-23 (Phase 1 execution handoff with finalized shell backlog)
 
+## Reference Catalog Metadata and Consumption Policy
+
+All reference assets must be cataloged with one of the following tiers.
+
+| Tier | Purpose | Minimum metadata | Example |
+| --- | --- | --- | --- |
+| Tier A | Full-layout benchmark for shell architecture and primary information hierarchy. | `tier`, `justification`, `resolution`, `source`, `imported_at` | 1920x1080 full-console reference |
+| Tier B | Component-level detail references used for control treatment and micro-interactions. | `tier`, `justification`, `component_scope`, `source`, `imported_at` | EQ knob strip, transport cluster close-up |
+| Tier C | Marketing/ancillary inspiration only; not authoritative for architecture or control fidelity. | `tier`, `justification`, `usage_notes`, `source`, `imported_at` | Promo renders, hero shots, social screenshots |
+
+### Per-tier consumption rules
+
+- Tier A:
+  - Allowed for shell architecture decisions (deck/mixer/browser zoning, module placement, density targets).
+  - Allowed for cross-panel spacing rhythm and baseline scan-path assumptions.
+  - Not allowed for direct branding/icon/logo reuse.
+- Tier B:
+  - Allowed for control styling only (button states, fader tracks, meter framing, waveform annotation details).
+  - Allowed for interaction details that do not conflict with accessibility and keyboard requirements.
+  - Not allowed to override Tier A layout structure.
+- Tier C:
+  - Allowed for mood, storytelling, and non-functional visual inspiration.
+  - Not allowed for shell architecture or critical control behavior decisions.
+  - Must always be treated as optional and subordinate to Tier A and Tier B evidence.
+
+### Minimum readable detail threshold (required before import)
+
+Every candidate reference must pass this checklist before entering the catalog:
+
+- [ ] Text legibility: key labels are readable at 100% zoom without inference.
+- [ ] Control separation: individual controls are visually separable (no merged silhouettes for adjacent controls).
+- [ ] Waveform visibility: waveform lanes, playhead, and beat/cue cues are distinguishable.
+- [ ] Contrast sanity: control foreground/background boundaries are clear enough to extract intent.
+- [ ] Cropping integrity: the captured region preserves context needed for interpretation.
+
+### New asset intake requirement
+
+Any new reference asset is non-compliant unless it includes both:
+
+1. Explicit tier assignment (`Tier A`, `Tier B`, or `Tier C`), and
+2. A short justification describing why that tier is appropriate and what decisions it may influence.
+
 ## 1. Target Experience (What the references are doing)
 
 The references consistently use these patterns:
@@ -337,4 +379,3 @@ while still preserving:
 - product branding
 - accessibility requirements
 - maintainable token/component architecture.
-
