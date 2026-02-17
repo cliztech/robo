@@ -9,3 +9,19 @@ This document is the top-level architecture entry point for the repository.
 - Execution plans: `docs/exec-plans/`
 - Reliability and security: `docs/RELIABILITY.md`, `docs/SECURITY.md`
 - Generated schema references: `docs/generated/db-schema.md`
+
+## Agent deliverables
+
+All implementation and planning agents should produce repository artifacts that support
+delivery, operations, and traceability. Outputs should include:
+
+- Product code and tests
+- CI configuration and release tooling
+- Internal developer tools
+- Documentation and design history
+- Evaluation harnesses
+- Review comments and responses
+- Scripts that manage the repository itself
+- Production dashboard definition files
+
+Reference: `AGENTS.md` → **Agent Output Requirements**.
