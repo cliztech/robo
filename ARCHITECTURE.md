@@ -32,6 +32,8 @@ Use this quick map when placing artifacts:
 
 ## Agent deliverables
 
+Agents working in this repository are expected to produce and maintain the
+following artifact categories:
 All implementation and planning agents should produce repository artifacts that support
 delivery, operations, and traceability. Outputs should include:
 
