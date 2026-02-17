@@ -4,6 +4,11 @@ Status: Proposed
 Owner: Design + DevOps + QA + AI Improvement + Management
 Primary reference style: user-provided DJ/radio console mockups (dark, high-density, deck-centric)
 
+## Reference Inputs
+
+- Visual asset catalog index: [`docs/ui/reference-catalog/virtual-dj/README.md`](./reference-catalog/virtual-dj/README.md)
+- Asset-by-asset scoring: [`docs/ui/reference-catalog/virtual-dj/catalog.csv`](./reference-catalog/virtual-dj/catalog.csv)
+
 
 ## Progress Summary (2026-02-16)
 

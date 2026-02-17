@@ -4,6 +4,11 @@ Status: draft
 Audience: product/design/frontend/audio teams  
 Goal: reproduce the look-and-feel of the reference DJ images (VirtualDJ-like density and performance) while fitting the DGN-DJ stack and accessibility commitments.
 
+## Reference Inputs
+
+- Visual asset catalog index: [`docs/ui/reference-catalog/virtual-dj/README.md`](./reference-catalog/virtual-dj/README.md)
+- Asset-by-asset scoring: [`docs/ui/reference-catalog/virtual-dj/catalog.csv`](./reference-catalog/virtual-dj/catalog.csv)
+
 
 ## Progress Summary (2026-02-16)
 
@@ -337,4 +342,3 @@ while still preserving:
 - product branding
 - accessibility requirements
 - maintainable token/component architecture.
-
