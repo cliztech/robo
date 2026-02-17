@@ -229,6 +229,8 @@ Use these gates before moving work from planning to execution and from draft PR 
 
 ## Route Selection
 
+> Canonical BMAD route-to-command mapping (with triggers + tie-breaks): [`docs/operations/agent_execution_commands.md#05-bmad-route-to-command-matrix-canonical-selection-guide`](docs/operations/agent_execution_commands.md#05-bmad-route-to-command-matrix-canonical-selection-guide)
+
 | Route | Purpose | Agent Behavior |
 | ----- | ------- | -------------- |
 | **QA** | Read-only inspection | No file edits; findings + task stubs only |
