@@ -29,8 +29,8 @@ Canonical status labels (use exactly): **Not Started / In Progress / Blocked / D
 
 | Item | Status | Evidence |
 | --- | --- | --- |
-| Reference pattern analysis captured | ✅ Done | `docs/ui/dj_console_ui_research_plan.md#1-target-experience-what-the-references-are-doing` |
-| Quality gates and measurable definition of “perfect” recorded | ✅ Done | `docs/ui/dj_console_ui_research_plan.md#11-quality-gates-perfect--measurable` |
+| Reference pattern analysis captured | ✅ Done | #1-target-experience-what-the-references-are-doing |
+| Quality gates and measurable definition of “perfect” recorded | ✅ Done | #11-quality-gates-perfect--measurable |
 
 ### Current Risks/Blockers
 
