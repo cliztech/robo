@@ -1,5 +1,12 @@
 installation:
   version: 6.0.0-Beta.8
+  installDate: 2026-02-16T22:10:12.391Z
+  lastUpdated: 2026-02-16T22:10:12.391Z
+modules:
+  - name: core
+    version: 6.0.0-Beta.8
+    installDate: 2026-02-16T22:10:12.391Z
+    lastUpdated: 2026-02-16T22:10:12.391Z
   installDate: 2026-02-16T22:10:31.799Z
   lastUpdated: 2026-02-16T22:10:31.799Z
 modules:
@@ -26,6 +33,8 @@ modules:
     repoUrl: null
   - name: bmm
     version: 6.0.0-Beta.8
+    installDate: 2026-02-16T22:10:12.328Z
+    lastUpdated: 2026-02-16T22:10:12.391Z
     installDate: 2026-02-16T22:10:31.735Z
     lastUpdated: 2026-02-16T22:10:31.799Z
     installDate: 2026-02-16T22:10:57.447Z
