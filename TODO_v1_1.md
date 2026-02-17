@@ -2,6 +2,8 @@
 
 This board converts the v1.1 **Must** scope into an execution-ready TODO checklist with concrete completion criteria and validation steps.
 
+See [docs/operations/execution_index.md](docs/operations/execution_index.md) for cross-track ownership/status routing and weekly freshness protocol.
+
 > Implementation note (current): `config/scripts/startup_safety.py` is now wired into `RoboDJ_Launcher.bat` as the launch gate for diagnostics, config validation, auto-restore attempt, and snapshot creation.
 
 ## Active TODO checklist
