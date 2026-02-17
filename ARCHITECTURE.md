@@ -32,6 +32,7 @@ Use this quick map when placing artifacts:
 
 ## Agent deliverables
 
+Agents operating in this repository are expected to produce and maintain the following artifact categories:
 All repository agents are expected to produce and maintain the following artifact classes:
 All agents should produce or maintain one or more of the following artifact types:
 Agents working in this repository are expected to produce and maintain the
