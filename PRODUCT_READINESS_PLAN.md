@@ -82,7 +82,7 @@ Make multi-agent workflows transparent, safe, and efficient for non-technical op
 | Metric | Event names | Collection points | Ownership |
 |---|---|---|---|
 | Workflow completion time | `ux_workflow_started`, `ux_stage_entered`, `ux_workflow_completed` | Frontend emits start/stage/complete events with `workflow_id`; backend computes `completed_at - started_at` and p50/p95 aggregates. | Frontend: UI Telemetry; Backend: Observability/Analytics |
-| Intervention rate | `ux_checkpoint_presented`, `ux_checkpoint_decision` (`approve`, `request_changes`, `reject`) | Frontend emits when checkpoint is shown and when operator decides; backend computes `non_approve_decisions / checkpoints_presented` by route and stage. | Frontend: UI Telemetry; Backend: Workflow Analytics |
+| Intervention rate | `ux_checkpoint_presented`, `ux_checkpoint_decision` (`approve`, `request_changes`, `rollback`) | Frontend emits when checkpoint is shown and when operator decides; backend computes `non_approve_decisions / checkpoints_presented` by route and stage. | Frontend: UI Telemetry; Backend: Workflow Analytics |
 | Rollback rate | `ux_rollback_initiated`, `ux_rollback_completed`, `ux_rollback_failed` | Frontend emits initiation source (checkpoint/manual); backend confirms outcome and computes `rollback_initiated / workflows_completed` plus failure rate. | Frontend: UI Telemetry; Backend: Reliability/Operations |
 
 Collection rules:
