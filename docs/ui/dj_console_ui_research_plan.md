@@ -4,6 +4,41 @@ Status: draft
 Audience: product/design/frontend/audio teams  
 Goal: reproduce the look-and-feel of the reference DJ images (VirtualDJ-like density and performance) while fitting the DGN-DJ stack and accessibility commitments.
 
+
+## Progress Summary (2026-02-16)
+
+Canonical status labels (use exactly): **Not Started / In Progress / Blocked / Done**.
+
+| Phase | Status | Notes |
+| --- | --- | --- |
+| Phase 1 — Theme + shell scaffolding | In Progress | Research direction and shell/component targets are documented; implementation is queued. |
+| Phase 2 — Interactive controls | Not Started | Waiting on Phase 1 shell baseline and interaction state primitives. |
+| Phase 3 — Waveform + audio integration | Not Started | Depends on renderer choice and telemetry contract definition. |
+| Phase 4 — Hardening and presets | Not Started | Validation gates are defined but execution has not started. |
+
+### Phase Ownership (Accountable Team/Agent)
+
+| Phase | Accountable team | Accountable agent |
+| --- | --- | --- |
+| Phase 1 — Theme + shell scaffolding | Design Team | UI/UX Agent |
+| Phase 2 — Interactive controls | DevOps Team | Infrastructure Agent |
+| Phase 3 — Waveform + audio integration | AI Improvement Team | Model Evaluator Agent |
+| Phase 4 — Hardening and presets | QA Team | Regression Watcher Agent |
+
+### Completion Evidence (Checked Items)
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| Reference pattern analysis captured | ✅ Done | #1-target-experience-what-the-references-are-doing |
+| Quality gates and measurable definition of “perfect” recorded | ✅ Done | #11-quality-gates-perfect--measurable |
+
+### Current Risks/Blockers
+
+- Blocked on confirmed rendering approach (Canvas vs WebGL profile by target hardware tier) before Phase 3 can be staffed.
+- Baseline React source paths referenced in this plan may diverge from current repo reality and need reconciliation before execution.
+
+**Next milestone date:** 2026-02-23 (Phase 1 execution handoff with finalized shell backlog)
+
 ## 1. Target Experience (What the references are doing)
 
 The references consistently use these patterns:
