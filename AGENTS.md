@@ -142,6 +142,7 @@ All agents operating in this repository should produce and maintain artifacts th
 The following outputs are mandatory deliverable categories for agents:
 
 ### Agents produce
+### Agents produce:
 
 - Product code and tests
 - CI configuration and release tooling
