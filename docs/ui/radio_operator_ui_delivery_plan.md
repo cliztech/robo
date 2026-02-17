@@ -31,8 +31,8 @@ Canonical status labels (use exactly): **Not Started / In Progress / Blocked / D
 
 | Item | Status | Evidence |
 | --- | --- | --- |
-| Delivery plan charter and phased structure published | ✅ Done | `docs/ui/radio_operator_ui_delivery_plan.md` |
-| Cross-team responsibilities documented | ✅ Done | `docs/ui/radio_operator_ui_delivery_plan.md#7-agent-team-plan-who-does-what` |
+| Delivery plan charter and phased structure published | ✅ Done | #radio-operator-ui-delivery-plan-functional-not-mockup-only |
+| Cross-team responsibilities documented | ✅ Done | #7-agent-team-plan-who-does-what |
 
 ### Current Risks/Blockers
 
