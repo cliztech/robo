@@ -5,7 +5,9 @@ from pydantic import ValidationError
 
 from backend.scheduling.autonomy_policy import (
     AutonomyPolicy,
+    DecisionAuthority,
     DecisionType,
+    DEFAULT_MODE_PERMISSIONS,
     GlobalMode,
 )
 from backend.scheduling.autonomy_service import AutonomyPolicyService
@@ -149,3 +151,17 @@ def test_invalid_payload_rejection_paths_service(tmp_path):
             decision_type=DecisionType.track_selection,
             origin="not-valid-origin",
         )
+
+
+def test_autonomy_policy_mode_permissions_do_not_leak_between_instances():
+    first_policy = AutonomyPolicy()
+    second_policy = AutonomyPolicy()
+
+    first_policy.mode_permissions[GlobalMode.semi_auto][
+        DecisionType.track_selection
+    ] = DecisionAuthority.ai_autonomous
+
+    assert (
+        second_policy.mode_permissions[GlobalMode.semi_auto][DecisionType.track_selection]
+        == DEFAULT_MODE_PERMISSIONS[GlobalMode.semi_auto][DecisionType.track_selection]
+    )
