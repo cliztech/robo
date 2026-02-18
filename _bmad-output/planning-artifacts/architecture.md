@@ -1,5 +1,5 @@
 ---
-stepsCompleted: [1, 2, 3]
+stepsCompleted: [1, 2, 3, 4]
 inputDocuments:
   - docs/planning_artifacts/bmad_deep_research/04_prd.md
   - docs/exec-plans/active/bmad-2026-02-17-implementation-readiness-pack/01-prd.md
@@ -12,7 +12,7 @@ project_name: 'DGN-DJ by DGNradio'
 user_name: 'CLIZTECH'
 date: '2026-02-18T23:13:21Z'
 status: 'in_progress'
-lastStep: 3
+lastStep: 4
 ---
 
 # Architecture Decision Document
@@ -132,3 +132,72 @@ BMAD stage-gated workflows, markdown artifact chain, and explicit continuation c
 **Note:** The first implementation story should be a build reproducibility and startup-readiness baseline story (packaging verification + startup diagnostics contract).
 
 [C] Continue to architectural decisions
+
+## Core Architectural Decisions
+
+### Decision Priority Analysis
+
+**Critical Decisions (Block Implementation):**
+- **Artifact-chain gating is mandatory:** implementation cannot begin until PRD → Architecture → Epics/Stories → Readiness artifacts exist and pass critical checks.
+- **Single-source traceability model:** every FR/NFR must map to architecture sections and implementation stories via stable requirement IDs.
+- **Reliability-first startup policy:** startup diagnostics, config validation, and crash-state recovery are first-class gates with explicit pass/warn/fail behavior.
+
+**Important Decisions (Shape Architecture):**
+- **Config-first control plane:** `schedules.json` and `prompt_variables.json` remain canonical mutable state, with validation before write and backup before risky edits.
+- **Workflow-state persistence in markdown frontmatter:** BMAD workflow progression fields (`stepsCompleted`, `lastStep`, `status`) are authoritative for resumability.
+- **Brownfield baseline strategy:** no framework migration in this increment; leverage current Python + PyInstaller runtime and modular repository layout.
+
+**Deferred Decisions (Post-MVP):**
+- Full UI framework migration (e.g., PySide6 desktop rewrite or web-shell desktop shell).
+- Multi-tenant orchestration abstractions.
+- Expanded external service integrations beyond current validated workflow boundaries.
+
+### Data Architecture
+
+- **Primary stores:** SQLite for runtime/system data and JSON for operator-editable configuration.
+- **Mutation policy:** agents do not mutate `.db` files directly; configuration edits are scoped to approved JSON files with syntax validation and backup discipline.
+- **Validation contract:** JSON changes must be machine-validated pre-commit and logged in readiness evidence.
+- **Data boundary decision:** preserve current split between immutable operational evidence (artifacts/docs) and mutable runtime config (JSON).
+
+### Authentication & Security
+
+- **Secrets hygiene:** no secrets or key material in planning artifacts or commits.
+- **Policy enforcement:** apply redaction and security documentation constraints to all generated artifacts.
+- **Risk control:** guardrails focus on validation, auditability, and explicit operator-facing recovery instructions.
+- **Decision note:** identity/auth stack expansion is deferred unless required by implementation stories.
+
+### API & Communication Patterns
+
+- **Internal contract model:** architecture decisions and readiness checks communicate through structured markdown artifacts rather than introducing new network API layers in this phase.
+- **Severity taxonomy standardization:** pass/warn/fail semantics are shared across startup diagnostics, config validation, and readiness reporting.
+- **Traceability interface:** requirement IDs and artifact references are the canonical communication mechanism across planning outputs.
+
+### Frontend Architecture
+
+- **Current-phase decision:** no new frontend stack commitment in this step; prioritize operator workflow clarity via diagnostics and guided remediation flows.
+- **UX contract source:** existing UX artifacts (when available) should be consumed as constraints on error messaging, intervention friction, and recovery pathways.
+- **Deferred expansion:** richer UI framework choices remain explicitly post-baseline and must preserve reliability and accessibility requirements.
+
+### Infrastructure & Deployment
+
+- **Packaging baseline:** PyInstaller-based Windows desktop packaging remains the deployment standard (`pyinstaller` latest verified: `6.19.0`).
+- **Execution model:** launcher-mediated startup remains primary operational entry point.
+- **Evidence bundle requirement:** each non-trivial change must include validation commands, outputs, and rollback notes in planning/release artifacts.
+- **No replatforming decision:** avoid CI/CD or runtime platform overhauls in this architecture increment.
+
+### Decision Impact Analysis
+
+**Implementation Sequence:**
+1. Establish requirement ID convention and traceability matrix scaffold.
+2. Define startup gate taxonomy (diagnostics, config validation, crash-state handling).
+3. Implement/validate config backup + restore contract for risky edits.
+4. Produce epics/stories aligned to decisions and readiness checks.
+5. Run readiness report ensuring zero unresolved critical blockers.
+
+**Cross-Component Dependencies:**
+- Traceability decisions drive epic/story structure and readiness report coverage.
+- Startup reliability policy depends on consistent config validation and backup semantics.
+- Security/redaction constraints apply across all planning artifacts and operator guidance outputs.
+- Deployment confidence depends on packaging reproducibility plus readiness evidence completeness.
+
+[C] Continue to implementation patterns
