@@ -26,20 +26,21 @@ This script:
 - optionally configures `upstream`
 - fetches all remotes
 
-## 2) Verify environment health
+## 2) Verify environment health (preferred manual runbook command)
 
 Run:
 
 ```bash
-scripts/bootstrap_dev_environment.sh
+scripts/codex_env_doctor.sh
 ```
 
-It validates:
-- git repository + remotes
-- presence of `docker-compose.yaml`
-- Docker Compose availability
-- presence of `.github/workflows`
-- GitHub CLI install + auth status
+This orchestrates, in order:
+- `scripts/bootstrap_dev_environment.sh`
+- `python config/validate_config.py`
+- `python config/check_runtime_secrets.py --require-env-only`
+- optional read-only presence checks for `config/secret.key` and `config/secret_v2.key`
+
+Output is CI-friendly and concise using `PASS:`, `WARN:`, and `FAIL:` status lines.
 
 ## 3) Docker workflow (optional)
 
