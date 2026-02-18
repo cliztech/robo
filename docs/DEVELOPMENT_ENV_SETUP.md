@@ -26,22 +26,93 @@ This script:
 - optionally configures `upstream`
 - fetches all remotes
 
-## 2) Verify environment health
+## 2) Choose bootstrap mode before task execution
 
-Run:
+Use `scripts/bootstrap_codex_environment.sh` to validate tooling, execution assumptions, and secrets.
+
+### Automatic mode (default)
+
+Use this when running in Codex-managed environments (for example, hosted agent sessions where `CODEX_CI` and `CODEX_HOME` are typically present).
 
 ```bash
-scripts/bootstrap_dev_environment.sh
+scripts/bootstrap_codex_environment.sh
+# or
+scripts/bootstrap_codex_environment.sh automatic
 ```
 
-It validates:
-- git repository + remotes
-- presence of `docker-compose.yaml`
-- Docker Compose availability
-- presence of `.github/workflows`
-- GitHub CLI install + auth status
+Automatic mode is best for:
+- task execution in Codex
+- CI-like runs
+- pull request preflight checks
 
-## 3) Docker workflow (optional)
+### Manual mode
+
+Use this when running from a local shell where Codex-managed environment markers may not exist.
+
+```bash
+scripts/bootstrap_codex_environment.sh manual
+```
+
+Manual mode is best for:
+- local debugging and dry-runs
+- validating local fallback secret files before committing changes
+
+## 3) Secret placement strategy (Codex settings vs local fallback)
+
+### Configure these in Codex environment settings (primary)
+
+Set these environment variables in the Codex environment configuration so they are injected securely at runtime:
+- `ROBODJ_SECRET_KEY`
+- `ROBODJ_SECRET_V2_KEY`
+- `ICECAST_PASS`
+- `ICECAST_SOURCE_PASSWORD`
+- `ICECAST_ADMIN_PASSWORD`
+- `ICECAST_RELAY_PASSWORD`
+
+### Local fallback files (manual mode only)
+
+For local-only manual development, keep fallback values in untracked local files such as:
+- `.env.local`
+- `radio-agentic/.env.local`
+
+Do **not** commit fallback secret files.
+
+## 4) What the Codex bootstrap script validates
+
+`scripts/bootstrap_codex_environment.sh` checks:
+- required CLI/tooling availability (`git`, `python3`, `rg`)
+- optional tooling signals (`docker`, `gh`, `node`, `npm`)
+- expected environment mode assumptions (Automatic vs Manual)
+- presence (not content disclosure) of required secret env vars
+- warning signals when likely placeholder values are still configured (for example `hackme`, `changeme`, `placeholder`, `example`)
+
+## 5) Minimal secure defaults before starting work
+
+- Always run with real secrets injected via environment variables.
+- Treat placeholder values (`hackme`, `changeme`, `example`) as invalid for real task execution.
+- Keep secret files untracked and avoid echoing secret values into logs.
+- Use the repo bootstrap checks before editing code or config.
+
+## 6) Validation commands to run before task execution
+
+Run from repository root:
+
+```bash
+# Codex/CI-preferred bootstrap check
+scripts/bootstrap_codex_environment.sh automatic
+
+# Local/manual bootstrap check
+scripts/bootstrap_codex_environment.sh manual
+
+# Existing baseline repo health check
+scripts/bootstrap_dev_environment.sh
+
+# Optional: validate JSON configuration syntax quickly
+python -m json.tool config/schedules.json >/dev/null
+python -m json.tool config/prompt_variables.json >/dev/null
+```
+
+## 7) Docker workflow (optional)
 
 To start the MCP gateway service already defined in this repository:
 
@@ -55,7 +126,7 @@ To stop it:
 docker compose down
 ```
 
-## 4) GitHub workflow files
+## 8) GitHub workflow files
 
 CI workflow files live in `.github/workflows/` and are executed automatically when pushed to GitHub.
 
