@@ -3,6 +3,8 @@
 ## Purpose
 This policy defines how RoboDJ runtime secrets are generated, stored, rotated, revoked, and handled during incidents.
 
+For environment-specific variable requirements and fallback allowances, see [CODEX Environment Contract](CODEX_ENVIRONMENT_CONTRACT.md).
+
 ## In-Scope Secrets
 - `secret.key` equivalent runtime value (`ROBODJ_SECRET_KEY`)
 - `secret_v2.key` equivalent runtime value (`ROBODJ_SECRET_V2_KEY`)
