@@ -41,6 +41,35 @@ It validates:
 - presence of `.github/workflows`
 - GitHub CLI install + auth status
 
+Then validate required non-secret runtime variables by context:
+
+```bash
+# Desktop launcher / local runtime context
+ROBODJ_ENV=development \
+ROBODJ_STATION_ID=dgn_local \
+ROBODJ_LOG_LEVEL=INFO \
+ROBODJ_DATA_DIR=./config/cache \
+python config/check_runtime_env.py --context desktop_app
+
+# Docker stack context
+COMPOSE_PROJECT_NAME=robodj \
+ROBODJ_ENV=development \
+ROBODJ_LOG_LEVEL=INFO \
+ROBODJ_HTTP_PORT=8080 \
+python config/check_runtime_env.py --context docker_stack
+
+# CI context (example values for local dry-run)
+CI=true \
+GITHUB_ACTIONS=true \
+GITHUB_REF_NAME=main \
+GITHUB_SHA=0123456789abcdef0123456789abcdef01234567 \
+ROBODJ_ENV=staging \
+python config/check_runtime_env.py --context ci
+```
+
+Contract source of truth:
+- `config/env_contract.json` (machine-readable variable requirements by context)
+
 ## 3) Docker workflow (optional)
 
 To start the MCP gateway service already defined in this repository:
