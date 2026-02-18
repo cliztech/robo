@@ -7,6 +7,8 @@ This policy defines how RoboDJ runtime secrets are generated, stored, rotated, r
 - `secret.key` equivalent runtime value (`ROBODJ_SECRET_KEY`)
 - `secret_v2.key` equivalent runtime value (`ROBODJ_SECRET_V2_KEY`)
 
+For Codex/operator environment requirements (required vars, optional expiry metadata, source priority, validation command, and redaction handling), see [docs/operations/codex_environment_contract.md](operations/codex_environment_contract.md).
+
 Examples/templates are versioned as:
 - `config/secret.key.example`
 - `config/secret_v2.key.example`
