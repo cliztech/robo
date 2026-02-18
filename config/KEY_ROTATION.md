@@ -2,6 +2,8 @@
 
 For lifecycle requirements (generation, storage, cadence, revocation, incidents), see `docs/SECRET_LIFECYCLE_POLICY.md`.
 
+For environment-specific variable contracts (contexts, platform vars, redaction, fallback decisions), see [CODEX Environment Contract](../docs/CODEX_ENVIRONMENT_CONTRACT.md).
+
 ## Runtime Source Priority
 1. Environment variables (preferred):
    - `ROBODJ_SECRET_KEY`

@@ -11,10 +11,10 @@ services:
     image: infiniteproject/icecast
     ports: ["8000:8000"]
     environment:
-      ICECAST_SOURCE_PASSWORD: hackme
-      ICECAST_ADMIN_PASSWORD: hackme
-      ICECAST_PASSWORD: hackme
-      ICECAST_RELAY_PASSWORD: hackme
+      ICECAST_SOURCE_PASSWORD: ${ICECAST_SOURCE_PASSWORD:-__SET_IN_ENV__}
+      ICECAST_ADMIN_PASSWORD: ${ICECAST_ADMIN_PASSWORD:-__SET_IN_ENV__}
+      ICECAST_PASSWORD: ${ICECAST_PASSWORD:-__SET_IN_ENV__}
+      ICECAST_RELAY_PASSWORD: ${ICECAST_RELAY_PASSWORD:-__SET_IN_ENV__}
     volumes:
       - ./infra/icecast/icecast.xml:/etc/icecast.xml:ro
 
@@ -69,7 +69,7 @@ services:
       ICECAST_PORT: 8000
       ICECAST_MOUNT: /stream
       ICECAST_USER: source
-      ICECAST_PASS: hackme
+      ICECAST_PASS: ${ICECAST_PASS:-__SET_IN_ENV__}
     volumes:
       - /tmp:/tmp
     depends_on: [icecast, nats, audio-engine]
