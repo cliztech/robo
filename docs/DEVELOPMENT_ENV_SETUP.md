@@ -72,3 +72,4 @@ Current workflows in this repo include:
 
 - Keep sensitive files (such as `config/secret.key` and `config/secret_v2.key`) out of shared logs and screenshots.
 - This setup is non-destructive; it does not modify app binaries or SQLite databases.
+- For environment-variable requirements and platform variable expectations, see [CODEX Environment Contract](CODEX_ENVIRONMENT_CONTRACT.md).
