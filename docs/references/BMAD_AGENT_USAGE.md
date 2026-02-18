@@ -28,12 +28,7 @@ Use an explicit startup instruction/profile per tool.
 
 ### Suggested default instruction block
 
-Add this to each client's project-level startup prompt:
-
-> Use BMAD as the default execution framework for this repository.
-> Load `_bmad/_config/bmad-help.csv` at session start.
-> If a matching BMAD workflow exists, use that workflow first and only fall back to free-form execution when no workflow applies.
-> Treat `_bmad/` as the source of truth for available workflows, agents, and tasks.
+Use the canonical startup snippet in [`docs/operations/agent_execution_commands.md`](../operations/agent_execution_commands.md#canonical-bmad-startup-policy-codexgeminijules) for all client bootstrap prompts.
 
 ### Per-client setup checklist
 

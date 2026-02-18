@@ -2,6 +2,20 @@
 
 Short, runnable command sequences for execution workflows, plus an operational matrix for all DGN-DJ teams (managers, subagents, tools, skills, personalities, tech stack, and trusted references).
 
+## Canonical BMAD startup policy (Codex/Gemini/Jules)
+
+Use this as the single startup snippet for repository-level agent bootstrap instructions.
+
+> Use BMAD as the default execution framework for this repository.
+> Load `_bmad/_config/bmad-help.csv` at session start.
+> Match command/workflow first, then fall back to free-form execution.
+> Treat `_bmad/` as the workflow source of truth.
+
+### Quick verification checklist
+
+- [ ] Given request X, expected BMAD command Y is selected.
+- [ ] If no match exists, fallback path is used.
+
 ## 0) Fast start and repository sanity checks
 
 ```bash
