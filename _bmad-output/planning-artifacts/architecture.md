@@ -1,5 +1,5 @@
 ---
-stepsCompleted: [1, 2, 3, 4, 5]
+stepsCompleted: [1, 2, 3, 4, 5, 6]
 inputDocuments:
   - docs/planning_artifacts/bmad_deep_research/04_prd.md
   - docs/exec-plans/active/bmad-2026-02-17-implementation-readiness-pack/01-prd.md
@@ -12,7 +12,7 @@ project_name: 'DGN-DJ by DGNradio'
 user_name: 'CLIZTECH'
 date: '2026-02-18T23:13:21Z'
 status: 'in_progress'
-lastStep: 5
+lastStep: 6
 ---
 
 # Architecture Decision Document
@@ -260,3 +260,90 @@ BMAD stage-gated workflows, markdown artifact chain, and explicit continuation c
 - Workflow state (`stepsCompleted`, `lastStep`, `status`) reflects actual progress.
 
 [C] Continue to project structure
+
+## Project Structure & Boundaries
+
+### Complete Project Directory Structure
+
+```text
+robo/
+├── AGENTS.md
+├── ARCHITECTURE.md
+├── SKILLS.md
+├── backend/
+│   ├── agents/
+│   ├── content_engine.py
+│   └── ...
+├── config/
+│   ├── schedules.json
+│   ├── prompt_variables.json
+│   ├── settings.db                # read-only for agents
+│   ├── user_content.db            # read-only for agents
+│   ├── prompts/
+│   ├── backups/
+│   ├── logs/
+│   ├── cache/
+│   └── scripts/
+├── docs/
+│   ├── operations/
+│   ├── exec-plans/
+│   ├── product-specs/
+│   ├── design-docs/
+│   └── ...
+├── _bmad/
+│   ├── _config/
+│   ├── core/
+│   └── bmm/
+├── _bmad-output/
+│   ├── planning-artifacts/
+│   │   └── architecture.md
+│   └── implementation-artifacts/
+├── RoboDJ_Launcher.bat
+└── RoboDJ Automation.exe          # do not edit
+```
+
+### Architectural Boundaries
+
+**API Boundaries:**
+- No new external API surface is introduced in this increment.
+- Planning-stage contracts are artifact-driven (PRD, architecture, epics/stories, readiness report).
+- Validation commands and readiness statuses are treated as interface outputs between stages.
+
+**Component Boundaries:**
+- `backend/` owns runtime behavior and orchestration logic.
+- `config/` owns mutable runtime configuration and operational state artifacts.
+- `docs/` owns human-readable standards, plans, and policy context.
+- `_bmad-output/` owns generated workflow artifacts and traceability evidence.
+
+**Service Boundaries:**
+- Startup diagnostics, configuration validation, recovery guidance, and backup policy are separate concern areas with shared severity vocabulary.
+- Cross-cutting governance (traceability, readiness gates, evidence requirements) constrains all services.
+
+### Requirement-to-Structure Mapping
+
+- **FR-1 Planning Artifact Chain**
+  - `_bmad-output/planning-artifacts/` for PRD, architecture, epics/stories, readiness artifacts.
+- **FR-2 Requirement Traceability**
+  - Requirement IDs embedded in `docs/` planning artifacts and carried into implementation stories.
+- **FR-3 Gated Readiness**
+  - Readiness checks and reports under planning/execution docs; gate criteria reflected in architecture + implementation artifacts.
+- **FR-4 Operator Reliability Outcomes**
+  - Runtime logic in `backend/`; operational configuration/backup artifacts in `config/`; verification evidence in `docs/` + `_bmad-output/`.
+- **FR-5 Documentation Discoverability**
+  - Canonical documentation routing through `docs/` indexes and planning artifact directories.
+
+### Integration Boundaries
+
+- **Data boundary:** agents never directly mutate `.db` files; config changes go through JSON validation and backup workflow.
+- **Workflow boundary:** BMAD step progression depends on frontmatter state + explicit continuation markers.
+- **Security boundary:** secret-bearing assets and key material remain outside editable planning paths.
+- **Release boundary:** architecture decisions must map to readiness evidence before implementation kickoff.
+
+### Implementation Ownership Zones
+
+- **Team-facing planning zone:** `docs/exec-plans/`, `docs/operations/`, `_bmad-output/planning-artifacts/`
+- **Runtime code zone:** `backend/`
+- **Operator configuration zone:** `config/`
+- **Generated evidence zone:** `_bmad-output/`
+
+[C] Continue to architecture validation
