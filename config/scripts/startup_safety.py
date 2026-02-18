@@ -29,6 +29,8 @@ SNAPSHOT_PREFIX = "config_snapshot_"
 SNAPSHOT_FILES = [
     "schedules.json",
     "prompt_variables.json",
+]
+SNAPSHOT_SECRET_FILES = [
     "secret.key",
     "secret_v2.key",
 ]
@@ -203,13 +205,17 @@ def _snapshot_name() -> str:
     return f"{SNAPSHOT_PREFIX}{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
 
 
-def create_backup_snapshot() -> Path:
+def create_backup_snapshot(*, include_secrets: bool = False) -> Path:
     BACKUP_DIR.mkdir(parents=True, exist_ok=True)
     snapshot_dir = BACKUP_DIR / _snapshot_name()
     snapshot_dir.mkdir(parents=True, exist_ok=False)
 
+    snapshot_files = list(SNAPSHOT_FILES)
+    if include_secrets:
+        snapshot_files.extend(SNAPSHOT_SECRET_FILES)
+
     copied: list[str] = []
-    for relative in SNAPSHOT_FILES:
+    for relative in snapshot_files:
         source = CONFIG_DIR / relative
         if source.exists():
             shutil.copy2(source, snapshot_dir / relative)
@@ -218,10 +224,21 @@ def create_backup_snapshot() -> Path:
     manifest = {
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
         "snapshot_type": "last_known_good_config",
+        "includes_secrets": include_secrets,
         "files": copied,
     }
     (snapshot_dir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    log_path = _append_event_log(
+        "create_backup_snapshot",
+        {
+            "status": "success",
+            "snapshot": snapshot_dir.name,
+            "includes_secrets": include_secrets,
+            "copied_files": copied,
+        },
+    )
     print(f"Created config snapshot: {snapshot_dir}")
+    print(f"Snapshot event logged to: {log_path}")
     return snapshot_dir
 
 
@@ -236,7 +253,7 @@ def _latest_snapshot_dir() -> Path | None:
     return sorted(snapshots, key=lambda p: p.name)[-1]
 
 
-def restore_last_known_good_config() -> bool:
+def restore_last_known_good_config(*, include_secrets: bool = False) -> bool:
     snapshot_dir = _latest_snapshot_dir()
     if snapshot_dir is None:
         print("No snapshot found in config/backups/.")
@@ -246,8 +263,12 @@ def restore_last_known_good_config() -> bool:
         )
         return False
 
+    restorable_files = list(SNAPSHOT_FILES)
+    if include_secrets:
+        restorable_files.extend(SNAPSHOT_SECRET_FILES)
+
     restored_files: list[str] = []
-    for relative in SNAPSHOT_FILES:
+    for relative in restorable_files:
         source = snapshot_dir / relative
         if source.exists():
             shutil.copy2(source, CONFIG_DIR / relative)
@@ -272,13 +293,14 @@ def restore_last_known_good_config() -> bool:
             "status": "success",
             "snapshot": snapshot_dir.name,
             "restored_files": restored_files,
+            "includes_secrets": include_secrets,
         },
     )
     print(f"Restore event logged to: {log_path}")
     return True
 
 
-def launch_gate() -> int:
+def launch_gate(*, include_secrets_in_snapshot: bool = False) -> int:
     diagnostics_ok = run_startup_diagnostics()
     config_errors = validate_launch_config()
 
@@ -288,7 +310,7 @@ def launch_gate() -> int:
             print(f" - {error}")
         print("Attempting crash recovery using last-known-good snapshot...")
 
-        restored = restore_last_known_good_config()
+        restored = restore_last_known_good_config(include_secrets=include_secrets_in_snapshot)
         if restored:
             post_restore_errors = validate_launch_config()
             if post_restore_errors:
@@ -305,7 +327,7 @@ def launch_gate() -> int:
         print("Startup diagnostics failed. Startup blocked.")
         return 1
 
-    create_backup_snapshot()
+    create_backup_snapshot(include_secrets=include_secrets_in_snapshot)
     print("Startup safety gate passed.")
     return 0
 
@@ -321,15 +343,23 @@ def main() -> int:
         action="store_true",
         help="Restore latest snapshot from config/backups/ and exit",
     )
+    parser.add_argument(
+        "--include-secrets",
+        action="store_true",
+        help=(
+            "Break-glass mode: include secret.key and secret_v2.key during snapshot "
+            "create/restore flows. By default, snapshots exclude secrets."
+        ),
+    )
     args = parser.parse_args()
 
     if args.create_backup:
-        create_backup_snapshot()
+        create_backup_snapshot(include_secrets=args.include_secrets)
         return 0
     if args.restore_last_known_good:
-        return 0 if restore_last_known_good_config() else 1
+        return 0 if restore_last_known_good_config(include_secrets=args.include_secrets) else 1
     if args.on_launch:
-        return launch_gate()
+        return launch_gate(include_secrets_in_snapshot=args.include_secrets)
 
     parser.print_help()
     return 1

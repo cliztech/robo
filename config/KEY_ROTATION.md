@@ -14,6 +14,16 @@ Only templates are versioned:
 - `config/secret.key.example`
 - `config/secret_v2.key.example`
 
+
+## Startup Snapshot Secret Handling
+Routine snapshots created by `config/scripts/startup_safety.py` now exclude `config/secret.key` and `config/secret_v2.key` by default to reduce secret duplication and keep env-first handling aligned with `docs/SECRET_LIFECYCLE_POLICY.md`.
+
+Use break-glass opt-in only when an operator explicitly needs secret file capture:
+- `python config/scripts/startup_safety.py --create-backup --include-secrets`
+- `python config/scripts/startup_safety.py --on-launch --include-secrets`
+
+Snapshot events are written to `config/logs/startup_safety_events.jsonl` and include an `includes_secrets` field so operators can audit whether key material was copied.
+
 ## Rotation Procedure
 1. Stop RoboDJ processes using the active secrets.
 2. Generate replacement values out-of-band:
