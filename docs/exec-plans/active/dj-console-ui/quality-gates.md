@@ -12,7 +12,7 @@ Sources merged: `docs/ui/dj_console_ui_research_plan.md` ("Perfect = measurable"
 
 ## Gate 1 — Visual density and hierarchy fidelity
 
-**Intent:** Keep the DJ-console visual rhythm (high information density, strict grouping, immediate scanability) while preserving accessibility profiles.
+**Intent:** Keep the DJ-console visual rhythm (high information density, strict grouping, immediate scannability) while preserving accessibility profiles.
 
 ### Pass criteria
 
