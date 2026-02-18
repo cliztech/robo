@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect } from 'react'; // Removed unused hooks for cleaner code
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { DegenEffectRack } from '../components/audio/DegenEffectRack';
@@ -11,12 +11,11 @@ import { DegenTransport } from '../components/audio/DegenTransport';
 import { DegenTrackList } from '../components/audio/DegenTrackList';
 import { DegenScheduleTimeline } from '../components/schedule/DegenScheduleTimeline';
 import { DegenAIHost } from '../components/ai/DegenAIHost';
-import { DegenButton } from '../components/primitives/DegenButton';
+import { DegenPersonaManager } from '../components/ai/DegenPersonaManager';
 import { GorillaLogo } from '../components/shell/GorillaLogo';
 import {
     Activity,
     Radio,
-    Mic2,
     LayoutDashboard,
     Disc,
     Settings as SettingsIcon,
@@ -36,10 +35,10 @@ import {
     AlertTriangle,
 } from 'lucide-react';
 
-type ViewMode = 'dashboard' | 'decks' | 'mixer' | 'library' | 'schedule' | 'ai-host';
+type ViewMode = 'dashboard' | 'decks' | 'mixer' | 'library' | 'schedule' | 'ai-host' | 'personas';
 
 /* ═══════════════════════════════════════════════
-   SIDEBAR ICON — with glass hover and glow bar
+   SIDEBAR ICON
    ═══════════════════════════════════════════════ */
 function SidebarIcon({
     icon: Icon,
@@ -92,7 +91,7 @@ function SidebarIcon({
 }
 
 /* ═══════════════════════════════════════════════
-   STAT CARD — with sparkline, trend, and shimmer
+   STAT CARD
    ═══════════════════════════════════════════════ */
 function StatCard({
     label,
@@ -214,7 +213,6 @@ function StatCard({
                             <stop offset="100%" stopColor={c.spark} stopOpacity="0" />
                         </linearGradient>
                     </defs>
-                    {/* Fill area */}
                     <path
                         d={`M 0 30 ${(sparkline || defaultSparkline)
                             .map(
@@ -224,7 +222,6 @@ function StatCard({
                             .join(' ')} L 100 30 Z`}
                         fill={`url(#spark-fill-${label})`}
                     />
-                    {/* Line */}
                     <polyline
                         points={(sparkline || defaultSparkline)
                             .map(
@@ -247,7 +244,7 @@ function StatCard({
 }
 
 /* ═══════════════════════════════════════════════
-   DECK PANEL — glass wrapper
+   DECK PANEL
    ═══════════════════════════════════════════════ */
 function DeckPanel({
     label,
@@ -266,7 +263,6 @@ function DeckPanel({
 }) {
     return (
         <div className="glass-panel overflow-hidden">
-            {/* Deck header */}
             <div className="panel-header">
                 <div className="flex items-center gap-2.5">
                     <div className="relative">
@@ -390,7 +386,7 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
 }
 
 /* ═══════════════════════════════════════════════
-   DASHBOARD VIEW — with ambient bg, glass panels
+   DASHBOARD VIEW
    ═══════════════════════════════════════════════ */
 function DashboardView() {
     const [currentTime, setCurrentTime] = useState('');
@@ -568,6 +564,7 @@ export default function StudioPage() {
         { view: 'library', icon: Music, label: 'Library' },
         { view: 'schedule', icon: Clock, label: 'Schedule' },
         { view: 'ai-host', icon: Bot, label: 'AI Host', badge: '3' },
+        { view: 'personas', icon: Users, label: 'Personas' },
     ];
 
     return (
@@ -703,6 +700,11 @@ export default function StudioPage() {
                             {currentView === 'ai-host' && (
                                 <div className="max-w-3xl mx-auto">
                                     <DegenAIHost className="max-h-[calc(100vh-160px)]" />
+                                </div>
+                            )}
+                            {currentView === 'personas' && (
+                                <div className="max-w-4xl mx-auto h-[70vh]">
+                                    <DegenPersonaManager />
                                 </div>
                             )}
                         </motion.div>
