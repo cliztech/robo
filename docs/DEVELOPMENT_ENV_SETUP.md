@@ -142,6 +142,21 @@ python config/check_runtime_env.py --context ci
 Contract source of truth:
 - `config/env_contract.json` (machine-readable variable requirements by context)
 
+### Codex pre-task secret check (recommended)
+
+Before starting implementation tasks in Codex, run:
+
+```bash
+scripts/codex_env_doctor.sh
+```
+
+This read-only quality gate checks:
+- repository context and required files
+- `ROBODJ_SECRET_KEY` and `ROBODJ_SECRET_V2_KEY` presence in environment (without printing values)
+- `python config/check_runtime_secrets.py --require-env-only`
+
+If any check fails, the script prints remediation steps and exits non-zero.
+
 ## 3) Docker workflow (optional)
 
 To start the MCP gateway service already defined in this repository:
