@@ -34,12 +34,23 @@ Run:
 scripts/bootstrap_dev_environment.sh
 ```
 
+Before running automation, also run:
+
+```bash
+scripts/codex_env_doctor.sh
+```
+
 It validates:
 - git repository + remotes
 - presence of `docker-compose.yaml`
 - Docker Compose availability
 - presence of `.github/workflows`
 - GitHub CLI install + auth status
+
+The Codex doctor script validates:
+- required runtime secret environment variable presence (without printing values)
+- secret integrity via `python config/check_runtime_secrets.py --require-env-only`
+- helper tooling availability (`git`, optional `gh`, optional `docker`)
 
 ## 3) Docker workflow (optional)
 
