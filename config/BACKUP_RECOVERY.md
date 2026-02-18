@@ -42,8 +42,9 @@ At launch it performs:
 
 ## Acceptance criteria (v1.1 exit alignment)
 - Invalid config is blocked before runtime when launch validation fails.
-- Operators can execute restore from latest snapshot in under 2 minutes using:
+- Operators can execute restore from latest snapshot in under 2 minutes using either:
 
 ```bash
 python config/scripts/startup_safety.py --restore-last-known-good
+python config/scripts/startup_safety.py --guided-restore
 ```
