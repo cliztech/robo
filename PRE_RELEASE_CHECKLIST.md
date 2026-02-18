@@ -62,6 +62,14 @@
 
 - **Checklist owner:** ____________________
 - **Sign-off (name + date/time):** ____________________
+## Launcher workflow pre-run gate (all release paths)
+
+Run this command before **every** launcher-based release path (`dev -> staging`, `staging -> prod`, and hotfix redeploys):
+
+- [ ] `python config/check_runtime_secrets.py --require-env-only`
+- [ ] Confirm output: `Secret integrity check passed (key material redacted).`
+- [ ] Confirm no fallback secret files were used outside explicitly approved local dev/break-glass scenarios.
+
 ## Baseline gates (run every release)
 
 - [ ] Run configuration validation: `python config/validate_config.py`
@@ -197,10 +205,11 @@ When launching via `RoboDJ_Launcher.bat`, startup now runs config validation bef
 
 ## Startup preflight behavior (operator runbook)
 
-- `RoboDJ_Launcher.bat` now runs `config/validate_config.py` before launching the app.
+- `RoboDJ_Launcher.bat` now runs `config/validate_config.py` and `config/check_runtime_secrets.py --require-env-only` before launching the app.
 - Startup continues only when validation prints:
   `Configuration validation passed for schedules.json and prompt_variables.json.`
 - If validation fails, startup is blocked and the launcher keeps the actionable validator output visible.
+- If secret preflight fails, startup is blocked until env-only key material is available and fallback usage is resolved per policy.
 - Operator actions on failure:
   1. Read each listed `[target]` error and fix the referenced field(s) in the matching config JSON.
   2. Re-run `python config/validate_config.py` until it prints the expected success string exactly.
