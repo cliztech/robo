@@ -229,7 +229,7 @@ Use these gates before moving work from planning to execution and from draft PR 
 
 ## Route Selection
 
-Routing must follow the canonical BMAD startup policy in [`docs/operations/agent_execution_commands.md`](docs/operations/agent_execution_commands.md#canonical-bmad-startup-policy-codexgeminijules): load `_bmad/_config/bmad-help.csv` at session start, match workflow first, then use free-form fallback when no BMAD command applies.
+Routing must follow the canonical BMAD startup policy defined in [`docs/operations/agent_execution_commands.md`](docs/operations/agent_execution_commands.md#canonical-bmad-startup-policy-codexgeminijules).
 
 | Route | Purpose | Agent Behavior |
 | ----- | ------- | -------------- |
