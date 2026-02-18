@@ -68,6 +68,8 @@
 - [ ] Confirm validation output is: `Configuration validation passed for schedules.json and prompt_variables.json.`
 - [ ] Run runtime secret preflight: `python config/check_runtime_secrets.py --require-env-only`
 - [ ] Confirm secret preflight output is: `Secret integrity check passed (key material redacted).`
+- [ ] Confirm protected runtime flags are set: `ROBODJ_PROTECTED_ENV=true` and `ROBODJ_ALLOW_FILE_SECRET_FALLBACK` is unset/false.
+- [ ] Confirm no real key material exists in `config/secret.key` or `config/secret_v2.key` on release runners.
 - [ ] If validation fails, confirm output starts with: `Configuration validation failed:` and lists actionable field-level errors.
 - [ ] Archive config backups in `config/backups/` for any risky config changes.
 
