@@ -1,5 +1,5 @@
 ---
-stepsCompleted: [1, 2, 3, 4]
+stepsCompleted: [1, 2, 3, 4, 5]
 inputDocuments:
   - docs/planning_artifacts/bmad_deep_research/04_prd.md
   - docs/exec-plans/active/bmad-2026-02-17-implementation-readiness-pack/01-prd.md
@@ -12,7 +12,7 @@ project_name: 'DGN-DJ by DGNradio'
 user_name: 'CLIZTECH'
 date: '2026-02-18T23:13:21Z'
 status: 'in_progress'
-lastStep: 4
+lastStep: 5
 ---
 
 # Architecture Decision Document
@@ -201,3 +201,62 @@ BMAD stage-gated workflows, markdown artifact chain, and explicit continuation c
 - Deployment confidence depends on packaging reproducibility plus readiness evidence completeness.
 
 [C] Continue to implementation patterns
+
+## Implementation Patterns & Consistency Rules
+
+### Naming Patterns
+
+- **Python modules/functions/variables:** `lower_snake_case`
+- **Python classes:** `PascalCase`
+- **Constants:** `UPPER_SNAKE_CASE`
+- **JSON keys:** `lower_snake_case`
+- **Markdown artifacts:** kebab-case or stable workflow filenames; avoid ad-hoc naming drift.
+- **Requirement IDs:** stable `FR-*` / `NFR-*` identifiers preserved across PRD, architecture, stories, and readiness artifacts.
+
+### Structure Patterns
+
+- Keep existing repo segmentation as the baseline contract:
+  - `backend/` for Python runtime logic
+  - `config/` for runtime state/config assets
+  - `docs/` for operational and product documentation
+  - `_bmad-output/` for generated workflow artifacts
+- Do not introduce alternate parallel folder schemes that duplicate existing responsibilities.
+- Keep workflow outputs append-only where feasible and stateful via frontmatter.
+
+### Format Patterns
+
+- **JSON:** strict syntax validation before commit (`python -m json.tool ...`).
+- **Operational status vocabulary:** standardize on `pass`, `warn`, `fail` for diagnostics/readiness outputs.
+- **Dates/timestamps in artifacts:** ISO-8601 UTC where timestamps are required.
+- **Decision records:** always include decision, rationale, and impacted components/workflows.
+
+### Communication Patterns
+
+- Use artifact-first communication between planning stages (PRD ↔ Architecture ↔ Epics ↔ Readiness) instead of implicit assumptions.
+- Every handoff artifact must include traceability pointers to prior-stage requirements/decisions.
+- Cross-team updates should reference canonical artifact paths rather than free-form summaries only.
+
+### Process Patterns
+
+- **Before risky config edits:** create a backup/snapshot.
+- **Before step advancement:** ensure continuation marker is explicit and frontmatter state is updated.
+- **Before readiness sign-off:** verify no unresolved critical blockers.
+- **For any architecture-impacting change:** document rollback intent and verification commands.
+
+### Anti-Conflict Rules for Multi-Agent Contributions
+
+- Never rename requirement IDs after publication.
+- Never introduce competing naming conventions within the same layer.
+- Never bypass validation checks for JSON/config artifacts.
+- Never modify protected binaries/databases/keys; enforce documented repository boundaries.
+- Resolve ambiguity by updating the architecture artifact first, then implementing.
+
+### Consistency Enforcement Checklist
+
+- Naming conventions match AGENTS.md rules.
+- File placement follows baseline repo segmentation.
+- Artifact traceability links are present and valid.
+- Validation commands are documented and reproducible.
+- Workflow state (`stepsCompleted`, `lastStep`, `status`) reflects actual progress.
+
+[C] Continue to project structure
