@@ -86,6 +86,32 @@ def test_audit_log_append_and_read(tmp_path):
     assert parsed[-1]["notes"] == "second"
 
 
+def test_audit_log_skips_malformed_lines_and_returns_valid_events(tmp_path):
+    audit_path = tmp_path / "audit.jsonl"
+    service = AutonomyPolicyService(
+        policy_path=tmp_path / "autonomy_policy.json",
+        audit_log_path=audit_path,
+    )
+
+    first = service.record_audit_event(
+        decision_type=DecisionType.track_selection,
+        origin="ai",
+        notes="first",
+    )
+    second = service.record_audit_event(
+        decision_type=DecisionType.script_generation,
+        origin="human",
+        notes="second",
+    )
+
+    with audit_path.open("a", encoding="utf-8") as handle:
+        handle.write('{"malformed_json": true\n')
+
+    events = service.list_audit_events(limit=10)
+
+    assert [event.event_id for event in events] == [first.event_id, second.event_id]
+
+
 def test_invalid_payload_rejection_paths_service(tmp_path):
     service = AutonomyPolicyService(
         policy_path=tmp_path / "autonomy_policy.json",
