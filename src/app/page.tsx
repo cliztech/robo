@@ -14,6 +14,7 @@ import { DegenTransport } from '../components/audio/DegenTransport';
 import { DegenTrackList } from '../components/audio/DegenTrackList';
 import { DegenScheduleTimeline } from '../components/schedule/DegenScheduleTimeline';
 import { DegenAIHost } from '../components/ai/DegenAIHost';
+import { StageTimeline } from '../components/workflow/StageTimeline';
 import { DegenButton } from '../components/primitives/DegenButton';
 import { GorillaLogo, Sidebar, TabStrip, Topbar, Workspace } from '../components/shell';
 import {
@@ -528,6 +529,7 @@ function DashboardView({ telemetry }: { telemetry: DJTelemetry }) {
 
                 <div className="space-y-4">
                     <DegenAIHost className="glass-panel" />
+                    <StageTimeline />
                 </div>
             </div>
 
