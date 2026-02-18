@@ -122,5 +122,5 @@ Sources merged: `docs/ui/dj_console_ui_research_plan.md` ("Perfect = measurable"
 
 Before moving an increment to Ready-for-Review or release candidate, provide a gate checklist with direct links for every required evidence item above.
 
-- If **any gate** is fail or evidence is missing: release advancement is blocked.
+- If **any gate** fails or evidence is missing: release advancement is blocked.
 - If all gates pass with complete evidence: release advancement may proceed.
