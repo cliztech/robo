@@ -212,7 +212,7 @@ export function DegenTransport({
                         {currentTrack.bpm || '—'}
                     </span>
                 </div>
-                <div className="flex flex-col items-center px-2 py-1 rounded bg-[hsla(var(--color-deck-b),0.08)] border border-[hsla(var(--color-deck-b),0.15)]">
+                <div className="flex flex-col items-center px-2 py-1 rounded bg-deck-b-soft border border-deck-b-soft">
                     <span className="text-[8px] text-zinc-600 uppercase font-bold tracking-widest">Key</span>
                     <span className="text-[12px] font-mono font-black text-[hsl(var(--color-deck-b))] tabular-nums">
                         {currentTrack.key || '—'}
