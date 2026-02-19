@@ -30,7 +30,14 @@ export function ConsoleTopbar({ currentView, isOnAir, onToggleOnAir }: ConsoleTo
                     animate={{ opacity: 1, y: 0 }}
                     className="text-[10px] font-mono font-medium text-zinc-500 uppercase"
                 >
-                    {currentView.replace('-', ' ')}
+                <motion.span
+                    key={currentView}
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-[10px] font-mono font-medium text-zinc-500 uppercase"
+                >
+                    {CONSOLE_NAV_ITEMS.find(item => item.view === currentView)?.label ?? currentView}
+                </motion.span>
                 </motion.span>
             </div>
 
