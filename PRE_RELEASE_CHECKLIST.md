@@ -235,7 +235,7 @@ When launching via `RoboDJ_Launcher.bat`, startup now runs config validation bef
 
 - [ ] **PASS/FAIL:** Redaction source-of-truth artifacts are unchanged or reviewed.
   - Files: `contracts/redaction_rules.md`, `contracts/redaction_denylist.json`
-  - Command: `git diff --name-only -- contracts/redaction_rules.md contracts/redaction_denylist.json contracts/frontend_responses/*.schema.json`
+  - Command: git diff main --name-only -- contracts/redaction_rules.md contracts/redaction_denylist.json contracts/frontend_responses/*.schema.json
   - Pass criteria: any touched file has reviewer sign-off from SecOps Compliance Agent.
   - Fail criteria: touched redaction artifacts lack security review sign-off.
 
