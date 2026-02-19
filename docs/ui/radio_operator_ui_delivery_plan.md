@@ -12,6 +12,42 @@ Primary reference style: user-provided DJ/radio console mockups (dark, high-dens
 - Release target: Operator UI Beta (Phase 2 complete)
 - Rollout status source of truth: [`docs/ui/radio_broadcasting_ui_execution_plan.md`](radio_broadcasting_ui_execution_plan.md#execution-status-source-of-truth)
 
+## Progress Summary (2026-02-16)
+
+Canonical status labels (use exactly): **Not Started / In Progress / Blocked / Done**.
+
+| Phase | Status | Notes |
+| --- | --- | --- |
+| Phase 0 — Foundations | In Progress | IA/component taxonomy and tokenization planning documented; awaiting approval to lock execution scope. |
+| Phase 1 — Console Core (Functional) | Not Started | Implementation backlog defined but not opened for build execution. |
+| Phase 2 — Browser + Queue + Scheduler Integration | Not Started | Dependencies on Phase 1 contracts and API mapping remain open. |
+| Phase 3 — FX/Sampler + Routing + Diagnostics | Not Started | Requires validated control surface contracts and fallback policy hooks. |
+| Phase 4 — Hardening + Release Readiness | Not Started | QA/perf/accessibility hardening starts only after functional surfaces are implemented. |
+
+### Phase Ownership (Accountable Team/Agent)
+
+| Phase | Accountable team | Accountable agent |
+| --- | --- | --- |
+| Phase 0 — Foundations | Design Team | UI/UX Agent |
+| Phase 1 — Console Core (Functional) | DevOps Team | CI/CD Pipeline Agent |
+| Phase 2 — Browser + Queue + Scheduler Integration | DevOps Team | Infrastructure Agent |
+| Phase 3 — FX/Sampler + Routing + Diagnostics | QA Team | Test Generator Agent |
+| Phase 4 — Hardening + Release Readiness | Management Team | Release Manager Agent |
+
+### Completion Evidence (Checked Items)
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| Delivery plan charter and phased structure published | ✅ Done | #radio-operator-ui-delivery-plan-functional-not-mockup-only |
+| Cross-team responsibilities documented | ✅ Done | #7-agent-team-plan-who-does-what |
+
+### Current Risks/Blockers
+
+- Blocked on formal phase approval and sprint assignment from Management before moving from planning artifacts to implementation tickets.
+- API/state contract ownership is listed, but module-level endpoint mapping is still pending and can delay Phase 1 start.
+
+**Next milestone date:** 2026-02-23 (Phase 0 sign-off + implementation backlog approval)
+
 ## 1) Outcome
 
 Design and implement **fully operational** operator interfaces (not static images) for the DGN-DJ radio platform by translating the visual language of the provided mockups into a production-ready interaction system.
@@ -203,16 +239,31 @@ Objective completion criteria:
 - [ ] Implement deck, waveform, transport, mixer, and meter bridge.
 - [ ] Integrate live state feeds (read + control).
 - [ ] Add fail-safe indicators and transport confirmations.
+- Implement deck, waveform, transport, mixer, meter bridge
+- Integrate live state feeds (read + control)
+- Add fail-safe indicators and transport confirmations
+- Add B1.1/B1.2 MVP workflow header: stage timeline + high-risk human checkpoint card in the main console view
+- Implement reference-catalog requirements from `docs/ui/reference-catalog/virtual-dj/video-notes.md`: `REQ-VDJ-TRN-01`, `REQ-VDJ-CTL-01`, `REQ-VDJ-WFM-01`, `REQ-VDJ-STAT-01`, `REQ-VDJ-STAT-02`
 
 Objective completion criteria:
 - [ ] End-to-end control of A/B playout works in dev/staging with deterministic state sync.
 - [ ] Transport confirmations and alert states are visible and keyboard-accessible.
 - [ ] Smoke tests cover load, play, pause, cue, and stop paths.
 
+#### B1.1/B1.2 MVP UX definition (Phase 1 gate)
+- Timeline stages must match orchestration stages in `docs/conversation_orchestrator_spec.md`: Intake, Plan, Execute, Verify, Handoff.
+- Checkpoint triggers must map to escalation points defined in `docs/operations/subagent_execution_playbook.md`.
+- The operator must be able to identify stage, risk, and next action without changing views.
+- Checkpoint actions required in MVP: Approve, Request changes, Rollback, with explicit confirmation and rationale capture for non-approve paths.
+
 ### Phase 2 — Browser + Queue + Scheduler Integration
 - [ ] Implement media browser and queue operations.
 - [ ] Integrate scheduler overlay and conflict handling.
 - [ ] Add now/next and break-window intelligence.
+- Implement media browser and queue operations
+- Integrate scheduler overlay and conflict handling
+- Add now/next and break-window intelligence
+- Implement reference-catalog requirements from `docs/ui/reference-catalog/virtual-dj/video-notes.md`: `REQ-VDJ-CTL-01`, `REQ-VDJ-PNL-01`, `REQ-VDJ-STAT-01`
 
 Objective completion criteria:
 - [ ] Operator can run a full hour with mixed manual and automated transitions.
@@ -223,6 +274,10 @@ Objective completion criteria:
 - [ ] Add FX/sampler module with safety locks and reset semantics.
 - [ ] Add routing/device settings with apply/test/rollback flow.
 - [ ] Integrate diagnostics command center.
+- Add FX/sampler module with safety locks and reset semantics
+- Add routing/device settings with apply/test/rollback
+- Integrate diagnostics command center
+- Implement reference-catalog requirements from `docs/ui/reference-catalog/virtual-dj/video-notes.md`: `REQ-VDJ-TRN-01`, `REQ-VDJ-CTL-01`, `REQ-VDJ-PNL-01`, `REQ-VDJ-STAT-01`
 
 Objective completion criteria:
 - [ ] Failure drills pass: routing rollback, stream fallback, incident mode.
