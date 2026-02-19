@@ -4,6 +4,7 @@ Status: draft
 Audience: product/design/frontend/audio teams  
 Goal: reproduce the look-and-feel of the reference DJ images (VirtualDJ-like density and performance) while fitting the DGN-DJ stack and accessibility commitments.
 
+Reference index: `docs/ui/virtual_dj_reference_index.md`.
 Reference assets are maintained in `images/` using canonical filenames, including:
 
 - `vdj_04_pro_4decks_v1_1920x1080.jpg`
