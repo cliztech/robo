@@ -206,6 +206,7 @@ def _snapshot_name() -> str:
     return f"{SNAPSHOT_PREFIX}{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
 
 
+def create_backup_snapshot(snapshot_type: str = "last_known_good_config") -> Path:
 def create_backup_snapshot(*, include_secrets: bool = False) -> Path:
     BACKUP_DIR.mkdir(parents=True, exist_ok=True)
     snapshot_dir = BACKUP_DIR / _snapshot_name()
@@ -224,6 +225,7 @@ def create_backup_snapshot(*, include_secrets: bool = False) -> Path:
 
     manifest = {
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "snapshot_type": snapshot_type,
         "snapshot_type": "last_known_good_config",
         "includes_secrets": include_secrets,
         "files": copied,
@@ -253,6 +255,24 @@ def _latest_snapshot_dir() -> Path | None:
         return None
     return sorted(snapshots, key=lambda p: p.name)[-1]
 
+
+def _copy_snapshot_files(snapshot_dir: Path) -> list[str]:
+    restored_files: list[str] = []
+    for relative in SNAPSHOT_FILES:
+        source = snapshot_dir / relative
+        if source.exists():
+            shutil.copy2(source, CONFIG_DIR / relative)
+            restored_files.append(relative)
+    return restored_files
+
+
+def restore_last_known_good_config() -> bool:
+    started_at = time.monotonic()
+    print("Guided crash recovery flow:")
+    print("  1) Select latest snapshot")
+    print("  2) Create pre-restore safety checkpoint")
+    print("  3) Restore files and validate")
+    print("  4) Auto-rollback if validation fails")
 
 def restore_last_known_good_config(*, include_secrets: bool = False) -> bool:
     snapshot_dir = _latest_snapshot_dir()
@@ -296,6 +316,8 @@ def restore_last_known_good_config(snapshot_dir: Path | None = None) -> bool:
         )
         return False
 
+    pre_restore_snapshot = create_backup_snapshot(snapshot_type="pre_restore_checkpoint")
+    restored_files = _copy_snapshot_files(snapshot_dir)
     restorable_files = list(SNAPSHOT_FILES)
     if include_secrets:
         restorable_files.extend(SNAPSHOT_SECRET_FILES)
@@ -315,8 +337,39 @@ def restore_last_known_good_config(snapshot_dir: Path | None = None) -> bool:
                 "status": "failed",
                 "reason": "empty_snapshot",
                 "snapshot": snapshot_dir.name,
+                "pre_restore_snapshot": pre_restore_snapshot.name,
             },
         )
+        return False
+
+    post_restore_errors = validate_launch_config()
+    duration_seconds = round(time.monotonic() - started_at, 2)
+    if post_restore_errors:
+        print("Recovery validation failed. Rolling back to pre-restore checkpoint...")
+        rolled_back_files = _copy_snapshot_files(pre_restore_snapshot)
+        rollback_errors = validate_launch_config()
+        status = "failed_rollback_requires_operator" if rollback_errors else "failed_rolled_back"
+        payload: dict[str, object] = {
+            "status": status,
+            "reason": "post_restore_validation_failed",
+            "snapshot": snapshot_dir.name,
+            "pre_restore_snapshot": pre_restore_snapshot.name,
+            "restored_files": restored_files,
+            "rolled_back_files": rolled_back_files,
+            "post_restore_errors": post_restore_errors,
+            "rollback_errors": rollback_errors,
+            "recovery_duration_seconds": duration_seconds,
+            "recovery_under_120_seconds": duration_seconds <= 120,
+        }
+        _append_event_log("restore_last_known_good", payload)
+        for error in post_restore_errors:
+            print(f" - {error}")
+        if rollback_errors:
+            print("Rollback validation also failed. Operator intervention is required.")
+            for error in rollback_errors:
+                print(f" - {error}")
+        else:
+            print("Rollback completed and config returned to pre-restore state.")
         return False
 
     print(f"Restored last-known-good files from {snapshot_dir.name}: {', '.join(restored_files)}")
@@ -325,11 +378,15 @@ def restore_last_known_good_config(snapshot_dir: Path | None = None) -> bool:
         {
             "status": "success",
             "snapshot": snapshot_dir.name,
+            "pre_restore_snapshot": pre_restore_snapshot.name,
             "restored_files": restored_files,
+            "recovery_duration_seconds": duration_seconds,
+            "recovery_under_120_seconds": duration_seconds <= 120,
             "includes_secrets": include_secrets,
         },
     )
     print(f"Restore event logged to: {log_path}")
+    print(f"Recovery duration: {duration_seconds}s (target <= 120s)")
     return True
 
 
@@ -347,6 +404,7 @@ def launch_gate(*, include_secrets_in_snapshot: bool = False) -> int:
         recovery_started = time.monotonic()
         restored = restore_last_known_good_config()
         if restored:
+            print("Recovery succeeded: restored config validates.")
             post_restore_errors = validate_launch_config()
             if post_restore_errors:
                 print("Recovery failed: restored snapshot is still invalid.")

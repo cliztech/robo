@@ -53,6 +53,7 @@ See [docs/operations/execution_index.md](docs/operations/execution_index.md) for
 - [x] Add guided restore flow in launcher/runtime startup path.
 - [x] Restore last known good `schedules.json` and `prompt_variables.json` from backup.
 - [x] Log restore event under `config/logs/` with timestamp and source snapshot.
+- [ ] Verify post-restore readiness state can be reached in under 2 minutes. _(instrumented with recovery duration logging; manual timing validation pending)_
 - [ ] **Subtask 3.2 — Recovery SLA run documented and passed**
   - **Owner:** QA lead
   - **Due date:** 2026-03-12
