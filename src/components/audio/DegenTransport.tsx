@@ -133,7 +133,7 @@ export function DegenTransport({
                     className={cn(
                         'relative w-10 h-10 rounded-full flex items-center justify-center transition-all',
                         isPlaying
-                            ? 'bg-deck-a-soft border border-deck-a-soft text-[hsl(var(--color-deck-a))] hover:bg-[hsla(var(--color-deck-a),0.2)]'
+                            ? 'bg-deck-a-soft border border-deck-a-soft text-deck-a hover:bg-[hsla(var(--color-deck-a),0.2)]'
                             : 'bg-white/5 border border-white/10 text-white hover:bg-white/10'
                     )}
                     style={isPlaying ? { boxShadow: 'var(--glow-deck-a-ring)' } : {}}
