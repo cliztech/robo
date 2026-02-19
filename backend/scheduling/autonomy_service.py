@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import json
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional
 from uuid import uuid4
+
+from pydantic import ValidationError
 
 from .autonomy_policy import (
     AutonomyPolicy,
@@ -27,6 +30,9 @@ LEGACY_MODE_MAP = {
     "assisted": GlobalMode.semi_auto,
     "autonomous": GlobalMode.auto_with_human_override,
 }
+
+
+logger = logging.getLogger(__name__)
 
 
 class AutonomyPolicyService:
@@ -175,4 +181,20 @@ class AutonomyPolicyService:
             return []
 
         lines = self.audit_log_path.read_text(encoding="utf-8").splitlines()
-        return [PolicyAuditEvent.model_validate(json.loads(line)) for line in lines[-limit:]]
+        events: List[PolicyAuditEvent] = []
+        invalid_line_count = 0
+
+        for line in lines[-limit:]:
+            try:
+                events.append(PolicyAuditEvent.model_validate(json.loads(line)))
+            except (json.JSONDecodeError, ValidationError):
+                invalid_line_count += 1
+
+        if invalid_line_count:
+            logger.warning(
+                "Skipped %s invalid autonomy audit event lines from %s",
+                invalid_line_count,
+                self.audit_log_path,
+            )
+
+        return events

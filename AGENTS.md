@@ -248,6 +248,7 @@ Use these gates before moving work from planning to execution and from draft PR 
 
 ## Route Selection
 
+Routing must follow the canonical BMAD startup policy defined in [`docs/operations/agent_execution_commands.md`](docs/operations/agent_execution_commands.md#canonical-bmad-startup-policy-codexgeminijules).
 > Canonical BMAD route-to-command mapping (with triggers + tie-breaks): [`docs/operations/agent_execution_commands.md#05-bmad-route-to-command-matrix-canonical-selection-guide`](docs/operations/agent_execution_commands.md#05-bmad-route-to-command-matrix-canonical-selection-guide)
 
 | Route | Purpose | Agent Behavior |
