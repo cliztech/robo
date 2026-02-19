@@ -11,10 +11,17 @@ run_check() {
     local label="$1"
     shift
 
-    if "$@" >/dev/null 2>&1; then
+    local output_file
+    output_file=$(mktemp)
+    # Ensure temp file is cleaned up when function returns
+    trap "rm -f '$output_file'" RETURN
+
+    if "$@" >"$output_file" 2>&1; then
         printf 'PASS: %s\n' "$label"
     else
         printf 'FAIL: %s\n' "$label"
+        # Print the captured output to provide context on the failure.
+        sed 's/^/    /' < "$output_file"
         failures=$((failures + 1))
     fi
 }
