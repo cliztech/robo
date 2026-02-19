@@ -1,6 +1,6 @@
 # Radio Operator UI Delivery Plan (Functional, Not Mockup-Only)
 
-Status: Proposed
+Status: Prototype complete; Hardening in progress (Phase 4)
 Owner: Design + DevOps + QA + AI Improvement + Management
 Primary reference style: user-provided DJ/radio console mockups (dark, high-density, deck-centric)
 
@@ -48,6 +48,25 @@ Canonical status labels (use exactly): **Not Started / In Progress / Blocked / D
 **Next milestone date:** 2026-02-23 (Phase 0 sign-off + implementation backlog approval)
 
 ## 1) Outcome
+
+## 1.1) Current implementation snapshot
+
+The operator UI is already partially implemented in `src/app/page.tsx` and the audio component set in `src/components/audio/`, with scheduling context from `src/components/schedule/DegenScheduleTimeline.tsx`.
+
+Completed modules:
+- `DegenWaveform`
+- `DegenMixer`
+- `DegenTransport`
+- `DegenTrackList`
+- `DegenScheduleTimeline`
+- Supporting modules in current console: `DegenEffectRack`, `DegenBeatGrid`
+
+Remaining hardening tasks:
+- Replace simulated/randomized UI telemetry with backend/audio-engine streams.
+- Strengthen keyboard-first and screen-reader behavior across all deck and mixer controls.
+- Add deterministic coverage for transport, browser filtering/loading, and timeline interactions.
+- Complete reliability behavior for reconnect, stale state, and fallback visualization flows.
+- Validate sustained performance for concurrent waveform, meters, and table updates.
 
 Design and implement **fully operational** operator interfaces (not static images) for the DGN-DJ radio platform by translating the visual language of the provided mockups into a production-ready interaction system.
 
@@ -225,6 +244,7 @@ From `SKILLS.md`, recommended stack:
 ## 9) Phased Delivery Plan (From Spec to Working UI)
 
 ### Phase 0 — Foundations
+State: Complete
 - Finalize IA + component taxonomy
 - Lock design tokens and contrast profiles
 - Define keyboard command map and ARIA landmarks
@@ -233,6 +253,7 @@ Exit criteria:
 - Approved spec package with acceptance criteria per module
 
 ### Phase 1 — Console Core (Functional)
+State: Prototype complete
 - Implement deck, waveform, transport, mixer, meter bridge
 - Integrate live state feeds (read + control)
 - Add fail-safe indicators and transport confirmations
@@ -249,6 +270,7 @@ Exit criteria:
 - Checkpoint actions required in MVP: Approve, Request changes, Rollback, with explicit confirmation and rationale capture for non-approve paths.
 
 ### Phase 2 — Browser + Queue + Scheduler Integration
+State: Prototype complete
 - Implement media browser and queue operations
 - Integrate scheduler overlay and conflict handling
 - Add now/next and break-window intelligence
@@ -258,6 +280,7 @@ Exit criteria:
 - Operator can run a full hour with mixed manual and automated transitions
 
 ### Phase 3 — FX/Sampler + Routing + Diagnostics
+State: In progress
 - Add FX/sampler module with safety locks and reset semantics
 - Add routing/device settings with apply/test/rollback
 - Integrate diagnostics command center
@@ -267,12 +290,20 @@ Exit criteria:
 - Failure drills pass (routing change rollback, stream fallback, incident mode)
 
 ### Phase 4 — Hardening + Release Readiness
+State: Hardening in progress
 - Performance tuning for real-time visual updates
 - Accessibility and keyboard completion
 - Full QA regression, release checklist, and operator training aids
 
 Exit criteria:
 - Release candidate passes all quality gates in `PRE_RELEASE_CHECKLIST.md`
+
+Quality readiness exit criteria:
+- 100% pass rate for defined on-air operator regression scenarios in CI.
+- P95 transport and cue interaction latency <100ms in staging.
+- Zero unresolved blocker/critical defects and zero critical accessibility issues.
+- Keyboard-only completion rate ≥95% for deck, queue, and scheduler workflows.
+- 55+ FPS sustained in composite operator view during active meter + waveform updates.
 
 ## 10) Verification and Quality Gates
 
