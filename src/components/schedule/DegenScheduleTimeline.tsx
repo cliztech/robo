@@ -2,19 +2,11 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { cn } from '../../lib/utils';
+import { ScheduleSegmentData, resolveScheduleCurrentHour, resolveScheduleSegmentData } from '../../lib/degenDataAdapters';
 import { Clock, Radio, Mic2, Music2, Megaphone, Newspaper, ChevronLeft, ChevronRight } from 'lucide-react';
 
-interface ScheduleSegment {
-    id: string;
-    type: 'music' | 'ai-host' | 'ad' | 'jingle' | 'news';
-    title: string;
-    startHour: number;
-    durationMinutes: number;
-    description?: string;
-}
-
 interface DegenScheduleTimelineProps {
-    segments?: ScheduleSegment[];
+    segments?: ScheduleSegmentData[];
     currentHour?: number;
     className?: string;
 }
@@ -27,38 +19,25 @@ const TYPE_CONFIG = {
     news: { icon: Newspaper, color: '#ffcc00', bg: 'rgba(255,204,0,0.08)', label: 'News' },
 };
 
-const DEFAULT_SEGMENTS: ScheduleSegment[] = [
-    { id: '1', type: 'music', title: 'Morning Bass Set', startHour: 6, durationMinutes: 90, description: 'Deep house mix' },
-    { id: '2', type: 'ai-host', title: 'AI Morning Show', startHour: 7.5, durationMinutes: 30, description: 'AI persona intro' },
-    { id: '3', type: 'jingle', title: 'Station ID', startHour: 8, durationMinutes: 5 },
-    { id: '4', type: 'ad', title: 'Sponsor Block', startHour: 8.08, durationMinutes: 15 },
-    { id: '5', type: 'music', title: 'Midday Vibes', startHour: 8.33, durationMinutes: 120 },
-    { id: '6', type: 'news', title: 'Crypto News', startHour: 10.33, durationMinutes: 15 },
-    { id: '7', type: 'ai-host', title: 'AI Commentary', startHour: 10.58, durationMinutes: 20 },
-    { id: '8', type: 'music', title: 'Afternoon Mix', startHour: 10.92, durationMinutes: 180 },
-    { id: '9', type: 'ad', title: 'Ad Break', startHour: 13.92, durationMinutes: 10 },
-    { id: '10', type: 'jingle', title: 'Station ID', startHour: 14.08, durationMinutes: 5 },
-    { id: '11', type: 'music', title: 'Evening Sessions', startHour: 14.17, durationMinutes: 240 },
-    { id: '12', type: 'ai-host', title: 'Overnight AI', startHour: 18.17, durationMinutes: 120 },
-];
-
 export function DegenScheduleTimeline({
-    segments = DEFAULT_SEGMENTS,
-    currentHour = 9.5,
+    segments,
+    currentHour,
     className,
 }: DegenScheduleTimelineProps) {
+    const scheduleSegments = useMemo(() => resolveScheduleSegmentData(segments), [segments]);
+    const activeHour = resolveScheduleCurrentHour(currentHour);
     const [viewStart, setViewStart] = useState(6);
-    const [selectedSegment, setSelectedSegment] = useState<ScheduleSegment | null>(null);
+    const [selectedSegment, setSelectedSegment] = useState<ScheduleSegmentData | null>(null);
     const viewHours = 12;
     const viewEnd = viewStart + viewHours;
     const hourWidth = 100 / viewHours;
 
     const visibleSegments = useMemo(
-        () => segments.filter((s) => {
+        () => scheduleSegments.filter((s) => {
             const end = s.startHour + s.durationMinutes / 60;
             return end > viewStart && s.startHour < viewEnd;
         }),
-        [segments, viewStart, viewEnd]
+        [scheduleSegments, viewStart, viewEnd]
     );
 
     const formatHour = (h: number) => {
@@ -68,8 +47,8 @@ export function DegenScheduleTimeline({
         return `${display}${ampm}`;
     };
 
-    const nowPercent = ((currentHour - viewStart) / viewHours) * 100;
-    const showNow = currentHour >= viewStart && currentHour <= viewEnd;
+    const nowPercent = ((activeHour - viewStart) / viewHours) * 100;
+    const showNow = activeHour >= viewStart && activeHour <= viewEnd;
 
     const selectSegmentByOffset = useCallback(
         (segmentId: string, offset: number) => {
@@ -154,7 +133,7 @@ export function DegenScheduleTimeline({
                             100 - left,
                             (seg.durationMinutes / 60 / viewHours) * 100
                         );
-                        const isActive = currentHour >= seg.startHour && currentHour < seg.startHour + seg.durationMinutes / 60;
+                        const isActive = activeHour >= seg.startHour && activeHour < seg.startHour + seg.durationMinutes / 60;
                         const isSelected = selectedSegment?.id === seg.id;
 
                         return (

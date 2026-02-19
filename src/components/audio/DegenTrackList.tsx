@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { cn } from '../../lib/utils';
+import { TrackLibraryTrack, resolveTrackLibraryData } from '../../lib/degenDataAdapters';
 import {
     Search,
     Filter,
@@ -14,47 +15,24 @@ import {
     ChevronDown,
 } from 'lucide-react';
 
-interface Track {
-    id: string;
-    title: string;
-    artist: string;
-    bpm: number;
-    key: string;
-    duration: number;
-    genre: string;
-    energy: number;
-}
-
 interface DegenTrackListProps {
-    tracks?: Track[];
-    onTrackSelect?: (track: Track) => void;
-    onTrackLoad?: (track: Track, deck: 'A' | 'B') => void;
+    tracks?: TrackLibraryTrack[];
+    onTrackSelect?: (track: TrackLibraryTrack) => void;
+    onTrackLoad?: (track: TrackLibraryTrack, deck: 'A' | 'B') => void;
     className?: string;
 }
-
-const DEMO_TRACKS: Track[] = [
-    { id: '1', title: 'Neural Drift v2.1', artist: 'SynthKong', bpm: 128, key: 'Am', duration: 234, genre: 'Deep House', energy: 7 },
-    { id: '2', title: 'Bass Gorilla', artist: 'DJ DegenApe', bpm: 140, key: 'Fm', duration: 198, genre: 'DnB', energy: 9 },
-    { id: '3', title: 'Quantum Entanglement', artist: 'PixelVault', bpm: 124, key: 'Cm', duration: 312, genre: 'Techno', energy: 6 },
-    { id: '4', title: 'Zero Knowledge Proof', artist: 'HashRate', bpm: 132, key: 'Gm', duration: 276, genre: 'Electro', energy: 8 },
-    { id: '5', title: 'Liquidation Event', artist: 'Margin Call', bpm: 138, key: 'Dm', duration: 186, genre: 'DnB', energy: 10 },
-    { id: '6', title: 'Smart Contract', artist: 'Eth Gardener', bpm: 120, key: 'Bbm', duration: 298, genre: 'Deep House', energy: 5 },
-    { id: '7', title: 'Fork This', artist: 'GitPush', bpm: 126, key: 'Em', duration: 204, genre: 'Tech House', energy: 7 },
-    { id: '8', title: 'Block Height', artist: 'MinerBot', bpm: 136, key: 'Ab', duration: 245, genre: 'Techno', energy: 8 },
-    { id: '9', title: 'Rug Pull Blues', artist: 'Sad Pepe', bpm: 118, key: 'Eb', duration: 190, genre: 'Lo-Fi', energy: 3 },
-    { id: '10', title: 'Diamond Hands', artist: 'HODL Gang', bpm: 145, key: 'Fm', duration: 222, genre: 'Hardstyle', energy: 10 },
-];
 
 const GENRES = ['All', 'Deep House', 'DnB', 'Techno', 'Electro', 'Tech House', 'Lo-Fi', 'Hardstyle'];
 
 type SortField = 'title' | 'artist' | 'bpm' | 'key' | 'duration' | 'energy';
 
 export function DegenTrackList({
-    tracks = DEMO_TRACKS,
+    tracks,
     onTrackSelect,
     onTrackLoad,
     className,
 }: DegenTrackListProps) {
+    const trackLibrary = useMemo(() => resolveTrackLibraryData(tracks), [tracks]);
     const [search, setSearch] = useState('');
     const [genre, setGenre] = useState('All');
     const [sortField, setSortField] = useState<SortField>('title');
@@ -68,7 +46,7 @@ export function DegenTrackList({
     };
 
     const filtered = useMemo(() => {
-        let list = [...tracks];
+        let list = [...trackLibrary];
         if (search) {
             const q = search.toLowerCase();
             list = list.filter(
@@ -83,12 +61,12 @@ export function DegenTrackList({
             return sortAsc ? cmp : -cmp;
         });
         return list;
-    }, [tracks, search, genre, sortField, sortAsc]);
+    }, [trackLibrary, search, genre, sortField, sortAsc]);
 
     const formatDur = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
     const energyBar = (e: number) => {
-        const colors = e >= 8 ? '#ff4444' : e >= 6 ? '#ffaa00' : e >= 4 ? '#aaff00' : '#00bfff';
+        const colors = e >= 8 ? 'hsl(var(--color-danger-bright))' : e >= 6 ? 'hsl(var(--color-warning))' : e >= 4 ? 'hsl(var(--color-deck-a))' : 'hsl(var(--color-deck-mic))';
         return (
             <div className="flex items-center gap-1.5 w-16">
                 <div className="flex-1 h-[3px] rounded-full bg-white/[0.04] overflow-hidden">
@@ -107,7 +85,7 @@ export function DegenTrackList({
             onClick={() => handleSort(field)}
             className={cn(
                 'flex items-center gap-1 text-[8px] font-black uppercase tracking-[0.12em] transition-colors',
-                sortField === field ? 'text-lime-400' : 'text-zinc-600 hover:text-zinc-400'
+                sortField === field ? 'text-deck-a' : 'text-zinc-600 hover:text-zinc-400'
             )}
             style={{ width }}
         >
@@ -126,7 +104,7 @@ export function DegenTrackList({
             {/* Header */}
             <div className="panel-header">
                 <div className="flex items-center gap-2">
-                    <Music2 size={12} className="text-lime-500/70" />
+                    <Music2 size={12} className="text-[hsla(var(--color-deck-a),0.7)]" />
                     <span className="panel-header-title">Track Library</span>
                 </div>
                 <span className="text-[9px] font-mono text-zinc-600">{filtered.length} tracks</span>

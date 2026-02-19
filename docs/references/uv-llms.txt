@@ -1,0 +1,1 @@
+uv tooling reference notes for LLM-guided Python workflows live here.

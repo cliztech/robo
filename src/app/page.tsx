@@ -1,6 +1,28 @@
 'use client';
 
+import { ConsoleWorkspaceView } from '@/components/console/ConsoleWorkspaceView';
+import { CONSOLE_NAV_ITEMS, CONSOLE_UTILITY_ITEMS } from '@/components/console/consoleNav';
+import { ConsoleLayout } from '@/components/shell/ConsoleLayout';
+import { useConsoleViewState } from '@/hooks/useConsoleViewState';
+
+export default function StudioPage() {
+    const { currentView, isOnAir, setCurrentView, toggleOnAir } = useConsoleViewState();
+import { useMemo, useState } from 'react';
+import { Bot, Clock, Disc, LayoutDashboard, Music, Sliders } from 'lucide-react';
+import { DegenAIHost } from '../components/ai/DegenAIHost';
+import { LibraryBrowser } from '../components/shell/library-browser';
+import { MixerPanel } from '../components/shell/mixer-panel';
+import { DegenScheduleTimeline } from '../components/schedule/DegenScheduleTimeline';
+import { AppShell, type ShellNavItem } from '../components/shell/app-shell';
+import { DashboardView, DecksView } from '../components/shell/console-views';
+
+type ViewMode = 'dashboard' | 'decks' | 'mixer' | 'library' | 'schedule' | 'ai-host';
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { useAudioEngine } from '../hooks/useAudioEngine';
+import { createDJTelemetry, type DJTelemetry } from '../lib/audio/telemetry';
+import { createMockTelemetry } from '../lib/audio/mockTelemetry';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { DegenEffectRack } from '../components/audio/DegenEffectRack';
@@ -11,8 +33,9 @@ import { DegenTransport } from '../components/audio/DegenTransport';
 import { DegenTrackList } from '../components/audio/DegenTrackList';
 import { DegenScheduleTimeline } from '../components/schedule/DegenScheduleTimeline';
 import { DegenAIHost } from '../components/ai/DegenAIHost';
+import { StageTimeline } from '../components/workflow/StageTimeline';
 import { DegenButton } from '../components/primitives/DegenButton';
-import { GorillaLogo } from '../components/shell/GorillaLogo';
+import { GorillaLogo, Sidebar, TabStrip, Topbar, Workspace } from '../components/shell';
 import {
     Activity,
     Radio,
@@ -60,10 +83,13 @@ function SidebarIcon({
             title={label}
             aria-label={label}
             aria-pressed={active}
+            aria-label={badge ? `${label}, ${badge} new items` : label}
+            aria-pressed={active}
+            aria-label={label}
             className={cn(
-                'relative w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 group',
+                'relative w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
                 active
-                    ? 'bg-lime-500/10 text-lime-400 shadow-[0_0_15px_rgba(170,255,0,0.08)]'
+                    ? 'bg-deck-a-soft text-deck-a shadow-glow-deck-a-ring'
                     : 'text-zinc-600 hover:text-zinc-200 hover:bg-white/[0.03]'
             )}
         >
@@ -72,14 +98,16 @@ function SidebarIcon({
             {active && (
                 <motion.div
                     layoutId="sidebar-active"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[2.5px] h-5 rounded-r-full bg-lime-500"
-                    style={{ boxShadow: '0 0 8px rgba(170,255,0,0.5)' }}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[2.5px] h-5 rounded-r-full bg-[hsl(var(--color-deck-a))] shadow-glow-deck-a"
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                 />
             )}
             {/* Badge */}
             {badge && (
-                <div className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center">
+                <div
+                    className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center"
+                    aria-hidden="true"
+                >
                     <span className="text-[6px] font-black text-white">{badge}</span>
                 </div>
             )}
@@ -118,42 +146,37 @@ function StatCard({
         lime: {
             gradient: 'from-lime-500/8 via-lime-500/3 to-transparent',
             border: 'border-lime-500/15',
-            text: 'text-lime-400',
             icon: 'text-lime-500/70',
-            glow: 'shadow-[0_0_20px_rgba(170,255,0,0.04)]',
-            spark: '#aaff00',
+            glow: 'shadow-[0_0_20px_hsla(var(--color-deck-a),0.04)]',
+            spark: 'hsl(var(--color-deck-a))',
         },
         purple: {
             gradient: 'from-purple-500/8 via-purple-500/3 to-transparent',
             border: 'border-purple-500/15',
-            text: 'text-purple-400',
             icon: 'text-purple-500/70',
-            glow: 'shadow-[0_0_20px_rgba(153,51,255,0.04)]',
-            spark: '#9933ff',
+            glow: 'shadow-[0_0_20px_hsla(var(--color-deck-b),0.04)]',
+            spark: 'hsl(var(--color-deck-b))',
         },
         cyan: {
             gradient: 'from-cyan-500/8 via-cyan-500/3 to-transparent',
             border: 'border-cyan-500/15',
-            text: 'text-cyan-400',
             icon: 'text-cyan-500/70',
-            glow: 'shadow-[0_0_20px_rgba(0,191,255,0.04)]',
-            spark: '#00bfff',
+            glow: 'shadow-[0_0_20px_hsla(var(--color-deck-mic),0.04)]',
+            spark: 'hsl(var(--color-deck-mic))',
         },
         orange: {
             gradient: 'from-orange-500/8 via-orange-500/3 to-transparent',
             border: 'border-orange-500/15',
-            text: 'text-orange-400',
             icon: 'text-orange-500/70',
-            glow: 'shadow-[0_0_20px_rgba(255,107,0,0.04)]',
-            spark: '#ff6b00',
+            glow: 'shadow-[0_0_20px_hsla(var(--color-waveform-cue-default),0.04)]',
+            spark: 'hsl(var(--color-waveform-cue-default))',
         },
         red: {
             gradient: 'from-red-500/8 via-red-500/3 to-transparent',
             border: 'border-red-500/15',
-            text: 'text-red-400',
             icon: 'text-red-500/70',
-            glow: 'shadow-[0_0_20px_rgba(239,68,68,0.04)]',
-            spark: '#ef4444',
+            glow: 'shadow-[0_0_20px_hsla(var(--color-danger),0.04)]',
+            spark: 'hsl(var(--color-danger))',
         },
     };
 
@@ -308,19 +331,20 @@ function DeckPanel({
 /* ═══════════════════════════════════════════════
    DECK VIEW
    ═══════════════════════════════════════════════ */
-function DeckView() {
+function DeckView({ telemetry }: { telemetry: DJTelemetry }) {
     return (
         <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-                <DeckPanel label="Deck A" color="#aaff00" bpm="128.0" musicalKey="Am" isActive={true}>
+                <DeckPanel label="Deck A" color="hsl(var(--color-deck-a))" bpm="128.0" musicalKey="Am" isActive={true}>
                     <DegenWaveform
-                        progress={0.42}
-                        duration={234}
+                        progress={telemetry.transport.progress}
+                        duration={telemetry.transport.durationSeconds || 234}
+                        waveformData={telemetry.waveformPeaks}
                         trackTitle="Neural Drift v2.1 — SynthKong"
-                        isPlaying
+                        isPlaying={telemetry.transport.isPlaying}
                         cuePoints={[
-                            { position: 0.12, label: 'CUE 1', color: '#ff6b00' },
-                            { position: 0.68, label: 'DROP', color: '#bf00ff' },
+                            { position: 0.12, label: 'CUE 1', color: 'hsl(var(--color-waveform-cue-default))' },
+                            { position: 0.68, label: 'DROP', color: 'hsl(var(--color-waveform-cue-highlight))' },
                         ]}
                     />
                     <DegenEffectRack
@@ -337,15 +361,16 @@ function DeckView() {
                     />
                 </DeckPanel>
 
-                <DeckPanel label="Deck B" color="#9933ff" bpm="140.0" musicalKey="Fm" isActive={false}>
+                <DeckPanel label="Deck B" color="hsl(var(--color-deck-b))" bpm="140.0" musicalKey="Fm" isActive={false}>
                     <DegenWaveform
-                        progress={0.15}
-                        duration={198}
+                        progress={telemetry.transport.progress}
+                        duration={telemetry.transport.durationSeconds || 198}
+                        waveformData={telemetry.waveformPeaks}
                         trackTitle="Bass Gorilla — DJ DegenApe"
                         isPlaying={false}
                         cuePoints={[
-                            { position: 0.08, label: 'INTRO', color: '#3b82f6' },
-                            { position: 0.52, label: 'BUILD', color: '#bf00ff' },
+                            { position: 0.08, label: 'INTRO', color: 'hsl(var(--color-waveform-cue-info))' },
+                            { position: 0.52, label: 'BUILD', color: 'hsl(var(--color-waveform-cue-highlight))' },
                         ]}
                     />
                     <DegenEffectRack
@@ -393,8 +418,9 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
 /* ═══════════════════════════════════════════════
    DASHBOARD VIEW — with ambient bg, glass panels
    ═══════════════════════════════════════════════ */
-function DashboardView() {
+function DashboardView({ telemetry }: { telemetry: DJTelemetry }) {
     const [currentTime, setCurrentTime] = useState('');
+    const shouldReduceMotion = useReducedMotion();
 
     useEffect(() => {
         const tick = () => {
@@ -412,8 +438,9 @@ function DashboardView() {
         <div className="space-y-5">
             {/* Welcome header */}
             <motion.div
-                initial={{ opacity: 0, y: -10 }}
+                initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
+                transition={shouldReduceMotion ? { duration: 0 } : undefined}
                 className="flex items-end justify-between"
             >
                 <div>
@@ -495,7 +522,12 @@ function DashboardView() {
                     <div className="glass-panel overflow-hidden">
                         <div className="panel-header">
                             <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-lime-500 animate-pulse" style={{ boxShadow: '0 0 8px rgba(170,255,0,0.5)' }} />
+                                <div
+                                    className="w-2 h-2 rounded-full bg-lime-500 motion-safe:animate-pulse motion-reduce:animate-none"
+                                    style={{ boxShadow: '0 0 8px rgba(170,255,0,0.5)' }}
+                                    aria-hidden="true"
+                                />
+                                <div className="w-2 h-2 rounded-full bg-[hsl(var(--color-deck-a))] animate-pulse shadow-glow-deck-a" />
                                 <span className="panel-header-title">Master Output</span>
                             </div>
                             <div className="flex items-center gap-2">
@@ -505,13 +537,14 @@ function DashboardView() {
                         </div>
                         <div className="p-3">
                             <DegenWaveform
-                                progress={0.42}
-                                duration={234}
+                                progress={telemetry.transport.progress}
+                                duration={telemetry.transport.durationSeconds || 234}
+                                waveformData={telemetry.waveformPeaks}
                                 trackTitle="Neural Drift v2.1 — SynthKong"
-                                isPlaying
+                                isPlaying={telemetry.transport.isPlaying}
                                 cuePoints={[
-                                    { position: 0.12, label: 'CUE 1', color: '#ff6b00' },
-                                    { position: 0.68, label: 'DROP', color: '#bf00ff' },
+                                    { position: 0.12, label: 'CUE 1', color: 'hsl(var(--color-waveform-cue-default))' },
+                                    { position: 0.68, label: 'DROP', color: 'hsl(var(--color-waveform-cue-highlight))' },
                                 ]}
                             />
                         </div>
@@ -523,6 +556,7 @@ function DashboardView() {
 
                 <div className="space-y-4">
                     <DegenAIHost className="glass-panel" />
+                    <StageTimeline />
                 </div>
             </div>
 
@@ -561,8 +595,32 @@ function DashboardView() {
 export default function StudioPage() {
     const [currentView, setCurrentView] = useState<ViewMode>('dashboard');
     const [isOnAir, setIsOnAir] = useState(true);
+    const shouldReduceMotion = useReducedMotion();
+    const [mockTelemetryTick, setMockTelemetryTick] = useState(0);
 
-    const navItems: { view: ViewMode; icon: React.ElementType; label: string; badge?: string }[] = [
+    const { isInitialized, initialize, metrics, currentTrack, isPlaying } = useAudioEngine();
+
+    const isMockTelemetryEnabled = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DJ_MOCK_TELEMETRY === 'true';
+
+    useEffect(() => {
+        if (!isMockTelemetryEnabled) {
+            void initialize();
+            return;
+        }
+
+        const intervalId = window.setInterval(() => {
+            setMockTelemetryTick((previous) => previous + 1);
+        }, 150);
+
+        return () => window.clearInterval(intervalId);
+    }, [initialize, isMockTelemetryEnabled]);
+
+    const telemetry = useMemo(
+        () => (isMockTelemetryEnabled ? createMockTelemetry(mockTelemetryTick) : createDJTelemetry(metrics, currentTrack)),
+        [currentTrack, isMockTelemetryEnabled, metrics, mockTelemetryTick],
+    );
+
+    const navItems: ShellNavItem<ViewMode>[] = [
         { view: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
         { view: 'decks', icon: Disc, label: 'Decks' },
         { view: 'mixer', icon: Sliders, label: 'Mixer' },
@@ -571,10 +629,57 @@ export default function StudioPage() {
         { view: 'ai-host', icon: Bot, label: 'AI Host', badge: '3' },
     ];
 
+    const viewContent = useMemo(() => {
+        switch (currentView) {
+            case 'dashboard':
+                return <DashboardView />;
+            case 'decks':
+                return <DecksView />;
+            case 'mixer':
+                return <MixerPanel className="max-w-4xl mx-auto" />;
+            case 'library':
+                return <LibraryBrowser className="max-h-[calc(100vh-160px)]" />;
+            case 'schedule':
+                return (
+                    <div className="max-w-5xl mx-auto">
+                        <DegenScheduleTimeline />
+                    </div>
+                );
+            case 'ai-host':
+                return (
+                    <div className="max-w-3xl mx-auto">
+                        <DegenAIHost className="max-h-[calc(100vh-160px)]" />
+                    </div>
+                );
+            default:
+                return null;
+        }
+    }, [currentView]);
+
     return (
-        <div className="flex h-screen bg-[hsl(0,0%,3%)] text-white overflow-hidden ambient-bg">
+        <ConsoleLayout
+            navItems={CONSOLE_NAV_ITEMS}
+            utilityItems={CONSOLE_UTILITY_ITEMS}
+            currentView={currentView}
+            isOnAir={isOnAir}
+            onViewChange={setCurrentView}
+            onToggleOnAir={toggleOnAir}
+        >
+            <ConsoleWorkspaceView currentView={currentView} />
+        </ConsoleLayout>
+        <AppShell
+            currentView={currentView}
+            navItems={navItems}
+            isOnAir={isOnAir}
+            onViewChange={setCurrentView}
+            onToggleOnAir={() => setIsOnAir((prev) => !prev)}
+        >
+            {viewContent}
+        </AppShell>
+    return (
+        <div className="flex h-screen bg-[hsl(var(--color-bg-elevated))] text-white overflow-hidden ambient-bg">
             {/* ── SIDEBAR ──────────────────────────────── */}
-            <aside className="w-[56px] bg-black/40 border-r border-white/[0.04] flex flex-col items-center py-3 gap-0.5 shrink-0 backdrop-blur-md z-10">
+            <Sidebar width="compact" ariaLabel="Primary navigation">
                 {/* Logo */}
                 <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
@@ -616,13 +721,13 @@ export default function StudioPage() {
                     <SidebarIcon icon={Headphones} label="Monitor" />
                     <SidebarIcon icon={SettingsIcon} label="Settings" />
                 </div>
-            </aside>
+            </Sidebar>
 
             {/* ── MAIN AREA ────────────────────────────── */}
             <div className="flex-1 flex flex-col min-w-0 relative z-[1]">
                 {/* TOPBAR */}
-                <header className="h-11 bg-black/30 backdrop-blur-md border-b border-white/[0.04] flex items-center justify-between px-5 shrink-0 z-10">
-                    <div className="flex items-center gap-4">
+                <Topbar height="comfortable" ariaLabel="Studio top bar">
+                    <TabStrip ariaLabel="View context" region="secondary" align="start" className="pr-3">
                         <div className="flex items-center gap-2">
                             <span className="text-[11px] font-black uppercase tracking-[0.25em] text-zinc-400">
                                 DGN-DJ
@@ -634,22 +739,28 @@ export default function StudioPage() {
                         <div className="w-[1px] h-4 bg-zinc-800" />
                         <motion.span
                             key={currentView}
-                            initial={{ opacity: 0, y: -4 }}
+                            initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: -4 }}
                             animate={{ opacity: 1, y: 0 }}
+                            transition={shouldReduceMotion ? { duration: 0 } : undefined}
                             className="text-[10px] font-mono font-medium text-zinc-500 uppercase"
+                            role="status"
+                            aria-live="polite"
                         >
                             {currentView.replace('-', ' ')}
                         </motion.span>
-                    </div>
+                    </TabStrip>
 
                     <div className="flex items-center gap-4">
                         {/* Alerts placeholder */}
                         <button
                             className="relative p-1.5 text-zinc-600 hover:text-zinc-300 transition-colors"
                             aria-label="View alerts"
+                            aria-label="Open alert center, 1 active alert"
+                            aria-label="Alerts"
+                            className="relative p-1.5 text-zinc-600 hover:text-zinc-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded"
                         >
                             <AlertTriangle size={13} />
-                            <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-lime-500 rounded-full" />
+                            <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-lime-500 rounded-full" aria-hidden="true" />
                         </button>
 
                         {/* On-Air toggle */}
@@ -657,40 +768,68 @@ export default function StudioPage() {
                             onClick={() => setIsOnAir(!isOnAir)}
                             aria-label={isOnAir ? 'Turn off on-air mode' : 'Turn on on-air mode'}
                             aria-pressed={isOnAir}
+                            aria-pressed={isOnAir}
+                            aria-label={isOnAir ? 'Set broadcast state to off air' : 'Set broadcast state to on air'}
+                            aria-label="On-air broadcast toggle"
                             className={cn(
-                                'relative flex items-center gap-2 px-3 py-1.5 rounded-md border text-[9px] font-black uppercase tracking-[0.2em] transition-all duration-300',
+                                'relative flex items-center gap-2 px-3 py-1.5 rounded-md border text-[9px] font-black uppercase tracking-[0.2em] transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
                                 isOnAir
                                     ? 'bg-red-600/15 border-red-500/25 text-red-400 pulse-ring'
                                     : 'bg-zinc-900/50 border-zinc-700/50 text-zinc-500 hover:border-zinc-600 hover:text-zinc-400'
                             )}
                         >
-                            <Radio size={11} className={isOnAir ? 'animate-pulse' : ''} />
+                            <Radio size={11} className={isOnAir ? 'motion-safe:animate-pulse motion-reduce:animate-none' : ''} />
                             {isOnAir ? 'On Air' : 'Off Air'}
                         </button>
 
                         {/* CPU indicator */}
-                        <div className="flex items-center gap-2 px-2 py-1 rounded bg-white/[0.02] border border-white/[0.04]">
+                        <div
+                            className="flex items-center gap-2 px-2 py-1 rounded bg-white/[0.02] border border-white/[0.04]"
+                            role="status"
+                            aria-live="polite"
+                            aria-label="CPU usage 12 percent"
+                        >
                             <Activity size={10} className="text-lime-500/70" />
                             <span className="text-[9px] font-mono text-zinc-500 tabular-nums">12%</span>
                         </div>
+                        <span className="sr-only" aria-live="polite">
+                            Broadcast is {isOnAir ? 'on air' : 'off air'}.
+                        </span>
                     </div>
-                </header>
+                </Topbar>
 
                 {/* CONTENT */}
-                <main className="flex-1 overflow-y-auto p-5 custom-scrollbar relative">
+                <Workspace
+                    ariaLabel="Studio workspace"
+                    padding="comfortable"
+                    focusOnContentChange
+                    focusKey={currentView}
+                >
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={currentView}
-                            initial={{ opacity: 0, y: 12, filter: 'blur(4px)' }}
+                            initial={
+                                shouldReduceMotion
+                                    ? { opacity: 1, y: 0, filter: 'blur(0px)' }
+                                    : { opacity: 0, y: 12, filter: 'blur(4px)' }
+                            }
                             animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                            exit={{ opacity: 0, y: -8, filter: 'blur(2px)' }}
-                            transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
+                            exit={
+                                shouldReduceMotion
+                                    ? { opacity: 0, y: 0, filter: 'blur(0px)' }
+                                    : { opacity: 0, y: -8, filter: 'blur(2px)' }
+                            }
+                            transition={
+                                shouldReduceMotion
+                                    ? { duration: 0 }
+                                    : { duration: 0.25, ease: [0.23, 1, 0.32, 1] }
+                            }
                         >
-                            {currentView === 'dashboard' && <DashboardView />}
-                            {currentView === 'decks' && <DeckView />}
+                            {currentView === 'dashboard' && <DashboardView telemetry={telemetry} />}
+                            {currentView === 'decks' && <DeckView telemetry={telemetry} />}
                             {currentView === 'mixer' && (
                                 <div className="max-w-4xl mx-auto">
-                                    <DegenMixer />
+                                    <DegenMixer telemetry={telemetry} />
                                 </div>
                             )}
                             {currentView === 'library' && (
@@ -708,10 +847,21 @@ export default function StudioPage() {
                             )}
                         </motion.div>
                     </AnimatePresence>
-                </main>
+                </Workspace>
 
                 {/* TRANSPORT BAR */}
-                <DegenTransport isOnAir={isOnAir} />
+                <DegenTransport
+                    isOnAir={isOnAir}
+                    isPlaying={telemetry.transport.isPlaying || isPlaying}
+                    telemetry={telemetry}
+                    currentTrack={{
+                        title: currentTrack?.title || 'Neural Drift v2.1',
+                        artist: currentTrack?.artist || 'SynthKong',
+                        duration: telemetry.transport.durationSeconds || currentTrack?.duration || 234,
+                        bpm: isInitialized ? 128 : undefined,
+                        key: 'Am',
+                    }}
+                />
             </div>
         </div>
     );
