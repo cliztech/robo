@@ -26,6 +26,7 @@ This script:
 - optionally configures `upstream`
 - fetches all remotes
 
+## 2) Verify environment health (preferred manual runbook command)
 ## 2) Choose bootstrap mode before task execution
 
 Use `scripts/bootstrap_codex_environment.sh` to validate tooling, execution assumptions, and secrets.
@@ -98,6 +99,16 @@ Do **not** commit fallback secret files.
 Run from repository root:
 
 ```bash
+scripts/codex_env_doctor.sh
+```
+
+This orchestrates, in order:
+- `scripts/bootstrap_dev_environment.sh`
+- `python config/validate_config.py`
+- `python config/check_runtime_secrets.py --require-env-only`
+- optional read-only presence checks for `config/secret.key` and `config/secret_v2.key`
+
+Output is CI-friendly and concise using `PASS:`, `WARN:`, and `FAIL:` status lines.
 # Codex/CI-preferred bootstrap check
 scripts/bootstrap_codex_environment.sh automatic
 
