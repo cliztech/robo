@@ -1,3 +1,4 @@
+.PHONY: help build build-all build-modules build-airwaves build-robo-rippa package-config qa smoke run-airwaves run-robo-rippa check distcheck
 .PHONY: help build build-all build-modules package-config qa smoke run-airwaves run-robo-rippa check distcheck
 
 PYTHON ?= python3
@@ -49,7 +50,7 @@ run-airwaves:
 run-robo-rippa:
 	PYTHONPATH=dgn-robo-rippa/src $(PYTHON) -m dgn_robo_rippa.main
 
-check: build-modules
+check: build
 	$(PYTHON) -m json.tool docs/architecture/event-schema.json > /dev/null
 
 distcheck: check
