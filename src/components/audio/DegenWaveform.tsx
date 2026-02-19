@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { cn } from '../../lib/utils';
+import { deterministicWaveformSample } from '../../lib/audio/telemetry';
 
 interface CuePoint {
     position: number; // 0-1
@@ -20,21 +21,6 @@ interface DegenWaveformProps {
     className?: string;
 }
 
-function generateDefaultWaveform(length = 250): number[] {
-    const data: number[] = [];
-    for (let i = 0; i < length; i++) {
-        const t = i / length;
-        const base = 0.25 + Math.random() * 0.35;
-        const envelope =
-            Math.sin(t * Math.PI) * 0.25 +
-            Math.sin(t * Math.PI * 3.7) * 0.12 +
-            Math.sin(t * Math.PI * 7.3) * 0.08 +
-            Math.sin(t * Math.PI * 13.1) * 0.05;
-        data.push(Math.min(1, Math.max(0.04, base + envelope)));
-    }
-    return data;
-}
-
 export function DegenWaveform({
     progress = 0,
     duration = 210,
@@ -50,7 +36,7 @@ export function DegenWaveform({
     const [isDragging, setIsDragging] = useState(false);
 
     const data = useMemo(
-        () => waveformData || generateDefaultWaveform(250),
+        () => waveformData || deterministicWaveformSample(250),
         [waveformData]
     );
 

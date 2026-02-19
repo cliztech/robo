@@ -12,6 +12,7 @@ The runtime requires both secrets to be set before release validation:
 ## Optional metadata variables
 
 Use these optional metadata variables to track expiry and trigger proactive rotation alerts:
+Use these optional metadata variables to track expiry and trigger proactive rotation alerts. The value should be an ISO 8601 date-time string (e.g., `2023-12-31T23:59:59Z`).
 
 - `ROBODJ_SECRET_KEY_EXPIRES_AT`
 - `ROBODJ_SECRET_V2_KEY_EXPIRES_AT`

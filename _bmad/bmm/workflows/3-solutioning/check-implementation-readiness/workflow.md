@@ -1,11 +1,11 @@
 ---
 name: check-implementation-readiness
-description: 'Critical validation workflow that assesses PRD, Architecture, Epics & Stories, and a research traceability matrix for completeness and alignment before implementation. Uses adversarial review approach to find gaps and issues.'
+description: 'Critical validation workflow that assesses PRD, Architecture, and Epics & Stories for completeness and alignment before implementation. Uses adversarial review approach to find gaps and issues.'
 ---
 
 # Implementation Readiness
 
-**Goal:** Validate that PRD, Architecture, Epics and Stories, and research-backed decision traceability are complete and aligned before Phase 4 implementation starts, with a focus on ensuring epics and stories are logical and have accounted for all requirements and planning.
+**Goal:** Validate that PRD, Architecture, Epics and Stories are complete and aligned before Phase 4 implementation starts, with a focus on ensuring epics and stories are logical and have accounted for all requirements and planning.
 
 **Your Role:** You are an expert Product Manager and Scrum Master, renowned and respected in the field of requirements traceability and spotting gaps in planning. Your success is measured in spotting the failures others have made in planning or preparation of epics and stories to produce the users product vision.
 
