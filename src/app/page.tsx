@@ -1,5 +1,12 @@
 'use client';
 
+import { ConsoleWorkspaceView } from '@/components/console/ConsoleWorkspaceView';
+import { CONSOLE_NAV_ITEMS, CONSOLE_UTILITY_ITEMS } from '@/components/console/consoleNav';
+import { ConsoleLayout } from '@/components/shell/ConsoleLayout';
+import { useConsoleViewState } from '@/hooks/useConsoleViewState';
+
+export default function StudioPage() {
+    const { currentView, isOnAir, setCurrentView, toggleOnAir } = useConsoleViewState();
 import { useMemo, useState } from 'react';
 import { Bot, Clock, Disc, LayoutDashboard, Music, Sliders } from 'lucide-react';
 import { DegenAIHost } from '../components/ai/DegenAIHost';
@@ -648,6 +655,16 @@ export default function StudioPage() {
     }, [currentView]);
 
     return (
+        <ConsoleLayout
+            navItems={CONSOLE_NAV_ITEMS}
+            utilityItems={CONSOLE_UTILITY_ITEMS}
+            currentView={currentView}
+            isOnAir={isOnAir}
+            onViewChange={setCurrentView}
+            onToggleOnAir={toggleOnAir}
+        >
+            <ConsoleWorkspaceView currentView={currentView} />
+        </ConsoleLayout>
         <AppShell
             currentView={currentView}
             navItems={navItems}
