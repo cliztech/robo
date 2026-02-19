@@ -1,0 +1,188 @@
+{
+  "contract_version": "1.0.0",
+  "description": "Runtime environment variable contract for DGN-DJ by DGNradio.",
+  "contexts": {
+    "desktop_app": {
+      "description": "Windows desktop launcher/runtime checks.",
+      "variables": [
+        {
+          "name": "ROBODJ_ENV",
+          "required": true,
+          "secret": false,
+          "type": "enum",
+          "allowed_values": ["development", "staging", "production"],
+          "allow_placeholder_values": false,
+          "description": "Runtime environment label used by startup and operational scripts."
+        },
+        {
+          "name": "ROBODJ_STATION_ID",
+          "required": true,
+          "secret": false,
+          "type": "regex",
+          "pattern": "^[a-z0-9][a-z0-9_-]{2,31}$",
+          "allow_placeholder_values": false,
+          "description": "Station or tenant identifier used in logs and cache partitioning."
+        },
+        {
+          "name": "ROBODJ_LOG_LEVEL",
+          "required": true,
+          "secret": false,
+          "type": "enum",
+          "allowed_values": ["DEBUG", "INFO", "WARNING", "ERROR"],
+          "allow_placeholder_values": false,
+          "description": "Process log verbosity."
+        },
+        {
+          "name": "ROBODJ_DATA_DIR",
+          "required": true,
+          "secret": false,
+          "type": "path",
+          "allow_placeholder_values": false,
+          "description": "Writable runtime directory for cache/log scratch data."
+        },
+        {
+          "name": "ROBODJ_SECRET_KEY",
+          "required": true,
+          "secret": true,
+          "type": "secret",
+          "description": "Primary runtime secret key."
+        },
+        {
+          "name": "ROBODJ_SECRET_V2_KEY",
+          "required": true,
+          "secret": true,
+          "type": "secret",
+          "description": "Secondary runtime secret key."
+        }
+      ]
+    },
+    "docker_stack": {
+      "description": "Containerized stack runtime for compose deployments.",
+      "variables": [
+        {
+          "name": "COMPOSE_PROJECT_NAME",
+          "required": true,
+          "secret": false,
+          "type": "regex",
+          "pattern": "^[a-z0-9][a-z0-9_-]{1,30}$",
+          "allow_placeholder_values": false,
+          "description": "Compose project name used for network/resource namespacing."
+        },
+        {
+          "name": "ROBODJ_ENV",
+          "required": true,
+          "secret": false,
+          "type": "enum",
+          "allowed_values": ["development", "staging", "production"],
+          "allow_placeholder_values": false,
+          "description": "Runtime environment label inside containers."
+        },
+        {
+          "name": "ROBODJ_LOG_LEVEL",
+          "required": true,
+          "secret": false,
+          "type": "enum",
+          "allowed_values": ["DEBUG", "INFO", "WARNING", "ERROR"],
+          "allow_placeholder_values": false,
+          "description": "Container log verbosity."
+        },
+        {
+          "name": "ROBODJ_HTTP_PORT",
+          "required": true,
+          "secret": false,
+          "type": "integer",
+          "min": 1,
+          "max": 65535,
+          "allow_placeholder_values": false,
+          "description": "Published HTTP port for runtime service endpoints."
+        },
+        {
+          "name": "ROBODJ_SECRET_KEY",
+          "required": true,
+          "secret": true,
+          "type": "secret",
+          "description": "Primary runtime secret key."
+        },
+        {
+          "name": "ROBODJ_SECRET_V2_KEY",
+          "required": true,
+          "secret": true,
+          "type": "secret",
+          "description": "Secondary runtime secret key."
+        }
+      ]
+    },
+    "ci": {
+      "description": "GitHub Actions and CI runner checks.",
+      "variables": [
+        {
+          "name": "CI",
+          "required": true,
+          "secret": false,
+          "type": "enum",
+          "allowed_values": ["true", "1"],
+          "allow_placeholder_values": false,
+          "description": "Canonical CI marker."
+        },
+        {
+          "name": "GITHUB_ACTIONS",
+          "required": true,
+          "secret": false,
+          "type": "enum",
+          "allowed_values": ["true"],
+          "allow_placeholder_values": false,
+          "description": "GitHub Actions marker in CI context."
+        },
+        {
+          "name": "GITHUB_REF_NAME",
+          "required": true,
+          "secret": false,
+          "type": "regex",
+          "pattern": "^[A-Za-z0-9._/\\-]{1,255}$",
+          "allow_placeholder_values": false,
+          "description": "Branch or tag reference for release/build metadata."
+        },
+        {
+          "name": "GITHUB_SHA",
+          "required": true,
+          "secret": false,
+          "type": "regex",
+          "pattern": "^[a-f0-9]{40}$",
+          "allow_placeholder_values": false,
+          "description": "Commit SHA used in build provenance."
+        },
+        {
+          "name": "ROBODJ_ENV",
+          "required": true,
+          "secret": false,
+          "type": "enum",
+          "allowed_values": ["development", "staging", "production"],
+          "allow_placeholder_values": false,
+          "description": "Target environment for CI validation/deploy stage."
+        },
+        {
+          "name": "ROBODJ_SECRET_KEY",
+          "required": true,
+          "secret": true,
+          "type": "secret",
+          "description": "Primary runtime secret key."
+        },
+        {
+          "name": "ROBODJ_SECRET_V2_KEY",
+          "required": true,
+          "secret": true,
+          "type": "secret",
+          "description": "Secondary runtime secret key."
+        }
+      ]
+    }
+  },
+  "placeholder_tokens": [
+    "changeme",
+    "replace_me",
+    "your_value_here",
+    "example",
+    "sample",
+    "todo"
+  ]
+}

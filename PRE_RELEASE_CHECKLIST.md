@@ -62,12 +62,23 @@
 
 - **Checklist owner:** ____________________
 - **Sign-off (name + date/time):** ____________________
+## Launcher workflow pre-run gate (all release paths)
+
+Run this command before **every** launcher-based release path (`dev -> staging`, `staging -> prod`, and hotfix redeploys):
+
+- [ ] `python config/check_runtime_secrets.py --require-env-only`
+- [ ] Confirm output: `Secret integrity check passed (key material redacted).`
+- [ ] Confirm no fallback secret files were used outside explicitly approved local dev/break-glass scenarios.
+
 ## Baseline gates (run every release)
 
 - [ ] Run configuration validation: `python config/validate_config.py`
 - [ ] Confirm validation output is: `Configuration validation passed for schedules.json and prompt_variables.json.`
 - [ ] Run runtime secret preflight: `python config/check_runtime_secrets.py --require-env-only`
 - [ ] Confirm secret preflight output is: `Secret integrity check passed (key material redacted).`
+- [ ] Review and enforce [Codex Environment Contract](docs/operations/codex_environment_contract.md) (required vars, source priority, and redaction rules).
+- [ ] Confirm protected runtime flags are set: `ROBODJ_PROTECTED_ENV=true` and `ROBODJ_ALLOW_FILE_SECRET_FALLBACK` is unset/false.
+- [ ] Confirm no real key material exists in `config/secret.key` or `config/secret_v2.key` on release runners.
 - [ ] If validation fails, confirm output starts with: `Configuration validation failed:` and lists actionable field-level errors.
 - [ ] Archive config backups in `config/backups/` for any risky config changes.
 
@@ -197,10 +208,11 @@ When launching via `RoboDJ_Launcher.bat`, startup now runs config validation bef
 
 ## Startup preflight behavior (operator runbook)
 
-- `RoboDJ_Launcher.bat` now runs `config/validate_config.py` before launching the app.
+- `RoboDJ_Launcher.bat` now runs `config/validate_config.py` and `config/check_runtime_secrets.py --require-env-only` before launching the app.
 - Startup continues only when validation prints:
   `Configuration validation passed for schedules.json and prompt_variables.json.`
 - If validation fails, startup is blocked and the launcher keeps the actionable validator output visible.
+- If secret preflight fails, startup is blocked until env-only key material is available and fallback usage is resolved per policy.
 - Operator actions on failure:
   1. Read each listed `[target]` error and fix the referenced field(s) in the matching config JSON.
   2. Re-run `python config/validate_config.py` until it prints the expected success string exactly.
