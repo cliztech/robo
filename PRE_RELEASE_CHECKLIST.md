@@ -230,6 +230,35 @@ When launching via `RoboDJ_Launcher.bat`, startup now runs config validation bef
 - [ ] Backup/restore drill pass — Sign-off: Release Manager
 - [ ] Crash recovery simulation pass — Sign-off: Release Manager
 - [ ] Rollback path verified — Sign-off: Release Manager
+- [ ] Execute the accessibility QA matrix in `REACT_BROWSER_UI_TEAM_BLUEPRINT.md` for shell, overlays, and scheduler interactions.
+- [ ] Verify keyboard-only flow for all release-critical user paths (no pointer required).
+- [ ] Verify visible, logical focus order and focus restoration behavior for overlays/modals.
+- [ ] Verify screen-reader naming/instructions for controls, dialogs, timeline events, and state changes.
+- [ ] Verify WCAG AA color contrast in all supported themes and interactive states.
+- [ ] Verify reduced-motion behavior for all key transitions and timeline interactions.
+- [ ] Verify zoom/reflow behavior at 200%+ with no blocked or clipped critical actions.
+- [ ] Enforce **No Ship** when custom interactive widgets (drag/drop, tab strip, timeline blocks) lack keyboard and ARIA equivalents.
+- [ ] Block release on any P0 accessibility failure; track and resolve any P1 accessibility failures before final approval.
+
+## Track A pre-release security gate (A3.2)
+
+> This gate is mandatory for readiness scoring and release approval.
+
+- [ ] **PASS/FAIL:** Redaction contract enforcement is verified.
+  - Command: `python config/spec_check_frontend_contracts.py`
+  - Pass criteria: command exits 0 and reports denylist checks passed for all files in `contracts/frontend_responses/*.schema.json`.
+  - Fail criteria: any denylisted key/path fragment is found, command errors, or coverage is incomplete.
+
+- [ ] **PASS/FAIL:** Redaction source-of-truth artifacts are unchanged or reviewed.
+  - Files: `contracts/redaction_rules.md`, `contracts/redaction_denylist.json`
+  - Command: git diff main --name-only -- contracts/redaction_rules.md contracts/redaction_denylist.json contracts/frontend_responses/*.schema.json
+  - Pass criteria: any touched file has reviewer sign-off from SecOps Compliance Agent.
+  - Fail criteria: touched redaction artifacts lack security review sign-off.
+
+- [ ] **PASS/FAIL:** Security gate sign-off recorded.
+  - Required signers: **Release Manager Agent** and **SecOps Compliance Agent**
+  - Pass criteria: both signers are recorded with UTC timestamp before release candidate creation.
+  - Fail criteria: missing signer, missing timestamp, or sign-off captured after release candidate creation.
 - [ ] Accessibility QA matrix in `REACT_BROWSER_UI_TEAM_BLUEPRINT.md` completed for shell, overlays, and scheduler interactions.
 - [ ] Keyboard-only flow verified for all release-critical paths.
 - [ ] Focus order and focus restoration behavior verified for overlays/modals.
