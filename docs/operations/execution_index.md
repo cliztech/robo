@@ -14,6 +14,10 @@ This index lists active tracks, owners, and current status pointers. The status 
 | One-click backup snapshot (`feature_one_click_backup_snapshot`) | Config owner | Complete | [`TODO_v1_1.md` → "4) One-click backup snapshot"](../../TODO_v1_1.md#4-one-click-backup-snapshot-feature_one_click_backup_snapshot) |
 | Product readiness scorecard | Management Team (Project Coordinator) | Active weekly refresh | [`docs/readiness_scorecard.md` → "Scoring model"](../readiness_scorecard.md#scoring-model) |
 
+## Planning runbooks
+
+- [`BMAD Deep Research Runbook`](./bmad_deep_research_runbook.md) — Mandatory sequence and quality gates for Market Research → Domain Research → Technical Research → PRD → Architecture → Epics/Stories → Readiness Check.
+
 ## Weekly update protocol
 
 Run this protocol once per week (or immediately after major scope/status shifts):

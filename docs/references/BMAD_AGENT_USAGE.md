@@ -28,12 +28,7 @@ Use an explicit startup instruction/profile per tool.
 
 ### Suggested default instruction block
 
-Add this to each client's project-level startup prompt:
-
-> Use BMAD as the default execution framework for this repository.
-> Load `_bmad/_config/bmad-help.csv` at session start.
-> If a matching BMAD workflow exists, use that workflow first and only fall back to free-form execution when no workflow applies.
-> Treat `_bmad/` as the source of truth for available workflows, agents, and tasks.
+Use the canonical startup snippet in [`docs/operations/agent_execution_commands.md`](../operations/agent_execution_commands.md#canonical-bmad-startup-policy-codexgeminijules) for all client bootstrap prompts.
 
 ### Per-client setup checklist
 
@@ -48,3 +43,21 @@ Without this per-client setup, BMAD remains installed but optional.
 
 - **Installed now:** BMAD assets are present and ready.
 - **Still required:** per-client configuration (Codex/Gemini/Jules) so BMAD is applied by default every session/generation.
+
+## BMM workflow runtime config source
+
+For workflow execution under `_bmad/bmm/workflows/**`, runtime configuration is sourced from:
+
+- `_bmad/bmm/config.yaml`
+
+This file is the canonical BMM config and provides keys consumed by workflow variables such as `main_config`/`config_source` (`project_name`, `output_folder`, `planning_artifacts`, `implementation_artifacts`, `communication_language`, and related fields).
+
+## BMAD manifest maintenance
+
+After any BMAD module install or update, regenerate `_bmad/_config/manifest.yaml` so it remains a single valid YAML document with one `installation` block and one `modules` list.
+
+Recommended quick procedure:
+
+1. Rebuild or clean up the manifest to keep one entry per installed module.
+2. Validate YAML syntax and confirm there are no duplicate top-level keys.
+3. Verify installed modules (`core`, `bmm`) still appear with consistent metadata fields (`name`, `version`, `installDate`, `lastUpdated`, `source`, `npmPackage`, `repoUrl`).

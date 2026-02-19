@@ -8,6 +8,7 @@ Primary reference style: user-provided DJ/radio console mockups (dark, high-dens
 
 - Visual asset catalog index: [`docs/ui/reference-catalog/virtual-dj/README.md`](./reference-catalog/virtual-dj/README.md)
 - Asset-by-asset scoring: [`docs/ui/reference-catalog/virtual-dj/catalog.csv`](./reference-catalog/virtual-dj/catalog.csv)
+Reference index: `docs/ui/virtual_dj_reference_index.md`.
 
 
 ## Progress Summary (2026-02-16)
@@ -236,6 +237,7 @@ Exit criteria:
 - Integrate live state feeds (read + control)
 - Add fail-safe indicators and transport confirmations
 - Add B1.1/B1.2 MVP workflow header: stage timeline + high-risk human checkpoint card in the main console view
+- Implement reference-catalog requirements from `docs/ui/reference-catalog/virtual-dj/video-notes.md`: `REQ-VDJ-TRN-01`, `REQ-VDJ-CTL-01`, `REQ-VDJ-WFM-01`, `REQ-VDJ-STAT-01`, `REQ-VDJ-STAT-02`
 
 Exit criteria:
 - End-to-end control of A/B playout in dev/staging with deterministic state sync
@@ -250,6 +252,7 @@ Exit criteria:
 - Implement media browser and queue operations
 - Integrate scheduler overlay and conflict handling
 - Add now/next and break-window intelligence
+- Implement reference-catalog requirements from `docs/ui/reference-catalog/virtual-dj/video-notes.md`: `REQ-VDJ-CTL-01`, `REQ-VDJ-PNL-01`, `REQ-VDJ-STAT-01`
 
 Exit criteria:
 - Operator can run a full hour with mixed manual and automated transitions
@@ -258,6 +261,7 @@ Exit criteria:
 - Add FX/sampler module with safety locks and reset semantics
 - Add routing/device settings with apply/test/rollback
 - Integrate diagnostics command center
+- Implement reference-catalog requirements from `docs/ui/reference-catalog/virtual-dj/video-notes.md`: `REQ-VDJ-TRN-01`, `REQ-VDJ-CTL-01`, `REQ-VDJ-PNL-01`, `REQ-VDJ-STAT-01`
 
 Exit criteria:
 - Failure drills pass (routing change rollback, stream fallback, incident mode)
