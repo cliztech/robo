@@ -1,5 +1,13 @@
 # Sprint Planning Validation Checklist
 
+## Pre-Planning Freshness Gate (Required)
+
+- [ ] Reviewed every source-of-truth status section listed in `docs/operations/execution_index.md`
+- [ ] Confirmed each SoT section includes a weekly update entry with `Date (UTC)` in the last 7 days
+- [ ] If any stale SoT entries were found, sprint planning was blocked and owners were asked to refresh
+- [ ] Verified stale SoT entries were refreshed before continuing sprint-planning
+- [ ] Captured stale-check results in planning notes using the runbook: `docs/operations/runbooks/sprint_planning_source_of_truth_gate.md`
+
 ## Core Validation
 
 ### Complete Coverage Check
