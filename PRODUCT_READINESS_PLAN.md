@@ -58,8 +58,15 @@ Make multi-agent workflows transparent, safe, and efficient for non-technical op
 
 ### B1. Agent Progression UX
 - **Task B1.1 (MVP)**: Stage timeline UI (Intake → Plan → Execute → Verify → Handoff) with status badges.
-- **Task B1.2 (Enhanced)**: Human-in-the-loop checkpoints for high-impact decisions.
+- **Task B1.2 (MVP)**: Human-in-the-loop checkpoints for high-impact decisions.
 - **Task B1.3 (Advanced)**: “Explain this decision” panel with compact rationale + source links.
+
+#### B1 MVP scope (B1.1/B1.2)
+- Single-view workflow header that always shows: current stage, stage owner (human/system), risk level, and next required action.
+- Timeline must expose 5 canonical orchestration stages from `docs/conversation_orchestrator_spec.md` and use matching stage labels.
+- Checkpoints trigger only at high-impact moments defined by `docs/operations/subagent_execution_playbook.md` (scope expansion, destructive actions, release gate bypass attempts).
+- Checkpoint card must provide Approve / Request changes / Rollback action choices with required rationale text for non-approve actions.
+- MVP excludes advanced rationale drill-down (reserved for B1.3).
 
 ### B2. Operator Assist UX
 - **Task B2.1**: Preset task templates (QA route, change route, proposal route).
@@ -69,6 +76,35 @@ Make multi-agent workflows transparent, safe, and efficient for non-technical op
 ### B3. UX Quality Metrics
 - **Task B3.1**: Track completion time per workflow.
 - **Task B3.2**: Track intervention rate and rollback rate.
+
+### B4. Instrumentation spec (UX progression + checkpoints)
+
+| Metric | Event names | Collection points | Ownership |
+|---|---|---|---|
+| Workflow completion time | `ux_workflow_started`, `ux_stage_entered`, `ux_workflow_completed` | Frontend emits start/stage/complete events with `workflow_id`; backend computes `completed_at - started_at` and p50/p95 aggregates. | Frontend: UI Telemetry; Backend: Observability/Analytics |
+| Intervention rate | `ux_checkpoint_presented`, `ux_checkpoint_decision` (`approve`, `request_changes`, `rollback`) | Frontend emits when checkpoint is shown and when operator decides; backend computes `non_approve_decisions / checkpoints_presented` by route and stage. | Frontend: UI Telemetry; Backend: Workflow Analytics |
+| Rollback rate | `ux_rollback_initiated`, `ux_rollback_completed`, `ux_rollback_failed` | Frontend emits initiation source (checkpoint/manual); backend confirms outcome and computes `rollback_initiated / workflows_completed` plus failure rate. | Frontend: UI Telemetry; Backend: Reliability/Operations |
+
+Collection rules:
+- Include required dimensions on all events: `workflow_id`, `route_type` (`QA`, `Change`, `Proposal`), `stage_name`, `risk_level`, `operator_role`, and UTC timestamp.
+- Frontend owns event emission correctness and schema version tagging.
+- Backend owns metric calculations, durable storage, and weekly scorecard exports.
+- Data retention and redaction must follow `contracts/redaction_rules.md`.
+
+### B5. Operator usability acceptance criteria
+1. In one view, operator can identify current stage, risk status, and next action within 5 seconds (validated in scripted usability run).
+2. Operator can distinguish whether control is human-owned or system-owned at every stage transition with no ambiguity.
+3. For checkpoint-required steps, operator can complete a compliant decision (approve/request changes/rollback) in <=2 clicks plus rationale input.
+4. Operator can locate rollback state/result from the same workflow surface without opening a secondary diagnostics page.
+5. Accessibility baseline: timeline and checkpoint actions are keyboard-operable and announce stage/risk updates to assistive tech.
+
+### B6. UX milestone linkage to orchestration specs
+
+| UX milestone | Orchestration spec linkage |
+|---|---|
+| B1.1 Stage timeline MVP | Mirrors stage model and transition semantics in `docs/conversation_orchestrator_spec.md`. |
+| B1.2 Human checkpoints MVP | Uses escalation/approval trigger definitions from `docs/operations/subagent_execution_playbook.md`. |
+| B1.3 Decision explainability | Reuses rationale artifact expectations and evidence handoff patterns from both orchestration specs. |
 
 **Exit metric**: UX category from **54% → 82%**.
 

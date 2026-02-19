@@ -1,0 +1,81 @@
+# generated: 2026-02-17
+# project: DGN-DJ Product Readiness Tracks
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: docs/exec-plans/active
+
+generated: 2026-02-17
+project: DGN-DJ Product Readiness Tracks
+project_key: NOKEY
+tracking_system: file-system
+story_location: docs/exec-plans/active
+
+development_status:
+  epic-a1-role-based-security-controls: backlog
+  a1-1-role-aware-settings-visibility: backlog
+  a1-2-session-timeout-idle-lock-reauth: backlog
+  a1-3-approval-workflow-immutable-audit-export: backlog
+  epic-a1-retrospective: optional
+
+  epic-a2-secrets-lifecycle-and-data-protection: backlog
+  a2-1-key-rotation-workflow-cli-checklist: backlog
+  a2-2-config-at-rest-encryption-high-risk-fields: backlog
+  a2-3-redaction-denylist-enforcement-logs-api: backlog
+  epic-a2-retrospective: optional
+
+  epic-a3-security-verification-and-release-gate-hardening: backlog
+  a3-1-security-smoke-script-authn-authz-lockout: backlog
+  a3-2-pre-release-security-gate-checklist: backlog
+  epic-a3-retrospective: optional
+
+  epic-b1-agent-progression-ux-mvp-and-explainability: backlog
+  b1-1-stage-timeline-ui: backlog
+  b1-2-human-in-the-loop-checkpoints: backlog
+  b1-3-explain-this-decision-panel: backlog
+  epic-b1-retrospective: optional
+
+  epic-b2-operator-assist-ux: backlog
+  b2-1-preset-task-templates: backlog
+  b2-2-one-click-rollback-assistant: backlog
+  b2-3-guided-troubleshooting-panel: backlog
+  epic-b2-retrospective: optional
+
+  epic-b3-ux-metrics-and-instrumentation: backlog
+  b3-1-workflow-completion-time-metric: backlog
+  b3-2-intervention-and-rollback-rate-metrics: backlog
+  epic-b3-retrospective: optional
+
+  epic-c1-runtime-and-deployment-baseline: backlog
+  c1-1-supported-runtime-matrix-publication: backlog
+  c1-2-minimum-dependency-versions-and-compatibility-contract: backlog
+  c1-3-environment-profile-docs: backlog
+  epic-c1-retrospective: optional
+
+  epic-c2-contracts-and-api-governance: backlog
+  c2-1-expanded-schema-contracts-and-ci-validation: backlog
+  c2-2-versioned-api-contract-change-policy: backlog
+  c2-3-breaking-change-checklist-gate: backlog
+  epic-c2-retrospective: optional
+
+  epic-c3-reliability-and-observability-stack: backlog
+  c3-1-slos-for-scheduling-latency-autonomy-throughput: backlog
+  c3-2-alert-thresholds-and-escalation-policy: backlog
+  c3-3-incident-runbook-and-postmortem-template: backlog
+  epic-c3-retrospective: optional
+
+  epic-d1-release-maturity: backlog
+  d1-1-versioned-release-checklist-strict-gates: backlog
+  d1-2-upgrade-rollback-docs-and-compatibility-notes: backlog
+  d1-3-golden-path-fresh-install-validation-test: backlog
+  epic-d1-retrospective: optional
+
+  epic-d2-documentation-and-support-model: backlog
+  d2-1-operator-guide-by-persona: backlog
+  d2-2-runbook-index-for-common-failures: backlog
+  d2-3-support-triage-workflow-and-sla-targets: backlog
+  epic-d2-retrospective: optional
+
+  epic-d3-commercial-readiness: backlog
+  d3-1-product-packaging-definition-base-pro-gates: backlog
+  d3-2-telemetry-ethics-and-opt-in-policy: backlog
+  epic-d3-retrospective: optional

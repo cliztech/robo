@@ -1,0 +1,40 @@
+# <!-- Powered by BMAD-CORE™ -->
+bundle:
+  name: Team GUI Console Delivery
+  icon: 🎛️
+  description: Team focused on DJ console analysis, planning, solutioning, implementation, and review.
+agents:
+  - pm
+  - ux-designer
+  - architect
+  - dev
+  - sm
+  - tech-writer
+party: "./default-party.csv"
+role_artifacts:
+  pm:
+    - prd
+    - milestone_gate_definitions
+  ux-designer:
+    - module_specs
+    - interaction_states
+    - accessibility_presets
+  architect:
+    - component_boundaries
+    - data_contracts
+  dev:
+    - implementation_stories
+    - acceptance_criteria
+  qa_aligned:
+    - test_matrix
+    - regression_checklist
+references:
+  - docs/ui/dj_console_ui_research_plan.md
+  - docs/ui/radio_broadcasting_ui_execution_plan.md
+  - REACT_BROWSER_UI_TEAM_BLUEPRINT.md
+handoff_sequence:
+  - Analysis
+  - Plan
+  - Solutioning
+  - Implementation
+  - Review
