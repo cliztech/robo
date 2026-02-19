@@ -149,6 +149,7 @@ export function DegenTransport({
                 <button
                     onClick={onPrev}
                     aria-label="Previous track"
+                    className="p-1.5 rounded text-zinc-400 hover:text-white transition-colors"
                     className="p-1.5 rounded text-zinc-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                 >
                     <SkipBack size={14} fill="currentColor" />
@@ -157,6 +158,7 @@ export function DegenTransport({
                 <button
                     onClick={onPlayPause}
                     aria-label={isPlaying ? 'Pause playback' : 'Start playback'}
+                    aria-pressed={isPlaying}
                     className={cn(
                         'relative w-10 h-10 rounded-full flex items-center justify-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
                         isPlaying
@@ -172,6 +174,7 @@ export function DegenTransport({
                 <button
                     onClick={onNext}
                     aria-label="Next track"
+                    className="p-1.5 rounded text-zinc-400 hover:text-white transition-colors"
                     className="p-1.5 rounded text-zinc-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                 >
                     <SkipForward size={14} fill="currentColor" />
@@ -212,6 +215,8 @@ export function DegenTransport({
                         max={1}
                         step={0.001}
                         value={progress}
+                        onChange={(e) => setProgress(parseFloat(e.target.value))}
+                        aria-label="Track progress"
                         onChange={(e) => setProgressOverride(parseFloat(e.target.value))}
                         className="absolute inset-x-0 h-7 w-full opacity-0 cursor-pointer z-10"
                     />
@@ -291,6 +296,7 @@ export function DegenTransport({
                             setVolume(parseInt(e.target.value, 10));
                             if (isMuted) setIsMuted(false);
                         }}
+                        aria-label="Output volume"
                         className="absolute inset-0 w-full opacity-0 cursor-pointer"
                     />
                 </div>

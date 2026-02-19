@@ -33,6 +33,8 @@ export function DegenKnob({
     const accentColor = color || 'hsl(var(--color-control-active))';
     const accentColor = color || 'hsl(var(--color-deck-a))';
 
+    const clampValue = (nextValue: number) => Math.max(min, Math.min(max, nextValue));
+
     const handleMouseDown = (e: React.MouseEvent) => {
         setIsDragging(true);
         startY.current = e.clientY;
@@ -41,7 +43,7 @@ export function DegenKnob({
             const deltaY = startY.current - ev.clientY;
             const range = max - min;
             const step = range / 200;
-            const newVal = Math.max(min, Math.min(max, startVal.current + deltaY * step));
+            const newVal = clampValue(startVal.current + deltaY * step);
             onChange?.(newVal);
         };
         const handleMouseUp = () => {
@@ -51,6 +53,34 @@ export function DegenKnob({
         };
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        const range = max - min;
+        const step = Math.max(1, Math.round(range / 20));
+
+        if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
+            e.preventDefault();
+            onChange?.(clampValue(value + step));
+            return;
+        }
+
+        if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
+            e.preventDefault();
+            onChange?.(clampValue(value - step));
+            return;
+        }
+
+        if (e.key === 'Home') {
+            e.preventDefault();
+            onChange?.(min);
+            return;
+        }
+
+        if (e.key === 'End') {
+            e.preventDefault();
+            onChange?.(max);
+        }
     };
 
     // SVG arc path for the value track
@@ -77,10 +107,18 @@ export function DegenKnob({
         <div className="flex flex-col items-center gap-0.5 select-none">
             <div
                 className={cn(
-                    'relative cursor-ns-resize group',
+                    'relative cursor-ns-resize group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded-full',
                     isDragging && 'scale-105'
                 )}
                 onMouseDown={handleMouseDown}
+                onKeyDown={handleKeyDown}
+                role="slider"
+                tabIndex={0}
+                aria-label={`${label} control`}
+                aria-valuemin={min}
+                aria-valuemax={max}
+                aria-valuenow={Math.round(value)}
+                aria-valuetext={`${Math.round(value)}${unit}`}
                 style={{ width: size, height: size, transition: 'transform 0.1s ease' }}
             >
                 <svg viewBox="0 0 100 100" className="w-full h-full">

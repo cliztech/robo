@@ -81,6 +81,8 @@ function SidebarIcon({
         <button
             onClick={onClick}
             title={label}
+            aria-label={label}
+            aria-pressed={active}
             aria-label={badge ? `${label}, ${badge} new items` : label}
             aria-pressed={active}
             aria-label={label}
@@ -752,6 +754,7 @@ export default function StudioPage() {
                         {/* Alerts placeholder */}
                         <button
                             className="relative p-1.5 text-zinc-600 hover:text-zinc-300 transition-colors"
+                            aria-label="View alerts"
                             aria-label="Open alert center, 1 active alert"
                             aria-label="Alerts"
                             className="relative p-1.5 text-zinc-600 hover:text-zinc-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded"
@@ -763,6 +766,8 @@ export default function StudioPage() {
                         {/* On-Air toggle */}
                         <button
                             onClick={() => setIsOnAir(!isOnAir)}
+                            aria-label={isOnAir ? 'Turn off on-air mode' : 'Turn on on-air mode'}
+                            aria-pressed={isOnAir}
                             aria-pressed={isOnAir}
                             aria-label={isOnAir ? 'Set broadcast state to off air' : 'Set broadcast state to on air'}
                             aria-label="On-air broadcast toggle"
