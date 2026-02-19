@@ -107,7 +107,7 @@ export function DegenTrackList({
             onClick={() => handleSort(field)}
             className={cn(
                 'flex items-center gap-1 text-[8px] font-black uppercase tracking-[0.12em] transition-colors',
-                sortField === field ? 'text-[hsl(var(--color-deck-a))]' : 'text-zinc-600 hover:text-zinc-400'
+                sortField === field ? 'text-deck-a' : 'text-zinc-600 hover:text-zinc-400'
             )}
             style={{ width }}
         >
