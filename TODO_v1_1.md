@@ -8,6 +8,20 @@ See [docs/operations/execution_index.md](docs/operations/execution_index.md) for
 
 ## Active TODO checklist
 
+## Parallel workstreams (current build)
+
+- **Lane A — startup diagnostics + operator hints**
+  - Parallelized DB/key/audio checks to reduce boot-time wait.
+  - Added failure hints and structured diagnostics log output.
+- **Lane B — launch config validation gate**
+  - Continue validating `schedules.json` and `prompt_variables.json` at launch.
+  - Keep runtime blocked on invalid config and print actionable errors.
+- **Lane C — crash recovery and LKG restore**
+  - Keep automated restore flow from latest snapshot.
+  - Added restore event logging under `config/logs/`.
+- **Lane D — one-click backup snapshots**
+  - Keep timestamped snapshots in `config/backups/` for restore readiness.
+
 ### 1) Startup diagnostics panel (`feature_startup_diagnostics`)
 
 - [x] Add boot-time diagnostics runner for:

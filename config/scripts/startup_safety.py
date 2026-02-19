@@ -22,11 +22,11 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "config"))
-from validate_config import TARGETS, ValidationError, validate_target
 CONFIG_DIR = REPO_ROOT / "config"
 BACKUP_DIR = CONFIG_DIR / "backups"
 LOG_DIR = CONFIG_DIR / "logs"
 SNAPSHOT_PREFIX = "config_snapshot_"
+LOG_DIR = CONFIG_DIR / "logs"
 SNAPSHOT_FILES = [
     "schedules.json",
     "prompt_variables.json",
@@ -35,6 +35,14 @@ SNAPSHOT_SECRET_FILES = [
     "secret.key",
     "secret_v2.key",
 ]
+
+RECOVERY_HINTS = {
+    "DB settings.db": "Run `python config/inspect_db.py` to inspect DB schema and verify the file path/permissions.",
+    "DB user_content.db": "Run `python config/inspect_db.py` to inspect DB schema and verify the file path/permissions.",
+    "Key secret.key": "Restore `config/secret.key` from your latest backup snapshot in `config/backups/`.",
+    "Key secret_v2.key": "Restore `config/secret_v2.key` from your latest backup snapshot in `config/backups/`.",
+    "Audio devices": "Confirm at least one playback device is enabled in the OS sound settings, then relaunch.",
+}
 
 
 @dataclass
@@ -46,6 +54,31 @@ class CheckResult:
     recovery_hint: str | None = None
 
 
+def _load_config_validator() -> tuple[list[dict], type[Exception], object] | tuple[None, None, None]:
+    """Load config validation symbols lazily so non-validation paths remain usable."""
+    try:
+        from validate_config import TARGETS, ValidationError, validate_target
+    except Exception as exc:
+        print(f"[WARN] Config validator unavailable: {exc}")
+        _log_event(
+            "startup_validator_error",
+            {
+                "created_at_utc": datetime.now(timezone.utc).isoformat(),
+                "error": str(exc),
+            },
+        )
+        return None, None, None
+
+    return TARGETS, ValidationError, validate_target
+
+
+def _log_event(filename_prefix: str, payload: dict) -> None:
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    output_path = LOG_DIR / f"{filename_prefix}_{stamp}.json"
+    output_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
 def _print_result(result: CheckResult) -> None:
     if result.ok and not result.warning:
         status = "PASS"
@@ -54,6 +87,10 @@ def _print_result(result: CheckResult) -> None:
     else:
         status = "FAIL"
     print(f"[{status}] {result.name}: {result.detail}")
+    if not result.ok:
+        hint = RECOVERY_HINTS.get(result.name)
+        if hint:
+            print(f"        hint: {hint}")
     if result.recovery_hint:
         print(f"  ↳ Recovery hint: {result.recovery_hint}")
 
@@ -175,13 +212,15 @@ def _append_event_log(event_type: str, payload: dict[str, object]) -> Path:
 
 def run_startup_diagnostics() -> bool:
     print("Running RoboDJ startup diagnostics...")
-    checks = [
-        _check_db_readable(CONFIG_DIR / "settings.db"),
-        _check_db_readable(CONFIG_DIR / "user_content.db"),
-        _check_key_file(CONFIG_DIR / "secret.key"),
-        _check_key_file(CONFIG_DIR / "secret_v2.key"),
-        _check_audio_devices(),
+    check_steps = [
+        lambda: _check_db_readable(CONFIG_DIR / "settings.db"),
+        lambda: _check_db_readable(CONFIG_DIR / "user_content.db"),
+        lambda: _check_key_file(CONFIG_DIR / "secret.key"),
+        lambda: _check_key_file(CONFIG_DIR / "secret_v2.key"),
+        _check_audio_devices,
     ]
+    with ThreadPoolExecutor(max_workers=len(check_steps)) as executor:
+        checks = list(executor.map(lambda check: check(), check_steps))
 
     has_failures = False
     for check in checks:
@@ -189,15 +228,34 @@ def run_startup_diagnostics() -> bool:
         if not check.ok:
             has_failures = True
 
+    _log_event(
+        "startup_diagnostics",
+        {
+            "created_at_utc": datetime.now(timezone.utc).isoformat(),
+            "results": [
+                {"name": check.name, "ok": check.ok, "warning": check.warning, "detail": check.detail}
+                for check in checks
+            ],
+            "has_failures": has_failures,
+        },
+    )
+
     return not has_failures
 
 
 def validate_launch_config() -> list[str]:
     errors: list[str] = []
-    for target in TARGETS:
+    targets, validation_error, validate_target = _load_config_validator()
+    if targets is None or validation_error is None or validate_target is None:
+        return [
+            "[launch_config_validation] Validator could not be loaded. "
+            "Fix validator dependencies/imports before launch."
+        ]
+
+    for target in targets:
         try:
             errors.extend(validate_target(target["name"], target["config"], target["schema"]))
-        except ValidationError as exc:
+        except validation_error as exc:  # type: ignore[misc]
             errors.append(f"[{target['name']}] {exc}")
     return errors
 
@@ -373,6 +431,14 @@ def restore_last_known_good_config(snapshot_dir: Path | None = None) -> bool:
         return False
 
     print(f"Restored last-known-good files from {snapshot_dir.name}: {', '.join(restored_files)}")
+    _log_event(
+        "restore_event",
+        {
+            "created_at_utc": datetime.now(timezone.utc).isoformat(),
+            "snapshot": snapshot_dir.name,
+            "restored_files": restored_files,
+        },
+    )
     log_path = _append_event_log(
         "restore_last_known_good",
         {
