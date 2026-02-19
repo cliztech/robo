@@ -39,19 +39,22 @@
   },
   "show_overrides": [
     {
-      "show_id": "morning_show",
-      "mode": "semi_auto"
+      "mode": "semi_auto",
+      "permissions": null,
+      "show_id": "morning_show"
     }
   ],
   "timeslot_overrides": [
     {
+      "mode": "lights_out_overnight",
+      "permissions": null,
       "id": "overnight_weekdays",
       "day_of_week": "monday",
       "start_time": "00:00",
       "end_time": "05:59",
-      "mode": "lights_out_overnight"
+      "show_id": null
     }
   ],
   "conflict_resolution": "timeslot_override > show_override > station_default",
-  "updated_at": "2026-01-01T00:00:00Z"
+  "updated_at": "2026-02-15T05:33:14.109503+00:00"
 }

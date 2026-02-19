@@ -1,10 +1,12 @@
-# Quick chat (Codex needs a git repo!)
+# GEMINI.md
+
+## Quick chat (Codex needs a git repo!)
 
 SCRATCH=$(mktemp -d) && cd $SCRATCH && git init && codex exec "Your prompt here"
 
-# Or in a real project - with PTY
+## Or in a real project - with PTY
 
-bash pty:true workdir:~/Projects/myproject command:"codex exec 'Add error handling to the API calls'"claude# GEMINI.md
+bash pty:true workdir:~/Projects/myproject command:"codex exec 'Add error handling to the API calls'"
 
 This file provides guidance to Gemini (Google AI) and Gemini Code when working with code in this repository.
 
@@ -29,6 +31,10 @@ This repository is the runtime distribution for **DGN-DJ by DGNradio**, an AI-po
 | **Inspect DB** | `python config/inspect_db.py` | Read-only schema inspection |
 | **Validate config** | `python config/validate_config.py` | JSON schema validation |
 | **Check JSON** | `python -m json.tool config/schedules.json` | Quick syntax check |
+
+## BMAD Startup Default
+
+For repository bootstrap behavior, use the canonical BMAD startup policy in [`docs/operations/agent_execution_commands.md`](docs/operations/agent_execution_commands.md#canonical-bmad-startup-policy-codexgeminijules). Do not duplicate or fork the startup snippet in this file.
 
 ## Key Rules
 

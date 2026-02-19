@@ -21,10 +21,30 @@ DEFAULT_TODO_FILES = [
     ROOT / "TODO_v1_1.md",
     ROOT / "FEATURE_HEAVY_ROADMAP_TODO.md",
 ]
+DEFAULT_WORKFLOW_FILES = [
+    ROOT / "MASSIVE_WORKFLOW_BLUEPRINT.md",
+    ROOT / "ROADMAP_AI_RADIO_STATION.md",
+    ROOT / "ROADMAP_SUMMARY.md",
+    ROOT / "docs" / "massive_workflow_blueprint.md",
+    ROOT / "docs" / "parallel_agent_organization_roadmap.md",
+]
 
 HEADER_PATTERN = re.compile(r"^(#{1,6})\s+(.*\S)\s*$")
 TASK_PATTERN = re.compile(r"^\s*[-*]\s+\[\s\]\s+(.*\S)\s*$")
 PHASE_PATTERN = re.compile(r"\bP(\d+)\b", re.IGNORECASE)
+BULLET_PATTERN = re.compile(r"^\s*[-*]\s+(?!\[)(.*\S)\s*$")
+NUMBERED_PATTERN = re.compile(r"^\s*\d+[.)]\s+(.*\S)\s*$")
+ACTION_HEADING_PATTERN = re.compile(
+    r"(workflow|workstream|roadmap|backlog|deliverable|game plan|execution|"
+    r"horizon|release order|todo)",
+    re.IGNORECASE,
+)
+ACTION_TEXT_PATTERN = re.compile(
+    r"^(add|build|create|define|deploy|design|document|enable|implement|"
+    r"introduce|launch|monitor|optimize|publish|run|ship|track|update|"
+    r"validate|verify|write|restore)\b",
+    re.IGNORECASE,
+)
 
 
 @dataclass(frozen=True)
@@ -36,6 +56,17 @@ class OpenTask:
     section: str
     phase: str
     text: str
+
+
+@dataclass(frozen=True)
+class QueueItem:
+    """Queue item from TODO checklists or roadmap/workflow action bullets."""
+
+    source: Path
+    line_number: int
+    section: str
+    text: str
+    kind: str
 
 
 def collect_open_tasks(markdown_path: Path) -> list[OpenTask]:
@@ -75,7 +106,7 @@ def collect_open_tasks(markdown_path: Path) -> list[OpenTask]:
     return open_tasks
 
 
-def render_queue(tasks: list[OpenTask], limit: int) -> str:
+def render_queue(tasks: list[QueueItem], limit: int) -> str:
     """Render the open-task queue with stable ordering and truncation."""
     if not tasks:
         return "No open tasks found in the selected roadmap files."
@@ -88,11 +119,15 @@ def render_queue(tasks: list[OpenTask], limit: int) -> str:
         lines.append(f"Next unfinished phase: {next_phase}")
     lines.append(render_phase_summary(phase_totals))
 
+    lines: list[str] = [
+        f"Open task queue ({min(limit, len(tasks))}/{len(tasks)} shown):"
+    ]
     for index, task in enumerate(tasks[:limit], start=1):
         rel_source = task.source.relative_to(ROOT)
         lines.append(
             f"{index:>2}. [{rel_source}:{task.line_number}] "
             f"{task.phase} | {task.section} -> {task.text}"
+            f"{task.section} ({task.kind}) -> {task.text}"
         )
 
     return "\n".join(lines)
@@ -158,6 +193,15 @@ def parse_args() -> argparse.Namespace:
         help="Specific markdown TODO file to scan (can be passed multiple times).",
     )
     parser.add_argument(
+        "--workflow-file",
+        action="append",
+        default=[],
+        help=(
+            "Specific roadmap/workflow markdown file to scan for unfinished "
+            "action bullets (can be passed multiple times)."
+        ),
+    )
+    parser.add_argument(
         "--limit",
         type=int,
         default=12,
@@ -173,6 +217,11 @@ def parse_args() -> argparse.Namespace:
         type=float,
         default=30.0,
         help="Loop refresh interval in seconds (used with --loop).",
+    )
+    parser.add_argument(
+        "--todos-only",
+        action="store_true",
+        help="Only scan TODO checklist files and skip roadmap/workflow action bullets.",
     )
     return parser.parse_args()
 
@@ -192,13 +241,69 @@ def resolve_files(raw_files: list[str]) -> list[Path]:
     return resolved
 
 
-def run_once(todo_files: list[Path], limit: int) -> int:
-    tasks: list[OpenTask] = []
+def collect_workflow_actions(markdown_path: Path) -> list[QueueItem]:
+    """Collect roadmap/workflow action bullets that look unfinished and actionable."""
+    if not markdown_path.exists():
+        return []
+
+    current_section = "(root)"
+    section_is_actionable = False
+    items: list[QueueItem] = []
+
+    for line_number, raw_line in enumerate(
+        markdown_path.read_text(encoding="utf-8").splitlines(),
+        start=1,
+    ):
+        header_match = HEADER_PATTERN.match(raw_line)
+        if header_match:
+            current_section = header_match.group(2)
+            section_is_actionable = bool(ACTION_HEADING_PATTERN.search(current_section))
+            continue
+
+        match = BULLET_PATTERN.match(raw_line) or NUMBERED_PATTERN.match(raw_line)
+        if not match or not section_is_actionable:
+            continue
+
+        text = match.group(1).strip()
+        normalized = re.sub(r"^\*\*([^*]+)\*\*:?\s*", "", text).strip()
+        if not normalized or not ACTION_TEXT_PATTERN.match(normalized):
+            continue
+
+        items.append(
+            QueueItem(
+                source=markdown_path,
+                line_number=line_number,
+                section=current_section,
+                text=normalized,
+                kind="workflow",
+            )
+        )
+
+    return items
+
+
+def run_once(todo_files: list[Path], workflow_files: list[Path], limit: int) -> int:
+    tasks: list[QueueItem] = []
     missing_files: list[Path] = []
 
     for markdown_path in todo_files:
         if markdown_path.exists():
-            tasks.extend(collect_open_tasks(markdown_path))
+            tasks.extend(
+                QueueItem(
+                    source=task.source,
+                    line_number=task.line_number,
+                    section=task.section,
+                    text=task.text,
+                    kind="todo",
+                )
+                for task in collect_open_tasks(markdown_path)
+            )
+        else:
+            missing_files.append(markdown_path)
+
+    for markdown_path in workflow_files:
+        if markdown_path.exists():
+            tasks.extend(collect_workflow_actions(markdown_path))
         else:
             missing_files.append(markdown_path)
 
@@ -223,17 +328,23 @@ def main() -> int:
         return 2
 
     todo_files = resolve_files(args.file)
-    if not todo_files:
+    workflow_files = []
+    if not args.todos_only:
+        workflow_files = resolve_files(args.workflow_file) if args.workflow_file else [
+            path for path in DEFAULT_WORKFLOW_FILES if path.exists()
+        ]
+
+    if not todo_files and not workflow_files:
         print("error: no roadmap files found to scan", file=sys.stderr)
         return 2
 
     if not args.loop:
-        return run_once(todo_files, limit=args.limit)
+        return run_once(todo_files, workflow_files=workflow_files, limit=args.limit)
 
     try:
         while True:
             print(f"\n=== Roadmap loop tick @ {time.strftime('%Y-%m-%d %H:%M:%S')} ===")
-            run_once(todo_files, limit=args.limit)
+            run_once(todo_files, workflow_files=workflow_files, limit=args.limit)
             time.sleep(args.interval)
     except KeyboardInterrupt:
         print("\nStopped roadmap loop.")

@@ -1,0 +1,578 @@
+(function(w,d,c) {
+	var _mf = function(d, ptn, m, pos) {
+		if( typeof(d)==="undefined" || typeof(ptn)==="undefined" || typeof(m)==="undefined" ) {
+			return "";
+		}
+		var ma = {
+			front: function(){return (d.indexOf(ptn)===0 ? d : "");},
+			back : function(){
+				var p = d.lastIndexOf(ptn);
+				return (p>=0&&p===d.length-ptn.length) ? d : "";
+			},
+			part : function(){return (d.indexOf(ptn)!==-1 ? d : "");},
+			complete: function(){return (d===ptn ? d : "");},
+			mismatch: function(){return (d!==ptn ? d : "");},
+			regex: function() {
+				var re = new RegExp(ptn);
+				var r = d.match(re);
+				if( !r ) {
+					return "";
+				}
+				pos = (typeof(pos)==="undefined") ? 0 : parseInt(pos);
+				pos = isNaN(pos) ? 0 : pos;
+				return (r.length > pos) ? r[pos] : "";
+			}
+		};
+		if( typeof(ma[m])==="undefined" ) {
+			return "";
+		}
+		return ma[m]();
+	};
+	w["__xd_str_compare"] = _mf;
+	var _l = w.location;
+	var _dc = decodeURIComponent;
+	var _url = {
+		setAction: function(m, a, args) {
+			if( typeof(m)==="undefined" || typeof(a)==="undefined" ) {
+				return false;
+			}
+			var funclist = {
+				url: this._url2Action,
+				query: this._query2Action
+			};
+			if( typeof(funclist[m])==="undefined" ) {
+				return false;
+			}
+			args = args || [];
+			if( typeof(args)!=="object" || typeof(args.length)==="undefined" ) {
+				args = [args];
+			}
+			args.unshift(a);
+			var ret = funclist[m].apply(this, args);
+			if( ret && typeof(args[args.length-1])==='function' ) {
+				args[args.length-1]();
+			}
+		},
+		_url2Action: function(a, ptn, m) {
+			if( typeof(a)==="undefined" || typeof(ptn)==="undefined" || typeof(m)==="undefined" ) {
+				return false;
+			}
+			var ret = _mf(_l.href, ptn, ((typeof(m)!=="string") ? "complete" : m)) ? true : false;
+			if( ret ) {
+				__action = a;
+			}
+			return ret;
+		},
+		_query2Action: function(a, k, v, m) {
+			if( typeof(a)==="undefined" || typeof(k)==="undefined" ) {
+				return false;
+			}
+			var p = "[?&]"+k+"=([^&]+)";
+			var ret = false;
+			var _v = _mf(_l.search, p, "regex", 1);
+			if( !_v ) {
+				return false;
+			}
+			ret = _mf(_v, v, (typeof(m)!=="string" ? "complete" : m)) ? true : false;
+			if( ret ) {
+				__action = a;
+			}
+			return ret;
+		},
+		setCustomParameter: function(m, n, args) {
+			if(typeof(m)==="undefined" || typeof(n)==="undefined" || typeof(args)==="undefined") {
+				return false;
+			}
+			var funclist = {
+				directory: this._directory2CP,
+				regex: this._regex2CP,
+				query: this._query2CP
+			};
+			if( typeof(funclist[m])==="undefined" ) {
+				return false;
+			}
+			args = args || [];
+			if( typeof(args)!=="object" || typeof(args.length)==="undefined" ) {
+				args = [args];
+			}
+			args.unshift(n)
+			return funclist[m].apply(this, args);
+		},
+		erase_queryparameter: function(p, k, sf, a) {
+			if( !p ) {
+				return;
+			}
+			var rg = new RegExp('[\?&]'+p+'=([^&]+)');
+			var m = _l.search.match(rg);
+			if( !m ) {
+				return;
+			}
+			var href = _l.href;
+
+			var ar = new RegExp('#.+$');
+			var am = href.match(ar);
+			var anker = (am ? am[0] : "");
+			href = href.replace(ar,"");
+
+			var rb = RegExp('openExternalBrowser=1&|[\?&]openExternalBrowser=1$');
+			var rl = RegExp(p+'=[^&]+&|[\?&]'+p+'=[^&]+$');
+			href = href.replace(rb,"");
+			href = href.replace(rl,"");
+			href += anker;
+			if( typeof(__custom_param.view_url) !== "undefined" ) {
+				var vu = __custom_param.view_url;
+
+				var vuam = vu.match(ar);
+				var vua = (vuam ? vuam[0] : "");
+				vu = vu.replace(ar,"");
+
+				vu = vu.replace(rb,"");
+				vu = vu.replace(rl,"");
+				__custom_param.view_url = vu + vua;
+			}
+			switch((k||"")) {
+			case "line_id":
+				__custom_param[p] = m[1];
+				break;
+			case "customer_id":
+				if (!m[1].match(/^___.+___$/)) {
+					__cltId = m[1];
+					if( typeof(__mhtsc)==="object" ) {
+						__mhtsc.set("cltId",__cltId);
+					}
+				}
+				break;
+			case "session_id":
+				__reuse_session_id = m[1];
+				break;
+            case "mail_hash":
+                __xhm_mh = m[1];
+                var _idx = 0;
+                var _smh = function() {
+                    if( typeof(__mhtsc)==="object" ) {
+                        __mhtsc.set("mh",__xhm_mh);
+                    } else if( ++_idx < 10 ) {
+                        setTimeout(_smh,300);
+                    }
+                };
+                _smh();
+                break;
+			}
+			if( typeof(w.history.replaceState) === "function" ) {
+				w.history.replaceState(null, null, href);
+			}
+			if( sf == 1 ) {
+				var oa = __action;
+				if( a ) {
+					__action = a;
+				}
+				_send.pv();
+				__action = oa;
+			}
+		},
+		_directory2CP: function(prm, pos, ptn) {
+			if( typeof(prm)==="undefined" || typeof(pos)==="undefined" ) {
+				return false;
+			}
+			if( typeof(ptn)!=="undefined" ) {
+				if( !_mf(_l.href, ptn, "regex") ) {
+					return false;
+				}
+			}
+			pos = parseInt(pos);
+			if( isNaN(pos) || pos<1 ) {
+				return false;
+			}
+			var h = _l.pathname.substring(1).split("/");
+			if( typeof(h[pos-1])!=="undefined" && h[pos-1]) {
+				__custom_param = __custom_param||{};
+				__custom_param[prm] = _dc(h[pos-1]);
+				return true;
+			}
+			return false;
+		},
+		_regex2CP: function(prm, ptn, pos) {
+			if( typeof(ptn)==="undefined" || typeof(prm)==="undefined") {
+				return false;
+			}
+			var v = _mf(_l.href, ptn, "regex", pos);
+			if( v ) {
+				__custom_param = __custom_param||{};
+				__custom_param[prm] = _dc(v);
+				return true;
+			}
+			return false;
+		},
+		_query2CP: function(prm, k) {
+			if( typeof(prm)==="undefined" || typeof(k)==="undefined" ) {
+				return false;
+			}
+			var v = _mf(_l.search, "[?&]"+k+"=([^&]+)", "regex", 1);
+			if( v ) {
+				__custom_param = __custom_param||{};
+				__custom_param[prm] = _dc(v);
+				return true;
+			}
+			return false;
+		}
+	};
+	var _cookie = {
+		setCustomParameter: function(cn, prm, ptn, pos) {
+			if( typeof(prm)==="undefined" ) {
+				return;
+			}
+			var v = this.__get(cn,ptn,pos);
+			if( v ) {
+				__custom_param = __custom_param||{};
+				__custom_param[prm] = _dc(v);
+			}
+		},
+		setClientId: function(cn, ptn, pos) {
+			var v = this.__get(cn,ptn,pos);
+			if( v ) {
+				__cltId = v;
+				if( typeof(__mhtsc)=="object" && typeof(__mhtsc.set)==="function" ) {
+					__mhtsc.set("cltId",__cltId);
+				}
+			}
+		},
+		setSessionId: function(cn, ptn, pos) {
+			var v = this.__get(cn,ptn,pos);
+			if( v ) {
+				__reuse_session_id = v;
+			}
+		},
+		__get: function(cn, ptn, pos) {
+			if( typeof(cn)==="undefined" ) {
+				return "";
+			}
+			var cv = _mf(d.cookie, (cn+'=([^;]+);'), 'regex', 1);
+			if( !cv ) {
+				return "";
+			}
+			cv = _dc(cv);
+			var v = ((typeof(ptn)!=="undefined" && typeof(pos)!=="undefined")
+				      ? _mf(cv, ptn, 'regex', pos) : cv);
+			return (v ? _dc(v) : "");
+		}
+	};
+	var _action_handler = {
+		list: {},
+		set: function(a, f, args) {
+			if( typeof(a)==="undefined" || typeof(f)!=="function" ) {
+				return;
+			}
+			var s = _action_handler;
+			s.list[a] = {"f": f, "a": args||[]};
+		},
+		execute: function() {
+			var s = _action_handler;
+			if( typeof(__action)==="undefined" || !__action ||
+			    typeof(s.list[__action])==="undefined" ) {
+				return;
+			}
+			s.list[__action].f.apply(s, s.list[__action].a);
+		}
+	};
+	var _login = {
+		cn : 'xdLoginStatus',
+		customerId : '__cltId',
+		domain: "",
+		expire: -1,
+		notify: function(f,d) {
+			w[this.customerId]=(w[this.customerId]||'');
+			var _cid = w[this.customerId];
+			if( !this.status() ) {
+				var oa = __action;
+				this.login();
+				if( _cid !== '' ) {
+					if( typeof(__mhtsc) === 'object' ) {
+						__mhtsc.set('cltId', _cid);
+					} else {
+						(w.__custom_param||{}).ktr_cltid = _cid;
+					}
+				}
+				if( typeof(f) !== "undefined" && f == 1 ) {
+					__action = "login";
+					__push_beacon(__getURL(),d);
+					__action = oa;
+				}
+			}
+		},
+		login: function() {
+			if( !w.__action ) {
+				w.__action = 'login';
+			}
+			var cs = this.cn + '=1; path=/; ';
+			if( this.expire > 0 ) {
+				cs += "expires="+(new Date((new Date()).getTime()+(this.expire*1000))).toGMTString()+"; ";
+			}
+			if( this.domain !== "" ) {
+				cs += "domain="+this.domain+"; ";
+			}
+			d.cookie = cs;
+		},
+		logout: function() {
+			d.cookie = this.cn + '=1; path=/; expires=' + (new Date(0)).toGMTString() + '; ';
+		},
+		status: function() {
+			return (d.cookie.indexOf(this.cn)>=0 ? true : false);
+		},
+		__pb: null,
+		noticeLoginOnly: function() {
+			var self = this;
+			if( typeof(__push_beacon) !== 'function' || typeof(__getURL) !== 'function' ||
+			    typeof(self.__pb) === 'function' ) {
+				return;
+			}
+			self.__pb = __push_beacon;
+			__push_beacon = function(u, d) {
+				if( self.status() ) {
+					self.__pb(u||__getURL(), d);
+				}
+			};
+		}
+	};
+	var _send = {
+		onload: false,
+		waiting: 0,
+		filter: {
+			url: [],
+			enable: function() {
+				var self = _send.filter;
+				if( self.url.length === 0 ) {
+					return;
+				}
+				var _cu = _l.protocol + '//' + _l.hostname + _l.pathname
+				        + ((typeof(_l.search) !== 'undefined' && _l.search !== '') ? ("?" + _l.search) : '');
+				for(var i=0; i<self.url.length; i++) {
+					if( _cu.indexOf(self.url[i]) >= 0 ) {
+						__push_beacon = function(u,d) { return; };
+						__push_event  = function(c,e,d) { return; };
+						return;
+					}
+				}
+			}
+		},
+		pv : function(u, d) {
+			if( typeof(__push_beacon) !== "function" || typeof(__getURL) !== "function" ) {
+				return;
+			}
+			__push_beacon((u||__getURL()),d);
+		},
+		event : function(en, cn, d) {
+			if( typeof(__push_event) !== "function" || typeof(__getURL) !== "function" ||
+			    typeof(en) === "undefined" ) {
+				return;
+			}
+			__callurl = (__callurl||__getURL());
+			__push_event(en, cn, d);
+		},
+		load : function(p, t) {
+			if( !this.onload || this.waiting > 0 ) {
+				return;
+			}
+			var f = ((t||'page')==='event') ? this.event : this.pv;
+			__no_init = 2;
+			this.onload = false;
+			f.apply(this, p);
+		}
+	};
+    var mail1to1_landing_notify = function() {
+        var qs = _l.search;
+        if (!qs.match(/[\?&]action=mail1to1_landing(&|$)/)) {
+           return;
+        }
+        var _n = function() {
+            var cp = ["mail1to1_id","sender_hash","ktr_cltid"];
+            for (var i=0;i<cp.length;i++) {
+                var r = new RegExp('[\?&]'+cp[i]+'=([^&]+)');
+                var m = qs.match(r);
+                if (!m) {
+                    return;
+                }
+                __custom_param[cp[i]] = m[1];
+            }
+            if (__custom_param.ktr_cltid) {
+                if (typeof(__mhtsc) === 'object') {
+                    __mhtsc.set('cltId', __custom_param.ktr_cltid);
+                } else {
+                    w.__cltId = __custom_param.ktr_cltid;
+                }
+            }
+            var oa = __action;
+            __action = "mail1to1_landing";
+            _send.pv();
+            __action = oa;
+            for (var i=0;i<cp.length;i++) {
+                delete __custom_param[cp[i]];
+            }
+        };
+        if (d.readyState == "complete") {
+            _n();
+        } else {
+            if (w.addEventListener) {
+                w.addEventListener("load",_n);
+            } else {
+                w.attachEvent("onloas",_n);
+            }
+        }
+    };
+
+	var _pn = w['__xd_plugin_object'];
+	if( typeof(_pn)==='undefined' || typeof(w[_pn])==='undefined' ) {
+		return;
+	}
+
+	var ql = {
+		xd_url: {src: "_url", list: [], std: 1, obj: _url},
+		xd_cookie: {src: "_cookie", list: [], std: 1, obj: _cookie},
+		xd_action_handler: {src: "_action_handler", list: [], std: 1, obj: _action_handler},
+		xd_login: {src: "_login", list: [], std: 1, obj: _login},
+		xd_send: {src: "_send", list: [], std: 1, obj: _send}
+	};
+	var append = function(q) {
+		if(typeof(q)!=='object' || typeof(q.length)==='undefined') {
+			return;
+		}
+		if(q[0]==='require') {
+			(ql[q[1]]=ql[q[1]]||{}).src = q[1];
+		}
+		else {
+			var pt = q[0].split(":");
+			if(pt.length!=2) {
+				return;
+			}
+			((ql[pt[0]]=ql[pt[0]]||{}).list=ql[pt[0]].list||[]).push(q);
+		}
+	};
+	var load = function(src) {
+		if(typeof(src)==='undefined' || typeof(c)==='undefined') {
+			return;
+		}
+
+		_send.waiting++;
+		var _ie = function() {
+			if( typeof(ql[src])!=='object' ) {
+				return;
+			}
+			ql[src].list=(ql[src].list||[]);
+			for(var i=0;i<ql[src].list.length; i++) {
+				execute(ql[src].list[i]);
+			}
+			ql[src].list = [];
+			_send.waiting--;
+			_send.load();
+		};
+
+		var e = d.createElement('script');
+		var t = d.getElementsByTagName('script')[0];
+		e.type = 'text/javascript';
+		e.src = (('https:'==d.location.protocol) ? 'https' : 'http')+'://'+c+'/'+src+'.js';
+		if( e.addEventListener ) {
+			e.addEventListener("load",_ie)
+		} else {;
+			e.onreadystatechange = function() {
+				if( e.readyState=="loaded"||e.readyState=="complete" ) {
+					_ie(src);
+				}
+			};
+		}
+		t.parentNode.insertBefore(e,t);
+	};
+	var execute = function(list) {
+		if( typeof(list)!=='object' || typeof(list.length)=== 'undefined') {
+			return;
+		}
+		var a = list[0].split(":");
+		if(a.length !== 2) {
+			return;
+		}
+		if( typeof(ql[a[0]]) !== "object" ) {
+			return;
+		}
+		var o = ql[a[0]].obj||w[a[0]];
+		if(typeof(o)==='undefined' ) {
+			append(list);
+			return;
+		}
+
+		var args = [];
+		for(var i=1; i<list.length; i++) {
+			args.push(list[i]);
+		}
+
+		var _cf = o;
+		var _po = o;
+		var _a = a[1].split(".");
+		var idx = 0;
+		for(idx=0;idx<_a.length;idx++) {
+			_po = _cf;
+			_cf = _cf[_a[idx]];
+			if( typeof(_cf) === 'undefined' ) {
+				return;
+			}
+		}
+		if(typeof(_cf)==='function') {
+			var fa = (typeof(list[1])==='object'&&typeof(list[1].length)!=='undefined') ? list[1] : [list[1]];
+			return _cf.apply(o,fa);
+		}
+		else {
+			if( typeof(list[1])!=='undefined' ) {
+				_po[_a[idx-1]] = list[1];
+			}
+		}
+	};
+
+    mail1to1_landing_notify();
+
+	if(typeof(w[_pn].req)==='object' && typeof(w[_pn].req.length)!=='undefined' ) {
+		for(var i=0;i<w[_pn].req.length;i++) {
+			append(w[_pn].req[i]);
+		}
+	}
+
+	w[_pn] = function(t, v) {
+		if( typeof(t)==="undefined" ) {
+			return;
+		}
+		if( t==="require" ) {
+			if(typeof(ql[v])==='object' && typeof(ql[v].src)!=='undefined') {
+				return;
+			}
+			append([t,v]);
+			load(v);
+		}
+		else {
+			execute([t,v]);
+		}
+	};
+	
+	for(var k in ql) {
+		if( !ql.hasOwnProperty(k) ) {
+			continue;
+		}
+		if( (typeof(ql[k].std)!=="undefined" && ql[k].std===1) ||
+		    (typeof(ql[k].src)==="undefined" && typeof(ql[k].list)==="object") ) {
+			if( k==="xd_action_handler" ) {
+				continue;
+			}
+			var cnt = ql[k].list.length;
+			for(var i=0;i<cnt; i++) {
+				execute(ql[k].list[i]);
+			}
+			ql[k].list = [];
+		}
+		else {
+			load(ql[k].src);
+		}
+	}
+	var ah = ql.xd_action_handler;
+	for(var i=0; i<ah.list.length; i++) {
+		execute(ah.list[i]);
+	}
+	ah.list = [];
+
+	_send.load();
+})(window,document,__call_domain);
+
