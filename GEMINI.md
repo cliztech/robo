@@ -32,6 +32,10 @@ This repository is the runtime distribution for **DGN-DJ by DGNradio**, an AI-po
 | **Validate config** | `python config/validate_config.py` | JSON schema validation |
 | **Check JSON** | `python -m json.tool config/schedules.json` | Quick syntax check |
 
+## BMAD Startup Default
+
+For repository bootstrap behavior, use the canonical BMAD startup policy in [`docs/operations/agent_execution_commands.md`](docs/operations/agent_execution_commands.md#canonical-bmad-startup-policy-codexgeminijules). Do not duplicate or fork the startup snippet in this file.
+
 ## Key Rules
 
 1. **Read `AGENTS.md` first** — it defines the multi-agent pipeline, boundaries, agent teams, and coding style.
