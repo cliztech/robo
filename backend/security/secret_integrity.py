@@ -55,6 +55,12 @@ class SecretCheckResult:
         return not self.alerts
 
 
+def _is_truthy(value: str | None) -> bool:
+    if value is None:
+        return False
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
 
 def _load_from_file(file_name: str) -> str | None:
     file_path = CONFIG_DIR / file_name
@@ -78,23 +84,35 @@ def run_secret_integrity_checks(
     env: Mapping[str, str] | None = None,
     *,
     now: datetime | None = None,
+    allow_file_fallback: bool | None = None,
 ) -> SecretCheckResult:
     source_env = env if env is not None else os.environ
     current_time = now.astimezone(timezone.utc) if now else datetime.now(timezone.utc)
     alerts: list[str] = []
+    allow_file_fallback = (
+        _is_truthy(source_env.get("ROBODJ_ALLOW_FILE_SECRET_FALLBACK"))
+        if allow_file_fallback is None
+        else allow_file_fallback
+    )
 
     for spec in SECRET_SPECS:
         value = source_env.get(spec["env_var"])
         source = "environment"
 
-        if not value:
+        if not value and allow_file_fallback:
             value = _load_from_file(spec["file_name"])
             source = f"file:{spec['file_name']}"
 
         if not value:
-            alerts.append(
-                f"ALERT: Missing {spec['name']}. Set {spec['env_var']} (preferred) or provision config/{spec['file_name']}."
-            )
+            if allow_file_fallback:
+                alerts.append(
+                    f"ALERT: Missing {spec['name']}. Set {spec['env_var']} (preferred) or provision config/{spec['file_name']}."
+                )
+            else:
+                alerts.append(
+                    f"ALERT: Missing {spec['name']}. Set {spec['env_var']} in the environment. "
+                    "File fallback is disabled unless ROBODJ_ALLOW_FILE_SECRET_FALLBACK=true."
+                )
             continue
 
         if value in spec["placeholder_values"]:

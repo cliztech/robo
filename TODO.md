@@ -34,7 +34,7 @@ Use the roadmap helper to continuously surface the next open tasks while you wor
 
 ## P2 — UX & Operator Experience
 
-- [ ] Build stage timeline UI (Intake → Plan → Execute → Verify → Handoff).
+- [x] Build stage timeline UI (Intake → Plan → Execute → Verify → Handoff).
 - [ ] Add human-in-the-loop checkpoints for high-impact decisions.
 - [ ] Add task route templates (QA / Change / Proposal).
 - [ ] Add one-click rollback assistant for config-level changes.

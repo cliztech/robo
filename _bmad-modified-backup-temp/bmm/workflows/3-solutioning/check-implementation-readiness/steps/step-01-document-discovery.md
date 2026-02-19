@@ -52,7 +52,7 @@ To discover, inventory, and organize all project documents, identifying duplicat
 
 I will:
 
-1. Search for all required documents (PRD, Architecture, Epics, UX)
+1. Search for all required documents (PRD, Architecture, Epics, UX, Research Traceability Matrix)
 2. Group sharded documents together
 3. Identify any duplicates (whole + sharded versions)
 4. Present findings for your confirmation"
@@ -80,6 +80,10 @@ Search for each document type using these patterns:
 
 - Whole: `{planning_artifacts}/*ux*.md`
 - Sharded: `{planning_artifacts}/*ux*/index.md` and related files
+
+#### E. Research Traceability Matrix (REQUIRED)
+
+- Required file: `{project-root}/docs/exec-plans/active/research_traceability_matrix.md`
 
 ### 3. Organize Findings
 
@@ -120,6 +124,17 @@ If required documents not found:
 - Will impact assessment completeness
 ```
 
+#### Missing Research Traceability Matrix (CRITICAL)
+
+If `docs/exec-plans/active/research_traceability_matrix.md` is not found:
+
+```
+⚠️ CRITICAL ISSUE: Research traceability matrix is required
+- Missing required input: docs/exec-plans/active/research_traceability_matrix.md
+- check-implementation-readiness cannot continue without validated research-to-story traceability
+- Create/update the matrix before proceeding
+```
+
 ### 5. Add Initial Report Section
 
 Initialize {outputFile} with {templateFile}.
@@ -139,6 +154,7 @@ Display findings and ask:
 **Required Actions:**
 
 - If duplicates exist: Please remove/rename one version
+- If research traceability matrix is missing: create `docs/exec-plans/active/research_traceability_matrix.md`
 - Confirm which documents to use for assessment
 
 **Ready to proceed?** [C] Continue after resolving issues"
@@ -157,6 +173,7 @@ Display: **Select an Option:** [C] Continue to File Validation
 #### Menu Handling Logic:
 
 - IF C: Save document inventory to {outputFile}, update frontmatter with completed step and files being included, and then read fully and follow: {nextStepFile}
+- IF C with missing research traceability matrix: BLOCK and request matrix creation before proceeding
 - IF Any other comments or queries: help user respond then redisplay menu
 
 ## CRITICAL STEP COMPLETION NOTE
@@ -172,12 +189,14 @@ ONLY WHEN C is selected and document inventory is saved will you load {nextStepF
 - All document types searched systematically
 - Files organized and inventoried clearly
 - Duplicates identified and flagged for resolution
+- Research traceability matrix found and included as required input
 - User confirmed file selections
 
 ### ❌ SYSTEM FAILURE:
 
 - Not searching all document types
 - Ignoring duplicate document conflicts
+- Proceeding without required research traceability matrix
 - Proceeding without resolving critical issues
 - Not saving document inventory
 
