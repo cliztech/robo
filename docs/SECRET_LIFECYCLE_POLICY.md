@@ -3,9 +3,14 @@
 ## Purpose
 This policy defines how RoboDJ runtime secrets are generated, stored, rotated, revoked, and handled during incidents.
 
+For environment-specific variable requirements and fallback allowances, see [CODEX Environment Contract](CODEX_ENVIRONMENT_CONTRACT.md).
+
 ## In-Scope Secrets
 - `secret.key` equivalent runtime value (`ROBODJ_SECRET_KEY`)
 - `secret_v2.key` equivalent runtime value (`ROBODJ_SECRET_V2_KEY`)
+
+For Codex/operator environment requirements (required vars, optional expiry metadata, source priority, validation command, and redaction handling), see the [Codex Environment Contract](operations/codex_environment_contract.md).
+For Codex/operator environment requirements (required vars, optional expiry metadata, source priority, validation command, and redaction handling), see [docs/operations/codex_environment_contract.md](operations/codex_environment_contract.md).
 
 Examples/templates are versioned as:
 - `config/secret.key.example`
@@ -71,6 +76,9 @@ Alerting behavior:
 
 ## 7) Pre-Release Secret Gate
 Before release/deployment, run:
+- `python config/check_runtime_env.py --context desktop_app --context docker_stack --context ci`
 - `python config/check_runtime_secrets.py --require-env-only`
 
-This check verifies required keys are present and valid in runtime environment without printing secret material.
+The environment contract check validates required **non-secret** runtime variables and format constraints from `config/env_contract.json`.
+
+The secret integrity check verifies required keys are present and valid in runtime environment without printing secret material.

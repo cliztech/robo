@@ -1,10 +1,72 @@
 # Radio Operator UI Delivery Plan (Functional, Not Mockup-Only)
 
-Status: Proposed
+Status: Prototype complete; Hardening in progress (Phase 4)
 Owner: Design + DevOps + QA + AI Improvement + Management
 Primary reference style: user-provided DJ/radio console mockups (dark, high-density, deck-centric)
 
+## Reference Inputs
+
+- Visual asset catalog index: [`docs/ui/reference-catalog/virtual-dj/README.md`](./reference-catalog/virtual-dj/README.md)
+- Asset-by-asset scoring: [`docs/ui/reference-catalog/virtual-dj/catalog.csv`](./reference-catalog/virtual-dj/catalog.csv)
+Reference index: `docs/ui/virtual_dj_reference_index.md`.
+
+
+## Progress Summary (2026-02-16)
+
+Canonical status labels (use exactly): **Not Started / In Progress / Blocked / Done**.
+
+| Phase | Status | Notes |
+| --- | --- | --- |
+| Phase 0 — Foundations | In Progress | IA/component taxonomy and tokenization planning documented; awaiting approval to lock execution scope. |
+| Phase 1 — Console Core (Functional) | Not Started | Implementation backlog defined but not opened for build execution. |
+| Phase 2 — Browser + Queue + Scheduler Integration | Not Started | Dependencies on Phase 1 contracts and API mapping remain open. |
+| Phase 3 — FX/Sampler + Routing + Diagnostics | Not Started | Requires validated control surface contracts and fallback policy hooks. |
+| Phase 4 — Hardening + Release Readiness | Not Started | QA/perf/accessibility hardening starts only after functional surfaces are implemented. |
+
+### Phase Ownership (Accountable Team/Agent)
+
+| Phase | Accountable team | Accountable agent |
+| --- | --- | --- |
+| Phase 0 — Foundations | Design Team | UI/UX Agent |
+| Phase 1 — Console Core (Functional) | DevOps Team | CI/CD Pipeline Agent |
+| Phase 2 — Browser + Queue + Scheduler Integration | DevOps Team | Infrastructure Agent |
+| Phase 3 — FX/Sampler + Routing + Diagnostics | QA Team | Test Generator Agent |
+| Phase 4 — Hardening + Release Readiness | Management Team | Release Manager Agent |
+
+### Completion Evidence (Checked Items)
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| Delivery plan charter and phased structure published | ✅ Done | #radio-operator-ui-delivery-plan-functional-not-mockup-only |
+| Cross-team responsibilities documented | ✅ Done | #7-agent-team-plan-who-does-what |
+
+### Current Risks/Blockers
+
+- Blocked on formal phase approval and sprint assignment from Management before moving from planning artifacts to implementation tickets.
+- API/state contract ownership is listed, but module-level endpoint mapping is still pending and can delay Phase 1 start.
+
+**Next milestone date:** 2026-02-23 (Phase 0 sign-off + implementation backlog approval)
+
 ## 1) Outcome
+
+## 1.1) Current implementation snapshot
+
+The operator UI is already partially implemented in `src/app/page.tsx` and the audio component set in `src/components/audio/`, with scheduling context from `src/components/schedule/DegenScheduleTimeline.tsx`.
+
+Completed modules:
+- `DegenWaveform`
+- `DegenMixer`
+- `DegenTransport`
+- `DegenTrackList`
+- `DegenScheduleTimeline`
+- Supporting modules in current console: `DegenEffectRack`, `DegenBeatGrid`
+
+Remaining hardening tasks:
+- Replace simulated/randomized UI telemetry with backend/audio-engine streams.
+- Strengthen keyboard-first and screen-reader behavior across all deck and mixer controls.
+- Add deterministic coverage for transport, browser filtering/loading, and timeline interactions.
+- Complete reliability behavior for reconnect, stale state, and fallback visualization flows.
+- Validate sustained performance for concurrent waveform, meters, and table updates.
 
 Design and implement **fully operational** operator interfaces (not static images) for the DGN-DJ radio platform by translating the visual language of the provided mockups into a production-ready interaction system.
 
@@ -182,6 +244,7 @@ From `SKILLS.md`, recommended stack:
 ## 9) Phased Delivery Plan (From Spec to Working UI)
 
 ### Phase 0 — Foundations
+State: Complete
 - Finalize IA + component taxonomy
 - Lock design tokens and contrast profiles
 - Define keyboard command map and ARIA landmarks
@@ -190,30 +253,44 @@ Exit criteria:
 - Approved spec package with acceptance criteria per module
 
 ### Phase 1 — Console Core (Functional)
+State: Prototype complete
 - Implement deck, waveform, transport, mixer, meter bridge
 - Integrate live state feeds (read + control)
 - Add fail-safe indicators and transport confirmations
+- Add B1.1/B1.2 MVP workflow header: stage timeline + high-risk human checkpoint card in the main console view
+- Implement reference-catalog requirements from `docs/ui/reference-catalog/virtual-dj/video-notes.md`: `REQ-VDJ-TRN-01`, `REQ-VDJ-CTL-01`, `REQ-VDJ-WFM-01`, `REQ-VDJ-STAT-01`, `REQ-VDJ-STAT-02`
 
 Exit criteria:
 - End-to-end control of A/B playout in dev/staging with deterministic state sync
 
+#### B1.1/B1.2 MVP UX definition (Phase 1 gate)
+- Timeline stages must match orchestration stages in `docs/conversation_orchestrator_spec.md`: Intake, Plan, Execute, Verify, Handoff.
+- Checkpoint triggers must map to escalation points defined in `docs/operations/subagent_execution_playbook.md`.
+- The operator must be able to identify stage, risk, and next action without changing views.
+- Checkpoint actions required in MVP: Approve, Request changes, Rollback, with explicit confirmation and rationale capture for non-approve paths.
+
 ### Phase 2 — Browser + Queue + Scheduler Integration
+State: Prototype complete
 - Implement media browser and queue operations
 - Integrate scheduler overlay and conflict handling
 - Add now/next and break-window intelligence
+- Implement reference-catalog requirements from `docs/ui/reference-catalog/virtual-dj/video-notes.md`: `REQ-VDJ-CTL-01`, `REQ-VDJ-PNL-01`, `REQ-VDJ-STAT-01`
 
 Exit criteria:
 - Operator can run a full hour with mixed manual and automated transitions
 
 ### Phase 3 — FX/Sampler + Routing + Diagnostics
+State: In progress
 - Add FX/sampler module with safety locks and reset semantics
 - Add routing/device settings with apply/test/rollback
 - Integrate diagnostics command center
+- Implement reference-catalog requirements from `docs/ui/reference-catalog/virtual-dj/video-notes.md`: `REQ-VDJ-TRN-01`, `REQ-VDJ-CTL-01`, `REQ-VDJ-PNL-01`, `REQ-VDJ-STAT-01`
 
 Exit criteria:
 - Failure drills pass (routing change rollback, stream fallback, incident mode)
 
 ### Phase 4 — Hardening + Release Readiness
+State: Hardening in progress
 - Performance tuning for real-time visual updates
 - Accessibility and keyboard completion
 - Full QA regression, release checklist, and operator training aids
@@ -221,13 +298,21 @@ Exit criteria:
 Exit criteria:
 - Release candidate passes all quality gates in `PRE_RELEASE_CHECKLIST.md`
 
+Quality readiness exit criteria:
+- 100% pass rate for defined on-air operator regression scenarios in CI.
+- P95 transport and cue interaction latency <100ms in staging.
+- Zero unresolved blocker/critical defects and zero critical accessibility issues.
+- Keyboard-only completion rate ≥95% for deck, queue, and scheduler workflows.
+- 55+ FPS sustained in composite operator view during active meter + waveform updates.
+
 ## 10) Verification and Quality Gates
 
 Mandatory verification before production rollout:
 - Functional checks: transport control, queue ordering, scheduler sync, routing apply/rollback
 - Reliability checks: fallback behavior, reconnect logic, stale state detection
-- UX checks: keyboard-only operation, focus order, reduced-motion compatibility
+- UX checks: keyboard-only operation, deterministic focus order (top strip → deck and mixer canvas → context rail → bottom workspace), reduced-motion compatibility
 - Accessibility checks: contrast and screen-reader labels for critical controls
+- Keyboard shortcut checks: document and verify seek controls (`Left/Right`, `Shift+Left/Right`, `Home`, `End`), cue-point jump actions, and on-air/alert toggle announcements
 - Performance checks: waveform + meters + table scrolling under load
 
 ## 11) Immediate Next Actions (Execution Starter)
