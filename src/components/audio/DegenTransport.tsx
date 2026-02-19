@@ -115,7 +115,7 @@ export function DegenTransport({
                     onClick={() => setShuffle(!shuffle)}
                     className={cn(
                         'p-1.5 rounded transition-all',
-                        shuffle ? 'text-[hsl(var(--color-deck-a))]' : 'text-zinc-600 hover:text-zinc-300'
+                        shuffle ? 'text-deck-a' : 'text-zinc-600 hover:text-zinc-300'
                     )}
                 >
                     <Shuffle size={12} />
