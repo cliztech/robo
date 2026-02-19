@@ -132,7 +132,24 @@ function StatCard({
             <div className="relative z-10 mt-3 h-6">
                 <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="w-full h-full">
                     <defs>
-                        <linearGradient id={`spark-fill-${label}`} x1="0" y1="0" x2="0" y2="1">
+                        const sparkId = React.useId();
+                        return (
+                            <linearGradient id={sparkId} x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor={c.spark} stopOpacity="0.15" />
+                                <stop offset="100%" stopColor={c.spark} stopOpacity="0" />
+                            </linearGradient>
+                        );
+                    })()}
+                </defs>
+                <path
+                    d={`M 0 30 ${(sparkline || defaultSparkline)
+                        .map(
+                            (v, i, arr) =>
+                                `L ${(i / (arr.length - 1)) * 100} ${30 - (v / 100) * 28}`
+                        )
+                        .join(' ')} L 100 30 Z`}
+                    fill={`url(#${sparkId})`}
+                />
                             <stop offset="0%" stopColor={c.spark} stopOpacity="0.15" />
                             <stop offset="100%" stopColor={c.spark} stopOpacity="0" />
                         </linearGradient>
