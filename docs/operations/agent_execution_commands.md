@@ -16,6 +16,16 @@ Use this as the single startup snippet for repository-level agent bootstrap inst
 - [ ] Given request X, expected BMAD command Y is selected.
 - [ ] If no match exists, fallback path is used.
 
+### Slash-command normalization
+
+When users issue short slash commands (for example, `/bmad build`) that are not literal entries in `_bmad/_config/bmad-help.csv`, normalize to the closest canonical BMAD command before execution.
+
+| Incoming slash command | Canonical BMAD command | Rationale |
+| --- | --- | --- |
+| `/bmad build` | `bmad-bmm-quick-dev` | Implies immediate implementation/delivery intent in a one-off flow. |
+
+If no safe mapping is obvious, run `bmad-help` behavior and present nearest valid commands from `_bmad/_config/bmad-help.csv`.
+
 ## 0) Fast start and repository sanity checks
 
 ```bash
