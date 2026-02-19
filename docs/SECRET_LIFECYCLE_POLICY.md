@@ -9,6 +9,7 @@ For environment-specific variable requirements and fallback allowances, see [COD
 - `secret.key` equivalent runtime value (`ROBODJ_SECRET_KEY`)
 - `secret_v2.key` equivalent runtime value (`ROBODJ_SECRET_V2_KEY`)
 
+For Codex/operator environment requirements (required vars, optional expiry metadata, source priority, validation command, and redaction handling), see the [Codex Environment Contract](operations/codex_environment_contract.md).
 For Codex/operator environment requirements (required vars, optional expiry metadata, source priority, validation command, and redaction handling), see [docs/operations/codex_environment_contract.md](operations/codex_environment_contract.md).
 
 Examples/templates are versioned as:
