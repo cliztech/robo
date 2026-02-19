@@ -354,7 +354,7 @@ export function DegenMixer({ channels = DEFAULT_CHANNELS, className }: DegenMixe
                             <div className="absolute inset-x-1.5 top-[7px] h-[1px] bg-white/20" />
                         </div>
                     </div>
-                    <span className="text-[9px] font-black text-[hsl(var(--color-deck-b))] w-3 text-right">B</span>
+                    <span className="text-[9px] font-black text-deck-b w-3 text-right">B</span>
                 </div>
             </div>
         </div>
