@@ -10,9 +10,26 @@ const ICE_HOST = process.env.ICECAST_HOST ?? "icecast";
 const ICE_PORT = Number(process.env.ICECAST_PORT ?? 8000);
 const ICE_MOUNT = process.env.ICECAST_MOUNT ?? "/stream";
 const ICE_USER = process.env.ICECAST_USER ?? "source";
-const ICE_PASS = process.env.ICECAST_PASS ?? "hackme";
+const ICE_PASS = process.env.ICECAST_PASS ?? "__SET_IN_ENV__";
+
+const INVALID_CREDENTIAL_PLACEHOLDERS = new Set([
+  "",
+  "__SET_IN_ENV__",
+  "hackme",
+  "changeme",
+]);
+
+function assertValidCredential(name: string, value: string): void {
+  if (INVALID_CREDENTIAL_PLACEHOLDERS.has(value.trim().toLowerCase())) {
+    throw new Error(
+      `Invalid ${name}: set a real value in your environment before starting streaming-gateway.`,
+    );
+  }
+}
 
 async function main() {
+  assertValidCredential("ICECAST_PASS", ICE_PASS);
+
   const bus = await createBus(NATS_URL);
 
   const url = icecastUrl({

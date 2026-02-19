@@ -28,3 +28,12 @@ Generates a text milestone report from the machine-readable workflow program JSO
 python config/scripts/workflow_program_builder.py
 python config/scripts/workflow_program_builder.py --out config/custom_workflow_report.txt
 ```
+
+## `validate_image_assets.py`
+Validates top-level curated media files in `images/` against naming and dedupe policy.
+
+### Usage
+```bash
+python config/scripts/validate_image_assets.py
+python config/scripts/validate_image_assets.py --images-dir images
+```

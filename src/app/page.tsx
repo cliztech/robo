@@ -1,6 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useAudioEngine } from '../hooks/useAudioEngine';
+import { createDJTelemetry, type DJTelemetry } from '../lib/audio/telemetry';
+import { createMockTelemetry } from '../lib/audio/mockTelemetry';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { DegenEffectRack } from '../components/audio/DegenEffectRack';
@@ -11,8 +14,9 @@ import { DegenTransport } from '../components/audio/DegenTransport';
 import { DegenTrackList } from '../components/audio/DegenTrackList';
 import { DegenScheduleTimeline } from '../components/schedule/DegenScheduleTimeline';
 import { DegenAIHost } from '../components/ai/DegenAIHost';
+import { StageTimeline } from '../components/workflow/StageTimeline';
 import { DegenButton } from '../components/primitives/DegenButton';
-import { GorillaLogo } from '../components/shell/GorillaLogo';
+import { GorillaLogo, Sidebar, TabStrip, Topbar, Workspace } from '../components/shell';
 import {
     Activity,
     Radio,
@@ -307,16 +311,17 @@ function DeckPanel({
 /* ═══════════════════════════════════════════════
    DECK VIEW
    ═══════════════════════════════════════════════ */
-function DeckView() {
+function DeckView({ telemetry }: { telemetry: DJTelemetry }) {
     return (
         <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
                 <DeckPanel label="Deck A" color="#aaff00" bpm="128.0" musicalKey="Am" isActive={true}>
                     <DegenWaveform
-                        progress={0.42}
-                        duration={234}
+                        progress={telemetry.transport.progress}
+                        duration={telemetry.transport.durationSeconds || 234}
+                        waveformData={telemetry.waveformPeaks}
                         trackTitle="Neural Drift v2.1 — SynthKong"
-                        isPlaying
+                        isPlaying={telemetry.transport.isPlaying}
                         cuePoints={[
                             { position: 0.12, label: 'CUE 1', color: '#ff6b00' },
                             { position: 0.68, label: 'DROP', color: '#bf00ff' },
@@ -338,8 +343,9 @@ function DeckView() {
 
                 <DeckPanel label="Deck B" color="#9933ff" bpm="140.0" musicalKey="Fm" isActive={false}>
                     <DegenWaveform
-                        progress={0.15}
-                        duration={198}
+                        progress={telemetry.transport.progress}
+                        duration={telemetry.transport.durationSeconds || 198}
+                        waveformData={telemetry.waveformPeaks}
                         trackTitle="Bass Gorilla — DJ DegenApe"
                         isPlaying={false}
                         cuePoints={[
@@ -392,7 +398,7 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
 /* ═══════════════════════════════════════════════
    DASHBOARD VIEW — with ambient bg, glass panels
    ═══════════════════════════════════════════════ */
-function DashboardView() {
+function DashboardView({ telemetry }: { telemetry: DJTelemetry }) {
     const [currentTime, setCurrentTime] = useState('');
 
     useEffect(() => {
@@ -504,10 +510,11 @@ function DashboardView() {
                         </div>
                         <div className="p-3">
                             <DegenWaveform
-                                progress={0.42}
-                                duration={234}
+                                progress={telemetry.transport.progress}
+                                duration={telemetry.transport.durationSeconds || 234}
+                                waveformData={telemetry.waveformPeaks}
                                 trackTitle="Neural Drift v2.1 — SynthKong"
-                                isPlaying
+                                isPlaying={telemetry.transport.isPlaying}
                                 cuePoints={[
                                     { position: 0.12, label: 'CUE 1', color: '#ff6b00' },
                                     { position: 0.68, label: 'DROP', color: '#bf00ff' },
@@ -522,6 +529,7 @@ function DashboardView() {
 
                 <div className="space-y-4">
                     <DegenAIHost className="glass-panel" />
+                    <StageTimeline />
                 </div>
             </div>
 
@@ -560,6 +568,29 @@ function DashboardView() {
 export default function StudioPage() {
     const [currentView, setCurrentView] = useState<ViewMode>('dashboard');
     const [isOnAir, setIsOnAir] = useState(true);
+    const [mockTelemetryTick, setMockTelemetryTick] = useState(0);
+
+    const { isInitialized, initialize, metrics, currentTrack, isPlaying } = useAudioEngine();
+
+    const isMockTelemetryEnabled = process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DJ_MOCK_TELEMETRY === 'true';
+
+    useEffect(() => {
+        if (!isMockTelemetryEnabled) {
+            void initialize();
+            return;
+        }
+
+        const intervalId = window.setInterval(() => {
+            setMockTelemetryTick((previous) => previous + 1);
+        }, 150);
+
+        return () => window.clearInterval(intervalId);
+    }, [initialize, isMockTelemetryEnabled]);
+
+    const telemetry = useMemo(
+        () => (isMockTelemetryEnabled ? createMockTelemetry(mockTelemetryTick) : createDJTelemetry(metrics, currentTrack)),
+        [currentTrack, isMockTelemetryEnabled, metrics, mockTelemetryTick],
+    );
 
     const navItems: { view: ViewMode; icon: React.ElementType; label: string; badge?: string }[] = [
         { view: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -573,7 +604,7 @@ export default function StudioPage() {
     return (
         <div className="flex h-screen bg-[hsl(0,0%,3%)] text-white overflow-hidden ambient-bg">
             {/* ── SIDEBAR ──────────────────────────────── */}
-            <aside className="w-[56px] bg-black/40 border-r border-white/[0.04] flex flex-col items-center py-3 gap-0.5 shrink-0 backdrop-blur-md z-10">
+            <Sidebar width="compact" ariaLabel="Primary navigation">
                 {/* Logo */}
                 <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
@@ -615,13 +646,13 @@ export default function StudioPage() {
                     <SidebarIcon icon={Headphones} label="Monitor" />
                     <SidebarIcon icon={SettingsIcon} label="Settings" />
                 </div>
-            </aside>
+            </Sidebar>
 
             {/* ── MAIN AREA ────────────────────────────── */}
             <div className="flex-1 flex flex-col min-w-0 relative z-[1]">
                 {/* TOPBAR */}
-                <header className="h-11 bg-black/30 backdrop-blur-md border-b border-white/[0.04] flex items-center justify-between px-5 shrink-0 z-10">
-                    <div className="flex items-center gap-4">
+                <Topbar height="comfortable" ariaLabel="Studio top bar">
+                    <TabStrip ariaLabel="View context" region="secondary" align="start" className="pr-3">
                         <div className="flex items-center gap-2">
                             <span className="text-[11px] font-black uppercase tracking-[0.25em] text-zinc-400">
                                 DGN-DJ
@@ -636,10 +667,12 @@ export default function StudioPage() {
                             initial={{ opacity: 0, y: -4 }}
                             animate={{ opacity: 1, y: 0 }}
                             className="text-[10px] font-mono font-medium text-zinc-500 uppercase"
+                            role="status"
+                            aria-live="polite"
                         >
                             {currentView.replace('-', ' ')}
                         </motion.span>
-                    </div>
+                    </TabStrip>
 
                     <div className="flex items-center gap-4">
                         {/* Alerts placeholder */}
@@ -673,10 +706,15 @@ export default function StudioPage() {
                             <span className="text-[9px] font-mono text-zinc-500 tabular-nums">12%</span>
                         </div>
                     </div>
-                </header>
+                </Topbar>
 
                 {/* CONTENT */}
-                <main className="flex-1 overflow-y-auto p-5 custom-scrollbar relative">
+                <Workspace
+                    ariaLabel="Studio workspace"
+                    padding="comfortable"
+                    focusOnContentChange
+                    focusKey={currentView}
+                >
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={currentView}
@@ -685,11 +723,11 @@ export default function StudioPage() {
                             exit={{ opacity: 0, y: -8, filter: 'blur(2px)' }}
                             transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
                         >
-                            {currentView === 'dashboard' && <DashboardView />}
-                            {currentView === 'decks' && <DeckView />}
+                            {currentView === 'dashboard' && <DashboardView telemetry={telemetry} />}
+                            {currentView === 'decks' && <DeckView telemetry={telemetry} />}
                             {currentView === 'mixer' && (
                                 <div className="max-w-4xl mx-auto">
-                                    <DegenMixer />
+                                    <DegenMixer telemetry={telemetry} />
                                 </div>
                             )}
                             {currentView === 'library' && (
@@ -707,10 +745,21 @@ export default function StudioPage() {
                             )}
                         </motion.div>
                     </AnimatePresence>
-                </main>
+                </Workspace>
 
                 {/* TRANSPORT BAR */}
-                <DegenTransport isOnAir={isOnAir} />
+                <DegenTransport
+                    isOnAir={isOnAir}
+                    isPlaying={telemetry.transport.isPlaying || isPlaying}
+                    telemetry={telemetry}
+                    currentTrack={{
+                        title: currentTrack?.title || 'Neural Drift v2.1',
+                        artist: currentTrack?.artist || 'SynthKong',
+                        duration: telemetry.transport.durationSeconds || currentTrack?.duration || 234,
+                        bpm: isInitialized ? 128 : undefined,
+                        key: 'Am',
+                    }}
+                />
             </div>
         </div>
     );

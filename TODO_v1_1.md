@@ -2,6 +2,8 @@
 
 This board converts the v1.1 **Must** scope into an execution-ready TODO checklist with concrete completion criteria and validation steps.
 
+See [docs/operations/execution_index.md](docs/operations/execution_index.md) for cross-track ownership/status routing and weekly freshness protocol.
+
 > Implementation note (current): `config/scripts/startup_safety.py` is now wired into `RoboDJ_Launcher.bat` as the launch gate for diagnostics, config validation, auto-restore attempt, and snapshot creation.
 
 ## Active TODO checklist
@@ -48,7 +50,7 @@ This board converts the v1.1 **Must** scope into an execution-ready TODO checkli
 
 ### 3) Crash recovery: restore last known good config (`feature_crash_recovery_restore_lkg`)
 
-- [ ] Add guided restore flow in launcher/runtime startup path.
+- [x] Add guided restore flow in launcher/runtime startup path.
 - [x] Restore last known good `schedules.json` and `prompt_variables.json` from backup.
 - [x] Log restore event under `config/logs/` with timestamp and source snapshot.
 - [ ] Verify post-restore readiness state can be reached in under 2 minutes.
@@ -62,7 +64,7 @@ This board converts the v1.1 **Must** scope into an execution-ready TODO checkli
 - Manual scenario:
   1. Corrupt `config/schedules.json` or `config/prompt_variables.json`.
   2. Run `./RoboDJ_Launcher.bat`.
-  3. Execute restore flow.
+  3. Execute restore flow (`python config/scripts/startup_safety.py --guided-restore`).
   4. Verify app reaches ready state and restore is logged.
 
 ---
