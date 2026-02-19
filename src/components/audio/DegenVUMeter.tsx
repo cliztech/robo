@@ -69,10 +69,10 @@ export function DegenVUMeter({
 
                     // Color gradient: green -> yellow -> orange -> red
                     let color: string;
-                    if (ratio < 0.6) color = isActive ? '#aaff00' : 'rgba(255,255,255,0.04)';
-                    else if (ratio < 0.8) color = isActive ? '#ffcc00' : 'rgba(255,255,255,0.04)';
-                    else if (ratio < 0.9) color = isActive ? '#ff8800' : 'rgba(255,255,255,0.04)';
-                    else color = isActive ? '#ff3333' : 'rgba(255,255,255,0.04)';
+                    if (ratio < 0.6) color = isActive ? 'hsl(var(--color-deck-a))' : 'hsl(var(--surface-rgb) / 0.04)';
+                    else if (ratio < 0.8) color = isActive ? 'hsl(var(--color-warning))' : 'hsl(var(--surface-rgb) / 0.04)';
+                    else if (ratio < 0.9) color = isActive ? 'hsl(var(--color-warning-hot))' : 'hsl(var(--surface-rgb) / 0.04)';
+                    else color = isActive ? 'hsl(var(--color-danger-bright))' : 'hsl(var(--surface-rgb) / 0.04)';
 
                     return (
                         <div
@@ -80,12 +80,12 @@ export function DegenVUMeter({
                             className="rounded-[1px] transition-colors duration-75"
                             style={{
                                 flex: 1,
-                                backgroundColor: isPeak ? (ratio > 0.8 ? '#ff3333' : '#aaff00') : color,
+                                backgroundColor: isPeak ? (ratio > 0.8 ? 'hsl(var(--color-danger-bright))' : 'hsl(var(--color-deck-a))') : color,
                                 opacity: isPeak ? 0.9 : isActive ? (0.5 + ratio * 0.5) : 1,
                                 boxShadow: isActive && ratio > 0.85
-                                    ? '0 0 4px rgba(255,51,51,0.3)'
+                                    ? '0 0 4px hsla(var(--color-danger-bright),0.3)'
                                     : isPeak
-                                        ? `0 0 4px ${ratio > 0.8 ? 'rgba(255,51,51,0.3)' : 'rgba(170,255,0,0.3)'}`
+                                        ? `0 0 4px ${ratio > 0.8 ? 'hsla(var(--color-danger-bright),0.3)' : 'hsla(var(--color-deck-a),0.3)'}`
                                         : 'none',
                             }}
                         />

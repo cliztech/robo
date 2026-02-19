@@ -1,6 +1,6 @@
 # DJ Console UI/UX Research and Execution Plan
 
-Status: draft  
+Status: Prototype complete; Hardening in progress (Phase 4)  
 Audience: product/design/frontend/audio teams  
 Goal: reproduce the look-and-feel of the reference DJ images (VirtualDJ-like density and performance) while fitting the DGN-DJ stack and accessibility commitments.
 
@@ -132,16 +132,26 @@ Do not copy:
 
 Use original branding: **DGN-DJ by DGNradio**.
 
-## 3. Gap Analysis vs Current Repo UI
+## 3. Current implementation snapshot
 
-Current baseline in `src/` is an early scaffold:
+The DJ console prototype is already implemented in `src/app/page.tsx` and wired to dedicated audio/scheduling modules.
 
-- `src/components/shell/*.tsx` are placeholder wrappers.
-- `src/components/audio/AudioPlayer.tsx` is functional but generic.
-- `src/styles/tokens.css` includes a basic dark/light token layer.
-- `src/components/primitives/primitives.css` uses soft rounded controls unlike DJ hardware UI.
+Completed modules:
 
-Conclusion: this is a foundation-build task, not a polish task.
+- `DegenWaveform` (interactive waveform, cue markers, seek handling)
+- `DegenMixer` (channel strips, EQ knobs, crossfader, simulated metering)
+- `DegenTransport` (transport controls, timeline, master/CUE volume controls)
+- `DegenTrackList` (search, filter, sorting, deck load actions)
+- `DegenScheduleTimeline` (hour timeline, now marker, selected segment detail)
+- `DegenEffectRack` and `DegenBeatGrid` integrated in deck workflows
+
+Remaining hardening tasks:
+
+- Replace simulated/randomized telemetry and waveform fallback data with engine-fed live streams.
+- Complete keyboard-first coverage and ARIA semantics for all interactive controls.
+- Add deterministic test coverage for transport, mixer, and queue interactions.
+- Validate performance under sustained updates (waveform + metering + table interactions).
+- Close accessibility and reduced-motion parity checks for production readiness.
 
 ## 4. Visual System Specification (DJ Theme)
 
@@ -342,29 +352,41 @@ Extend it with DJ-specific snapshots:
 
 ## 12. Execution Phases
 
-Phase 1: Theme + shell scaffolding (1-2 sprints)
+Phase 1: Theme + shell scaffolding (1-2 sprints)  
+State: Complete
 
 - implement DJ token extension in `src/styles/tokens.css`
 - build `app-shell`, `waveform-rail`, `deck/mixer/browser` containers
 - ship static layout with placeholder data
 
-Phase 2: Interactive controls (1-2 sprints)
+Phase 2: Interactive controls (1-2 sprints)  
+State: Complete
 
 - faders/knobs/hotcues/pads controls
 - keyboard shortcuts
 - state wiring and deterministic focus order
 
-Phase 3: Waveform + audio integration (2-3 sprints)
+Phase 3: Waveform + audio integration (2-3 sprints)  
+State: Prototype complete
 
 - high-performance waveform renderer
 - meter bridge, cue markers, sync indicators
 - connect to `useAudioEngine` and engine telemetry
 
-Phase 4: hardening and presets (1-2 sprints)
+Phase 4: hardening and presets (1-2 sprints)  
+State: Hardening in progress
 
 - accessibility profiles and reduced-motion parity
 - visual regression + interaction tests
 - latency/perf tuning and release checklist
+
+Quality readiness exit criteria:
+
+- Keyboard-only completion for transport, deck load, and queue operations is ≥95% across QA scenarios.
+- No critical accessibility findings; zero WCAG AA contrast failures on critical controls.
+- P95 control-to-feedback latency for transport actions is <100ms in staging test runs.
+- Waveform + mixer + track list composite view maintains 55+ FPS on the target workstation profile.
+- Regression suite for `src/app/page.tsx` console flows and audio modules passes at 100% in CI.
 
 ## 13. Immediate Next Tasks (Recommended)
 

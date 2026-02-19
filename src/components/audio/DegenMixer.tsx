@@ -46,17 +46,27 @@ interface DegenMixerProps {
 }
 
 const DEFAULT_CHANNELS: MixerChannel[] = [
-    { id: 'deck-a', label: 'DECK A', color: '#aaff00', type: 'deck' },
-    { id: 'deck-b', label: 'DECK B', color: '#9933ff', type: 'deck' },
-    { id: 'mic', label: 'MIC', color: '#00bfff', type: 'mic' },
-    { id: 'aux', label: 'AUX', color: '#ffcc00', type: 'aux' },
-    { id: 'master', label: 'MASTER', color: '#ffffff', type: 'master' },
+    { id: 'deck-a', label: 'DECK A', color: 'hsl(var(--color-deck-a))', type: 'deck' },
+    { id: 'deck-b', label: 'DECK B', color: 'hsl(var(--color-deck-b))', type: 'deck' },
+    { id: 'mic', label: 'MIC', color: 'hsl(var(--color-accent-3))', type: 'mic' },
+    { id: 'aux', label: 'AUX', color: 'hsl(var(--color-warning))', type: 'aux' },
+    { id: 'master', label: 'MASTER', color: 'hsl(var(--color-text))', type: 'master' },
+];
+
+/* ── Fader Track SVG ───────── */
+    { id: 'mic', label: 'MIC', color: 'hsl(var(--color-deck-mic))', type: 'mic' },
+    { id: 'aux', label: 'AUX', color: 'hsl(var(--color-deck-aux))', type: 'aux' },
+    { id: 'master', label: 'MASTER', color: 'hsl(var(--color-deck-master))', type: 'master' },
 ];
 
 function FaderTrack({ value, color }: { value: number; color: string }) {
     const fillHeight = (value / 100) * 80;
     return (
         <svg viewBox="0 0 12 90" className="absolute inset-0 w-full h-full pointer-events-none">
+            {/* Track groove */}
+            <rect x="4.5" y="4" width="3" height="82" rx="0.75" fill="rgba(255,255,255,0.03)" />
+            <rect x="4.5" y="4" width="3" height="82" rx="1.5" fill="hsl(var(--surface-rgb) / 0.03)" />
+            {/* Fill from bottom */}
             <rect x="4.5" y="4" width="3" height="82" rx="1.5" fill="rgba(255,255,255,0.03)" />
             <rect x="4.5" y={86 - fillHeight} width="3" height={fillHeight} rx="1.5" fill={color} opacity={0.25} />
             <rect
@@ -64,7 +74,7 @@ function FaderTrack({ value, color }: { value: number; color: string }) {
                 y={86 - fillHeight}
                 width="3"
                 height={fillHeight}
-                rx="1.5"
+                rx="0.75"
                 fill={color}
                 opacity={0.25}
             />
@@ -77,11 +87,15 @@ function FaderTrack({ value, color }: { value: number; color: string }) {
                         y1={y}
                         x2={tick === 100 ? 11 : 10}
                         y2={y}
-                        stroke="rgba(255,255,255,0.08)"
+                        stroke="hsl(var(--surface-rgb) / 0.08)"
                         strokeWidth="0.5"
                     />
                 );
             })}
+            {/* dB labels */}
+            <text x="0" y="8" fill="hsl(var(--surface-rgb) / 0.15)" fontSize="3" fontFamily="monospace">+6</text>
+            <text x="0" y="30" fill="hsl(var(--surface-rgb) / 0.15)" fontSize="3" fontFamily="monospace">0</text>
+            <text x="0" y="88" fill="hsl(var(--surface-rgb) / 0.15)" fontSize="3" fontFamily="monospace">-∞</text>
             <text x="0" y="8" fill="rgba(255,255,255,0.15)" fontSize="3" fontFamily="monospace">+6</text>
             <text x="0" y="30" fill="rgba(255,255,255,0.15)" fontSize="3" fontFamily="monospace">0</text>
             <text x="0" y="88" fill="rgba(255,255,255,0.15)" fontSize="3" fontFamily="monospace">-∞</text>
@@ -117,7 +131,7 @@ function ChannelStrip({
             className={cn(
                 'flex flex-col items-center gap-2 py-3 px-2 rounded-lg transition-all border',
                 isMaster
-                    ? 'bg-white/[0.03] border-white/[0.06] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]'
+                    ? 'bg-white/[0.03] border-white/[0.06] shadow-[inset_0_1px_0_hsl(var(--surface-rgb)/0.03)]'
                     : 'bg-white/[0.015] border-white/[0.03] hover:border-white/[0.06]'
             )}
             style={{ minWidth: isMaster ? '88px' : '70px' }}
@@ -125,6 +139,16 @@ function ChannelStrip({
             <div className="flex items-center gap-1.5 w-full justify-center">
                 <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: channel.color, boxShadow: `0 0 6px ${channel.color}40` }} />
                 <span className="text-[7px] font-black uppercase tracking-[0.18em] text-zinc-400">{channel.label}</span>
+                <div
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{
+                        backgroundColor: channel.color,
+                        boxShadow: `0 0 4px ${channel.color}` ,
+                    }}
+                />
+                <span className="text-[7px] font-black uppercase tracking-[0.18em] text-zinc-400">
+                    {channel.label}
+                </span>
             </div>
 
             {!isMaster && (
@@ -204,7 +228,9 @@ function ChannelStrip({
                     className={cn(
                         'text-[7px] font-black w-6 h-5 flex items-center justify-center rounded-sm border transition-all',
                         state.mute
-                            ? 'bg-red-500/20 border-red-500/40 text-red-400 shadow-[0_0_6px_rgba(239,68,68,0.15)]'
+                            ? 'bg-[hsl(var(--color-danger)_/_0.18)] border-[hsl(var(--color-danger)_/_0.45)] text-[hsl(var(--color-danger))]'
+                            : 'bg-transparent border-[hsl(var(--color-control-border))] text-zinc-600 hover:text-zinc-400 hover:border-[hsl(var(--color-control-border-strong))]'
+                            ? 'bg-red-500/20 border-red-500/40 text-red-400 shadow-[0_0_6px_hsla(var(--color-danger),0.15)]'
                             : 'bg-transparent border-white/[0.06] text-zinc-600 hover:text-zinc-400 hover:border-white/[0.1]'
                     )}
                 >
@@ -216,7 +242,9 @@ function ChannelStrip({
                         className={cn(
                             'text-[7px] font-black w-6 h-5 flex items-center justify-center rounded-sm border transition-all',
                             state.solo
-                                ? 'bg-yellow-500/20 border-yellow-500/40 text-yellow-400 shadow-[0_0_6px_rgba(234,179,8,0.15)]'
+                                ? 'bg-[hsl(var(--color-warning)_/_0.18)] border-[hsl(var(--color-warning)_/_0.45)] text-[hsl(var(--color-warning))]'
+                                : 'bg-transparent border-[hsl(var(--color-control-border))] text-zinc-600 hover:text-zinc-400 hover:border-[hsl(var(--color-control-border-strong))]'
+                                ? 'bg-yellow-500/20 border-yellow-500/40 text-yellow-400 shadow-[0_0_6px_hsla(var(--color-warning),0.15)]'
                                 : 'bg-transparent border-white/[0.06] text-zinc-600 hover:text-zinc-400 hover:border-white/[0.1]'
                         )}
                     >
@@ -280,7 +308,8 @@ export function DegenMixer({ channels = DEFAULT_CHANNELS, telemetry, className }
         )}>
             <div className="panel-header">
                 <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-lime-500" style={{ boxShadow: '0 0 6px rgba(170,255,0,0.4)' }} />
+                    <div className="w-2 h-2 rounded-full bg-[hsl(var(--color-control-active))]" style={{ boxShadow: '0 0 4px hsla(var(--color-control-active), 0.4)' }} />
+                    <div className="w-2 h-2 rounded-full bg-[hsl(var(--color-deck-a))] shadow-glow-deck-a" />
                     <span className="panel-header-title">Mixer Console</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -323,7 +352,11 @@ export function DegenMixer({ channels = DEFAULT_CHANNELS, telemetry, className }
                     <span className="text-[7px] font-black uppercase tracking-widest text-zinc-600">Crossfader</span>
                 </div>
                 <div className="flex items-center gap-3">
-                    <span className="text-[9px] font-black text-lime-500/70 w-3">A</span>
+                    <span className="text-[9px] font-black text-[hsl(var(--color-deck-a)_/_0.78)] w-3">A</span>
+                    <div className="flex-1 relative group h-6 flex items-center">
+                        {/* Track */}
+                        <div className="absolute inset-x-0 h-[4px] rounded-sm overflow-hidden">
+                    <span className="text-[9px] font-black text-deck-a w-3">A</span>
                     <div className="flex-1 relative group h-6 flex items-center">
                         <div className="absolute inset-x-0 h-[4px] rounded-full overflow-hidden">
                             <div className="absolute inset-0 bg-white/[0.04]" />
@@ -333,14 +366,16 @@ export function DegenMixer({ channels = DEFAULT_CHANNELS, telemetry, className }
                                 className="absolute inset-y-0 left-0"
                                 style={{
                                     width: `${crossfader}%`,
-                                    background: 'linear-gradient(90deg, #aaff0030, transparent)',
+                                    background: 'linear-gradient(90deg, hsla(var(--color-deck-a), 0.22), transparent)',
+                                    background: 'linear-gradient(90deg, hsla(var(--color-deck-a), 0.18), transparent)',
                                 }}
                             />
                             <div
                                 className="absolute inset-y-0 right-0"
                                 style={{
                                     width: `${100 - crossfader}%`,
-                                    background: 'linear-gradient(-90deg, #9933ff30, transparent)',
+                                    background: 'linear-gradient(-90deg, hsla(var(--color-deck-b), 0.22), transparent)',
+                                    background: 'linear-gradient(-90deg, hsla(var(--color-deck-b), 0.18), transparent)',
                                 }}
                             />
                         </div>
@@ -357,12 +392,18 @@ export function DegenMixer({ channels = DEFAULT_CHANNELS, telemetry, className }
                         <div
                             className="absolute w-5 h-3 rounded-sm bg-gradient-to-b from-zinc-400 to-zinc-600 border border-white/20 pointer-events-none shadow-lg"
                             style={{ left: `calc(${crossfader}% - 10px)`, boxShadow: '0 2px 6px rgba(0,0,0,0.5), 0 0 8px rgba(255,255,255,0.05)' }}
+                            className="absolute w-5 h-3 rounded-[2px] bg-gradient-to-b from-zinc-400 to-zinc-600 border border-[hsl(var(--color-control-border-strong))] pointer-events-none"
+                            style={{
+                                left: `calc(${crossfader}% - 10px)`,
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.5)',
+                                boxShadow: '0 2px 6px hsl(var(--black-rgb) / 0.5), 0 0 8px hsl(var(--surface-rgb) / 0.05)',
+                            }}
                         >
                             <div className="absolute inset-x-1.5 top-[4px] h-[1px] bg-white/20" />
                             <div className="absolute inset-x-1.5 top-[7px] h-[1px] bg-white/20" />
                         </div>
                     </div>
-                    <span className="text-[9px] font-black text-purple-500/70 w-3 text-right">B</span>
+                    <span className="text-[9px] font-black text-deck-b w-3 text-right">B</span>
                 </div>
             </div>
         </div>
