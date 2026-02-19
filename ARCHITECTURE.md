@@ -67,6 +67,9 @@ Use this quick map when placing artifacts:
 - Reliability and security: `docs/RELIABILITY.md`, `docs/SECURITY.md`
 - Generated schema references: `docs/generated/db-schema.md`
 
+## Agent deliverables
+
+All agents operating in this repository are expected to produce and maintain artifacts across the full delivery lifecycle:
 ## Agent deliverable baseline
 
 All agent execution in this repository must produce artifacts that can be reviewed, operated, and audited. The baseline deliverables are:
