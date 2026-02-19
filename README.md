@@ -50,6 +50,7 @@ AetherRadio is a next-generation AI-powered radio automation platform that enabl
 
 ## 📁 Documentation Files
 
+1. [docs/operations/execution_index.md](docs/operations/execution_index.md) - Active track index, ownership, and status source mapping
 1. [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) - Complete folder structure
 2. [TECH_STACK.md](TECH_STACK.md) - Technologies and dependencies
 3. [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) - Complete database schema
@@ -106,10 +107,10 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 ## 🧪 Testing
 
 ```bash
-pnpm test
-pnpm test:e2e
-pnpm type-check
-pnpm lint
+npm run test:ui      # fast deterministic DJ UI component tests
+npm run test         # same UI suite for CI-friendly runs
+npm run test:watch   # watch mode while iterating on DJ UI modules
+npm run lint
 ```
 
 ## 📦 Deployment
