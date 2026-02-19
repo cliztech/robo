@@ -35,7 +35,7 @@ const DEFAULT_CHANNELS: MixerChannel[] = [
 ];
 
 /* ── Fader Track SVG ───────── */
-function FaderTrack({ value, color }: { value: number; color: string; isMaster: boolean }) {
+function FaderTrack({ value, color }: { value: number; color: string }) {
     const fillHeight = (value / 100) * 80;
     return (
         <svg viewBox="0 0 12 90" className="absolute inset-0 w-full h-full pointer-events-none">
