@@ -255,7 +255,106 @@ Deliverables:
 - Operator onboarding guide
 - Known limitations + deferred backlog
 
-## 10) Success Metrics
+## 10) BMAD Team Packets
+
+This section operationalizes Phases 0–4 with the repository BMAD stage gates: **Intake → Planner → Executor → Verifier → Handoff**.
+
+### Phase 0 — Discovery and Contracting Packet
+
+- **Primary team + accountable agent:** Management Team — Project Coordinator Agent
+- **Supporting teams:** Design, DevOps, QA, Research
+- **Entry criteria (Intake + Planner):**
+  - Intake classification confirms this is a Change route with UI execution planning scope.
+  - Applicable repository constraints and dependencies are enumerated.
+  - Planner produces a minimal plan covering scope, constraints, rollback, and verification.
+- **Artifacts produced (Executor + Verifier):**
+  - Functional requirements matrix
+  - UI data contract matrix
+  - Risk register with mitigation owners
+- **Exit criteria (Handoff):**
+  - Cross-team acknowledgement of requirements and contract boundaries.
+  - Phase 1 implementation backlog is decomposed and dependency-ordered.
+
+### Phase 1 — Foundation Packet
+
+- **Primary team + accountable agent:** Design Team — UI/UX Agent
+- **Supporting teams:** DevOps, QA, Accessibility Auditor, Frontend implementation owners
+- **Entry criteria (Intake + Planner):**
+  - Phase 0 artifacts are approved and linked to sprint work packages.
+  - Design tokens, keyboard behaviors, and baseline accessibility expectations are frozen for v1.
+- **Artifacts produced (Executor + Verifier):**
+  - UI foundation package (tokens-to-primitives mapping + shell specification)
+  - Keyboard map v1
+  - Baseline accessibility check report
+- **Exit criteria (Handoff):**
+  - Foundational component spec is implementation-ready with acceptance criteria.
+  - QA verifies baseline checks and publishes pass/fail evidence.
+
+### Phase 2 — Core Console Packet
+
+- **Primary team + accountable agent:** DevOps/Implementation Team — CI/CD Pipeline Agent (delivery accountability)
+- **Supporting teams:** Design, QA, Bug, Brutal Review
+- **Entry criteria (Intake + Planner):**
+  - Foundation packet exits cleanly with approved component contracts.
+  - API contract mocks and preview environment are available for console development.
+- **Artifacts produced (Executor + Verifier):**
+  - Studio MVP implementation (dual deck + master strip + queue + library browser + timeline v1)
+  - Smoke test evidence for load/playback transitions
+  - Initial defect and risk log for operator-critical flows
+- **Exit criteria (Handoff):**
+  - End-to-end MVP workflows are demonstrable in preview.
+  - Verifier gate confirms no blocker defects on core live-operation journeys.
+
+### Phase 3 — Advanced Ops Packet
+
+- **Primary team + accountable agent:** Design Team — Accessibility Auditor Agent (operability accountability)
+- **Supporting teams:** DevOps/Implementation, QA, Bug, SecOps
+- **Entry criteria (Intake + Planner):**
+  - Core console packet has signed-off flows and known limits.
+  - Advanced module specs (sampler, routing, presets) include explicit safety constraints.
+- **Artifacts produced (Executor + Verifier):**
+  - Advanced operator toolkit package
+  - Preset layout manager specification and implementation notes
+  - Accessibility and keyboard-first validation deltas for advanced modules
+- **Exit criteria (Handoff):**
+  - Advanced workflows meet accessibility and keyboard control gates.
+  - Operational guardrails for high-risk actions are verified and documented.
+
+### Phase 4 — Hardening & Launch Readiness Packet
+
+- **Primary team + accountable agent:** QA Team — Regression Watcher Agent
+- **Supporting teams:** DevOps, Bug, Incident Response, Brutal Review, Management
+- **Entry criteria (Intake + Planner):**
+  - All previous packet exits are complete with unresolved items explicitly tracked.
+  - Release readiness checks and rollback paths are documented.
+- **Artifacts produced (Executor + Verifier):**
+  - Release readiness report
+  - Incident/failure drill evidence
+  - Operator onboarding guide + deferred backlog log
+- **Exit criteria (Handoff):**
+  - Final verification shows regression, performance, reliability, and accessibility gates pass.
+  - Management receives launch recommendation with residual risk statement.
+
+### Cross-Phase Dependency Matrix
+
+| Dependency | Owner Team | Earliest Required Phase | Verification Gate | Blocking Impact if Missing |
+| --- | --- | --- | --- | --- |
+| Design tokens (`docs/ui/design_tokens_v1.md`) | Design | Phase 1 | Verifier (Foundation packet) | Prevents consistent primitives and layout implementation |
+| API contracts (runtime state/events) | DevOps + Backend support | Phase 0 (frozen), Phase 2 (enforced) | Verifier (Core Console packet) | Blocks integration of live state, timeline, and health signals |
+| Performance baseline | QA Performance Profiler + DevOps | Phase 2 | Verifier (Phase 4 hardening) | Launch risk due to unknown latency/jitter regressions |
+| Accessibility baseline | Design Accessibility Auditor + QA | Phase 1 | Verifier (Phase 1 + Phase 4) | Fails keyboard-first and preset acceptance gates |
+| Visual regression baseline | QA Regression Watcher + DevOps CI | Phase 2 | Verifier (Phase 4 hardening) | UI drift risk and unsafe release readiness signal |
+
+### Escalation Path and Blocker Ownership
+
+- Follow the normative escalation and reconciliation rules in `docs/operations/subagent_execution_playbook.md`.
+- **Initial blocker owner:** accountable agent for the active phase packet.
+- **Escalation level 1:** Management Team Project Coordinator Agent when a blocker crosses team boundaries or exceeds the phase SLA.
+- **Escalation level 2:** Dependency Tracker Agent for unresolved external/system dependency chains.
+- **Escalation level 3:** Incident Response + Release Manager Agent when blockers threaten launch safety, rollback viability, or production reliability.
+- Every escalation must include: blocker description, impacted gate (Intake/Planner/Executor/Verifier/Handoff), owner, ETA, and mitigation/rollback options.
+
+## 11) Success Metrics
 
 Operational metrics:
 
@@ -276,7 +375,7 @@ Quality metrics:
 - Accessibility acceptance matrix pass rate
 - Critical incident escape defects (target: zero)
 
-## 11) Immediate Next Steps (Week 1)
+## 12) Immediate Next Steps (Week 1)
 
 1. Approve this execution plan and lock scope for Phase 0/1
 2. Produce "Live Studio Console" low-fidelity interaction map

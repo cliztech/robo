@@ -50,6 +50,7 @@ AetherRadio is a next-generation AI-powered radio automation platform that enabl
 
 ## 📁 Documentation Files
 
+1. [docs/operations/execution_index.md](docs/operations/execution_index.md) - Active track index, ownership, and status source mapping
 1. [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) - Complete folder structure
 2. [TECH_STACK.md](TECH_STACK.md) - Technologies and dependencies
 3. [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) - Complete database schema
