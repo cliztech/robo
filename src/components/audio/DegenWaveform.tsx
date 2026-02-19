@@ -11,6 +11,7 @@ interface CuePoint {
 }
 
 interface DegenWaveformProps {
+    deck?: 'A' | 'B';
     progress?: number;
     duration?: number;
     waveformData?: number[];
@@ -22,6 +23,7 @@ interface DegenWaveformProps {
 }
 
 export function DegenWaveform({
+    deck = 'A',
     progress = 0,
     duration = 210,
     waveformData,
@@ -114,6 +116,11 @@ export function DegenWaveform({
     const playheadX = progress * 100;
     const remaining = duration - progress * duration;
 
+    const isDeckB = deck === 'B';
+    const waveColor = isDeckB ? 'hsl(var(--color-wave-b))' : 'hsl(var(--color-wave-a))';
+    const waveColorSoft = isDeckB ? 'hsla(var(--color-wave-b), 0.4)' : 'hsla(var(--color-wave-a), 0.4)';
+    const deckAccent = isDeckB ? 'hsl(var(--color-deck-b))' : 'hsl(var(--color-deck-a))';
+
     return (
         <div
             className={cn(
@@ -130,6 +137,8 @@ export function DegenWaveform({
                     <div className="flex items-center gap-2">
                         {isPlaying && (
                             <div className="relative">
+                                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: deckAccent, boxShadow: `0 0 4px ${waveColorSoft}` }} />
+                                <div className="absolute inset-0 w-1.5 h-1.5 rounded-full animate-ping opacity-50" style={{ backgroundColor: deckAccent }} />
                                 <div className="w-1.5 h-1.5 rounded-full bg-lime-500" style={{ boxShadow: '0 0 6px rgba(170,255,0,0.6)' }} />
                                 <div className="absolute inset-0 w-1.5 h-1.5 rounded-full bg-lime-500 motion-safe:animate-ping motion-reduce:animate-none opacity-50" />
                                 <div className="w-1.5 h-1.5 rounded-full bg-[hsl(var(--color-deck-a))] shadow-[0_0_6px_hsla(var(--color-deck-a),0.6)]" />
@@ -207,6 +216,7 @@ export function DegenWaveform({
                                 width={Math.max(0.15, barWidth - 0.12)}
                                 height={height}
                                 rx={0.1}
+                                fill={isPast ? waveColor : '#ffffff'}
                                 fill={isPast ? 'hsl(var(--color-waveform-played-strong))' : 'hsl(var(--color-waveform-unplayed-strong))'}
                                 opacity={isPast ? 0.06 : 0.02}
                             />
@@ -246,6 +256,7 @@ export function DegenWaveform({
                                 width={Math.max(0.15, barWidth - 0.12)}
                                 height={height}
                                 rx={0.1}
+                                fill={waveColor}
                                 fill="hsl(var(--color-waveform-played-strong))"
                                 opacity={0.15}
                                 filter="url(#wf-glow)"
@@ -262,7 +273,7 @@ export function DegenWaveform({
                     className="absolute inset-y-0 left-0 pointer-events-none"
                     style={{ width: `${playheadX}%` }}
                 >
-                    <div className="w-full h-full bg-gradient-to-r from-lime-500/[0.02] via-lime-500/[0.05] to-lime-500/[0.08]" />
+                    <div className="w-full h-full" style={{ background: `linear-gradient(90deg, transparent, ${waveColorSoft})` }} />
                 </div>
 
                 {/* Playhead */}
@@ -271,6 +282,9 @@ export function DegenWaveform({
                     style={{ left: `${playheadX}%` }}
                 >
                     {/* Line */}
+                    <div className="absolute top-0 bottom-0 w-[2px] -translate-x-1/2" style={{ backgroundColor: deckAccent, boxShadow: `0 0 8px ${waveColorSoft}` }} />
+                    {/* Arrow */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px]" style={{ borderTopColor: deckAccent, filter: `drop-shadow(0 0 3px ${waveColorSoft})` }} />
                     <div className="absolute top-0 bottom-0 w-[2px] -translate-x-1/2 bg-[hsl(var(--color-deck-a))] shadow-glow-waveform-playhead" />
                     {/* Arrow */}
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px] border-t-[hsl(var(--color-deck-a))]" style={{ filter: 'drop-shadow(0 0 4px hsla(var(--color-deck-a),0.5))' }} />
@@ -308,12 +322,16 @@ export function DegenWaveform({
                         <div
                             className="w-[2px] h-full opacity-50"
                             style={{
+                                backgroundColor: cue.color || 'hsl(var(--color-warning))',
+                                boxShadow: `0 0 4px ${cue.color || 'hsl(var(--color-warning))'}`,
                                 backgroundColor: cue.color || 'hsl(var(--color-waveform-cue-default))',
                                 boxShadow: `0 0 6px ${cue.color || 'hsl(var(--color-waveform-cue-default))'}40`,
                             }}
                         />
                         {/* Cue diamond marker */}
                         <div
+                            className="absolute bottom-2 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 opacity-60 group-hover/cue:opacity-100 transition-opacity"
+                            style={{ backgroundColor: cue.color || 'hsl(var(--color-warning))' }}
                             className="absolute bottom-2 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 opacity-60 group-hover/cue:opacity-100 transition-opacity motion-reduce:transition-none"
                             style={{ backgroundColor: cue.color || '#ff6b00' }}
                             className="absolute bottom-2 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 opacity-60 group-hover/cue:opacity-100 transition-opacity"
@@ -322,6 +340,9 @@ export function DegenWaveform({
                         <div
                             className="absolute bottom-5 left-1/2 -translate-x-1/2 px-1.5 py-0.5 text-[7px] font-black uppercase rounded opacity-0 group-hover/cue:opacity-100 transition-all duration-150 motion-reduce:transition-none whitespace-nowrap"
                             style={{
+                                backgroundColor: cue.color || 'hsl(var(--color-warning))',
+                                color: 'hsl(var(--color-bg))',
+                                boxShadow: `0 0 6px ${cue.color || 'hsl(var(--color-warning))'}`,
                                 backgroundColor: cue.color || 'hsl(var(--color-waveform-cue-default))',
                                 color: 'hsl(var(--black-rgb))',
                                 boxShadow: `0 0 10px ${cue.color || 'hsl(var(--color-waveform-cue-default))'}40`,
@@ -339,8 +360,8 @@ export function DegenWaveform({
                 {[0.25, 0.5, 0.75].map((pos) => (
                     <div
                         key={pos}
-                        className="absolute top-0 bottom-0 w-[1px] bg-white/[0.04] pointer-events-none"
-                        style={{ left: `${pos * 100}%` }}
+                        className="absolute top-0 bottom-0 w-[1px] pointer-events-none"
+                        style={{ left: `${pos * 100}%`, backgroundColor: pos === 0.5 ? 'hsla(var(--color-grid-major), 0.75)' : 'hsla(var(--color-grid-minor), 0.7)' }}
                     />
                 ))}
             </div>
@@ -353,6 +374,9 @@ export function DegenWaveform({
                             key={i}
                             className="text-[7px] font-black uppercase px-2 py-0.5 rounded-sm border transition-all hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/80 focus-visible:ring-offset-1 focus-visible:ring-offset-black"
                             style={{
+                                borderColor: cue.color || 'hsla(var(--color-warning), 0.45)',
+                                color: cue.color || 'hsl(var(--color-warning))',
+                                background: cue.color ? `${cue.color}14` : 'hsla(var(--color-warning), 0.1)',
                                 borderColor: `${cue.color || 'hsl(var(--color-waveform-cue-default))'}50`,
                                 color: cue.color || 'hsl(var(--color-waveform-cue-default))',
                                 background: `${cue.color || 'hsl(var(--color-waveform-cue-default))'}08`,

@@ -45,6 +45,22 @@
   --surface-rgb: 255 255 255;
   --black-rgb: 0 0 0;
 
+  /* DJ semantic color roles */
+  --deck-a: 195 100% 52%;
+  --deck-b: 332 95% 62%;
+  --grid-major: 210 20% 34%;
+  --grid-minor: 210 16% 22%;
+  --wave-a: 192 100% 58%;
+  --wave-b: 334 92% 64%;
+
+  /* DJ control-state roles */
+  --control-border: 210 12% 24%;
+  --control-border-strong: 210 14% 36%;
+  --control-press: 210 24% 14%;
+  --control-active: 82 100% 50%;
+  --control-focus: 195 100% 52%;
+  --control-disabled: 210 10% 40%;
+
   /* Glow tokens */
   --glow-accent: 0 0 20px hsla(82, 100%, 50%, 0.25),
     0 0 60px hsla(82, 100%, 50%, 0.08);
@@ -109,6 +125,18 @@
   --color-accent-3: var(--accent-tertiary);
   --color-danger: var(--danger);
   --color-warning: var(--warning);
+  --color-deck-a: var(--deck-a);
+  --color-deck-b: var(--deck-b);
+  --color-grid-major: var(--grid-major);
+  --color-grid-minor: var(--grid-minor);
+  --color-wave-a: var(--wave-a);
+  --color-wave-b: var(--wave-b);
+  --color-control-border: var(--control-border);
+  --color-control-border-strong: var(--control-border-strong);
+  --color-control-press: var(--control-press);
+  --color-control-active: var(--control-active);
+  --color-control-focus: var(--control-focus);
+  --color-control-disabled: var(--control-disabled);
   --color-warning-hot: var(--warning-hot);
   --color-danger-bright: var(--danger-bright);
   --color-deck-a: var(--deck-a);
