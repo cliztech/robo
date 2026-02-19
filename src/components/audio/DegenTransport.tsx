@@ -155,7 +155,7 @@ export function DegenTransport({
                     onClick={() => setRepeat(!repeat)}
                     className={cn(
                         'p-1.5 rounded transition-all',
-                        repeat ? 'text-[hsl(var(--color-deck-b))]' : 'text-zinc-600 hover:text-zinc-300'
+                        repeat ? 'text-deck-b' : 'text-zinc-600 hover:text-zinc-300'
                     )}
                 >
                     <Repeat size={12} />
