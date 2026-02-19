@@ -62,7 +62,7 @@ Run the following commands in order before release sign-off.
 
   Canonical expected output: A backup for each changed `.json` file in `config/` exists in the new timestamped backup directory.
 - [ ] **Autonomy audit-log write path is writable.**  
-  Command: `python -c "from pathlib import Path; p=Path('config/logs/autonomy_audit_events.jsonl'); p.parent.mkdir(parents=True, exist_ok=True); p.touch(exist_ok=True); open(p,'a',encoding='utf-8').write('{\"event\":\"pre_release_write_check\"}\n'); print('OK:', p)"`  
+  Command: `python config/scripts/check_audit_log_writable.py`
   Canonical expected output: `OK: config/logs/autonomy_audit_events.jsonl`
 - [ ] **Latest snapshot is discoverable and complete.**  
   Command: `latest=$(ls -1dt config/backups/* 2>/dev/null | head -n1); echo "$latest"; ls -la "$latest"`  
