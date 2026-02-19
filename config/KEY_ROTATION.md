@@ -2,6 +2,8 @@
 
 For lifecycle requirements (generation, storage, cadence, revocation, incidents), see `docs/SECRET_LIFECYCLE_POLICY.md`.
 
+For environment-specific variable contracts (contexts, platform vars, redaction, fallback decisions), see [CODEX Environment Contract](../docs/CODEX_ENVIRONMENT_CONTRACT.md).
+
 ## Runtime Source Priority
 1. Environment variables (preferred):
    - `ROBODJ_SECRET_KEY`
@@ -13,6 +15,16 @@ For lifecycle requirements (generation, storage, cadence, revocation, incidents)
 Only templates are versioned:
 - `config/secret.key.example`
 - `config/secret_v2.key.example`
+
+
+## Startup Snapshot Secret Handling
+Routine snapshots created by `config/scripts/startup_safety.py` now exclude `config/secret.key` and `config/secret_v2.key` by default to reduce secret duplication and keep env-first handling aligned with `docs/SECRET_LIFECYCLE_POLICY.md`.
+
+Use break-glass opt-in only when an operator explicitly needs secret file capture:
+- `python config/scripts/startup_safety.py --create-backup --include-secrets`
+- `python config/scripts/startup_safety.py --on-launch --include-secrets`
+
+Snapshot events are written to `config/logs/startup_safety_events.jsonl` and include an `includes_secrets` field so operators can audit whether key material was copied.
 
 ## Rotation Procedure
 1. Stop RoboDJ processes using the active secrets.
@@ -26,6 +38,22 @@ Only templates are versioned:
 6. Restart RoboDJ and verify key-dependent workflows.
 7. Revoke old keys and invalidate dependent sessions/tokens where applicable.
 
+### Rotation evidence requirements by profile
+
+Record rotation evidence in the ticket/change record before closing the change.
+
+| Profile | Required timestamp evidence | Required owner evidence | Required validation evidence |
+| --- | --- | --- | --- |
+| `dev` | Local timezone timestamp for rotation + cleanup completion | Name/handle of operator who rotated the keys | Command output from `python config/check_runtime_secrets.py --require-env-only` (or break-glass exception note when explicitly approved). |
+| `staging` | UTC timestamp for rotation start/end and approval time | Rotation owner (Release Manager Agent) + approving manager | Full command output from `python config/check_runtime_secrets.py --require-env-only` attached to release evidence. |
+| `prod` | UTC timestamp for rotate, deploy, and post-rotate verification checkpoints | Rotation owner (Release Manager Agent), Secrets Auditor reviewer, and incident/production approver | Full command output from `python config/check_runtime_secrets.py --require-env-only`, plus confirmation that no fallback files were used outside an approved break-glass incident. |
+
+### Fallback-file boundary (all profiles)
+
+- `config/secret.key` and `config/secret_v2.key` are fallback delivery targets only.
+- Normal release workflows must use env-only secret injection and pass `--require-env-only` checks.
+- Fallback files are permitted only for explicit local development or approved break-glass incidents with expiry/cleanup evidence.
+
 ## Emergency Rotation Trigger Examples
 - Suspected key exposure.
 - Startup integrity check reports invalid/missing/expired keys.
@@ -34,7 +62,7 @@ Only templates are versioned:
 
 This repository no longer tracks runtime-generated machine files or live secrets.
 
-## Files now local-only (production runtime)
+## Files now local-only (explicit local dev/break-glass runtime)
 
 - `config/secret.key`
 - `config/secret_v2.key`
@@ -51,13 +79,12 @@ Use the `.example` templates in this folder as references only.
 
 These template/example files are formatting guides and must never contain active or historical production key material.
 
-## Production key storage locations (outside git history)
+## Authoritative key storage locations (outside git history)
 
-- `config/secret.key` (local runtime machine file, git-ignored)
-- `config/secret_v2.key` (local runtime machine file, git-ignored)
-- Preferred: external secret manager/vault + deployment-time injection into local runtime files
+- Primary: external secret manager/vault + deployment-time env injection (required for normal staging/prod flows)
+- `config/secret.key` and `config/secret_v2.key` may exist only as temporary local delivery targets for explicit local dev/break-glass scenarios
 
-## Initial setup for operators
+## Initial setup for local dev/break-glass operators
 
 1. Copy template files for secrets:
    - `cp config/secret.key.example config/secret.key`
@@ -66,7 +93,7 @@ These template/example files are formatting guides and must never contain active
 3. Verify provenance before activation:
    - Confirm key values were generated from an approved method (vault workflow or local cryptographic generation command in this document).
    - Confirm values were never copied from chat logs, tickets, docs, or prior committed files.
-4. Start the application (`RoboDJ_Launcher.bat`) so runtime files are recreated as needed.
+4. Start the application (`RoboDJ_Launcher.bat`) for approved local dev/break-glass runs only, then remove fallback files after use.
 
 ## Rotation governance TODOs
 

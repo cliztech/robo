@@ -42,6 +42,11 @@ export function DegenEffectRack({ title, deck, controls, isActive = true }: Dege
             ? '--color-deck-a'
             : '--color-accent-3';
     const deckColor = `hsl(var(${deckColorToken}))`;
+    const deckColor = deck === 'A' || deck === 'MST'
+        ? 'hsl(var(--color-deck-a))'
+        : deck === 'B'
+            ? 'hsl(var(--color-deck-b))'
+            : 'hsl(var(--color-deck-mic))';
 
     return (
         <div className="glass-panel overflow-hidden">

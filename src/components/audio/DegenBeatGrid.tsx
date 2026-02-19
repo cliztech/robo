@@ -25,6 +25,7 @@ export function DegenBeatGrid({ decks = 4, steps = 16 }: DegenBeatGridProps) {
             <div className="flex justify-between items-center mb-4">
                 <div className="flex gap-2 items-center">
                     <div className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: 'hsl(var(--color-control-active))', boxShadow: '0 0 4px hsla(var(--color-control-active), 0.4)' }}></div>
+                    <div className="w-2 h-2 rounded-full bg-[hsl(var(--color-deck-mic))] animate-pulse shadow-[0_0_8px_hsla(var(--color-deck-mic),0.5)]"></div>
                     <span className="text-xs font-bold uppercase tracking-widest text-zinc-300">Beat Grid - DEGEN NODE</span>
                 </div>
                 <div className="flex gap-2">
@@ -55,6 +56,9 @@ export function DegenBeatGrid({ decks = 4, steps = 16 }: DegenBeatGridProps) {
                                                 ? 'bg-[hsl(var(--color-deck-b)_/_0.7)] border-[hsl(var(--color-deck-b)_/_0.45)] shadow-[0_0_4px_hsla(var(--color-deck-b),0.25)]'
                                                 : isPulse ? 'bg-[hsl(var(--color-grid-major)_/_0.3)] border-[hsl(var(--color-grid-major)_/_0.35)]' : 'bg-[hsl(var(--color-grid-minor)_/_0.28)] border-[hsl(var(--color-grid-minor)_/_0.35)]'}
                       hover:brightness-110 active:translate-y-px
+                                                ? 'bg-[hsl(var(--color-deck-b))] shadow-[0_0_10px_hsla(var(--color-deck-b),0.6)]'
+                                                : isPulse ? 'bg-zinc-800' : 'bg-zinc-900'}
+                      hover:scale-105 active:scale-95 border border-white/5
                     `}
                                     />
                                 );
@@ -67,6 +71,8 @@ export function DegenBeatGrid({ decks = 4, steps = 16 }: DegenBeatGridProps) {
             <div className="mt-4 flex gap-2">
                 <button className="flex-1 bg-zinc-900 hover:bg-zinc-800 text-[10px] font-bold py-1.5 border border-[hsl(var(--color-control-border))] rounded-sm uppercase">SNGL</button>
                 <button className="flex-1 bg-[hsl(var(--color-deck-b)_/_0.2)] text-[hsl(var(--color-deck-b))] border border-[hsl(var(--color-deck-b)_/_0.35)] text-[10px] font-bold py-1.5 rounded-sm uppercase">CONT</button>
+                <button className="flex-1 bg-zinc-900 hover:bg-zinc-800 text-[10px] font-bold py-1.5 border border-zinc-800 rounded uppercase">SNGL</button>
+                <button className="flex-1 bg-deck-b-soft text-deck-b border border-deck-b-soft text-[10px] font-bold py-1.5 rounded uppercase">CONT</button>
             </div>
         </div>
     );
