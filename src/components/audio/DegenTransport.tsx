@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { cn } from '../../lib/utils';
 import { DegenStereoMeter } from './DegenVUMeter';
 import {
@@ -9,6 +9,7 @@ import {
     resolveTransportTelemetry,
     resolveTransportTrack,
 } from '../../lib/degenDataAdapters';
+import type { DJTelemetry } from '../../lib/audio/telemetry';
 import {
     Play,
     Pause,
@@ -30,6 +31,7 @@ interface DegenTransportProps {
     onPlayPause?: () => void;
     onNext?: () => void;
     onPrev?: () => void;
+    telemetry?: DJTelemetry;
     className?: string;
 }
 
@@ -42,6 +44,7 @@ export function DegenTransport({
     onPlayPause,
     onNext,
     onPrev,
+    telemetry,
     className,
 }: DegenTransportProps) {
     const track = resolveTransportTrack(currentTrack);
@@ -65,10 +68,30 @@ export function DegenTransport({
     const phase = typeof telemetryTick === 'number' ? telemetryTick : telemetryStep;
     const vuLeft = telemetry?.vuLeft ?? Math.max(0.1, Math.min(1, transportTelemetry.vuLeft + Math.sin(phase / 5) * 0.08));
     const vuRight = telemetry?.vuRight ?? Math.max(0.1, Math.min(1, transportTelemetry.vuRight + Math.cos(phase / 6) * 0.08));
+    const [progressOverride, setProgressOverride] = useState<number | null>(null);
+    const [volume, setVolume] = useState(85);
+    const [isMuted, setIsMuted] = useState(false);
+    const [repeat, setRepeat] = useState(false);
+    const [shuffle, setShuffle] = useState(false);
+
+    const progress = progressOverride ?? telemetry?.transport.progress ?? 0;
+    const elapsed = telemetry?.transport.elapsedSeconds ?? progress * (currentTrack.duration || 0);
+    const remaining = useMemo(() => {
+        if (telemetry) {
+            return telemetry.transport.remainingSeconds;
+        }
+        return (currentTrack.duration || 0) - elapsed;
+    }, [currentTrack.duration, elapsed, telemetry]);
+
+    const vuLeft = telemetry?.stereoLevels.leftLevel ?? 0;
+    const vuRight = telemetry?.stereoLevels.rightLevel ?? 0;
+    const peakLeft = telemetry?.stereoLevels.leftPeak ?? vuLeft;
+    const peakRight = telemetry?.stereoLevels.rightPeak ?? vuRight;
 
     const formatTime = (seconds: number) => {
-        const m = Math.floor(seconds / 60);
-        const s = Math.floor(seconds % 60);
+        const safeSeconds = Math.max(0, seconds);
+        const m = Math.floor(safeSeconds / 60);
+        const s = Math.floor(safeSeconds % 60);
         return `${m}:${s.toString().padStart(2, '0')}`;
     };
 
@@ -112,13 +135,28 @@ export function DegenTransport({
                     <Shuffle size={12} />
                 </button>
                 <button onClick={onPrev} className="p-1.5 rounded text-zinc-400 hover:text-white transition-colors">
+                    aria-label="Toggle shuffle"
+                    aria-pressed={shuffle}
+                    className={cn(
+                        'p-1.5 rounded transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
+                        shuffle ? 'text-lime-400' : 'text-zinc-600 hover:text-zinc-300'
+                    )}
+                >
+                    <Shuffle size={12} />
+                </button>
+                <button
+                    onClick={onPrev}
+                    aria-label="Previous track"
+                    className="p-1.5 rounded text-zinc-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                >
                     <SkipBack size={14} fill="currentColor" />
                 </button>
 
                 <button
                     onClick={onPlayPause}
+                    aria-label={isPlaying ? 'Pause playback' : 'Start playback'}
                     className={cn(
-                        'relative w-10 h-10 rounded-full flex items-center justify-center transition-all',
+                        'relative w-10 h-10 rounded-full flex items-center justify-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
                         isPlaying
                             ? 'bg-lime-500/15 border border-lime-500/30 text-lime-400 hover:bg-lime-500/25'
                             : 'bg-white/5 border border-white/10 text-white hover:bg-white/10'
@@ -129,11 +167,22 @@ export function DegenTransport({
                 </button>
 
                 <button onClick={onNext} className="p-1.5 rounded text-zinc-400 hover:text-white transition-colors">
+                <button
+                    onClick={onNext}
+                    aria-label="Next track"
+                    className="p-1.5 rounded text-zinc-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+                >
                     <SkipForward size={14} fill="currentColor" />
                 </button>
                 <button
                     onClick={() => setRepeat(!repeat)}
                     className={cn('p-1.5 rounded transition-all', repeat ? 'text-purple-400' : 'text-zinc-600 hover:text-zinc-300')}
+                    aria-label="Toggle repeat"
+                    aria-pressed={repeat}
+                    className={cn(
+                        'p-1.5 rounded transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
+                        repeat ? 'text-purple-400' : 'text-zinc-600 hover:text-zinc-300'
+                    )}
                 >
                     <Repeat size={12} />
                 </button>
@@ -153,12 +202,13 @@ export function DegenTransport({
                         />
                     </div>
                     <input
+                        aria-label="Playback position"
                         type="range"
                         min={0}
                         max={1}
                         step={0.001}
                         value={progress}
-                        onChange={(e) => setProgress(parseFloat(e.target.value))}
+                        onChange={(e) => setProgressOverride(parseFloat(e.target.value))}
                         className="absolute inset-x-0 h-7 w-full opacity-0 cursor-pointer z-10"
                     />
                     <div
@@ -169,6 +219,7 @@ export function DegenTransport({
                 <span className="text-[10px] font-mono text-zinc-600 tabular-nums w-9 shrink-0">-{formatTime(remaining)}</span>
             </div>
 
+            {/* ── BPM / Key + flags ─── */}
             <div className="flex items-center gap-2 px-3 shrink-0 border-l border-white/[0.04]">
                 <div className="flex flex-col items-center px-2 py-1 rounded bg-white/[0.02]">
                     <span className="text-[8px] text-zinc-600 uppercase font-bold tracking-widest">BPM</span>
@@ -178,14 +229,24 @@ export function DegenTransport({
                     <span className="text-[8px] text-zinc-600 uppercase font-bold tracking-widest">Key</span>
                     <span className="text-[12px] font-mono font-black text-purple-400 tabular-nums">{track.key || '—'}</span>
                 </div>
+                <div className="flex flex-col gap-0.5 ml-1">
+                    <div className="flex items-center gap-1">
+                        <Radio size={10} className={cn(telemetry?.signalFlags.clipDetected ? 'text-red-400' : 'text-zinc-700')} />
+                        <span className={cn('text-[8px] font-black uppercase tracking-wider', telemetry?.signalFlags.clipDetected ? 'text-red-400' : 'text-zinc-600')}>Clip</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <div className={cn('w-1.5 h-1.5 rounded-full', telemetry?.signalFlags.limiterEngaged ? 'bg-orange-400' : 'bg-zinc-700')} />
+                        <span className={cn('text-[8px] font-black uppercase tracking-wider', telemetry?.signalFlags.limiterEngaged ? 'text-orange-400' : 'text-zinc-600')}>Lim</span>
+                    </div>
+                </div>
             </div>
 
             <div className="px-3 shrink-0 border-l border-white/[0.04]">
                 <DegenStereoMeter
                     leftLevel={vuLeft}
                     rightLevel={vuRight}
-                    leftPeak={Math.min(1, vuLeft + 0.08)}
-                    rightPeak={Math.min(1, vuRight + 0.08)}
+                    leftPeak={peakLeft}
+                    rightPeak={peakRight}
                     size="sm"
                     showDb
                 />
@@ -195,6 +256,12 @@ export function DegenTransport({
                 <button
                     onClick={() => setIsMuted(!isMuted)}
                     className={cn('p-1 rounded transition-colors', isMuted ? 'text-red-400' : 'text-zinc-500 hover:text-zinc-300')}
+                    aria-label={isMuted ? 'Unmute output' : 'Mute output'}
+                    aria-pressed={isMuted}
+                    className={cn(
+                        'p-1 rounded transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
+                        isMuted ? 'text-red-400' : 'text-zinc-500 hover:text-zinc-300'
+                    )}
                 >
                     <VolumeIcon size={14} />
                 </button>
@@ -203,6 +270,7 @@ export function DegenTransport({
                         <div className="h-full rounded-full bg-zinc-400 transition-[width] duration-75" style={{ width: `${isMuted ? 0 : volume}%` }} />
                     </div>
                     <input
+                        aria-label="Output volume"
                         type="range"
                         min={0}
                         max={100}

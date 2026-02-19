@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { cn } from '../../lib/utils';
-import { createDeterministicWaveform } from '../../lib/degenDataAdapters';
+import { deterministicWaveformSample } from '../../lib/audio/telemetry';
 
 interface CuePoint {
     position: number; // 0-1
@@ -39,6 +39,7 @@ export function DegenWaveform({
 
     const data = useMemo(
         () => waveformData || createDeterministicWaveform(250),
+        () => waveformData || deterministicWaveformSample(250),
         [waveformData]
     );
 

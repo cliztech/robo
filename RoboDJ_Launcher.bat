@@ -1,12 +1,17 @@
 @echo off
 setlocal
 
-:: Resolve launcher location so this script remains portable across install paths.
+:: Directory assumptions:
+::   - This launcher sits beside "RoboDJ Automation.exe".
+::   - Runtime config assets live under ".\config" from this launcher directory.
+:: Resolve launcher location (%~dp0) so startup is portable across machines/drives.
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 set "EXE_PATH=%SCRIPT_DIR%\RoboDJ Automation.exe"
-set "SAFETY_SCRIPT=%SCRIPT_DIR%\config\scripts\startup_safety.py"
+set "CONFIG_DIR=%SCRIPT_DIR%\config"
+set "SCRIPTS_DIR=%CONFIG_DIR%\scripts"
+set "SAFETY_SCRIPT=%SCRIPTS_DIR%\startup_safety.py"
 
 if not exist "%EXE_PATH%" (
     echo [RoboDJ] ERROR: Unable to find RoboDJ Automation executable.
@@ -37,8 +42,9 @@ if "%PYTHON_CMD%"=="" (
 )
 
 :: Startup diagnostics + config validation + auto-recovery + snapshot gate.
+:: Run from launcher directory so any relative paths inside safety tooling resolve correctly.
 pushd "%SCRIPT_DIR%"
-call %PYTHON_CMD% config\scripts\startup_safety.py --on-launch
+call %PYTHON_CMD% "%SAFETY_SCRIPT%" --on-launch
 set "SAFETY_EXIT=%ERRORLEVEL%"
 popd
 

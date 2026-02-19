@@ -7,6 +7,25 @@
 
 These instructions apply to the entire repository unless a deeper `AGENTS.md` overrides them.
 
+## Project Startup Instruction Block (Codex/Gemini/Jules)
+
+> **Mandatory bootstrap for all new sessions in this repo**
+>
+> 1. Load `_bmad/_config/bmad-help.csv` before planning or execution.
+> 2. Treat `_bmad/` as the source of truth for BMAD agents, tasks, and workflows.
+> 3. Match incoming intent to BMAD commands/workflows first.
+> 4. If a matching BMAD workflow exists, execute that workflow path first.
+> 5. Only fall back to free-form execution when no BMAD workflow matches.
+
+### How to invoke BMAD workflows
+
+Use command-style prompts that map to entries in `_bmad/_config/bmad-help.csv`, for example:
+
+- `bmad-bmm-market-research`
+- `bmad-bmm-domain-research`
+- `bmad-bmm-create-prd`
+- `bmad-bmm-create-architecture`
+
 ## Tech Stack
 
 | Layer | Technology | Notes |
@@ -37,6 +56,7 @@ robo/
 ├── RoboDJ Automation.exe          # Main executable (DO NOT EDIT)
 ├── RoboDJ_Launcher.bat            # Launcher script
 ├── AGENTS.md                      # This file (repo-wide agent rules)
+├── ARCHITECTURE.md                # Top-level architecture entry point
 ├── SKILLS.md                      # Reusable skill definitions
 ├── .agent/                        # Operational artifacts (plans, handoffs, verification)
 ├── backend/                       # Python source modules
@@ -55,7 +75,33 @@ robo/
 │   ├── cache/                     # Temp cache
 │   └── backups/                   # Pre-edit backups
 ├── RoboDJ Automation.exe_extracted/  # PyInstaller extraction (REFERENCE ONLY)
-└── docs/                          # PDF/MD documentation
+└── docs/                          # Documentation workspace
+    ├── design-docs/               # Design rationale and history
+    │   ├── index.md
+    │   ├── core-beliefs.md
+    │   └── ...
+    ├── exec-plans/                # Active/completed execution plans
+    │   ├── active/
+    │   ├── completed/
+    │   └── tech-debt-tracker.md
+    ├── generated/                 # Generated technical references
+    │   └── db-schema.md
+    ├── product-specs/             # Product requirement and behavior specs
+    │   ├── index.md
+    │   ├── new-user-onboarding.md
+    │   └── ...
+    ├── references/                # External/tooling references for agents
+    │   ├── design-system-reference-llms.txt
+    │   ├── nixpacks-llms.txt
+    │   ├── uv-llms.txt
+    │   └── ...
+    ├── DESIGN.md                  # Design overview pointer
+    ├── FRONTEND.md                # Frontend architecture notes
+    ├── PLANS.md                   # Planning and execution index
+    ├── PRODUCT_SENSE.md           # Product heuristics and acceptance framing
+    ├── QUALITY_SCORE.md           # Quality scoring rubric entry point
+    ├── RELIABILITY.md             # Reliability standards and SLO guidance
+    └── SECURITY.md                # Security architecture overview
 ```
 
 ## Multi-Agent Pipeline
@@ -107,6 +153,24 @@ Use this stage-gated flow for all requests:
   - Summarize outcomes, touched files, validation done, and follow-ups
   - Generate PR body if applicable
 - **Completion gate:** User request explicitly answered
+
+## Agent Output Requirements
+
+All agents operating in this repository should produce and maintain artifacts that support delivery, operations, and traceability.
+
+The following outputs are mandatory deliverable categories for agents:
+
+### Agents produce
+### Agents produce:
+
+- Product code and tests
+- CI configuration and release tooling
+- Internal developer tools
+- Documentation and design history
+- Evaluation harnesses
+- Review comments and responses
+- Scripts that manage the repository itself
+- Production dashboard definition files
 
 ## Workflow Quality Gates
 
@@ -178,12 +242,14 @@ Use these gates before moving work from planning to execution and from draft PR 
 | [`docs/autonomy_modes.md`](docs/autonomy_modes.md) | 5-level autonomy operating modes (Manual → Lights-Out) |
 | [`docs/conversation_orchestrator_spec.md`](docs/conversation_orchestrator_spec.md) | Conversation orchestration, turn-taking, energy curves |
 | [`docs/operations/agent_execution_commands.md`](docs/operations/agent_execution_commands.md) | Runnable command playbook for planning, subagents, PRs, and worktrees |
-| [`docs/operations/subagent_execution_playbook.md`](docs/operations/subagent_execution_playbook.md) | Normative rules for roadmap-to-execution subagent orchestration |
 | [`contracts/redaction_rules.md`](contracts/redaction_rules.md) | Frontend data redaction denylist and enforcement |
 | [`CONFIG_VALIDATION.md`](CONFIG_VALIDATION.md) | JSON schema validation procedures |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Contribution guidelines, CI scope, PR standards |
 
 ## Route Selection
+
+Routing must follow the canonical BMAD startup policy defined in [`docs/operations/agent_execution_commands.md`](docs/operations/agent_execution_commands.md#canonical-bmad-startup-policy-codexgeminijules).
+> Canonical BMAD route-to-command mapping (with triggers + tie-breaks): [`docs/operations/agent_execution_commands.md#05-bmad-route-to-command-matrix-canonical-selection-guide`](docs/operations/agent_execution_commands.md#05-bmad-route-to-command-matrix-canonical-selection-guide)
 
 | Route | Purpose | Agent Behavior |
 | ----- | ------- | -------------- |
