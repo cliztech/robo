@@ -58,7 +58,7 @@ function SidebarIcon({
         <button
             onClick={onClick}
             title={label}
-            aria-label={label}
+            aria-label={badge ? `${label}, ${badge} new items` : label}
             aria-pressed={active}
             className={cn(
                 'relative w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 group',
