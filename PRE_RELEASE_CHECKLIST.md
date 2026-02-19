@@ -76,6 +76,7 @@ Run this command before **every** launcher-based release path (`dev -> staging`,
 - [ ] Confirm validation output is: `Configuration validation passed for schedules.json and prompt_variables.json.`
 - [ ] Run runtime secret preflight: `python config/check_runtime_secrets.py --require-env-only`
 - [ ] Confirm secret preflight output is: `Secret integrity check passed (key material redacted).`
+- [ ] Review and enforce [Codex Environment Contract](docs/operations/codex_environment_contract.md) (required vars, source priority, and redaction rules).
 - [ ] Confirm protected runtime flags are set: `ROBODJ_PROTECTED_ENV=true` and `ROBODJ_ALLOW_FILE_SECRET_FALLBACK` is unset/false.
 - [ ] Confirm no real key material exists in `config/secret.key` or `config/secret_v2.key` on release runners.
 - [ ] If validation fails, confirm output starts with: `Configuration validation failed:` and lists actionable field-level errors.
