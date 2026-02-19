@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { DegenKnob } from './DegenKnob';
 import { cn } from '../../lib/utils';
+import { buildDefaultEffectValues } from '../../lib/degenDataAdapters';
 import { Lock, Unlock, RotateCcw, Zap } from 'lucide-react';
 
 interface EffectControl {
@@ -17,12 +18,13 @@ interface DegenEffectRackProps {
     title: string;
     deck: string;
     controls: EffectControl[];
+    initialValues?: Record<string, number>;
     isActive?: boolean;
 }
 
-export function DegenEffectRack({ title, deck, controls, isActive = true }: DegenEffectRackProps) {
+export function DegenEffectRack({ title, deck, controls, initialValues, isActive = true }: DegenEffectRackProps) {
     const [values, setValues] = useState<Record<string, number>>(
-        controls.reduce((acc, ctrl) => ({ ...acc, [ctrl.key]: 50 + Math.random() * 30 }), {})
+        initialValues ?? buildDefaultEffectValues(controls.map((ctrl) => ctrl.key))
     );
     const [isLocked, setIsLocked] = useState(false);
 
@@ -33,7 +35,7 @@ export function DegenEffectRack({ title, deck, controls, isActive = true }: Dege
 
     const handleReset = () => {
         if (isLocked) return;
-        setValues(controls.reduce((acc, ctrl) => ({ ...acc, [ctrl.key]: 50 }), {}));
+        setValues(buildDefaultEffectValues(controls.map((ctrl) => ctrl.key)));
     };
 
     const deckColorToken = deck === 'B'

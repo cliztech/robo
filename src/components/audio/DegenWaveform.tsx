@@ -19,6 +19,7 @@ interface DegenWaveformProps {
     onSeek?: (position: number) => void;
     trackTitle?: string;
     isPlaying?: boolean;
+    beatMarkers?: number[];
     className?: string;
 }
 
@@ -31,6 +32,7 @@ export function DegenWaveform({
     onSeek,
     trackTitle,
     isPlaying = false,
+    beatMarkers = [0.25, 0.5, 0.75],
     className,
 }: DegenWaveformProps) {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -38,6 +40,7 @@ export function DegenWaveform({
     const [isDragging, setIsDragging] = useState(false);
 
     const data = useMemo(
+        () => waveformData || createDeterministicWaveform(250),
         () => waveformData || deterministicWaveformSample(250),
         [waveformData]
     );
@@ -357,7 +360,7 @@ export function DegenWaveform({
                 );})}
 
                 {/* Beat grid markers */}
-                {[0.25, 0.5, 0.75].map((pos) => (
+                {beatMarkers.map((pos) => (
                     <div
                         key={pos}
                         className="absolute top-0 bottom-0 w-[1px] pointer-events-none"
