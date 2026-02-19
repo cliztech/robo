@@ -37,17 +37,17 @@ export function DegenEffectRack({ title, deck, controls, isActive = true }: Dege
     };
 
     const deckColor = deck === 'A' || deck === 'MST'
-        ? '#aaff00'
+        ? 'hsl(var(--color-deck-a))'
         : deck === 'B'
-            ? '#9933ff'
-            : '#00bfff';
+            ? 'hsl(var(--color-deck-b))'
+            : 'hsl(var(--color-deck-mic))';
 
     return (
         <div className="glass-panel overflow-hidden">
             {/* Header */}
             <div className="panel-header">
                 <div className="flex items-center gap-2">
-                    <Zap size={10} style={{ color: isActive ? deckColor : '#555' }} />
+                    <Zap size={10} style={{ color: isActive ? deckColor : 'hsl(var(--color-text-dim))' }} />
                     <span className="panel-header-title">{title}</span>
                     <span
                         className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded-sm tracking-wider"
