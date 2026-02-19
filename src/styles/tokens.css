@@ -20,6 +20,30 @@
   /* Alert Red */
   --warning: 38 92% 50%;
   /* Amber */
+  --warning-hot: 32 100% 50%;
+  --danger-bright: 0 100% 60%;
+
+  /* Deck + waveform semantic color roles */
+  --deck-a: var(--accent);
+  --deck-b: var(--accent-secondary);
+  --deck-mic: var(--accent-tertiary);
+  --deck-aux: var(--warning);
+  --deck-master: 0 0% 100%;
+
+  --waveform-played-strong: var(--deck-a);
+  --waveform-played-mid: 82 100% 43%;
+  --waveform-played-low: 82 100% 30%;
+  --waveform-unplayed-strong: 0 0% 100%;
+  --waveform-cue-default: 25 100% 50%;
+  --waveform-cue-highlight: 288 100% 50%;
+  --waveform-cue-info: 217 91% 60%;
+
+  --deck-a-rgb: 170 255 0;
+  --deck-b-rgb: 153 51 255;
+  --deck-mic-rgb: 0 191 255;
+  --alert-danger-rgb: 239 68 68;
+  --surface-rgb: 255 255 255;
+  --black-rgb: 0 0 0;
 
   /* Glow tokens */
   --glow-accent: 0 0 20px hsla(82, 100%, 50%, 0.25),
@@ -30,6 +54,14 @@
     0 0 60px hsla(195, 100%, 50%, 0.08);
   --glow-danger: 0 0 20px hsla(0, 72%, 51%, 0.3),
     0 0 60px hsla(0, 72%, 51%, 0.1);
+  --glow-deck-a-soft: 0 0 8px hsla(var(--deck-a), 0.5);
+  --glow-deck-a-ring: 0 0 15px hsla(var(--deck-a), 0.12);
+  --glow-deck-a-playhead: 0 0 10px hsla(var(--deck-a), 0.6),
+    0 0 30px hsla(var(--deck-a), 0.15);
+  --glow-danger-soft: 0 0 10px hsla(var(--danger), 0.5);
+  --glow-danger-xs: 0 0 6px hsla(var(--danger), 0.15);
+  --glow-warning-xs: 0 0 6px hsla(var(--warning), 0.15);
+  --glow-waveform-cue: 0 0 10px hsla(var(--waveform-cue-default), 0.25);
 
   /* Radii */
   --radius-xs: 3px;
@@ -77,8 +109,37 @@
   --color-accent-3: var(--accent-tertiary);
   --color-danger: var(--danger);
   --color-warning: var(--warning);
+  --color-warning-hot: var(--warning-hot);
+  --color-danger-bright: var(--danger-bright);
+  --color-deck-a: var(--deck-a);
+  --color-deck-b: var(--deck-b);
+  --color-deck-mic: var(--deck-mic);
+  --color-deck-aux: var(--deck-aux);
+  --color-deck-master: var(--deck-master);
+  --color-waveform-played-strong: var(--waveform-played-strong);
+  --color-waveform-played-mid: var(--waveform-played-mid);
+  --color-waveform-played-low: var(--waveform-played-low);
+  --color-waveform-unplayed-strong: var(--waveform-unplayed-strong);
+  --color-waveform-cue-default: var(--waveform-cue-default);
+  --color-waveform-cue-highlight: var(--waveform-cue-highlight);
+  --color-waveform-cue-info: var(--waveform-cue-info);
 }
 
 [data-theme='dark'] {
   color-scheme: dark;
+}
+
+
+[data-theme='light'] {
+  color-scheme: light;
+  --bg: 0 0% 98%;
+  --bg-elevated: 0 0% 96%;
+  --surface: 0 0% 100%;
+  --surface-2: 0 0% 94%;
+  --surface-3: 0 0% 90%;
+  --text: 0 0% 10%;
+  --text-muted: 0 0% 40%;
+  --text-dim: 0 0% 55%;
+  --glass-bg: hsla(0, 0%, 100%, 0.7);
+  --glass-border: hsla(0, 0%, 0%, 0.08);
 }
