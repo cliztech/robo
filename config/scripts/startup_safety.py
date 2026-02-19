@@ -30,6 +30,8 @@ SNAPSHOT_PREFIX = "config_snapshot_"
 SNAPSHOT_FILES = [
     "schedules.json",
     "prompt_variables.json",
+]
+SNAPSHOT_SECRET_FILES = [
     "secret.key",
     "secret_v2.key",
 ]
@@ -205,12 +207,17 @@ def _snapshot_name() -> str:
 
 
 def create_backup_snapshot(snapshot_type: str = "last_known_good_config") -> Path:
+def create_backup_snapshot(*, include_secrets: bool = False) -> Path:
     BACKUP_DIR.mkdir(parents=True, exist_ok=True)
     snapshot_dir = BACKUP_DIR / _snapshot_name()
     snapshot_dir.mkdir(parents=True, exist_ok=False)
 
+    snapshot_files = list(SNAPSHOT_FILES)
+    if include_secrets:
+        snapshot_files.extend(SNAPSHOT_SECRET_FILES)
+
     copied: list[str] = []
-    for relative in SNAPSHOT_FILES:
+    for relative in snapshot_files:
         source = CONFIG_DIR / relative
         if source.exists():
             shutil.copy2(source, snapshot_dir / relative)
@@ -219,10 +226,22 @@ def create_backup_snapshot(snapshot_type: str = "last_known_good_config") -> Pat
     manifest = {
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
         "snapshot_type": snapshot_type,
+        "snapshot_type": "last_known_good_config",
+        "includes_secrets": include_secrets,
         "files": copied,
     }
     (snapshot_dir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    log_path = _append_event_log(
+        "create_backup_snapshot",
+        {
+            "status": "success",
+            "snapshot": snapshot_dir.name,
+            "includes_secrets": include_secrets,
+            "copied_files": copied,
+        },
+    )
     print(f"Created config snapshot: {snapshot_dir}")
+    print(f"Snapshot event logged to: {log_path}")
     return snapshot_dir
 
 
@@ -255,7 +274,40 @@ def restore_last_known_good_config() -> bool:
     print("  3) Restore files and validate")
     print("  4) Auto-rollback if validation fails")
 
+def restore_last_known_good_config(*, include_secrets: bool = False) -> bool:
     snapshot_dir = _latest_snapshot_dir()
+def _list_snapshot_dirs() -> list[Path]:
+    if not BACKUP_DIR.exists():
+        return []
+    snapshots = [
+        p for p in BACKUP_DIR.iterdir() if p.is_dir() and p.name.startswith(SNAPSHOT_PREFIX)
+    ]
+    return sorted(snapshots, key=lambda p: p.name, reverse=True)
+
+
+def _prompt_snapshot_selection(snapshots: list[Path]) -> Path | None:
+    print("Guided restore: choose a snapshot to restore.")
+    for index, snapshot in enumerate(snapshots, start=1):
+        print(f"  {index}. {snapshot.name}")
+
+    print("Enter a number to restore that snapshot, or press Enter to cancel.")
+    raw_selection = input("> ").strip()
+    if not raw_selection:
+        return None
+    if not raw_selection.isdigit():
+        print("Invalid selection. Please enter a number from the list.")
+        return None
+
+    selected_index = int(raw_selection)
+    if selected_index < 1 or selected_index > len(snapshots):
+        print("Selection out of range. No changes were made.")
+        return None
+
+    return snapshots[selected_index - 1]
+
+
+def restore_last_known_good_config(snapshot_dir: Path | None = None) -> bool:
+    snapshot_dir = snapshot_dir or _latest_snapshot_dir()
     if snapshot_dir is None:
         print("No snapshot found in config/backups/.")
         _append_event_log(
@@ -266,6 +318,16 @@ def restore_last_known_good_config() -> bool:
 
     pre_restore_snapshot = create_backup_snapshot(snapshot_type="pre_restore_checkpoint")
     restored_files = _copy_snapshot_files(snapshot_dir)
+    restorable_files = list(SNAPSHOT_FILES)
+    if include_secrets:
+        restorable_files.extend(SNAPSHOT_SECRET_FILES)
+
+    restored_files: list[str] = []
+    for relative in restorable_files:
+        source = snapshot_dir / relative
+        if source.exists():
+            shutil.copy2(source, CONFIG_DIR / relative)
+            restored_files.append(relative)
 
     if not restored_files:
         print(f"Snapshot {snapshot_dir} did not contain restorable files.")
@@ -320,6 +382,7 @@ def restore_last_known_good_config() -> bool:
             "restored_files": restored_files,
             "recovery_duration_seconds": duration_seconds,
             "recovery_under_120_seconds": duration_seconds <= 120,
+            "includes_secrets": include_secrets,
         },
     )
     print(f"Restore event logged to: {log_path}")
@@ -327,7 +390,7 @@ def restore_last_known_good_config() -> bool:
     return True
 
 
-def launch_gate() -> int:
+def launch_gate(*, include_secrets_in_snapshot: bool = False) -> int:
     diagnostics_ok = run_startup_diagnostics()
     config_errors = validate_launch_config()
 
@@ -337,18 +400,34 @@ def launch_gate() -> int:
             print(f" - {error}")
         print("Attempting crash recovery using last-known-good snapshot...")
 
+        restored = restore_last_known_good_config(include_secrets=include_secrets_in_snapshot)
+        recovery_started = time.monotonic()
         restored = restore_last_known_good_config()
         if restored:
             print("Recovery succeeded: restored config validates.")
+            post_restore_errors = validate_launch_config()
+            if post_restore_errors:
+                print("Recovery failed: restored snapshot is still invalid.")
+                for error in post_restore_errors:
+                    print(f" - {error}")
+                return 1
+            elapsed = time.monotonic() - recovery_started
+            print(f"Recovery succeeded: restored config validates in {elapsed:.1f}s.")
+            if elapsed > 120:
+                print("Warning: restore completed outside the 2-minute recovery SLA target.")
         else:
             print("Recovery unavailable. Startup blocked to prevent runtime failure.")
+            print(
+                "Run guided restore manually: "
+                "python config/scripts/startup_safety.py --guided-restore"
+            )
             return 1
 
     if not diagnostics_ok:
         print("Startup diagnostics failed. Startup blocked.")
         return 1
 
-    create_backup_snapshot()
+    create_backup_snapshot(include_secrets=include_secrets_in_snapshot)
     print("Startup safety gate passed.")
     return 0
 
@@ -364,15 +443,56 @@ def main() -> int:
         action="store_true",
         help="Restore latest snapshot from config/backups/ and exit",
     )
+    parser.add_argument(
+        "--include-secrets",
+        action="store_true",
+        help=(
+            "Break-glass mode: include secret.key and secret_v2.key during snapshot "
+            "create/restore flows. By default, snapshots exclude secrets."
+        ),
+        "--guided-restore",
+        action="store_true",
+        help="Interactively choose a snapshot from config/backups/ and restore it",
+    )
     args = parser.parse_args()
 
     if args.create_backup:
-        create_backup_snapshot()
+        create_backup_snapshot(include_secrets=args.include_secrets)
         return 0
     if args.restore_last_known_good:
+        return 0 if restore_last_known_good_config(include_secrets=args.include_secrets) else 1
         return 0 if restore_last_known_good_config() else 1
+    if args.guided_restore:
+        snapshots = _list_snapshot_dirs()
+        if not snapshots:
+            print("No snapshot found in config/backups/.")
+            return 1
+
+        selected_snapshot = _prompt_snapshot_selection(snapshots)
+        if selected_snapshot is None:
+            print("Guided restore cancelled.")
+            return 1
+
+        print(f"Selected snapshot: {selected_snapshot.name}")
+        started = time.monotonic()
+        restored = restore_last_known_good_config(selected_snapshot)
+        if not restored:
+            return 1
+
+        errors = validate_launch_config()
+        if errors:
+            print("Restore completed, but configuration is still invalid:")
+            for error in errors:
+                print(f" - {error}")
+            return 1
+
+        elapsed = time.monotonic() - started
+        print(f"Guided restore succeeded and config validates in {elapsed:.1f}s.")
+        if elapsed > 120:
+            print("Warning: restore completed outside the 2-minute recovery SLA target.")
+        return 0
     if args.on_launch:
-        return launch_gate()
+        return launch_gate(include_secrets_in_snapshot=args.include_secrets)
 
     parser.print_help()
     return 1
