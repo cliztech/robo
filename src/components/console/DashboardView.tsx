@@ -203,7 +203,7 @@ export function DashboardView() {
         const tick = () => {
             const now = new Date();
             setCurrentTime(
-                now.toLocaleTimeString('en-AU', {
+                now.toLocaleTimeString(undefined, {
                     hour: '2-digit',
                     minute: '2-digit',
                     second: '2-digit',
