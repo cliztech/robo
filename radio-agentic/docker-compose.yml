@@ -1,0 +1,75 @@
+services:
+  nats:
+    image: nats:2
+    ports: ["4222:4222"]
+
+  redis:
+    image: redis:7
+    ports: ["6379:6379"]
+
+  icecast:
+    image: infiniteproject/icecast
+    ports: ["8000:8000"]
+    environment:
+      ICECAST_SOURCE_PASSWORD: ${ICECAST_SOURCE_PASSWORD:-__SET_IN_ENV__}
+      ICECAST_ADMIN_PASSWORD: ${ICECAST_ADMIN_PASSWORD:-__SET_IN_ENV__}
+      ICECAST_PASSWORD: ${ICECAST_PASSWORD:-__SET_IN_ENV__}
+      ICECAST_RELAY_PASSWORD: ${ICECAST_RELAY_PASSWORD:-__SET_IN_ENV__}
+    volumes:
+      - ./infra/icecast/icecast.xml:/etc/icecast.xml:ro
+
+  library:
+    build: ./services/library
+    environment:
+      PORT: 4001
+      NATS_URL: nats://nats:4222
+      MUSIC_DIR: /music
+    volumes:
+      - ./music:/music
+    ports: ["4001:4001"]
+    depends_on: [nats]
+
+  requests:
+    build: ./services/requests
+    environment:
+      PORT: 4002
+      NATS_URL: nats://nats:4222
+    ports: ["4002:4002"]
+    depends_on: [nats]
+
+  automation:
+    build: ./services/automation
+    environment:
+      NATS_URL: nats://nats:4222
+    depends_on: [nats]
+
+  agent-dj:
+    build: ./services/agent-dj
+    environment:
+      NATS_URL: nats://nats:4222
+      REDIS_URL: redis://redis:6379
+    depends_on: [nats, redis]
+
+  audio-engine:
+    build: ./services/audio-engine
+    environment:
+      NATS_URL: nats://nats:4222
+      AUDIO_FIFO: /tmp/radio.pcm
+    volumes:
+      - /tmp:/tmp
+      - ./music:/music
+    depends_on: [nats]
+
+  streaming-gateway:
+    build: ./services/streaming-gateway
+    environment:
+      NATS_URL: nats://nats:4222
+      AUDIO_FIFO: /tmp/radio.pcm
+      ICECAST_HOST: icecast
+      ICECAST_PORT: 8000
+      ICECAST_MOUNT: /stream
+      ICECAST_USER: source
+      ICECAST_PASS: ${ICECAST_PASS:-__SET_IN_ENV__}
+    volumes:
+      - /tmp:/tmp
+    depends_on: [icecast, nats, audio-engine]

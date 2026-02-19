@@ -1,0 +1,11 @@
+{
+  "name": "@radio-agentic/requests",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "express": "^4.21.2",
+    "nats": "^2.29.1",
+    "ws": "^8.18.1"
+  }
+}

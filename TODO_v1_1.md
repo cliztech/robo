@@ -2,6 +2,10 @@
 
 This board converts the v1.1 **Must** scope into an execution-ready TODO checklist with concrete completion criteria and validation steps.
 
+See [docs/operations/execution_index.md](docs/operations/execution_index.md) for cross-track ownership/status routing and weekly freshness protocol.
+
+> Implementation note (current): `config/scripts/startup_safety.py` is now wired into `RoboDJ_Launcher.bat` as the launch gate for diagnostics, config validation, auto-restore attempt, and snapshot creation.
+
 ## Active TODO checklist
 
 ## Parallel workstreams (current build)
@@ -63,7 +67,11 @@ This board converts the v1.1 **Must** scope into an execution-ready TODO checkli
 - [x] Add guided restore flow in launcher/runtime startup path.
 - [x] Restore last known good `schedules.json` and `prompt_variables.json` from backup.
 - [x] Log restore event under `config/logs/` with timestamp and source snapshot.
-- [ ] Verify post-restore readiness state can be reached in under 2 minutes.
+- [ ] Verify post-restore readiness state can be reached in under 2 minutes. _(instrumented with recovery duration logging; manual timing validation pending)_
+- [ ] **Subtask 3.2 — Recovery SLA run documented and passed**
+  - **Owner:** QA lead
+  - **Due date:** 2026-03-12
+  - **Pass criteria (measurable):** At least one deterministic manual run in `config/BACKUP_RECOVERY.md` records launch-gate start/ready-state stop timestamps with elapsed time `<= 120s`, plus matching restore success evidence in `config/logs/startup_safety_events.jsonl`.
 
 **Owner:** Runtime engineer  
 **Target date:** 2026-03-12  
@@ -71,10 +79,12 @@ This board converts the v1.1 **Must** scope into an execution-ready TODO checkli
 
 **Validation path**
 
+- Follow `docs/recovery_manual_test_protocol.md`.
+- Record run evidence in `config/BACKUP_RECOVERY.md`.
 - Manual scenario:
   1. Corrupt `config/schedules.json` or `config/prompt_variables.json`.
   2. Run `./RoboDJ_Launcher.bat`.
-  3. Execute restore flow.
+  3. Execute restore flow (`python config/scripts/startup_safety.py --guided-restore`).
   4. Verify app reaches ready state and restore is logged.
 
 ---

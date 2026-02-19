@@ -109,6 +109,7 @@ description: Route requests into QA, Change, or Proposal pipeline modes
 - **Purpose:** Classify incoming requests and assign them to the correct pipeline.
 - **Trigger:** New request received or scope changes mid-execution.
 - **Depends on:** `scope-resolver` (must run first)
+- **Normative source:** [`docs/operations/subagent_execution_playbook.md`](docs/operations/subagent_execution_playbook.md) for spawn/queue/task-packet rules.
 
 #### intake-router: When to Use
 
@@ -166,6 +167,7 @@ description: Report actionable issues with implementation task stubs
 - **Purpose:** Produce structured, actionable findings with attached implementation stubs.
 - **Trigger:** QA review requests, code inspections, or audit tasks.
 - **Depends on:** `intake-router` (must be routed to QA mode)
+- **Normative source:** [`docs/operations/subagent_execution_playbook.md`](docs/operations/subagent_execution_playbook.md) for evidence format, confidence ranking, and escalation handling.
 
 #### qa-issue-emitter: When to Use
 
@@ -299,6 +301,7 @@ description: Create or refine pipeline documentation for multi-agent operations
 
 - Existing documentation and governance requirements
 - Pipeline stage definitions from `AGENTS.md`
+- Artifact storage and naming requirements from `docs/operations/artifacts.md`
 
 #### docs-pipeline-designer: Steps
 
@@ -321,6 +324,7 @@ Documentation files in root `docs/` or `.agent/` scaffolding, including:
 - Pipeline stage definitions with Mermaid diagrams
 - Handoff templates
 - Failure-handling decision trees
+- Artifact specs aligned to `docs/operations/artifacts.md`
 
 #### docs-pipeline-designer: Boundaries
 
@@ -355,6 +359,7 @@ description: Generate structured PR titles and bodies for repository changes
 - Commit diff (`git diff`)
 - List of impacted files
 - Verification notes from Verifier Agent
+- Artifact references from `.agent/handoffs/` and `.agent/verification/` using `docs/operations/artifacts.md` naming rules
 
 #### pr-writer: Steps
 
@@ -363,6 +368,7 @@ description: Generate structured PR titles and bodies for repository changes
 3. List all files touched with change categories.
 4. Include validation commands run and their results.
 5. Note limitations, known issues, or follow-up items.
+6. Reference supporting artifacts (handoff/verification) when present.
 
 #### pr-writer: Commands / Tools
 

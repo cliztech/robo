@@ -5,10 +5,12 @@ from pydantic import ValidationError
 
 from backend.scheduling.autonomy_policy import (
     AutonomyPolicy,
+    DecisionAuthority,
     DecisionType,
+    DEFAULT_MODE_PERMISSIONS,
     GlobalMode,
 )
-from backend.scheduling.autonomy_service import AutonomyPolicyService
+from backend.scheduling.autonomy_service import AutonomyPolicyService, PolicyValidationError
 
 
 def test_default_policy_bootstrap_when_missing(tmp_path):
@@ -86,6 +88,32 @@ def test_audit_log_append_and_read(tmp_path):
     assert parsed[-1]["notes"] == "second"
 
 
+def test_audit_log_skips_malformed_lines_and_returns_valid_events(tmp_path):
+    audit_path = tmp_path / "audit.jsonl"
+    service = AutonomyPolicyService(
+        policy_path=tmp_path / "autonomy_policy.json",
+        audit_log_path=audit_path,
+    )
+
+    first = service.record_audit_event(
+        decision_type=DecisionType.track_selection,
+        origin="ai",
+        notes="first",
+    )
+    second = service.record_audit_event(
+        decision_type=DecisionType.script_generation,
+        origin="human",
+        notes="second",
+    )
+
+    with audit_path.open("a", encoding="utf-8") as handle:
+        handle.write('{"malformed_json": true\n')
+
+    events = service.list_audit_events(limit=10)
+
+    assert [event.event_id for event in events] == [first.event_id, second.event_id]
+
+
 def test_invalid_payload_rejection_paths_service(tmp_path):
     service = AutonomyPolicyService(
         policy_path=tmp_path / "autonomy_policy.json",
@@ -123,3 +151,42 @@ def test_invalid_payload_rejection_paths_service(tmp_path):
             decision_type=DecisionType.track_selection,
             origin="not-valid-origin",
         )
+
+
+def test_update_policy_rejects_contradictory_show_timeslot_overrides(tmp_path):
+    service = AutonomyPolicyService(
+        policy_path=tmp_path / "autonomy_policy.json",
+        audit_log_path=tmp_path / "audit.jsonl",
+    )
+
+    contradictory_policy = AutonomyPolicy.model_validate(
+        {
+            "station_default_mode": "manual",
+            "show_overrides": [{"show_id": "show-1", "mode": "autonomous"}],
+            "timeslot_overrides": [
+                {
+                    "id": "slot-1",
+                    "day_of_week": "monday",
+                    "start_time": "09:00",
+                    "end_time": "10:00",
+                    "show_id": "show-1",
+                    "mode": "assisted",
+                }
+            ],
+        }
+    )
+
+    with pytest.raises(PolicyValidationError):
+        service.update_policy(contradictory_policy)
+def test_autonomy_policy_mode_permissions_do_not_leak_between_instances():
+    first_policy = AutonomyPolicy()
+    second_policy = AutonomyPolicy()
+
+    first_policy.mode_permissions[GlobalMode.semi_auto][
+        DecisionType.track_selection
+    ] = DecisionAuthority.ai_autonomous
+
+    assert (
+        second_policy.mode_permissions[GlobalMode.semi_auto][DecisionType.track_selection]
+        == DEFAULT_MODE_PERMISSIONS[GlobalMode.semi_auto][DecisionType.track_selection]
+    )
