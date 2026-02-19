@@ -89,6 +89,27 @@ Run the following commands in order before release sign-off.
   - `Configuration validation failed:`
   - `Fix the fields above, then rerun: python config/validate_config.py`
   - `[RoboDJ] ERROR: Startup blocked because configuration validation failed.`
+- **Checklist owner:** ____________________
+- **Sign-off (name + date/time):** ____________________
+## Launcher workflow pre-run gate (all release paths)
+
+Run this command before **every** launcher-based release path (`dev -> staging`, `staging -> prod`, and hotfix redeploys):
+
+- [ ] `python config/check_runtime_secrets.py --require-env-only`
+- [ ] Confirm output: `Secret integrity check passed (key material redacted).`
+- [ ] Confirm no fallback secret files were used outside explicitly approved local dev/break-glass scenarios.
+
+## Baseline gates (run every release)
+
+- [ ] Run configuration validation: `python config/validate_config.py`
+- [ ] Confirm validation output is: `Configuration validation passed for schedules.json and prompt_variables.json.`
+- [ ] Run runtime secret preflight: `python config/check_runtime_secrets.py --require-env-only`
+- [ ] Confirm secret preflight output is: `Secret integrity check passed (key material redacted).`
+- [ ] Review and enforce [Codex Environment Contract](docs/operations/codex_environment_contract.md) (required vars, source priority, and redaction rules).
+- [ ] Confirm protected runtime flags are set: `ROBODJ_PROTECTED_ENV=true` and `ROBODJ_ALLOW_FILE_SECRET_FALLBACK` is unset/false.
+- [ ] Confirm no real key material exists in `config/secret.key` or `config/secret_v2.key` on release runners.
+- [ ] If validation fails, confirm output starts with: `Configuration validation failed:` and lists actionable field-level errors.
+- [ ] Archive config backups in `config/backups/` for any risky config changes.
 
 ---
 
@@ -174,12 +195,36 @@ Roadmap cross-links: [v2.0 heading](FEATURE_HEAVY_ROADMAP_TODO.md#v20--enterpris
 - [ ] Exit criteria are validated with reproducible runbook evidence:
   - Access controls + attribution enforced end-to-end.
   - Full-day simulation catches schedule/content errors before air.
+## Startup Preflight Failure Runbook
 
----
+When launching via `RoboDJ_Launcher.bat`, startup now runs config validation before opening the app.
 
-## Release-candidate sign-off
+1. If preflight fails, startup is blocked and the launcher prints:
+   - `Configuration validation failed:`
+   - One or more ` - [target] ...` error lines with JSON paths and expected values/types.
+   - `Fix the fields above, then rerun: python config/validate_config.py`
+   - `[RoboDJ] ERROR: Startup blocked because configuration validation failed.`
+2. Fix only the reported config fields (`config/schedules.json`, `config/prompt_variables.json`).
+3. Re-run `python config/validate_config.py` until the expected success string appears exactly:
+   - `Configuration validation passed for schedules.json and prompt_variables.json.`
+4. Relaunch using `RoboDJ_Launcher.bat`.
+- [ ] Verify backup/restore operations align with `config/BACKUP_RESTORE_CONTRACT.md` (scope, retention, confirmations, rollback).
 
-Accountable signer for each gate item: **Release Manager**
+## Startup preflight behavior (operator runbook)
+
+- `RoboDJ_Launcher.bat` now runs `config/validate_config.py` and `config/check_runtime_secrets.py --require-env-only` before launching the app.
+- Startup continues only when validation prints:
+  `Configuration validation passed for schedules.json and prompt_variables.json.`
+- If validation fails, startup is blocked and the launcher keeps the actionable validator output visible.
+- If secret preflight fails, startup is blocked until env-only key material is available and fallback usage is resolved per policy.
+- Operator actions on failure:
+  1. Read each listed `[target]` error and fix the referenced field(s) in the matching config JSON.
+  2. Re-run `python config/validate_config.py` until it prints the expected success string exactly.
+  3. Re-launch `RoboDJ_Launcher.bat`.
+- If startup is blocked because Python is missing, install Python 3 (or expose `py`/`python` on `PATH`) and rerun the launcher.
+## Required Before Release Candidate
+
+> Accountable signer for every gate item: **Release Manager**
 
 - [ ] Config schema validation pass — Sign-off: Release Manager
 - [ ] Backup/restore drill pass — Sign-off: Release Manager
