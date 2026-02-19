@@ -77,7 +77,7 @@ function SidebarIcon({
             className={cn(
                 'relative w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
                 active
-                    ? 'bg-lime-500/10 text-lime-400 shadow-[0_0_15px_rgba(170,255,0,0.08)]'
+                    ? 'bg-deck-a-soft text-deck-a shadow-glow-deck-a-ring'
                     : 'text-zinc-600 hover:text-zinc-200 hover:bg-white/[0.03]'
             )}
         >
@@ -86,8 +86,7 @@ function SidebarIcon({
             {active && (
                 <motion.div
                     layoutId="sidebar-active"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[2.5px] h-5 rounded-r-full bg-lime-500"
-                    style={{ boxShadow: '0 0 8px rgba(170,255,0,0.5)' }}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[2.5px] h-5 rounded-r-full bg-[hsl(var(--color-deck-a))] shadow-glow-deck-a"
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                 />
             )}
@@ -132,42 +131,37 @@ function StatCard({
         lime: {
             gradient: 'from-lime-500/8 via-lime-500/3 to-transparent',
             border: 'border-lime-500/15',
-            text: 'text-lime-400',
             icon: 'text-lime-500/70',
-            glow: 'shadow-[0_0_20px_rgba(170,255,0,0.04)]',
-            spark: '#aaff00',
+            glow: 'shadow-[0_0_20px_hsla(var(--color-deck-a),0.04)]',
+            spark: 'hsl(var(--color-deck-a))',
         },
         purple: {
             gradient: 'from-purple-500/8 via-purple-500/3 to-transparent',
             border: 'border-purple-500/15',
-            text: 'text-purple-400',
             icon: 'text-purple-500/70',
-            glow: 'shadow-[0_0_20px_rgba(153,51,255,0.04)]',
-            spark: '#9933ff',
+            glow: 'shadow-[0_0_20px_hsla(var(--color-deck-b),0.04)]',
+            spark: 'hsl(var(--color-deck-b))',
         },
         cyan: {
             gradient: 'from-cyan-500/8 via-cyan-500/3 to-transparent',
             border: 'border-cyan-500/15',
-            text: 'text-cyan-400',
             icon: 'text-cyan-500/70',
-            glow: 'shadow-[0_0_20px_rgba(0,191,255,0.04)]',
-            spark: '#00bfff',
+            glow: 'shadow-[0_0_20px_hsla(var(--color-deck-mic),0.04)]',
+            spark: 'hsl(var(--color-deck-mic))',
         },
         orange: {
             gradient: 'from-orange-500/8 via-orange-500/3 to-transparent',
             border: 'border-orange-500/15',
-            text: 'text-orange-400',
             icon: 'text-orange-500/70',
-            glow: 'shadow-[0_0_20px_rgba(255,107,0,0.04)]',
-            spark: '#ff6b00',
+            glow: 'shadow-[0_0_20px_hsla(var(--color-waveform-cue-default),0.04)]',
+            spark: 'hsl(var(--color-waveform-cue-default))',
         },
         red: {
             gradient: 'from-red-500/8 via-red-500/3 to-transparent',
             border: 'border-red-500/15',
-            text: 'text-red-400',
             icon: 'text-red-500/70',
-            glow: 'shadow-[0_0_20px_rgba(239,68,68,0.04)]',
-            spark: '#ef4444',
+            glow: 'shadow-[0_0_20px_hsla(var(--color-danger),0.04)]',
+            spark: 'hsl(var(--color-danger))',
         },
     };
 
@@ -326,7 +320,7 @@ function DeckView({ telemetry }: { telemetry: DJTelemetry }) {
     return (
         <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-                <DeckPanel label="Deck A" color="#aaff00" bpm="128.0" musicalKey="Am" isActive={true}>
+                <DeckPanel label="Deck A" color="hsl(var(--color-deck-a))" bpm="128.0" musicalKey="Am" isActive={true}>
                     <DegenWaveform
                         progress={telemetry.transport.progress}
                         duration={telemetry.transport.durationSeconds || 234}
@@ -334,8 +328,8 @@ function DeckView({ telemetry }: { telemetry: DJTelemetry }) {
                         trackTitle="Neural Drift v2.1 — SynthKong"
                         isPlaying={telemetry.transport.isPlaying}
                         cuePoints={[
-                            { position: 0.12, label: 'CUE 1', color: '#ff6b00' },
-                            { position: 0.68, label: 'DROP', color: '#bf00ff' },
+                            { position: 0.12, label: 'CUE 1', color: 'hsl(var(--color-waveform-cue-default))' },
+                            { position: 0.68, label: 'DROP', color: 'hsl(var(--color-waveform-cue-highlight))' },
                         ]}
                     />
                     <DegenEffectRack
@@ -352,7 +346,7 @@ function DeckView({ telemetry }: { telemetry: DJTelemetry }) {
                     />
                 </DeckPanel>
 
-                <DeckPanel label="Deck B" color="#9933ff" bpm="140.0" musicalKey="Fm" isActive={false}>
+                <DeckPanel label="Deck B" color="hsl(var(--color-deck-b))" bpm="140.0" musicalKey="Fm" isActive={false}>
                     <DegenWaveform
                         progress={telemetry.transport.progress}
                         duration={telemetry.transport.durationSeconds || 198}
@@ -360,8 +354,8 @@ function DeckView({ telemetry }: { telemetry: DJTelemetry }) {
                         trackTitle="Bass Gorilla — DJ DegenApe"
                         isPlaying={false}
                         cuePoints={[
-                            { position: 0.08, label: 'INTRO', color: '#3b82f6' },
-                            { position: 0.52, label: 'BUILD', color: '#bf00ff' },
+                            { position: 0.08, label: 'INTRO', color: 'hsl(var(--color-waveform-cue-info))' },
+                            { position: 0.52, label: 'BUILD', color: 'hsl(var(--color-waveform-cue-highlight))' },
                         ]}
                     />
                     <DegenEffectRack
@@ -511,7 +505,7 @@ function DashboardView({ telemetry }: { telemetry: DJTelemetry }) {
                     <div className="glass-panel overflow-hidden">
                         <div className="panel-header">
                             <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-lime-500 animate-pulse" style={{ boxShadow: '0 0 8px rgba(170,255,0,0.5)' }} />
+                                <div className="w-2 h-2 rounded-full bg-[hsl(var(--color-deck-a))] animate-pulse shadow-glow-deck-a" />
                                 <span className="panel-header-title">Master Output</span>
                             </div>
                             <div className="flex items-center gap-2">
@@ -527,8 +521,8 @@ function DashboardView({ telemetry }: { telemetry: DJTelemetry }) {
                                 trackTitle="Neural Drift v2.1 — SynthKong"
                                 isPlaying={telemetry.transport.isPlaying}
                                 cuePoints={[
-                                    { position: 0.12, label: 'CUE 1', color: '#ff6b00' },
-                                    { position: 0.68, label: 'DROP', color: '#bf00ff' },
+                                    { position: 0.12, label: 'CUE 1', color: 'hsl(var(--color-waveform-cue-default))' },
+                                    { position: 0.68, label: 'DROP', color: 'hsl(var(--color-waveform-cue-highlight))' },
                                 ]}
                             />
                         </div>
@@ -650,7 +644,7 @@ export default function StudioPage() {
             {viewContent}
         </AppShell>
     return (
-        <div className="flex h-screen bg-[hsl(0,0%,3%)] text-white overflow-hidden ambient-bg">
+        <div className="flex h-screen bg-[hsl(var(--color-bg-elevated))] text-white overflow-hidden ambient-bg">
             {/* ── SIDEBAR ──────────────────────────────── */}
             <Sidebar width="compact" ariaLabel="Primary navigation">
                 {/* Logo */}
