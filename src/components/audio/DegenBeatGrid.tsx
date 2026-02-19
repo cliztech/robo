@@ -66,7 +66,7 @@ export function DegenBeatGrid({ decks = 4, steps = 16 }: DegenBeatGridProps) {
 
             <div className="mt-4 flex gap-2">
                 <button className="flex-1 bg-zinc-900 hover:bg-zinc-800 text-[10px] font-bold py-1.5 border border-zinc-800 rounded uppercase">SNGL</button>
-                <button className="flex-1 bg-[hsla(var(--color-deck-b),0.2)] text-[hsl(var(--color-deck-b))] border border-[hsla(var(--color-deck-b),0.3)] text-[10px] font-bold py-1.5 rounded uppercase">CONT</button>
+                <button className="flex-1 bg-deck-b-soft text-deck-b border border-deck-b-soft text-[10px] font-bold py-1.5 rounded uppercase">CONT</button>
             </div>
         </div>
     );
