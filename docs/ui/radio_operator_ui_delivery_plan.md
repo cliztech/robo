@@ -1,6 +1,6 @@
 # Radio Operator UI Delivery Plan (Functional, Not Mockup-Only)
 
-Status: Proposed
+Status: Prototype complete; Hardening in progress (Phase 4)
 Owner: Design + DevOps + QA + AI Improvement + Management
 Primary reference style: user-provided DJ/radio console mockups (dark, high-density, deck-centric)
 
@@ -11,6 +11,12 @@ Primary reference style: user-provided DJ/radio console mockups (dark, high-dens
 - Last updated: 2026-02-16
 - Release target: Operator UI Beta (Phase 2 complete)
 - Rollout status source of truth: [`docs/ui/radio_broadcasting_ui_execution_plan.md`](radio_broadcasting_ui_execution_plan.md#execution-status-source-of-truth)
+## Reference Inputs
+
+- Visual asset catalog index: [`docs/ui/reference-catalog/virtual-dj/README.md`](./reference-catalog/virtual-dj/README.md)
+- Asset-by-asset scoring: [`docs/ui/reference-catalog/virtual-dj/catalog.csv`](./reference-catalog/virtual-dj/catalog.csv)
+Reference index: `docs/ui/virtual_dj_reference_index.md`.
+
 
 ## Progress Summary (2026-02-16)
 
@@ -49,6 +55,25 @@ Canonical status labels (use exactly): **Not Started / In Progress / Blocked / D
 **Next milestone date:** 2026-02-23 (Phase 0 sign-off + implementation backlog approval)
 
 ## 1) Outcome
+
+## 1.1) Current implementation snapshot
+
+The operator UI is already partially implemented in `src/app/page.tsx` and the audio component set in `src/components/audio/`, with scheduling context from `src/components/schedule/DegenScheduleTimeline.tsx`.
+
+Completed modules:
+- `DegenWaveform`
+- `DegenMixer`
+- `DegenTransport`
+- `DegenTrackList`
+- `DegenScheduleTimeline`
+- Supporting modules in current console: `DegenEffectRack`, `DegenBeatGrid`
+
+Remaining hardening tasks:
+- Replace simulated/randomized UI telemetry with backend/audio-engine streams.
+- Strengthen keyboard-first and screen-reader behavior across all deck and mixer controls.
+- Add deterministic coverage for transport, browser filtering/loading, and timeline interactions.
+- Complete reliability behavior for reconnect, stale state, and fallback visualization flows.
+- Validate sustained performance for concurrent waveform, meters, and table updates.
 
 Design and implement **fully operational** operator interfaces (not static images) for the DGN-DJ radio platform by translating the visual language of the provided mockups into a production-ready interaction system.
 
@@ -229,6 +254,10 @@ From `SKILLS.md`, recommended stack:
 - [ ] Finalize IA + component taxonomy.
 - [ ] Lock design tokens and contrast profiles.
 - [ ] Define keyboard command map and ARIA landmarks.
+State: Complete
+- Finalize IA + component taxonomy
+- Lock design tokens and contrast profiles
+- Define keyboard command map and ARIA landmarks
 
 Objective completion criteria:
 - [ ] Approved spec package includes acceptance criteria per module.
@@ -239,6 +268,7 @@ Objective completion criteria:
 - [ ] Implement deck, waveform, transport, mixer, and meter bridge.
 - [ ] Integrate live state feeds (read + control).
 - [ ] Add fail-safe indicators and transport confirmations.
+State: Prototype complete
 - Implement deck, waveform, transport, mixer, meter bridge
 - Integrate live state feeds (read + control)
 - Add fail-safe indicators and transport confirmations
@@ -260,6 +290,7 @@ Objective completion criteria:
 - [ ] Implement media browser and queue operations.
 - [ ] Integrate scheduler overlay and conflict handling.
 - [ ] Add now/next and break-window intelligence.
+State: Prototype complete
 - Implement media browser and queue operations
 - Integrate scheduler overlay and conflict handling
 - Add now/next and break-window intelligence
@@ -274,6 +305,7 @@ Objective completion criteria:
 - [ ] Add FX/sampler module with safety locks and reset semantics.
 - [ ] Add routing/device settings with apply/test/rollback flow.
 - [ ] Integrate diagnostics command center.
+State: In progress
 - Add FX/sampler module with safety locks and reset semantics
 - Add routing/device settings with apply/test/rollback
 - Integrate diagnostics command center
@@ -288,19 +320,31 @@ Objective completion criteria:
 - [ ] Tune performance for real-time visual updates.
 - [ ] Complete accessibility and keyboard coverage.
 - [ ] Finish full QA regression, release checklist, and operator training aids.
+State: Hardening in progress
+- Performance tuning for real-time visual updates
+- Accessibility and keyboard completion
+- Full QA regression, release checklist, and operator training aids
 
 Objective completion criteria:
 - [ ] Release candidate passes all quality gates in `PRE_RELEASE_CHECKLIST.md`.
 - [ ] Accessibility presets pass contrast, focus, and reduced-motion checks.
 - [ ] Performance budget signoff is captured in the rollout source-of-truth document.
 
+Quality readiness exit criteria:
+- 100% pass rate for defined on-air operator regression scenarios in CI.
+- P95 transport and cue interaction latency <100ms in staging.
+- Zero unresolved blocker/critical defects and zero critical accessibility issues.
+- Keyboard-only completion rate ≥95% for deck, queue, and scheduler workflows.
+- 55+ FPS sustained in composite operator view during active meter + waveform updates.
+
 ## 10) Verification and Quality Gates
 
 Mandatory verification before production rollout:
 - Functional checks: transport control, queue ordering, scheduler sync, routing apply/rollback
 - Reliability checks: fallback behavior, reconnect logic, stale state detection
-- UX checks: keyboard-only operation, focus order, reduced-motion compatibility
+- UX checks: keyboard-only operation, deterministic focus order (top strip → deck and mixer canvas → context rail → bottom workspace), reduced-motion compatibility
 - Accessibility checks: contrast and screen-reader labels for critical controls
+- Keyboard shortcut checks: document and verify seek controls (`Left/Right`, `Shift+Left/Right`, `Home`, `End`), cue-point jump actions, and on-air/alert toggle announcements
 - Performance checks: waveform + meters + table scrolling under load
 
 ## 11) Quality Gate Evidence

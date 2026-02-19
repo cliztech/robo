@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { DegenKnob } from './DegenKnob';
 import { cn } from '../../lib/utils';
+import { buildDefaultEffectValues } from '../../lib/degenDataAdapters';
 import { Lock, Unlock, RotateCcw, Zap } from 'lucide-react';
 
 interface EffectControl {
@@ -17,12 +18,13 @@ interface DegenEffectRackProps {
     title: string;
     deck: string;
     controls: EffectControl[];
+    initialValues?: Record<string, number>;
     isActive?: boolean;
 }
 
-export function DegenEffectRack({ title, deck, controls, isActive = true }: DegenEffectRackProps) {
+export function DegenEffectRack({ title, deck, controls, initialValues, isActive = true }: DegenEffectRackProps) {
     const [values, setValues] = useState<Record<string, number>>(
-        controls.reduce((acc, ctrl) => ({ ...acc, [ctrl.key]: 50 + Math.random() * 30 }), {})
+        initialValues ?? buildDefaultEffectValues(controls.map((ctrl) => ctrl.key))
     );
     const [isLocked, setIsLocked] = useState(false);
 
@@ -33,28 +35,34 @@ export function DegenEffectRack({ title, deck, controls, isActive = true }: Dege
 
     const handleReset = () => {
         if (isLocked) return;
-        setValues(controls.reduce((acc, ctrl) => ({ ...acc, [ctrl.key]: 50 }), {}));
+        setValues(buildDefaultEffectValues(controls.map((ctrl) => ctrl.key)));
     };
 
+    const deckColorToken = deck === 'B'
+        ? '--color-deck-b'
+        : deck === 'A' || deck === 'MST'
+            ? '--color-deck-a'
+            : '--color-accent-3';
+    const deckColor = `hsl(var(${deckColorToken}))`;
     const deckColor = deck === 'A' || deck === 'MST'
-        ? '#aaff00'
+        ? 'hsl(var(--color-deck-a))'
         : deck === 'B'
-            ? '#9933ff'
-            : '#00bfff';
+            ? 'hsl(var(--color-deck-b))'
+            : 'hsl(var(--color-deck-mic))';
 
     return (
         <div className="glass-panel overflow-hidden">
             {/* Header */}
             <div className="panel-header">
                 <div className="flex items-center gap-2">
-                    <Zap size={10} style={{ color: isActive ? deckColor : '#555' }} />
+                    <Zap size={10} style={{ color: isActive ? deckColor : 'hsl(var(--color-text-dim))' }} />
                     <span className="panel-header-title">{title}</span>
                     <span
                         className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded-sm tracking-wider"
                         style={{
                             color: deckColor,
-                            backgroundColor: `${deckColor}10`,
-                            border: `1px solid ${deckColor}15`,
+                            backgroundColor: isActive ? `hsla(var(${deckColorToken}), 0.12)` : 'hsl(var(--color-surface-2))',
+                            border: `1px solid ${isActive ? `hsla(var(${deckColorToken}), 0.24)` : 'hsl(var(--color-control-border))'}`,
                         }}
                     >
                         {deck}
@@ -64,10 +72,10 @@ export function DegenEffectRack({ title, deck, controls, isActive = true }: Dege
                     <button
                         onClick={() => setIsLocked(!isLocked)}
                         className={cn(
-                            'p-1 rounded transition-all',
+                            'p-1 rounded-sm border transition-all',
                             isLocked
-                                ? 'text-yellow-500 bg-yellow-500/10'
-                                : 'text-zinc-600 hover:text-zinc-400 hover:bg-white/[0.03]'
+                                ? 'text-[hsl(var(--color-warning))] bg-[hsl(var(--color-warning)_/_0.12)] border-[hsl(var(--color-warning)_/_0.35)]'
+                                : 'text-zinc-600 border-transparent hover:text-zinc-400 hover:border-[hsl(var(--color-control-border))] hover:bg-white/[0.02]'
                         )}
                         title={isLocked ? 'Unlock' : 'Lock'}
                     >
@@ -75,7 +83,7 @@ export function DegenEffectRack({ title, deck, controls, isActive = true }: Dege
                     </button>
                     <button
                         onClick={handleReset}
-                        className="p-1 rounded text-zinc-600 hover:text-zinc-400 hover:bg-white/[0.03] transition-all"
+                        className="p-1 rounded-sm border border-transparent text-zinc-600 hover:text-zinc-400 hover:border-[hsl(var(--color-control-border))] hover:bg-white/[0.02] transition-all"
                         title="Reset"
                     >
                         <RotateCcw size={10} />
@@ -105,11 +113,11 @@ export function DegenEffectRack({ title, deck, controls, isActive = true }: Dege
                 </div>
 
                 {/* Preset bar */}
-                <div className="flex items-center justify-center gap-1 mt-3 pt-3 border-t border-white/[0.03]">
+                <div className="flex items-center justify-center gap-1 mt-3 pt-3 border-t border-[hsl(var(--color-control-border)_/_0.6)]">
                     {['Subtle', 'Warm', 'Heavy', 'Custom'].map((preset) => (
                         <button
                             key={preset}
-                            className="text-[7px] font-black uppercase tracking-wider px-2 py-1 rounded-sm border border-white/[0.04] text-zinc-600 bg-white/[0.01] hover:text-zinc-300 hover:bg-white/[0.03] transition-all"
+                            className="text-[7px] font-black uppercase tracking-wider px-2 py-1 rounded-sm border border-[hsl(var(--color-control-border)_/_0.75)] text-zinc-500 bg-[hsl(var(--color-surface)_/_0.65)] hover:text-zinc-300 hover:border-[hsl(var(--color-control-border-strong))] transition-all"
                         >
                             {preset}
                         </button>
