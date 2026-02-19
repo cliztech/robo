@@ -309,7 +309,7 @@ export function DegenMixer({ channels = DEFAULT_CHANNELS, className }: DegenMixe
                     <span className="text-[7px] font-black uppercase tracking-widest text-zinc-600">Crossfader</span>
                 </div>
                 <div className="flex items-center gap-3">
-                    <span className="text-[9px] font-black text-[hsl(var(--color-deck-a))] w-3">A</span>
+                    <span className="text-[9px] font-black text-deck-a w-3">A</span>
                     <div className="flex-1 relative group h-6 flex items-center">
                         {/* Track */}
                         <div className="absolute inset-x-0 h-[4px] rounded-full overflow-hidden">
