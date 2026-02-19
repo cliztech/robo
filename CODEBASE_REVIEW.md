@@ -14,14 +14,17 @@ This review focuses on the repository artifacts that are editable in-source (scr
 
 ## Findings
 
-### 1) Launcher is environment-specific (High)
+### 1) Launcher portability (Resolved)
 
-- `RoboDJ_Launcher.bat` hardcodes an absolute local Windows path (`E:\onedrive\ai music agents\robodj\...`).
-- This can fail on any machine where that exact path does not exist.
+- `RoboDJ_Launcher.bat` now derives runtime paths from the launcher directory (`%~dp0`).
+- Executable and startup safety script locations are resolved relative to the launcher, so installs are portable across drives and folders.
 
 **Recommendation**
 
-- Derive executable path from `%~dp0` (script directory) so the launcher is portable across installations.
+- Keep launcher/runtime files in the expected portable layout:
+  - `RoboDJ_Launcher.bat`
+  - `RoboDJ Automation.exe`
+  - `config\scripts\startup_safety.py`
 
 ### 2) DB inspection script has weak resource handling and broad exception usage (Medium)
 

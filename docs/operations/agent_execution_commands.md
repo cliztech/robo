@@ -2,6 +2,30 @@
 
 Short, runnable command sequences for execution workflows, plus an operational matrix for all DGN-DJ teams (managers, subagents, tools, skills, personalities, tech stack, and trusted references).
 
+## Canonical BMAD startup policy (Codex/Gemini/Jules)
+
+Use this as the single startup snippet for repository-level agent bootstrap instructions.
+
+> Use BMAD as the default execution framework for this repository.
+> Load `_bmad/_config/bmad-help.csv` at session start.
+> Match command/workflow first, then fall back to free-form execution.
+> Treat `_bmad/` as the workflow source of truth.
+
+### Quick verification checklist
+
+- [ ] Given request X, expected BMAD command Y is selected.
+- [ ] If no match exists, fallback path is used.
+
+### Slash-command normalization
+
+When users issue short slash commands (for example, `/bmad build`) that are not literal entries in `_bmad/_config/bmad-help.csv`, normalize to the closest canonical BMAD command before execution.
+
+| Incoming slash command | Canonical BMAD command | Rationale |
+| --- | --- | --- |
+| `/bmad build` | `bmad-bmm-quick-dev` | Implies immediate implementation/delivery intent in a one-off flow. |
+
+If no safe mapping is obvious, run `bmad-help` behavior and present nearest valid commands from `_bmad/_config/bmad-help.csv`.
+
 ## 0) Fast start and repository sanity checks
 
 ```bash
