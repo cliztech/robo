@@ -129,6 +129,12 @@ Optional preflight mode:
 scripts/bootstrap_dev_environment.sh --with-preflight
 ```
 
+Before running automation, also run:
+
+```bash
+scripts/codex_env_doctor.sh
+```
+
 It validates:
 - git repository + remotes
 - presence of `docker-compose.yaml`
@@ -185,6 +191,11 @@ With `--with-preflight`, it also runs:
 - `python config/check_runtime_secrets.py --require-env-only`
 
 The script prints pass/fail summaries for preflight checks and avoids printing secret key material.
+
+The Codex doctor script validates:
+- required runtime secret environment variable presence (without printing values)
+- secret integrity via `python config/check_runtime_secrets.py --require-env-only`
+- helper tooling availability (`git`, optional `gh`, optional `docker`)
 
 ## 3) Docker workflow (optional)
 
