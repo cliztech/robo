@@ -78,9 +78,8 @@ python config/scripts/startup_safety.py --on-launch
 
 5. **Collect log evidence**
 
-```bash
+# On Linux/macOS, use 'tail'. On Windows, use PowerShell's 'Get-Content -Tail'.
 tail -n 5 config/logs/startup_safety_events.jsonl
-```
 
    - Confirm a `restore_last_known_good` event with `status` = `success`.
 
