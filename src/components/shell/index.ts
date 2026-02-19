@@ -1,3 +1,4 @@
+export * from './GorillaLogo';
 export * from './address-bar';
 export * from './app-shell';
 export * from './deck-panel';
