@@ -22,6 +22,21 @@
 
 <workflow>
 
+<step n="0" goal="Run source-of-truth freshness gate before sprint planning">
+<action>Load `docs/operations/execution_index.md` and enumerate every active-track link under the **Source of truth** column.</action>
+<action>For each linked SoT section, locate the most recent weekly update entry (template starts with `- Date (UTC): YYYY-MM-DD`).</action>
+<action>Compute age in days from current UTC date.</action>
+
+**Gate condition (required):**
+
+- If **any** SoT section is older than 7 days, mark it as stale and **block sprint planning**.
+- Emit a blocking summary listing stale tracks, owners, SoT links, and staleness age.
+- Require the listed owner to refresh the stale SoT status section first.
+- Resume sprint planning only after all SoT sections have updates within the last 7 days.
+
+<action>Reference runbook: `docs/operations/runbooks/sprint_planning_source_of_truth_gate.md`.</action>
+</step>
+
 <step n="1" goal="Parse epic files and extract all work items">
 <action>Communicate in {communication_language} with {user_name}</action>
 <action>Look for all files matching `{epics_pattern}` in {epics_location}</action>
