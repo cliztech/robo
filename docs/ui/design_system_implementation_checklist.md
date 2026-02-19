@@ -2,6 +2,43 @@
 
 Anchor document: `REACT_BROWSER_UI_TEAM_BLUEPRINT.md` (Objective, Team Model, Design Tokens, Delivery Plan, and Implementation Checklist sections).
 
+
+## Progress Summary (2026-02-16)
+
+Canonical status labels (use exactly): **Not Started / In Progress / Blocked / Done**.
+
+| Phase | Status | Notes |
+| --- | --- | --- |
+| Intake + Scope | Done | Scope and constraints are explicitly documented in this checklist. |
+| Stage-Gated Planning | Done | Intake/planner/executor/verifier/handoff stages are documented and completed for planning output. |
+| Minimal Token Set Adoption | In Progress | Token checklist exists; implementation evidence across surfaces is still pending. |
+| Operator Surface Migration | Not Started | Per-surface migration tasks are defined but not yet executed in UI source. |
+| Verification + Sign-Off | Not Started | Verification procedure is defined but has no run artifacts yet. |
+
+### Phase Ownership (Accountable Team/Agent)
+
+| Phase | Accountable team | Accountable agent |
+| --- | --- | --- |
+| Intake + Scope | Management Team | Project Coordinator Agent |
+| Stage-Gated Planning | Management Team | Sprint Planner Agent |
+| Minimal Token Set Adoption | Design Team | Brand Consistency Agent |
+| Operator Surface Migration | DevOps Team | Infrastructure Agent |
+| Verification + Sign-Off | QA Team | Performance Profiler Agent |
+
+### Completion Evidence (Checked Items)
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| Intake scope and out-of-scope boundaries documented | ✅ Done | #1-intake--scope |
+| Stage-gated plan recorded with completed planning stages | ✅ Done | #2-stage-gated-plan-aligned-to-repository-agents-flow |
+
+### Current Risks/Blockers
+
+- Blocked on implementation artifacts for tokenized surfaces; this checklist currently tracks planning-only progress.
+- Verification steps require runnable UI components and screenshots that are not yet present in this repository.
+
+**Next milestone date:** 2026-02-23 (first migrated surface evidence added to checklist)
+
 ## 1) Intake + Scope
 
 Request type: documentation + migration planning (no executable/binary modifications).
@@ -28,7 +65,7 @@ Out of scope:
 
 Reference source of truth: `docs/ui/design_tokens_v1.md`.
 
-- [ ] Adopt semantic color roles (`bg`, `surface`, `text`, `border`, `accent`, status roles, focus ring).
+- [x] Adopt semantic color roles (`bg`, `surface`, `text`, `border`, `accent`, status roles, focus ring) for `src/app/page.tsx`, `src/components/audio/`, and `src/styles/globals.css` via `src/styles/tokens.css`.
 - [ ] Adopt typography scale (`100`–`700`) and line-height roles.
 - [ ] Adopt spacing grid (`space-1` through `space-12`) for layout and component padding.
 - [ ] Adopt radius scale (`sm`, `md`, `lg`, `pill`) for all rounded elements.
@@ -120,8 +157,8 @@ Migration tasks:
 ## 6) Acceptance Checks (Required)
 
 ### A) Light/Dark parity
-- [ ] Every tokenized component supports both light and dark themes.
-- [ ] No hardcoded hex/HSL values in component-level styles.
+- [x] Every tokenized component supports both light and dark themes for the migrated studio/audio surfaces (token aliases used instead of fixed literals).
+- [x] No hardcoded hex/HSL values in component-level styles on migrated studio/audio surfaces (`src/app/page.tsx` + `src/components/audio/`).
 - [ ] Visual hierarchy (surface/elevation) remains equivalent across themes.
 
 ### B) Contrast thresholds
@@ -140,13 +177,39 @@ For each interactive primitive and each surface:
 
 ## 7) Verification Procedure Before Screen Sign-Off
 
-- [ ] Run a token-usage review to confirm no raw color literals on migrated screens.
+- [x] Run a token-usage review to confirm no raw color literals on migrated screens (completed for `src/app/page.tsx` and `src/components/audio/`).
 - [ ] Run keyboard-only walkthrough on each operator surface.
 - [ ] Run light/dark screenshot diff on shell + core primitives + each feature screen.
 - [ ] Run contrast scan and record exceptions with owner + fix date.
 - [ ] Confirm reduced-motion behavior parity for interaction feedback.
 
-## 8) Deliverables Produced by This Request
+## 8) Reference Benchmark Checks
+
+Use this benchmark set to validate operator-surface implementation quality against known reference captures in `images/`.
+
+| Check area | Measurable pass criteria | Reference files (`images/`) |
+| --- | --- | --- |
+| Layout density targets | Core workspace density remains within **40-60 px** row height for data-dense tables and **72-96 px** card/list entries; no more than **2 simultaneous dense variants** per screen. | `images/library.png`, `images/tracklists.png`, `images/MixerMain.png` |
+| Module visibility @ 1280x720 and 1920x1080 | At **1280x720**, top-level operator modules (nav, transport/now-playing, primary workspace, status rail) are visible without horizontal scroll; at **1920x1080**, all core modules plus secondary diagnostics/status panels are visible in a single viewport. | `images/broadcast.png`, `images/videobroadcast.png`, `images/08_video_mix.jpg` |
+| Color-role consistency (deck A/B/status) | Deck A and Deck B retain stable, non-conflicting role colors across all states; status colors map strictly to semantic roles (success/warning/error/info) and stay consistent between light/dark themes. | `images/04_Pro_4decks.jpg`, `images/05_Performance.jpg`, `images/06_PerformanceFX.jpg` |
+| Keyboard-first completion of core broadcast flows | Keyboard-only operator can complete each core flow (queue track, start transition, trigger FX, recover from warning) with **0 pointer interactions** and visible focus states on every actionable step. | `images/record.png`, `images/effects.png`, `images/automix.png` |
+| Motion restraint and feedback timing | Non-essential motion uses reduced-distance transitions and is disabled/reduced in reduced-motion mode; action feedback appears within **100-200 ms** and full transition completion stays under **300 ms** for routine UI interactions. | `images/sampler.png`, `images/pads.png`, `images/scratchdna.png` |
+
+### Pass/Fail Evidence Format (Required per check)
+
+- **Screenshot pairs**: provide before/after (or baseline/current) captures for both **1280x720** and **1920x1080** when layout/visibility is involved.
+- **Task-run logs**: include step-by-step run logs for keyboard-first flows with timestamped completion and any deviation notes.
+- **Accessibility and performance notes**: attach contrast/focus observations, reduced-motion behavior notes, and measured interaction timing summaries.
+
+### Ownership + Review Cadence
+
+| Activity | Primary owner | Reviewers | Cadence |
+| --- | --- | --- | --- |
+| Benchmark evidence collection | QA Team (Test Generator Agent) | Design Team (Accessibility Auditor Agent) | Weekly during active migration |
+| Design-token and visual consistency review | Design Team (Brand Consistency + Accessibility Auditor Agents) | QA Team | Weekly, plus before release candidate |
+| Quality gate and harsh-readiness review | Brutal Review & Feedback Team (Code Critic + UX Auditor Agents) | QA + Design Team leads | Bi-weekly and mandatory at draft PR maturity gate |
+
+## 9) Deliverables Produced by This Request
 
 - Versioned token source of truth: `docs/ui/design_tokens_v1.md`
 - Surface-mapped implementation checklist: `docs/ui/design_system_implementation_checklist.md`

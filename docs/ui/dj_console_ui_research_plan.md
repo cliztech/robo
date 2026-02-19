@@ -1,8 +1,97 @@
 # DJ Console UI/UX Research and Execution Plan
 
-Status: draft  
+Status: Prototype complete; Hardening in progress (Phase 4)  
 Audience: product/design/frontend/audio teams  
 Goal: reproduce the look-and-feel of the reference DJ images (VirtualDJ-like density and performance) while fitting the DGN-DJ stack and accessibility commitments.
+
+## Reference Inputs
+
+- Visual asset catalog index: [`docs/ui/reference-catalog/virtual-dj/README.md`](./reference-catalog/virtual-dj/README.md)
+- Asset-by-asset scoring: [`docs/ui/reference-catalog/virtual-dj/catalog.csv`](./reference-catalog/virtual-dj/catalog.csv)
+Reference index: `docs/ui/virtual_dj_reference_index.md`.
+Reference assets are maintained in `images/` using canonical filenames, including:
+
+- `vdj_04_pro_4decks_v1_1920x1080.jpg`
+- `vdj_06_performancefx_v1_1920x1080.jpg`
+- `vdj_mixermain_v1_1920x563.png`
+- `vdj_playlists_v1_800x500.png`
+
+
+## Progress Summary (2026-02-16)
+
+Canonical status labels (use exactly): **Not Started / In Progress / Blocked / Done**.
+
+| Phase | Status | Notes |
+| --- | --- | --- |
+| Phase 1 — Theme + shell scaffolding | In Progress | Research direction and shell/component targets are documented; implementation is queued. |
+| Phase 2 — Interactive controls | Not Started | Waiting on Phase 1 shell baseline and interaction state primitives. |
+| Phase 3 — Waveform + audio integration | Not Started | Depends on renderer choice and telemetry contract definition. |
+| Phase 4 — Hardening and presets | Not Started | Validation gates are defined but execution has not started. |
+
+### Phase Ownership (Accountable Team/Agent)
+
+| Phase | Accountable team | Accountable agent |
+| --- | --- | --- |
+| Phase 1 — Theme + shell scaffolding | Design Team | UI/UX Agent |
+| Phase 2 — Interactive controls | DevOps Team | Infrastructure Agent |
+| Phase 3 — Waveform + audio integration | AI Improvement Team | Model Evaluator Agent |
+| Phase 4 — Hardening and presets | QA Team | Regression Watcher Agent |
+
+### Completion Evidence (Checked Items)
+
+| Item | Status | Evidence |
+| --- | --- | --- |
+| Reference pattern analysis captured | ✅ Done | #1-target-experience-what-the-references-are-doing |
+| Quality gates and measurable definition of “perfect” recorded | ✅ Done | #11-quality-gates-perfect--measurable |
+
+### Current Risks/Blockers
+
+- Blocked on confirmed rendering approach (Canvas vs WebGL profile by target hardware tier) before Phase 3 can be staffed.
+- Baseline React source paths referenced in this plan may diverge from current repo reality and need reconciliation before execution.
+
+**Next milestone date:** 2026-02-23 (Phase 1 execution handoff with finalized shell backlog)
+
+## Reference Catalog Metadata and Consumption Policy
+
+All reference assets must be cataloged with one of the following tiers.
+
+| Tier | Purpose | Minimum metadata | Example |
+| --- | --- | --- | --- |
+| Tier A | Full-layout benchmark for shell architecture and primary information hierarchy. | `tier`, `justification`, `resolution`, `source`, `imported_at` | 1920x1080 full-console reference |
+| Tier B | Component-level detail references used for control treatment and micro-interactions. | `tier`, `justification`, `component_scope`, `source`, `imported_at` | EQ knob strip, transport cluster close-up |
+| Tier C | Marketing/ancillary inspiration only; not authoritative for architecture or control fidelity. | `tier`, `justification`, `usage_notes`, `source`, `imported_at` | Promo renders, hero shots, social screenshots |
+
+### Per-tier consumption rules
+
+- Tier A:
+  - Allowed for shell architecture decisions (deck/mixer/browser zoning, module placement, density targets).
+  - Allowed for cross-panel spacing rhythm and baseline scan-path assumptions.
+  - Not allowed for direct branding/icon/logo reuse.
+- Tier B:
+  - Allowed for control styling only (button states, fader tracks, meter framing, waveform annotation details).
+  - Allowed for interaction details that do not conflict with accessibility and keyboard requirements.
+  - Not allowed to override Tier A layout structure.
+- Tier C:
+  - Allowed for mood, storytelling, and non-functional visual inspiration.
+  - Not allowed for shell architecture or critical control behavior decisions.
+  - Must always be treated as optional and subordinate to Tier A and Tier B evidence.
+
+### Minimum readable detail threshold (required before import)
+
+Every candidate reference must pass this checklist before entering the catalog:
+
+- [ ] Text legibility: key labels are readable at 100% zoom without inference.
+- [ ] Control separation: individual controls are visually separable (no merged silhouettes for adjacent controls).
+- [ ] Waveform visibility: waveform lanes, playhead, and beat/cue cues are distinguishable.
+- [ ] Contrast sanity: control foreground/background boundaries are clear enough to extract intent.
+- [ ] Cropping integrity: the captured region preserves context needed for interpretation.
+
+### New asset intake requirement
+
+Any new reference asset is non-compliant unless it includes both:
+
+1. Explicit tier assignment (`Tier A`, `Tier B`, or `Tier C`), and
+2. A short justification describing why that tier is appropriate and what decisions it may influence.
 
 ## 1. Target Experience (What the references are doing)
 
@@ -43,16 +132,26 @@ Do not copy:
 
 Use original branding: **DGN-DJ by DGNradio**.
 
-## 3. Gap Analysis vs Current Repo UI
+## 3. Current implementation snapshot
 
-Current baseline in `src/` is an early scaffold:
+The DJ console prototype is already implemented in `src/app/page.tsx` and wired to dedicated audio/scheduling modules.
 
-- `src/components/shell/*.tsx` are placeholder wrappers.
-- `src/components/audio/AudioPlayer.tsx` is functional but generic.
-- `src/styles/tokens.css` includes a basic dark/light token layer.
-- `src/components/primitives/primitives.css` uses soft rounded controls unlike DJ hardware UI.
+Completed modules:
 
-Conclusion: this is a foundation-build task, not a polish task.
+- `DegenWaveform` (interactive waveform, cue markers, seek handling)
+- `DegenMixer` (channel strips, EQ knobs, crossfader, simulated metering)
+- `DegenTransport` (transport controls, timeline, master/CUE volume controls)
+- `DegenTrackList` (search, filter, sorting, deck load actions)
+- `DegenScheduleTimeline` (hour timeline, now marker, selected segment detail)
+- `DegenEffectRack` and `DegenBeatGrid` integrated in deck workflows
+
+Remaining hardening tasks:
+
+- Replace simulated/randomized telemetry and waveform fallback data with engine-fed live streams.
+- Complete keyboard-first coverage and ARIA semantics for all interactive controls.
+- Add deterministic test coverage for transport, mixer, and queue interactions.
+- Validate performance under sustained updates (waveform + metering + table interactions).
+- Close accessibility and reduced-motion parity checks for production readiness.
 
 ## 4. Visual System Specification (DJ Theme)
 
@@ -253,29 +352,41 @@ Extend it with DJ-specific snapshots:
 
 ## 12. Execution Phases
 
-Phase 1: Theme + shell scaffolding (1-2 sprints)
+Phase 1: Theme + shell scaffolding (1-2 sprints)  
+State: Complete
 
 - implement DJ token extension in `src/styles/tokens.css`
 - build `app-shell`, `waveform-rail`, `deck/mixer/browser` containers
 - ship static layout with placeholder data
 
-Phase 2: Interactive controls (1-2 sprints)
+Phase 2: Interactive controls (1-2 sprints)  
+State: Complete
 
 - faders/knobs/hotcues/pads controls
 - keyboard shortcuts
 - state wiring and deterministic focus order
 
-Phase 3: Waveform + audio integration (2-3 sprints)
+Phase 3: Waveform + audio integration (2-3 sprints)  
+State: Prototype complete
 
 - high-performance waveform renderer
 - meter bridge, cue markers, sync indicators
 - connect to `useAudioEngine` and engine telemetry
 
-Phase 4: hardening and presets (1-2 sprints)
+Phase 4: hardening and presets (1-2 sprints)  
+State: Hardening in progress
 
 - accessibility profiles and reduced-motion parity
 - visual regression + interaction tests
 - latency/perf tuning and release checklist
+
+Quality readiness exit criteria:
+
+- Keyboard-only completion for transport, deck load, and queue operations is ≥95% across QA scenarios.
+- No critical accessibility findings; zero WCAG AA contrast failures on critical controls.
+- P95 control-to-feedback latency for transport actions is <100ms in staging test runs.
+- Waveform + mixer + track list composite view maintains 55+ FPS on the target workstation profile.
+- Regression suite for `src/app/page.tsx` console flows and audio modules passes at 100% in CI.
 
 ## 13. Immediate Next Tasks (Recommended)
 
@@ -302,4 +413,3 @@ while still preserving:
 - product branding
 - accessibility requirements
 - maintainable token/component architecture.
-

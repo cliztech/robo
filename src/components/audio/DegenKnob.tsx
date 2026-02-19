@@ -30,7 +30,8 @@ export function DegenKnob({
 
     const ratio = (value - min) / (max - min);
     const angle = ratio * 270 - 135;
-    const accentColor = color || '#aaff00';
+    const accentColor = color || 'hsl(var(--color-control-active))';
+    const accentColor = color || 'hsl(var(--color-deck-a))';
 
     const handleMouseDown = (e: React.MouseEvent) => {
         setIsDragging(true);
@@ -85,34 +86,34 @@ export function DegenKnob({
                 <svg viewBox="0 0 100 100" className="w-full h-full">
                     <defs>
                         <radialGradient id={`knob-bg-${label}`} cx="40%" cy="35%" r="60%">
-                            <stop offset="0%" stopColor="rgba(255,255,255,0.08)" />
-                            <stop offset="100%" stopColor="rgba(0,0,0,0.3)" />
+                            <stop offset="0%" stopColor="hsl(var(--surface-rgb) / 0.08)" />
+                            <stop offset="100%" stopColor="hsl(var(--black-rgb) / 0.3)" />
                         </radialGradient>
                         <filter id={`knob-shadow-${label}`} x="-20%" y="-20%" width="140%" height="140%">
-                            <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="rgba(0,0,0,0.6)" />
+                            <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="hsl(var(--black-rgb) / 0.6)" />
                         </filter>
                     </defs>
 
                     {/* Outer ring shadow */}
-                    <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(0,0,0,0.3)" strokeWidth="1" />
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--black-rgb) / 0.3)" strokeWidth="1" />
 
                     {/* Knob body */}
                     <circle
                         cx="50" cy="50" r="40"
                         fill={`url(#knob-bg-${label})`}
-                        stroke="rgba(255,255,255,0.04)"
+                        stroke="hsl(var(--surface-rgb) / 0.04)"
                         strokeWidth="1"
                         filter={`url(#knob-shadow-${label})`}
                     />
 
                     {/* Inner circle */}
-                    <circle cx="50" cy="50" r="32" fill="rgba(0,0,0,0.15)" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" />
+                    <circle cx="50" cy="50" r="32" fill="hsl(var(--black-rgb) / 0.15)" stroke="hsl(var(--surface-rgb) / 0.03)" strokeWidth="0.5" />
 
                     {/* Background track */}
                     <path
                         d={describeArc(50, 50, arcRadius, startAngle, endAngle)}
                         fill="none"
-                        stroke="rgba(255,255,255,0.06)"
+                        stroke="hsl(var(--surface-rgb) / 0.06)"
                         strokeWidth="4"
                         strokeLinecap="round"
                     />
@@ -126,7 +127,8 @@ export function DegenKnob({
                             strokeWidth="4"
                             strokeLinecap="round"
                             opacity={0.8}
-                            style={{ filter: `drop-shadow(0 0 4px ${accentColor}50)` }}
+                            style={{ filter: `drop-shadow(0 0 2px ${accentColor})` }}
+                            style={{ filter: `drop-shadow(0 0 4px color-mix(in srgb, ${accentColor} 35%, transparent))` }}
                         />
                     )}
 
@@ -142,7 +144,7 @@ export function DegenKnob({
                     </g>
 
                     {/* Center dot */}
-                    <circle cx="50" cy="50" r="3" fill="rgba(255,255,255,0.08)" />
+                    <circle cx="50" cy="50" r="3" fill="hsl(var(--surface-rgb) / 0.08)" />
                 </svg>
             </div>
 
