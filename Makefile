@@ -1,4 +1,5 @@
 .PHONY: help build build-all build-modules build-airwaves build-robo-rippa package-config qa smoke run-airwaves run-robo-rippa check distcheck
+.PHONY: help build build-all build-modules package-config qa smoke run-airwaves run-robo-rippa check distcheck
 
 PYTHON ?= python3
 ARTIFACT_DIR ?= .artifacts
