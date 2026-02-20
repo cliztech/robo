@@ -2,11 +2,10 @@ import { useState } from 'react';
 import { MainLayout } from './components/layout/MainLayout';
 import { DeckContainer } from './components/deck/DeckContainer';
 import { WaveformCanvas } from './components/deck/WaveformCanvas';
-import { Knob } from './components/ui/Knob';
-import { Fader } from './components/ui/Fader';
 import { Button } from './components/ui/Button';
+import { MixerChannel } from './components/mixer/MixerChannel';
+import { StemControls } from './components/mixer/StemControls';
 import { cn } from './lib/utils';
-import { Play, Disc3 } from 'lucide-react'; // Import icons if available, otherwise fallback
 
 function App() {
   const [volA, setVolA] = useState(80);
@@ -77,17 +76,17 @@ function App() {
 
       {/* MIXER */}
       <div className="flex flex-col bg-brushed-metal rounded-lg border border-[#222] p-2 relative overflow-hidden">
-        <div className="relative z-10 flex flex-row h-full justify-evenly pt-4 pb-2">
+
+        {/* Helper Header for Stems */}
+        <div className="flex justify-between px-2 pb-2 border-b border-white/5 mb-2">
+          <StemControls deck="A" className="flex-1" />
+          <div className="w-2"></div>
+          <StemControls deck="B" className="flex-1" />
+        </div>
+
+        <div className="relative z-10 flex flex-row h-full justify-evenly pt-2 pb-2">
           {/* Channel A Strip */}
-          <div className="flex flex-col items-center gap-6 w-full px-2">
-            <Knob value={volA} onChange={setVolA} label="GAIN" size={40} color="neutral" />
-            <Knob value={75} onChange={() => { }} label="HIGH" size={40} color="neutral" />
-            <Knob value={50} onChange={() => { }} label="MID" size={40} color="neutral" />
-            <Knob value={50} onChange={() => { }} label="LOW" size={40} color="neutral" />
-            <div className="flex-1 flex items-end w-full justify-center">
-              <Fader value={volA} onChange={setVolA} height={200} color="deck-a" />
-            </div>
-          </div>
+          <MixerChannel deck="A" volume={volA} onVolumeChange={setVolA} />
 
           {/* Master Strip */}
           <div className="flex flex-col items-center gap-4 justify-center w-[60px]">
@@ -100,19 +99,11 @@ function App() {
           </div>
 
           {/* Channel B Strip */}
-          <div className="flex flex-col items-center gap-6 w-full px-2">
-            <Knob value={volB} onChange={setVolB} label="GAIN" size={40} color="neutral" />
-            <Knob value={75} onChange={() => { }} label="HIGH" size={40} color="neutral" />
-            <Knob value={50} onChange={() => { }} label="MID" size={40} color="neutral" />
-            <Knob value={50} onChange={() => { }} label="LOW" size={40} color="neutral" />
-            <div className="flex-1 flex items-end w-full justify-center">
-              <Fader value={volB} onChange={setVolB} height={200} color="deck-b" />
-            </div>
-          </div>
+          <MixerChannel deck="B" volume={volB} onVolumeChange={setVolB} />
         </div>
 
         {/* Crossfader */}
-        <div className="h-20 border-t border-white/5 flex items-center justify-center px-12 relative z-10 bg-black/20">
+        <div className="h-20 border-t border-white/5 flex items-center justify-center px-12 relative z-10 bg-black/20 shrink-0">
           <input
             type="range"
             min="0"
