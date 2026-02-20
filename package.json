@@ -12,6 +12,7 @@
         "test:ui": "vitest run"
     },
     "dependencies": {
+        "@google/adk": "^0.3.0",
         "class-variance-authority": "^0.7.0",
         "clsx": "^2.1.1",
         "framer-motion": "^11.1.7",

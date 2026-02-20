@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  background-color: #050505; /* bg-master */
+  color: #ffffff;
+  font-family: 'Inter', system-ui, sans-serif;
+}
