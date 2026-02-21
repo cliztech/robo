@@ -36,7 +36,6 @@ export const Knob: React.FC<KnobProps> = ({
         setIsDragging(true);
         startY.current = e.clientY;
         startValue.current = value;
-        document.body.style.cursor = 'ns-resize';
     };
 
     useEffect(() => {
@@ -51,15 +50,18 @@ export const Knob: React.FC<KnobProps> = ({
 
         const handleMouseUp = () => {
             setIsDragging(false);
-            document.body.style.cursor = 'default';
         };
 
         if (isDragging) {
+            document.body.style.cursor = 'ns-resize';
             window.addEventListener('mousemove', handleMouseMove);
             window.addEventListener('mouseup', handleMouseUp);
+        } else {
+            document.body.style.cursor = 'default';
         }
 
         return () => {
+            document.body.style.cursor = 'default';
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('mouseup', handleMouseUp);
         };
@@ -71,54 +73,106 @@ export const Knob: React.FC<KnobProps> = ({
         'neutral': 'text-white',
     }[color];
 
+    const colorGlow = {
+        'deck-a': 'rgba(0,145,255,0.6)',
+        'deck-b': 'rgba(255,85,0,0.6)',
+        'neutral': 'rgba(255,255,255,0.4)',
+    }[color];
+
     return (
-        <div className={cn("flex flex-col items-center gap-1", className)}>
+        <div className={cn("flex flex-col items-center gap-1.5", className)}>
             <div
                 className="relative cursor-ns-resize group"
                 style={{ width: size, height: size }}
                 onMouseDown={handleMouseDown}
             >
-                {/* Background Ring */}
-                <svg width={size} height={size} viewBox="0 0 100 100" className="transform rotate-90">
+                {/* Glow Backdrop */}
+                <div
+                    className="absolute inset-[-10%] rounded-full blur-xl opacity-0 group-hover:opacity-20 transition-opacity duration-500 pointer-events-none"
+                    style={{ backgroundColor: colorGlow }}
+                />
+
+                {/* Background Ring (Deep Groove) */}
+                <svg width={size} height={size} viewBox="0 0 100 100" className="transform rotate-90 scale-[1.05]">
                     <circle
                         cx="50"
                         cy="50"
-                        r="40"
+                        r="42"
                         fill="none"
-                        stroke="#333"
-                        strokeWidth="8"
+                        stroke="#111"
+                        strokeWidth="10"
                         strokeDasharray="251.2"
-                        strokeDashoffset="62.8" /* 270 degrees arc */
+                        strokeDashoffset="62.8"
                         strokeLinecap="round"
-                        className="transform -rotate-[225deg] origin-center"
+                        className="transform -rotate-[225deg] origin-center shadow-inner"
                     />
-                    {/* Value Arc */}
+                    {/* Shadow Ring */}
                     <circle
                         cx="50"
                         cy="50"
-                        r="40"
+                        r="42"
+                        fill="none"
+                        stroke="rgba(0,0,0,0.5)"
+                        strokeWidth="2"
+                        strokeDasharray="251.2"
+                        strokeDashoffset="62.8"
+                        strokeLinecap="round"
+                        className="transform -rotate-[225deg] origin-center blur-[1px]"
+                    />
+                    {/* Value Arc (The Glow) */}
+                    <circle
+                        cx="50"
+                        cy="50"
+                        r="42"
                         fill="none"
                         stroke="currentColor"
-                        strokeWidth="8"
+                        strokeWidth="6"
                         strokeDasharray="251.2"
-                        strokeDashoffset={251.2 - (normalizedValue * 188.4)} /* 188.4 is 75% of circumference */
+                        strokeDashoffset={251.2 - (normalizedValue * 188.4)}
                         strokeLinecap="round"
-                        className={cn("transform -rotate-[225deg] origin-center transition-colors", colorClass)}
+                        className={cn("transform -rotate-[225deg] origin-center transition-all duration-75 drop-shadow-[0_0_5px_currentColor]", colorClass)}
                     />
                 </svg>
 
-                {/* Pointer/Cap */}
+                {/* Main Knob Body (Metallic) */}
                 <div
-                    className="absolute top-0 left-0 w-full h-full rounded-full flex items-center justify-center pointer-events-none"
-                    style={{ transform: `rotate(${rotation}deg)` }}
+                    className={cn(
+                        "absolute inset-[8%] rounded-full transition-transform duration-200 ease-out shadow-[0_4px_10px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.1)]",
+                        isDragging ? "scale-95" : "scale-100 group-hover:scale-[1.02]"
+                    )}
+                    style={{
+                        background: `
+                            radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1) 0%, transparent 50%),
+                            conic-gradient(
+                                from 0deg,
+                                #222 0%,
+                                #333 10%,
+                                #222 20%,
+                                #444 30%,
+                                #222 45%,
+                                #333 55%,
+                                #222 70%,
+                                #444 85%,
+                                #222 100%
+                            )
+                        `,
+                        transform: `rotate(${rotation}deg)`
+                    }}
                 >
-                    <div className="w-1 h-3 bg-white absolute top-2 rounded-full shadow-[0_0_5px_rgba(255,255,255,0.8)]"></div>
+                    {/* Pointer Notch */}
+                    <div className="absolute top-[8%] left-1/2 -translate-x-1/2 w-[12%] h-[20%] rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.9)] z-10"></div>
+
+                    {/* Top Surface Texture */}
+                    <div className="absolute inset-[2%] rounded-full bg-[radial-gradient(circle_at_center,#333_0%,#1a1a1a_100%)] border border-white/5 overflow-hidden">
+                        {/* Anisotropic highlights */}
+                        <div className="absolute inset-0 opacity-30 bg-[conic-gradient(from_0deg,transparent_0%,white_10%,transparent_20%,transparent_50%,white_60%,transparent_70%)] blur-[2px]"></div>
+                    </div>
                 </div>
 
-                {/* Inner Cap Reflection */}
-                <div className="absolute inset-[15%] rounded-full bg-gradient-to-b from-white/5 to-transparent pointer-events-none border border-white/5"></div>
+                {/* Outer Rim Light */}
+                <div className="absolute inset-0 rounded-full border border-white/5 pointer-events-none"></div>
             </div>
-            {label && <span className="text-[10px] font-mono uppercase text-gray-400 select-none">{label}</span>}
+            {label && <span className="text-[9px] font-bold uppercase text-zinc-500 tracking-wider select-none group-hover:text-zinc-300 transition-colors text-center">{label}</span>}
         </div>
     );
 };
