@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { cn } from '../../lib/utils';
 
 interface KnobProps {
@@ -9,6 +9,7 @@ interface KnobProps {
     size?: number;
     color?: 'deck-a' | 'deck-b' | 'neutral';
     label?: string;
+    hasDetent?: boolean;
     className?: string;
 }
 
@@ -20,36 +21,56 @@ export const Knob: React.FC<KnobProps> = ({
     size = 64,
     color = 'neutral',
     label,
+    hasDetent = false,
     className,
 }) => {
     const [isDragging, setIsDragging] = useState(false);
+    const [showLedRing, setShowLedRing] = useState(false);
     const startY = useRef<number>(0);
     const startValue = useRef<number>(0);
+    const ledTimeout = useRef<ReturnType<typeof setTimeout>>();
 
-    // Normalize value to 0-1 range for rotation
     const range = max - min;
     const normalizedValue = (value - min) / range;
-    // Rotation range: -135deg to +135deg (270deg total)
-    const rotation = normalizedValue * 270 - 135;
+    // 300° rotation arc (spec): -150 to +150
+    const rotation = normalizedValue * 300 - 150;
+    // Arc length for 300° out of 360°
+    const circumference = 2 * Math.PI * 42;
+    const arcLength = circumference * (300 / 360);
+    const filledArc = normalizedValue * arcLength;
 
     const handleMouseDown = (e: React.MouseEvent) => {
         setIsDragging(true);
+        setShowLedRing(true);
         startY.current = e.clientY;
         startValue.current = value;
+        if (ledTimeout.current) clearTimeout(ledTimeout.current);
     };
+
+    // LED ring: show during interaction, fade after 1.5s
+    const handleMouseUp = useCallback(() => {
+        setIsDragging(false);
+        ledTimeout.current = setTimeout(() => setShowLedRing(false), 1500);
+    }, []);
 
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
             if (!isDragging) return;
             const deltaY = startY.current - e.clientY;
-            const sensitivity = 0.5; // Value change per pixel
+            const sensitivity = 0.5;
             let newValue = startValue.current + deltaY * sensitivity;
+
+            // Detent snap: ±2° tolerance around center
+            if (hasDetent) {
+                const center = (min + max) / 2;
+                const detentRange = range * (2 / 300); // 2° tolerance
+                if (Math.abs(newValue - center) < detentRange) {
+                    newValue = center;
+                }
+            }
+
             newValue = Math.max(min, Math.min(max, newValue));
             onChange(newValue);
-        };
-
-        const handleMouseUp = () => {
-            setIsDragging(false);
         };
 
         if (isDragging) {
@@ -65,7 +86,7 @@ export const Knob: React.FC<KnobProps> = ({
             window.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('mouseup', handleMouseUp);
         };
-    }, [isDragging, min, max, onChange]);
+    }, [isDragging, min, max, range, hasDetent, onChange, handleMouseUp]);
 
     const colorClass = {
         'deck-a': 'text-deck-a',
@@ -95,84 +116,65 @@ export const Knob: React.FC<KnobProps> = ({
                 {/* Background Ring (Deep Groove) */}
                 <svg width={size} height={size} viewBox="0 0 100 100" className="transform rotate-90 scale-[1.05]">
                     <circle
-                        cx="50"
-                        cy="50"
-                        r="42"
+                        cx="50" cy="50" r="42"
                         fill="none"
                         stroke="#111"
                         strokeWidth="10"
-                        strokeDasharray="251.2"
-                        strokeDashoffset="62.8"
+                        strokeDasharray={`${arcLength}`}
+                        strokeDashoffset={circumference - arcLength}
                         strokeLinecap="round"
-                        className="transform -rotate-[225deg] origin-center shadow-inner"
+                        className="transform -rotate-[210deg] origin-center"
                     />
-                    {/* Shadow Ring */}
+
+                    {/* LED Value Arc — visible only during/after interaction */}
                     <circle
-                        cx="50"
-                        cy="50"
-                        r="42"
-                        fill="none"
-                        stroke="rgba(0,0,0,0.5)"
-                        strokeWidth="2"
-                        strokeDasharray="251.2"
-                        strokeDashoffset="62.8"
-                        strokeLinecap="round"
-                        className="transform -rotate-[225deg] origin-center blur-[1px]"
-                    />
-                    {/* Value Arc (The Glow) */}
-                    <circle
-                        cx="50"
-                        cy="50"
-                        r="42"
+                        cx="50" cy="50" r="42"
                         fill="none"
                         stroke="currentColor"
                         strokeWidth="6"
-                        strokeDasharray="251.2"
-                        strokeDashoffset={251.2 - (normalizedValue * 188.4)}
+                        strokeDasharray={`${filledArc} ${circumference}`}
                         strokeLinecap="round"
-                        className={cn("transform -rotate-[225deg] origin-center transition-all duration-75 drop-shadow-[0_0_5px_currentColor]", colorClass)}
+                        className={cn(
+                            "transform -rotate-[210deg] origin-center drop-shadow-[0_0_5px_currentColor]",
+                            colorClass,
+                            "transition-opacity duration-300",
+                            showLedRing ? "opacity-100" : "opacity-30"
+                        )}
                     />
                 </svg>
 
-                {/* Main Knob Body (Metallic) */}
+                {/* Main Knob Body — matte rubber material */}
                 <div
                     className={cn(
-                        "absolute inset-[8%] rounded-full transition-transform duration-200 ease-out shadow-[0_4px_10px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.1)]",
+                        "absolute inset-[8%] rounded-full bg-matte-rubber noise-grain",
                         isDragging ? "scale-95" : "scale-100 group-hover:scale-[1.02]"
                     )}
                     style={{
-                        background: `
-                            radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1) 0%, transparent 50%),
-                            conic-gradient(
-                                from 0deg,
-                                #222 0%,
-                                #333 10%,
-                                #222 20%,
-                                #444 30%,
-                                #222 45%,
-                                #333 55%,
-                                #222 70%,
-                                #444 85%,
-                                #222 100%
-                            )
-                        `,
-                        transform: `rotate(${rotation}deg)`
+                        transform: `rotate(${rotation}deg)`,
+                        /* Spec easing: cubic-bezier(0.22, 0.61, 0.36, 1) */
+                        transition: isDragging
+                            ? 'transform 0ms, scale 200ms cubic-bezier(0.22,0.61,0.36,1)'
+                            : 'transform 100ms cubic-bezier(0.22,0.61,0.36,1), scale 200ms ease-out',
+                        boxShadow: '0 4px 10px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.08)',
                     }}
                 >
                     {/* Pointer Notch */}
-                    <div className="absolute top-[8%] left-1/2 -translate-x-1/2 w-[12%] h-[20%] rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.9)] z-10"></div>
+                    <div className="absolute top-[8%] left-1/2 -translate-x-1/2 w-[12%] h-[20%] rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.9)] z-10" />
 
-                    {/* Top Surface Texture */}
-                    <div className="absolute inset-[2%] rounded-full bg-[radial-gradient(circle_at_center,#333_0%,#1a1a1a_100%)] border border-white/5 overflow-hidden">
-                        {/* Anisotropic highlights */}
-                        <div className="absolute inset-0 opacity-30 bg-[conic-gradient(from_0deg,transparent_0%,white_10%,transparent_20%,transparent_50%,white_60%,transparent_70%)] blur-[2px]"></div>
-                    </div>
+                    {/* Detent marker */}
+                    {hasDetent && (
+                        <div className="absolute bottom-[8%] left-1/2 -translate-x-1/2 w-[6%] h-[4%] rounded-full bg-white/20" />
+                    )}
                 </div>
 
                 {/* Outer Rim Light */}
-                <div className="absolute inset-0 rounded-full border border-white/5 pointer-events-none"></div>
+                <div className="absolute inset-0 rounded-full border border-white/5 pointer-events-none" />
             </div>
-            {label && <span className="text-[9px] font-bold uppercase text-zinc-500 tracking-wider select-none group-hover:text-zinc-300 transition-colors text-center">{label}</span>}
+            {label && (
+                <span className="text-[9px] font-bold uppercase text-zinc-500 tracking-micro select-none group-hover:text-zinc-300 transition-colors text-center">
+                    {label}
+                </span>
+            )}
         </div>
     );
 };

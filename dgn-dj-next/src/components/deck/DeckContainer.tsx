@@ -8,22 +8,16 @@ interface DeckContainerProps {
 }
 
 export const DeckContainer: React.FC<DeckContainerProps> = ({ deck, children, className }) => {
-    const borderColor = deck === 'A' ? 'border-deck-a/30' : 'border-deck-b/30';
-    const glowColor = deck === 'A' ? 'shadow-[0_0_30px_rgba(0,145,255,0.05)]' : 'shadow-[0_0_30px_rgba(255,85,0,0.05)]';
-
     return (
         <div className={cn(
-            "relative flex flex-col h-full bg-surface-glass backdrop-blur-xl border rounded-xl overflow-hidden transition-all duration-300",
-            borderColor,
-            glowColor,
+            "relative flex flex-col bg-panel-1 border border-white/5 rounded-lg overflow-hidden",
             className
         )}>
-            {/* Top Identity Bar */}
+            {/* Top accent line */}
             <div className={cn(
-                "h-1 w-full absolute top-0 left-0 right-0 z-10",
-                deck === 'A' ? "bg-deck-a" : "bg-deck-b"
+                "h-0.5 w-full shrink-0",
+                deck === 'A' ? "bg-deck-a/40" : "bg-deck-b/40"
             )} />
-
             {children}
         </div>
     );
