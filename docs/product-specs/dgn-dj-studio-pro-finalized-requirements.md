@@ -149,7 +149,7 @@ Fallback hierarchy:
 
 ### 5.1 Overlap-Add Processing
 
-- Chunk size: 2048–8192 samples (configurable)
+- Chunk size: 512–8192 samples (configurable)
 - Overlap: 25–50%
 - Windowed crossfade (equal-power or sqrt-Hann)
 - Edge de-weighting to suppress boundary artifacts
