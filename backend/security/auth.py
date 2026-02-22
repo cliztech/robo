@@ -19,7 +19,10 @@ def _get_secret_key() -> str | None:
     if allow_fallback:
         secret_file = CONFIG_DIR / "secret.key"
         if secret_file.exists():
-            return secret_file.read_text(encoding="utf-8").strip()
+            try:
+                return secret_file.read_text(encoding="utf-8").strip()
+            except IOError:
+                return None
 
     return None
 
