@@ -7,6 +7,7 @@ from backend.security.secret_integrity import CONFIG_DIR
 API_KEY_NAME = "X-API-Key"
 api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
 
+@functools.lru_cache(maxsize=1)
 def _get_secret_key() -> str | None:
     # 1. Try environment variable
     secret = os.environ.get("ROBODJ_SECRET_KEY")
