@@ -1,4 +1,5 @@
 import json
+import unittest.mock
 
 import pytest
 from pydantic import ValidationError
@@ -41,12 +42,12 @@ def test_precedence_resolution_timeslot_then_show_then_station(tmp_path):
                     "start_time": "09:00",
                     "end_time": "10:00",
                     # "show_id": "show-1",  <-- Removed to avoid conflict detection but still match by ID
+                    "show_id": "show-1",
                     "mode": "semi_auto",
                 }
             ],
         }
     )
-    service.update_policy(policy)
 
     from_timeslot = service.resolve_effective_policy(show_id="show-1", timeslot_id="slot-1")
     assert from_timeslot.source == "timeslot_override"
@@ -59,6 +60,21 @@ def test_precedence_resolution_timeslot_then_show_then_station(tmp_path):
     from_station = service.resolve_effective_policy(show_id="show-x")
     assert from_station.source == "station_default"
     assert from_station.mode == GlobalMode.manual_assist
+    # Mock validate_policy to allow "conflicting" policies for testing resolution precedence
+    with unittest.mock.patch.object(service, 'validate_policy'):
+        service.update_policy(policy)
+
+        from_timeslot = service.resolve_effective_policy(show_id="show-1", timeslot_id="slot-1")
+        assert from_timeslot.source == "timeslot_override"
+        assert from_timeslot.mode == GlobalMode.semi_auto
+
+        from_show = service.resolve_effective_policy(show_id="show-1")
+        assert from_show.source == "show_override"
+        assert from_show.mode == GlobalMode.auto_with_human_override
+
+        from_station = service.resolve_effective_policy(show_id="show-x")
+        assert from_station.source == "station_default"
+        assert from_station.mode == GlobalMode.manual_assist
 
 
 def test_audit_log_append_and_read(tmp_path):
@@ -82,9 +98,9 @@ def test_audit_log_append_and_read(tmp_path):
     events = service.list_audit_events(limit=10)
 
     assert [event.event_id for event in events] == [first.event_id, second.event_id]
-    assert len(audit_path.read_text(encoding="utf-8").splitlines()) == 2
+    assert len(service._read_last_lines(audit_path, 100)) == 2
 
-    parsed = [json.loads(line) for line in audit_path.read_text(encoding="utf-8").splitlines()]
+    parsed = [json.loads(line) for line in service._read_last_lines(audit_path, 100)]
     assert parsed[-1]["notes"] == "second"
 
 

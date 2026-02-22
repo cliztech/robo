@@ -126,3 +126,25 @@ def test_file_fallback_disabled(mock_config_dir, valid_secrets):
     result = run_secret_integrity_checks(env={})
     assert result.ok is False
     assert any("File fallback is disabled" in alert for alert in result.alerts)
+
+def test_expiration_date_invalid_format(valid_secrets):
+    """Test that an invalid date format generates an alert."""
+    env = {
+        "ROBODJ_SECRET_KEY": valid_secrets["ROBODJ_SECRET_KEY"],
+        "ROBODJ_SECRET_V2_KEY": valid_secrets["ROBODJ_SECRET_V2_KEY"],
+        "ROBODJ_SECRET_KEY_EXPIRES_AT": "invalid-date",
+    }
+    result = run_secret_integrity_checks(env=env)
+    assert result.ok is False
+    assert any("Invalid isoformat string" in alert for alert in result.alerts)
+
+def test_expiration_date_missing_timezone(valid_secrets):
+    """Test that a date string without timezone information generates an alert."""
+    env = {
+        "ROBODJ_SECRET_KEY": valid_secrets["ROBODJ_SECRET_KEY"],
+        "ROBODJ_SECRET_V2_KEY": valid_secrets["ROBODJ_SECRET_V2_KEY"],
+        "ROBODJ_SECRET_KEY_EXPIRES_AT": "2023-01-01T00:00:00",  # valid format but missing timezone
+    }
+    result = run_secret_integrity_checks(env=env)
+    assert result.ok is False
+    assert any("must include timezone information" in alert for alert in result.alerts)

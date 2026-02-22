@@ -176,15 +176,66 @@ class AutonomyPolicyService:
             handle.write(event.model_dump_json() + "\n")
         return event
 
+    @staticmethod
+    def _read_last_lines(file_path: Path, limit: int) -> List[str]:
+        if not file_path.exists():
+            return []
+
+        try:
+            file_size = file_path.stat().st_size
+        except OSError:
+            return []
+
+        if file_size == 0:
+            return []
+
+        chunk_size = 8192
+
+        with file_path.open("rb") as f:
+            if file_size <= chunk_size:
+                f.seek(0)
+                content = f.read().decode("utf-8")
+                return content.splitlines()[-limit:]
+
+            remaining_bytes = file_size
+            buffer = b""
+
+            while remaining_bytes > 0:
+                read_size = min(chunk_size, remaining_bytes)
+                remaining_bytes -= read_size
+                f.seek(remaining_bytes)
+                chunk = f.read(read_size)
+                buffer = chunk + buffer
+
+                parts = buffer.split(b'\n')
+                # If the last part is empty (because file ends with newline), don't count it as a line yet
+                valid_count = len(parts)
+                if parts and parts[-1] == b'':
+                    valid_count -= 1
+
+                # We need > limit lines to ensure the last 'limit' lines are complete
+                # (since the first one in 'parts' might be partial)
+                if valid_count > limit:
+                    break
+
+            parts = buffer.split(b'\n')
+            if parts and parts[-1] == b'':
+                parts.pop()
+
+            if len(parts) > limit:
+                parts = parts[-limit:]
+
+            return [line.decode("utf-8") for line in parts]
+
     def list_audit_events(self, limit: int = 100) -> List[PolicyAuditEvent]:
         if not self.audit_log_path.exists():
             return []
 
-        lines = self.audit_log_path.read_text(encoding="utf-8").splitlines()
+        lines = self._read_last_lines(self.audit_log_path, limit)
         events: List[PolicyAuditEvent] = []
         invalid_line_count = 0
 
-        for line in lines[-limit:]:
+        for line in lines:
             try:
                 events.append(PolicyAuditEvent.model_validate(json.loads(line)))
             except (json.JSONDecodeError, ValidationError):
