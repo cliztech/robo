@@ -220,7 +220,7 @@ Master section:
 
 - Primary buttons: ≥ 80 px
 - Knobs: ≥ 60 px
-- Faders: ≥ 20 px width
+- Faders: ≥ 40 px width
 - Performance pads: ≥ 60 px with 8 px spacing
 
 ### 7.2 Gesture Mapping
