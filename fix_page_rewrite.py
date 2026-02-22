@@ -1,4 +1,6 @@
-'use client';
+file_path = 'src/app/page.tsx'
+
+content = """'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { ConsoleWorkspaceView } from '@/components/console/ConsoleWorkspaceView';
@@ -157,3 +159,9 @@ export default function StudioPage() {
 function DeckView({ telemetry }: { telemetry: any }) {
     return <DecksView telemetry={telemetry} />;
 }
+"""
+
+with open(file_path, 'w') as f:
+    f.write(content)
+
+print("Page rewritten.")
