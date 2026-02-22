@@ -14,10 +14,38 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: configure
-      run: ./configure
+      run: |
+        if [ -f ./configure ]; then
+          ./configure
+        elif [ -d make-4.3 ]; then
+          cd make-4.3 && ./configure
+        else
+          echo "No configure script found"
+        fi
     - name: make
-      run: make
+      run: |
+        if [ -f Makefile ]; then
+          make
+        elif [ -d make-4.3 ]; then
+          cd make-4.3 && make
+        else
+          echo "No Makefile found"
+        fi
     - name: make check
-      run: make check
+      run: |
+        if [ -f Makefile ]; then
+          make check
+        elif [ -d make-4.3 ]; then
+          cd make-4.3 && make check
+        else
+          echo "No Makefile found"
+        fi
     - name: make distcheck
-      run: make distcheck
+      run: |
+        if [ -f Makefile ]; then
+          make distcheck
+        elif [ -d make-4.3 ]; then
+          cd make-4.3 && make distcheck
+        else
+          echo "No Makefile found"
+        fi
