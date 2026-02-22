@@ -87,7 +87,7 @@ export const Crossfader: React.FC<CrossfaderProps> = ({
                 onMouseDown={handleMouseDown}
             >
                 {/* Track rail */}
-                <div className="absolute top-1/2 -translate-y-1/2 left-2 right-2 h-[3px] rounded-full bg-panel-2">
+                <div className="absolute top-1/2 -translate-y-1/2 left-2 right-2 h-0.75 rounded-full bg-panel-2">
                     {/* LED track indicator */}
                     <div
                         className="absolute inset-y-0 rounded-full transition-all"
@@ -108,7 +108,7 @@ export const Crossfader: React.FC<CrossfaderProps> = ({
                 </div>
 
                 {/* Center line */}
-                <div className="absolute top-1 bottom-1 left-1/2 -translate-x-px w-[2px] bg-white/8 rounded" />
+                <div className="absolute top-1 bottom-1 left-1/2 -translate-x-px w-0.5 bg-white/8 rounded" />
 
                 {/* Cap (brushed metal) */}
                 <div
@@ -125,10 +125,10 @@ export const Crossfader: React.FC<CrossfaderProps> = ({
                     }}
                 >
                     {/* Grip lines */}
-                    <div className="absolute inset-x-3 top-1/2 -translate-y-1/2 flex flex-col gap-[3px]">
-                        <div className="h-[1px] bg-white/10 rounded" />
-                        <div className="h-[1px] bg-white/15 rounded" />
-                        <div className="h-[1px] bg-white/10 rounded" />
+                    <div className="absolute inset-x-3 top-1/2 -translate-y-1/2 flex flex-col gap-0.75">
+                        <div className="h-px bg-white/10 rounded" />
+                        <div className="h-px bg-white/15 rounded" />
+                        <div className="h-px bg-white/10 rounded" />
                     </div>
                 </div>
             </div>

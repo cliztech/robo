@@ -123,7 +123,7 @@ export const Knob: React.FC<KnobProps> = ({
                         strokeDasharray={`${arcLength}`}
                         strokeDashoffset={circumference - arcLength}
                         strokeLinecap="round"
-                        className="transform -rotate-[210deg] origin-center"
+                        className="transform -rotate-210 origin-center"
                     />
 
                     {/* LED Value Arc — visible only during/after interaction */}
@@ -135,7 +135,7 @@ export const Knob: React.FC<KnobProps> = ({
                         strokeDasharray={`${filledArc} ${circumference}`}
                         strokeLinecap="round"
                         className={cn(
-                            "transform -rotate-[210deg] origin-center drop-shadow-[0_0_5px_currentColor]",
+                            "transform -rotate-210 origin-center drop-shadow-[0_0_5px_currentColor]",
                             colorClass,
                             "transition-opacity duration-300",
                             showLedRing ? "opacity-100" : "opacity-30"

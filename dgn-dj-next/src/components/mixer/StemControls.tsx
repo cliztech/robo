@@ -31,7 +31,7 @@ export const StemControls: React.FC<StemControlsProps> = ({ deck, className }) =
                             "flex-1 rounded-lg border flex flex-col items-center justify-end pb-3 transition-all duration-300 relative overflow-hidden group",
                             mutes[i]
                                 ? "bg-black/40 border-white/5"
-                                : "bg-gradient-to-b from-zinc-800 to-zinc-900 border-white/20 hover:border-white/40 shadow-lg active:scale-95"
+                                : "bg-linear-to-b from-zinc-800 to-zinc-900 border-white/20 hover:border-white/40 shadow-lg active:scale-95"
                         )}
                     >
                         {/* Lighting Backdrop (Glow when active) */}
@@ -62,7 +62,7 @@ export const StemControls: React.FC<StemControlsProps> = ({ deck, className }) =
                         </span>
 
                         {/* Glass Reflection */}
-                        <div className="absolute top-0 left-0 w-full h-[40%] bg-gradient-to-b from-white/10 to-transparent pointer-events-none"></div>
+                        <div className="absolute top-0 left-0 w-full h-[40%] bg-linear-to-b from-white/10 to-transparent pointer-events-none"></div>
                     </button>
                 ))}
             </div>

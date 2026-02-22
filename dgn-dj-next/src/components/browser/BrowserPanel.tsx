@@ -1,5 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { cn } from '../../lib/utils';
+import { useDeck } from '../../contexts/DeckContext';
+import { DEMO_TRACKS, formatTime } from '../../data/demoTracks';
+import { audioEngine } from '../../engine/AudioEngine';
+import type { DeckId, TrackInfo } from '../../types';
 
 interface Track {
     id: number;
@@ -33,13 +37,67 @@ const COMPATIBLE_KEYS: Record<string, string[]> = {
 const isKeyCompatible = (trackKey: string, deckKey: string) =>
     COMPATIBLE_KEYS[deckKey]?.includes(trackKey) ?? false;
 
+/** Parse "M:SS" time string to seconds */
+const parseDuration = (dur: string): number => {
+    const parts = dur.split(':').map(Number);
+    return (parts[0] ?? 0) * 60 + (parts[1] ?? 0);
+};
+
+/** Static energy/rating values for demo tracks (avoids Math.random in render) */
+const DEMO_ENERGY = [8, 7, 9, 10, 9, 7, 8, 7, 8, 10, 8, 9, 6, 9, 8, 7];
+const DEMO_RATING = [5, 4, 5, 4, 5, 4, 5, 5, 5, 4, 4, 5, 4, 5, 5, 4];
+
 export const BrowserPanel: React.FC = () => {
+    const { decks, loadTrack, engineReady, initEngine } = useDeck();
     const [selectedPlaylist, setSelectedPlaylist] = useState(0);
     const [searchQuery, setSearchQuery] = useState('');
-    const [currentDeckKey] = useState('8A'); // Current deck A key for compatibility check
     const [selectedTrack, setSelectedTrack] = useState<number | null>(null);
     const [sortField, setSortField] = useState<SortField>('title');
     const [sortAsc, setSortAsc] = useState(true);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [loadTarget] = useState<DeckId>('A');
+
+    // Current deck A's key for compatibility highlighting
+    const currentDeckKey = decks.A.track?.camelotKey ?? '8A';
+
+    // Load a demo track to a deck (generates audio buffer)
+    const handleLoadTrack = useCallback(async (track: Track, deck: DeckId) => {
+        if (!engineReady) await initEngine();
+
+        const buffer = audioEngine.generateDemoBuffer(track.bpm, parseDuration(track.duration));
+        const trackInfo: TrackInfo = {
+            title: track.title,
+            artist: track.artist,
+            bpm: track.bpm,
+            key: track.key,
+            camelotKey: track.key,
+            duration: parseDuration(track.duration),
+        };
+        loadTrack(deck, trackInfo, buffer);
+    }, [engineReady, initEngine, loadTrack]);
+
+    // Load a real audio file
+    const handleFileLoad = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (!engineReady) await initEngine();
+
+        try {
+            const buffer = await audioEngine.decodeFile(file);
+            const trackInfo: TrackInfo = {
+                title: file.name.replace(/\.[^/.]+$/, ''),
+                artist: 'Local File',
+                bpm: 128, // Would need BPM detection
+                key: '—',
+                camelotKey: '8A',
+                duration: buffer.duration,
+            };
+            loadTrack(loadTarget, trackInfo, buffer);
+        } catch {
+            console.error('Failed to decode audio file');
+        }
+        e.target.value = ''; // Reset input
+    }, [engineReady, initEngine, loadTrack, loadTarget]);
 
     const playlists = [
         { name: 'All Tracks', count: 847 },
@@ -50,20 +108,16 @@ export const BrowserPanel: React.FC = () => {
         { name: 'New Arrivals', count: 34 },
     ];
 
-    const tracks: Track[] = useMemo(() => [
-        { id: 1, title: 'Strobe', artist: 'deadmau5', bpm: 128.00, key: '5A', energy: 8, rating: 5, duration: '10:33' },
-        { id: 2, title: 'Midnight City', artist: 'M83', bpm: 105.00, key: '2B', energy: 7, rating: 4, duration: '4:03' },
-        { id: 3, title: 'One More Time', artist: 'Daft Punk', bpm: 122.50, key: '8A', energy: 9, rating: 5, duration: '5:20' },
-        { id: 4, title: 'Apex', artist: 'Unleash The Archers', bpm: 140.00, key: '3B', energy: 10, rating: 4, duration: '5:45' },
-        { id: 5, title: 'Ghosts n Stuff', artist: 'deadmau5', bpm: 128.00, key: '1A', energy: 8, rating: 5, duration: '6:42' },
-        { id: 6, title: 'Get Lucky', artist: 'Daft Punk', bpm: 116.00, key: '11B', energy: 6, rating: 5, duration: '6:07' },
-        { id: 7, title: 'Levels', artist: 'Avicii', bpm: 126.00, key: '6A', energy: 9, rating: 5, duration: '5:38' },
-        { id: 8, title: 'Scary Monsters', artist: 'Skrillex', bpm: 140.00, key: '4B', energy: 10, rating: 4, duration: '5:00' },
-        { id: 9, title: 'In The Name Of Love', artist: 'Martin Garrix', bpm: 128.00, key: '7A', energy: 8, rating: 4, duration: '3:41' },
-        { id: 10, title: 'Titanium', artist: 'David Guetta', bpm: 126.00, key: '2A', energy: 7, rating: 5, duration: '4:05' },
-        { id: 11, title: 'Silence', artist: 'Marshmello', bpm: 150.00, key: '8B', energy: 8, rating: 4, duration: '3:07' },
-        { id: 12, title: 'Faded', artist: 'Alan Walker', bpm: 90.00, key: '6A', energy: 7, rating: 5, duration: '3:32' },
-    ], []);
+    const tracks: Track[] = useMemo(() => DEMO_TRACKS.map((dt, i) => ({
+        id: i + 1,
+        title: dt.title,
+        artist: dt.artist,
+        bpm: dt.bpm,
+        key: dt.camelotKey,
+        energy: DEMO_ENERGY[i % DEMO_ENERGY.length],
+        rating: DEMO_RATING[i % DEMO_RATING.length],
+        duration: formatTime(dt.duration),
+    })), []);
 
     const sortedTracks = useMemo(() => {
         return [...tracks].sort((a, b) => {
@@ -86,6 +140,8 @@ export const BrowserPanel: React.FC = () => {
 
     return (
         <div className="h-full flex bg-panel-1 border-t border-white/5">
+            {/* Hidden file input for loading audio files */}
+            <input ref={fileInputRef} type="file" accept="audio/*" className="hidden" onChange={handleFileLoad} />
             {/* Playlist Sidebar */}
             <div className="w-48 shrink-0 border-r border-white/5 flex flex-col">
                 <div className="p-2 text-xxs font-mono tracking-micro text-zinc-600 border-b border-white/5">
@@ -99,8 +155,8 @@ export const BrowserPanel: React.FC = () => {
                             className={cn(
                                 "w-full text-left px-3 py-1.5 text-xs font-mono transition-all flex justify-between",
                                 selectedPlaylist === i
-                                    ? "text-white bg-white/[0.06] border-l-2 border-primary-accent"
-                                    : "text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.02] border-l-2 border-transparent"
+                                    ? "text-white bg-white/6 border-l-2 border-primary-accent"
+                                    : "text-zinc-500 hover:text-zinc-300 hover:bg-white/2 border-l-2 border-transparent"
                             )}
                         >
                             <span className="truncate">{pl.name}</span>
@@ -131,15 +187,15 @@ export const BrowserPanel: React.FC = () => {
                 </div>
 
                 {/* Album Carousel — 72px height, 64px artwork */}
-                <div className="h-[72px] shrink-0 flex items-center gap-2 px-3 border-b border-white/5 overflow-x-auto scroll-inertia">
+                <div className="h-18 shrink-0 flex items-center gap-2 px-3 border-b border-white/5 overflow-x-auto scroll-inertia">
                     {tracks.slice(0, 8).map((track) => (
                         <div
                             key={track.id}
                             className={cn(
                                 "shrink-0 flex items-center gap-2 px-2 py-1 rounded cursor-pointer transition-all",
                                 selectedTrack === track.id
-                                    ? "bg-white/[0.08] ring-1 ring-primary-accent/30"
-                                    : "hover:bg-white/[0.04]"
+                                    ? "bg-white/8 ring-1 ring-primary-accent/30"
+                                    : "hover:bg-white/4"
                             )}
                             onClick={() => setSelectedTrack(track.id)}
                         >
@@ -150,7 +206,7 @@ export const BrowserPanel: React.FC = () => {
                             >
                                 <span className="text-[10px] text-zinc-700 font-mono">♪</span>
                             </div>
-                            <div className="min-w-0 max-w-[100px]">
+                            <div className="min-w-0 max-w-25">
                                 <div className="text-xxs text-white truncate tracking-title">{track.title}</div>
                                 <div className="text-xxs text-zinc-600 truncate">{track.artist}</div>
                             </div>
@@ -163,10 +219,10 @@ export const BrowserPanel: React.FC = () => {
                     {/* Header */}
                     <div className="flex items-center px-3 h-7 border-b border-white/5 text-xxs font-mono text-zinc-600 tracking-micro shrink-0">
                         <div className="w-8 text-center">#</div>
-                        <div className="flex-[3] cursor-pointer hover:text-zinc-400" onClick={() => handleSort('title')}>
+                        <div className="flex-3 cursor-pointer hover:text-zinc-400" onClick={() => handleSort('title')}>
                             TITLE {sortIcon('title')}
                         </div>
-                        <div className="flex-[2] cursor-pointer hover:text-zinc-400" onClick={() => handleSort('artist')}>
+                        <div className="flex-2 cursor-pointer hover:text-zinc-400" onClick={() => handleSort('artist')}>
                             ARTIST {sortIcon('artist')}
                         </div>
                         <div className="w-16 text-right cursor-pointer hover:text-zinc-400" onClick={() => handleSort('bpm')}>
@@ -195,21 +251,21 @@ export const BrowserPanel: React.FC = () => {
                                 className={cn(
                                     "group flex items-center px-3 text-xs font-mono cursor-pointer transition-all",
                                     selectedTrack === track.id
-                                        ? "bg-white/[0.06] border-l-2 border-primary-accent"
-                                        : "hover:bg-white/[0.04] border-l-2 border-transparent"
+                                        ? "bg-white/6 border-l-2 border-primary-accent"
+                                        : "hover:bg-white/4 border-l-2 border-transparent"
                                 )}
                                 style={{ height: '34px' }}
                             >
                                 <div className="w-8 text-center text-zinc-700 tabular-nums">{idx + 1}</div>
-                                <div className="flex-[3] text-white truncate tracking-title">{track.title}</div>
-                                <div className="flex-[2] text-zinc-500 truncate tracking-meta">{track.artist}</div>
+                                <div className="flex-3 text-white truncate tracking-title">{track.title}</div>
+                                <div className="flex-2 text-zinc-500 truncate tracking-meta">{track.artist}</div>
                                 <div className="w-16 text-right text-zinc-400 tabular-nums">{track.bpm.toFixed(2)}</div>
                                 <div className={cn(
                                     "w-10 text-center tabular-nums font-bold",
                                     isKeyCompatible(track.key, currentDeckKey) ? "text-meter-green" : "text-zinc-500"
                                 )}>{track.key}</div>
                                 <div className="w-14 text-center">
-                                    <div className="inline-flex gap-[1px]">
+                                    <div className="inline-flex gap-px">
                                         {Array.from({ length: 10 }).map((_, j) => (
                                             <div key={j} className={cn(
                                                 "w-1 h-2.5 rounded-[0.5px]",
@@ -224,8 +280,14 @@ export const BrowserPanel: React.FC = () => {
                                 <div className="w-14 text-right text-zinc-600 tabular-nums">{track.duration}</div>
                                 {/* Load to deck buttons */}
                                 <div className="w-12 flex gap-0.5 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button className="text-[8px] font-mono font-bold text-deck-a px-1 py-0.5 rounded hover:bg-deck-a/20 transition-colors">A</button>
-                                    <button className="text-[8px] font-mono font-bold text-deck-b px-1 py-0.5 rounded hover:bg-deck-b/20 transition-colors">B</button>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleLoadTrack(track, 'A'); }}
+                                        className="text-[8px] font-mono font-bold text-deck-a px-1 py-0.5 rounded hover:bg-deck-a/20 transition-colors"
+                                    >A</button>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); handleLoadTrack(track, 'B'); }}
+                                        className="text-[8px] font-mono font-bold text-deck-b px-1 py-0.5 rounded hover:bg-deck-b/20 transition-colors"
+                                    >B</button>
                                 </div>
                             </div>
                         ))}

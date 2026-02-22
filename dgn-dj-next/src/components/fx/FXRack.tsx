@@ -102,7 +102,7 @@ export const FXRack: React.FC<FXRackProps> = ({ deck }) => {
                         <button
                             onClick={() => updateSlot(i, { active: !slot.active })}
                             className={cn(
-                                "transport-btn !h-5 !w-full text-[8px] font-mono font-bold tracking-micro",
+                                "transport-btn h-5! w-full! text-[8px] font-mono font-bold tracking-micro",
                                 slot.active
                                     ? "text-white border"
                                     : "text-zinc-600 border border-white/5 bg-panel-2"

@@ -113,7 +113,7 @@ export default function ListenerMonitor({ className = '' }: ListenerMonitorProps
             style={{ backdropFilter: 'blur(8px)' }}>
             <div className="flex items-start gap-3 px-3 py-2">
                 {/* ── Left: Big number + stats ── */}
-                <div className="flex-shrink-0">
+                <div className="shrink-0">
                     <div className="flex items-baseline gap-1">
                         <span className="text-[26px] font-bold text-white tabular-nums leading-none"
                             style={{ textShadow: '0 0 12px rgba(0, 145, 255, 0.4)' }}>

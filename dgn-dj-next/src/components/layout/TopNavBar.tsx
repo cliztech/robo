@@ -47,7 +47,7 @@ export const TopNavBar: React.FC = () => {
             style={{ height: 'var(--layout-nav-h)', minHeight: '44px' }}>
 
             {/* Headroom Monitor — 2px strip above nav */}
-            <div className="h-[2px] w-full relative">
+            <div className="h-0.5 w-full relative">
                 <div
                     className="absolute inset-y-0 left-0 transition-all duration-500"
                     style={{
@@ -61,13 +61,14 @@ export const TopNavBar: React.FC = () => {
             {/* Main Nav */}
             <div className="flex-1 flex items-center justify-between px-4">
                 {/* Left: Branding */}
-                <div className="flex items-center gap-3">
-                    <span className="text-sm font-bold tracking-tight text-white">
-                        DGN-DJ <span className="text-primary-accent">Studio</span>
-                        <span className="text-xxs text-zinc-500 ml-0.5">™</span>
+                <div className="flex items-center gap-4">
+                    <span className="text-2xl flex items-start font-black tracking-tighter text-white uppercase drop-shadow-md">
+                        DGN-DJ <span className="text-primary-accent ml-1">Studio</span>
+                        <span className="text-xs text-zinc-500 ml-0.5 font-bold mt-1 tracking-normal uppercase">Ttm</span>
                     </span>
-                    <div className="w-px h-5 bg-white/10" />
-                    <span className="text-xxs text-zinc-500 font-mono uppercase tracking-widest">Performance</span>
+                    <div className="w-px h-6 bg-white/10 ml-2" />
+                    <span className="text-xs text-zinc-500 font-mono uppercase tracking-widest hover:text-white cursor-pointer transition-colors">Library</span>
+                    <span className="text-xs text-zinc-500 font-mono uppercase tracking-widest hover:text-white cursor-pointer transition-colors">Performance</span>
                 </div>
 
                 {/* Center: Engine Status + System Gauges */}

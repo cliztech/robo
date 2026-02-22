@@ -52,8 +52,8 @@ export default function RecordingControls({ className = '' }: RecordingControlsP
                 {/* ── Record button ── */}
                 <button
                     onClick={() => setIsRecording(!isRecording)}
-                    className={`w-[28px] h-[28px] rounded-full flex items-center justify-center 
-            transition-all cursor-pointer border-0 flex-shrink-0
+                    className={`w-7 h-7 rounded-full flex items-center justify-center 
+            transition-all cursor-pointer border-0 shrink-0
             ${isRecording ? 'animate-rec-pulse' : 'hover:brightness-125'}`}
                     style={{
                         background: isRecording ? '#E54848' : 'rgba(229, 72, 72, 0.2)',
@@ -62,9 +62,9 @@ export default function RecordingControls({ className = '' }: RecordingControlsP
                     title={isRecording ? 'Stop Recording' : 'Start Recording'}
                 >
                     {isRecording ? (
-                        <div className="w-[10px] h-[10px] rounded-sm bg-white" />
+                        <div className="w-2.5 h-2.5 rounded-sm bg-white" />
                     ) : (
-                        <div className="w-[10px] h-[10px] rounded-full bg-red-400" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-red-400" />
                     )}
                 </button>
 

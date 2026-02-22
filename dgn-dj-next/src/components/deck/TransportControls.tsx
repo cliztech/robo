@@ -61,7 +61,7 @@ export const TransportControls: React.FC<TransportControlsProps> = ({
                 <button
                     onClick={() => setLoopActive(!loopActive)}
                     className={cn(
-                        "transport-btn !h-7 px-2.5 text-xxs font-mono font-bold",
+                        "transport-btn h-7! px-2.5 text-xxs font-mono font-bold",
                         loopActive
                             ? cn("text-white border", accentBorder, accentBg + '/20')
                             : "text-zinc-500 border border-white/5 bg-panel-2 hover:text-zinc-300"
@@ -74,7 +74,7 @@ export const TransportControls: React.FC<TransportControlsProps> = ({
                         key={s}
                         onClick={() => setLoopSize(s)}
                         className={cn(
-                            "transport-btn !h-7 !w-7 text-xxs font-mono",
+                            "transport-btn h-7! w-7! text-xxs font-mono",
                             loopSize === s && loopActive
                                 ? cn("text-white font-bold", accentBg + '/30', "border", accentBorder)
                                 : "text-zinc-600 bg-panel-2 border border-white/5 hover:text-zinc-400"

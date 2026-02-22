@@ -108,7 +108,7 @@ export const JogWheel: React.FC<JogWheelProps> = ({
                     }}
                 >
                     {/* 1px inner edge bevel at 6% */}
-                    <div className="absolute inset-0 rounded-full border border-white/[0.06]" />
+                    <div className="absolute inset-0 rounded-full border border-white/6" />
 
                     {/* Vinyl groove rings */}
                     {[30, 50, 70, 90, 110].map(r => (
