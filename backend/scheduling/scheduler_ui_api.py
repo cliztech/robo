@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from backend.security.auth import get_scheduler_api_key
-
 from .scheduler_models import (
     PreviewRequest,
     ScheduleConflict,
@@ -13,11 +11,7 @@ from .scheduler_models import (
 )
 from .scheduler_ui_service import SchedulerUiService
 
-router = APIRouter(
-    prefix="/api/v1/scheduler-ui",
-    tags=["scheduler-ui"],
-    dependencies=[Depends(get_scheduler_api_key)]
-)
+router = APIRouter(prefix="/api/v1/scheduler-ui", tags=["scheduler-ui"])
 
 
 def get_scheduler_service() -> SchedulerUiService:

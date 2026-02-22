@@ -58,6 +58,7 @@ def test_conflicts_are_deterministic_and_actionable() -> None:
     assert [item.conflict_type.value for item in conflicts] == [
         "ambiguous_dispatch",
         "duplicate_name",
+        "overlap",
     ]
     assert all(item.suggestions for item in conflicts)
 

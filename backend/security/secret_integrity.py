@@ -28,20 +28,6 @@ SECRET_SPECS = (
         "rotation_days": 90,
     },
     {
-        "name": "scheduler.api.key",
-        "env_var": "ROBODJ_SCHEDULER_API_KEY",
-        "file_name": "scheduler.api.key",
-        "placeholder_values": {
-            "REPLACE_WITH_GENERATED_SCHEDULER_KEY",
-        },
-        "validators": (
-            re.compile(r"^[A-Za-z0-9_-]{32,}$"),
-        ),
-        "expires_env_var": "ROBODJ_SCHEDULER_API_KEY_EXPIRES_AT",
-        "owner": "Scheduler Team",
-        "rotation_days": 180,
-    },
-    {
         "name": "secret_v2.key",
         "env_var": "ROBODJ_SECRET_V2_KEY",
         "file_name": "secret_v2.key",

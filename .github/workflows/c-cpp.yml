@@ -1,0 +1,23 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: configure
+      run: cd make-4.3 && ./configure
+    - name: make
+      run: cd make-4.3 && make
+    - name: make check
+      run: cd make-4.3 && make check
+    - name: make distcheck
+      run: cd make-4.3 && make distcheck
