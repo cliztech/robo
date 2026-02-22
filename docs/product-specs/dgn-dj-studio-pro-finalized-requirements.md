@@ -1,5 +1,34 @@
 # DGN-DJ Studio Pro — Finalized Product Requirements Baseline
 
+## 1. Product Overview
+
+DGN-DJ Studio Pro is a hardware-emulation, performance-grade DJ platform with:
+
+- Club-standard workflow (CDJ + DJM inspired)
+- Integrated streaming services
+- Real-time AI stem separation
+- Touch-optimized interaction
+- 2-deck base, scalable to 4 decks
+- GPU-accelerated audio + inference pipeline
+
+**Primary positioning:**
+Professional DJ performance system with AI-enhanced live production capability.
+
+## 2. Core System Requirements
+
+### 2.1 Audio Engine
+
+- 24-bit / 48kHz minimum
+- 64-bit internal mixing engine
+- End-to-end latency target: < 5 ms (audio path)
+- No blocking operations on audio thread
+- Dedicated real-time audio thread (highest priority)
+- Configurable buffer sizes
+- ASIO (Windows), Core Audio (macOS/iOS)
+
+### 2.2 Thread Architecture
+
+Separate execution domains:
 ## 1) Product Overview
 
 DGN-DJ Studio Pro is a hardware-emulation, performance-grade DJ platform that combines:
@@ -46,6 +75,26 @@ The system must operate with distinct execution domains:
 - Beatport Streaming
 - Beatsource
 - SoundCloud Go+
+- TIDAL (Targeted for Phase 2, pending licensing)
+
+Architecture must support modular addition of new services.
+
+### 3.2 Streaming Functional Requirements
+
+- Unified local + streaming library
+- Visual distinction for streamed tracks
+- Cloud playlist sync
+- Buffered playback (30–60 seconds minimum pre-buffer)
+- Automatic network reconnection handling
+- Offline locker mode (if licensing allows)
+
+### 3.3 Streaming Performance Requirements
+
+- Streaming must not block audio thread
+- Preload next track while current is playing
+- Adaptive quality based on bandwidth
+- Seamless playback if connection drops (buffered continuation)
+- Local caching of:
 - TIDAL (if licensing permits)
 
 The architecture must remain modular for future service expansion.
@@ -91,6 +140,11 @@ Per-stem controls:
 
 ### 4.2 Performance Targets
 
+- Stem latency target: < 30 ms total
+- Inference latency target: < 20 ms
+- CPU overhead target: < 20% per active deck
+- Stable under 4-deck load
+- No audible glitching under heavy FX + stems
 - Total stem latency target: **< 30 ms**
 - Inference latency target: **< 20 ms**
 - CPU overhead target: **< 20% per active deck**
@@ -135,22 +189,47 @@ Fallback hierarchy:
 1. Hold last valid stem frame
 2. Crossfade to full mix
 3. Disable stems on affected deck
-4. Display UI notification
+4. UI notification
 
-## 5) Stem Artifact Control
+## 5. Stem Artifact Control
 
 ### 5.1 Overlap-Add Processing
 
 - Chunk size: 2048–8192 samples (configurable)
 - Overlap: 25–50%
-- Windowed crossfade: equal-power or sqrt-Hann
-- Edge de-weighting to reduce boundary artifacts
+- Windowed crossfade (equal-power or sqrt-Hann)
+- Edge de-weighting to suppress boundary artifacts
 
 ### 5.2 Gain Smoothing
 
 - Stem fader smoothing: 10–30 ms
 - Mute/unmute fade: 30–60 ms
 - Solo isolate fade: 50–120 ms
+- No instantaneous gain steps allowed
+
+### 5.3 Scratch Protection Mode
+
+- If rapid jog motion detected:
+  - Temporarily reduce stem intensity internally
+  - Crossfade toward full mix during scratch
+  - Smooth return to stems after motion stabilizes
+
+### 5.4 Transient Guard (Drums)
+
+- Preserve kick/snare transients
+- Short gain smoothing
+- Optional lightweight post-processing filter
+
+## 6. Hardware-Emulation UI Requirements
+
+### 6.1 Deck Layout (CDJ Inspired)
+
+Per deck:
+
+- Large jog wheel with LED ring
+- OLED center display (BPM, Key, Time, Pitch)
+- Play/Pause (LED)
+- Cue (LED)
 - Instantaneous gain steps are prohibited
 
 ### 5.3 Scratch Protection Mode
@@ -195,12 +274,14 @@ Per-channel controls:
 
 Master section:
 
+- Crossfader (adjustable curve)
 - Crossfader with adjustable curve
 - Master VU
 - Booth level
 - Headphone cue mix
 - Headphone level
 
+## 7. Touch Optimization
 ## 7) Touch Optimization
 
 ### 7.1 Touch Targets
@@ -223,6 +304,12 @@ Master section:
 
 - LED glow on activation
 - Press-depth animation
+- Micro-interaction (120–300 ms)
+- Optional haptic feedback (supported devices)
+
+## 8. Performance Pads (8 Per Deck)
+
+Modes:
 - Micro-interaction timing: 120–300 ms
 - Optional haptic feedback on supported devices
 
@@ -243,6 +330,9 @@ Pad states:
 - Latched
 - Disabled
 
+All transitions use equal-power fades to prevent artifacts.
+
+## 9. FX Engine
 All state transitions must use equal-power fades to avoid artifacts.
 
 ## 9) FX Engine
@@ -251,6 +341,9 @@ All state transitions must use equal-power fades to avoid artifacts.
 - Wet/Dry control
 - Beat sync
 - Channel routing
+- No phase drift allowed
+
+FX types (initial):
 - No phase drift under synced operation
 
 Initial FX set:
@@ -281,6 +374,7 @@ Initial FX set:
 - Custom mapping editor
 - HID mode support (future phase)
 
+## 12. Modes of Operation
 ## 12) Modes of Operation
 
 ### Classic Mode
@@ -327,6 +421,14 @@ Initial FX set:
 - Automatic load scaling
 - GPU fallback logic
 - Graceful degradation under overload
+- Autosave cue/loop metadata
+- Recovery mode after crash
+
+## 15. Minimum Hardware Target
+
+Recommended:
+
+- 16GB RAM
 - Autosave for cue/loop metadata
 - Recovery mode after crash
 
