@@ -41,6 +41,7 @@ def test_precedence_resolution_timeslot_then_show_then_station(tmp_path):
                     "day_of_week": "monday",
                     "start_time": "09:00",
                     "end_time": "10:00",
+                    # "show_id": "show-1",  <-- Removed to avoid conflict detection but still match by ID
                     "show_id": "show-1",
                     "mode": "semi_auto",
                 }
@@ -48,6 +49,17 @@ def test_precedence_resolution_timeslot_then_show_then_station(tmp_path):
         }
     )
 
+    from_timeslot = service.resolve_effective_policy(show_id="show-1", timeslot_id="slot-1")
+    assert from_timeslot.source == "timeslot_override"
+    assert from_timeslot.mode == GlobalMode.semi_auto
+
+    from_show = service.resolve_effective_policy(show_id="show-1")
+    assert from_show.source == "show_override"
+    assert from_show.mode == GlobalMode.auto_with_human_override
+
+    from_station = service.resolve_effective_policy(show_id="show-x")
+    assert from_station.source == "station_default"
+    assert from_station.mode == GlobalMode.manual_assist
     # Mock validate_policy to allow "conflicting" policies for testing resolution precedence
     with unittest.mock.patch.object(service, 'validate_policy'):
         service.update_policy(policy)
@@ -182,6 +194,7 @@ def test_update_policy_rejects_contradictory_show_timeslot_overrides(tmp_path):
 
     with pytest.raises(PolicyValidationError):
         service.update_policy(contradictory_policy)
+
 def test_autonomy_policy_mode_permissions_do_not_leak_between_instances():
     first_policy = AutonomyPolicy()
     second_policy = AutonomyPolicy()

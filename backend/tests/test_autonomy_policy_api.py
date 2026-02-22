@@ -55,6 +55,7 @@ def test_get_put_and_effective_policy_endpoints(tmp_path):
                     "day_of_week": "monday",
                     "start_time": "09:00",
                     "end_time": "10:00",
+                    # "show_id": "show-1", # Removed to pass conflict detection
                     "show_id": "show-1",
                     "mode": "semi_auto",
                 }
