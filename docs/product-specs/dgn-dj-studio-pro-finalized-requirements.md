@@ -107,7 +107,7 @@ Execution provider hierarchy:
 - Windows NVIDIA: TensorRT → CUDA → DirectML → CPU
 - Windows AMD/Intel: DirectML → CPU
 - Apple: Metal / MPSGraph → CPU
-- Linux (if supported): CUDA → CPU
+- Linux (Roadmap): CUDA → CPU
 
 Model strategy:
 
