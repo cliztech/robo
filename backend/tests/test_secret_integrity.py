@@ -10,6 +10,7 @@ def valid_secrets():
     return {
         "ROBODJ_SECRET_KEY": "A" * 44,  # Matches ^[A-Za-z0-9_-]{43,}$
         "ROBODJ_SECRET_V2_KEY": "a" * 128,  # Matches ^[A-Fa-f0-9]{128}$
+        "ROBODJ_SCHEDULER_API_KEY": "B" * 32, # Matches ^[A-Za-z0-9_-]{32,}$
     }
 
 @pytest.fixture
@@ -29,11 +30,12 @@ def test_file_fallback_enabled(mock_config_dir, valid_secrets):
     # Create valid secret files in the mock config directory
     (mock_config_dir / "secret.key").write_text(valid_secrets["ROBODJ_SECRET_KEY"], encoding="utf-8")
     (mock_config_dir / "secret_v2.key").write_text(valid_secrets["ROBODJ_SECRET_V2_KEY"], encoding="utf-8")
+    (mock_config_dir / "scheduler.api.key").write_text(valid_secrets["ROBODJ_SCHEDULER_API_KEY"], encoding="utf-8")
 
     # Enable file fallback via environment variable
     env = {
         "ROBODJ_ALLOW_FILE_SECRET_FALLBACK": "true",
-        # Intentionally missing ROBODJ_SECRET_KEY and ROBODJ_SECRET_V2_KEY from env
+        # Intentionally missing secrets from env
     }
 
     result = run_secret_integrity_checks(env=env)
@@ -45,6 +47,7 @@ def test_file_fallback_explicit_arg(mock_config_dir, valid_secrets):
     # Create valid secret files
     (mock_config_dir / "secret.key").write_text(valid_secrets["ROBODJ_SECRET_KEY"], encoding="utf-8")
     (mock_config_dir / "secret_v2.key").write_text(valid_secrets["ROBODJ_SECRET_V2_KEY"], encoding="utf-8")
+    (mock_config_dir / "scheduler.api.key").write_text(valid_secrets["ROBODJ_SCHEDULER_API_KEY"], encoding="utf-8")
 
     # Missing secrets in env, but allow_file_fallback=True passed explicitly
     result = run_secret_integrity_checks(env={}, allow_file_fallback=True)
@@ -58,29 +61,34 @@ def test_missing_secrets():
     # Ensure specific alerts are present without enforcing strict count
     assert any("Missing secret.key" in alert for alert in result.alerts)
     assert any("Missing secret_v2.key" in alert for alert in result.alerts)
+    assert any("Missing scheduler.api.key" in alert for alert in result.alerts)
 
 def test_placeholder_values():
     """Test that placeholder values generate alerts."""
     env = {
         "ROBODJ_SECRET_KEY": "REPLACE_WITH_GENERATED_KEY",
         "ROBODJ_SECRET_V2_KEY": "REPLACE_WITH_GENERATED_SECRET_V2_KEY",
+        "ROBODJ_SCHEDULER_API_KEY": "REPLACE_WITH_GENERATED_SCHEDULER_KEY",
     }
     result = run_secret_integrity_checks(env=env)
     assert result.ok is False
     # Ensure placeholder alerts are present without enforcing strict count
     assert any("secret.key contains placeholder text" in alert for alert in result.alerts)
     assert any("secret_v2.key contains placeholder text" in alert for alert in result.alerts)
+    assert any("scheduler.api.key contains placeholder text" in alert for alert in result.alerts)
 
 def test_invalid_formats(valid_secrets):
     """Test that secrets not matching the regex validators generate alerts."""
     env = {
         "ROBODJ_SECRET_KEY": "short",  # Too short
         "ROBODJ_SECRET_V2_KEY": "123",  # Too short
+        "ROBODJ_SCHEDULER_API_KEY": "abc", # Too short
     }
     result = run_secret_integrity_checks(env=env)
     assert result.ok is False
     assert any("secret.key from environment has an invalid format" in alert for alert in result.alerts)
     assert any("secret_v2.key from environment has an invalid format" in alert for alert in result.alerts)
+    assert any("scheduler.api.key from environment has an invalid format" in alert for alert in result.alerts)
 
 def test_expired_secrets(valid_secrets):
     """Test that expired secrets generate alerts."""
@@ -88,8 +96,10 @@ def test_expired_secrets(valid_secrets):
     env = {
         "ROBODJ_SECRET_KEY": valid_secrets["ROBODJ_SECRET_KEY"],
         "ROBODJ_SECRET_V2_KEY": valid_secrets["ROBODJ_SECRET_V2_KEY"],
+        "ROBODJ_SCHEDULER_API_KEY": valid_secrets["ROBODJ_SCHEDULER_API_KEY"],
         "ROBODJ_SECRET_KEY_EXPIRES_AT": "2023-01-01T00:00:00Z",
         "ROBODJ_SECRET_V2_KEY_EXPIRES_AT": "2023-01-01T00:00:00Z",
+        "ROBODJ_SCHEDULER_API_KEY_EXPIRES_AT": "2023-01-01T00:00:00Z",
     }
 
     # Mock 'now' to be after the expiration date
@@ -99,14 +109,17 @@ def test_expired_secrets(valid_secrets):
     assert result.ok is False
     assert any("secret.key is expired as of" in alert for alert in result.alerts)
     assert any("secret_v2.key is expired as of" in alert for alert in result.alerts)
+    assert any("scheduler.api.key is expired as of" in alert for alert in result.alerts)
 
 def test_valid_expiration(valid_secrets):
     """Test that future expiration dates do not generate alerts."""
     env = {
         "ROBODJ_SECRET_KEY": valid_secrets["ROBODJ_SECRET_KEY"],
         "ROBODJ_SECRET_V2_KEY": valid_secrets["ROBODJ_SECRET_V2_KEY"],
+        "ROBODJ_SCHEDULER_API_KEY": valid_secrets["ROBODJ_SCHEDULER_API_KEY"],
         "ROBODJ_SECRET_KEY_EXPIRES_AT": "2025-01-01T00:00:00Z",
         "ROBODJ_SECRET_V2_KEY_EXPIRES_AT": "2025-01-01T00:00:00Z",
+        "ROBODJ_SCHEDULER_API_KEY_EXPIRES_AT": "2025-01-01T00:00:00Z",
     }
 
     # Mock 'now' to be before the expiration date
@@ -121,6 +134,7 @@ def test_file_fallback_disabled(mock_config_dir, valid_secrets):
     # Create valid secret files
     (mock_config_dir / "secret.key").write_text(valid_secrets["ROBODJ_SECRET_KEY"], encoding="utf-8")
     (mock_config_dir / "secret_v2.key").write_text(valid_secrets["ROBODJ_SECRET_V2_KEY"], encoding="utf-8")
+    (mock_config_dir / "scheduler.api.key").write_text(valid_secrets["ROBODJ_SCHEDULER_API_KEY"], encoding="utf-8")
 
     # Missing secrets in env, and fallback is disabled by default
     result = run_secret_integrity_checks(env={})
