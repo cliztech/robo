@@ -19,6 +19,13 @@ Professional DJ performance system with AI-enhanced live production capability.
 
 ### 2.1 Audio Engine
 
+- 24-bit / 48 kHz minimum
+- 64-bit internal mixing engine
+- End-to-end audio path latency target: **< 5 ms**
+- No blocking operations on audio thread
+- Dedicated real-time audio thread (highest priority)
+- Configurable buffer sizes
+- ASIO support on Windows, Core Audio on macOS/iOS
 - 24-bit / 48kHz minimum
 - 64-bit internal mixing engine
 - End-to-end latency target: < 5 ms (audio path)
@@ -67,6 +74,12 @@ The system must operate with distinct execution domains:
 4. Background Analysis Thread (BPM/Key)
 5. UI Thread
 
+Constraints:
+
+- No shared blocking resources between threads
+- Audio thread must never wait on inference or network
+
+## 3. Streaming Integration
 No shared blocking resources between threads.
 Audio thread must never wait on inference or network.
 
@@ -82,6 +95,9 @@ Audio thread must never wait on inference or network.
 - Beatport Streaming
 - Beatsource
 - SoundCloud Go+
+- TIDAL (if licensing permits)
+
+The architecture must support modular addition of new services.
 - TIDAL (if licensing permitted)
 - TIDAL (Targeted for Phase 2, pending licensing)
 
@@ -99,6 +115,10 @@ Architecture must support modular addition of new services.
 ### 3.3 Streaming Performance Requirements
 
 - Streaming must not block audio thread
+- Preload next track while current track is playing
+- Adaptive quality based on bandwidth
+- Seamless playback continuation if connection drops (using buffer)
+- Local caching of:
 - Preload next track while current is playing
 - Adaptive quality based on bandwidth
 - Seamless playback if connection drops (buffered continuation)
@@ -142,12 +162,19 @@ Four stems per deck:
 Per-stem controls:
 
 - Volume fader
+- Mute (latching)
+- Solo (momentar.y + latch)
 - Latching mute
 - Solo (momentary and latch)
 - Double-tap reset
 
 ### 4.2 Performance Targets
 
+- Stem latency target: **< 30 ms** total
+- Inference latency target: **< 20 ms**
+- CPU overhead target: **< 20%** per active deck
+- Stable under 4-deck load
+- No audible glitching under heavy FX + stems
 - Stem latency target: < 30 ms total
 - Inference latency target: < 20 ms
 - CPU overhead target: < 20% per active deck
@@ -162,6 +189,22 @@ Per-stem controls:
 ### 4.3 Model Strategy
 
 - Canonical model format: ONNX
+- Inference runtime: ONNX Runtime
+
+Execution provider hierarchy:
+
+- **Windows NVIDIA:** TensorRT → CUDA → DirectML → CPU
+- **Windows AMD/Intel:** DirectML → CPU
+- **Apple:** Metal / MPSGraph → CPU
+- **Linux (if supported):** CUDA → CPU
+
+Model strategy:
+
+- Lightweight MDX-style frequency-domain model
+- Quantized execution (FP16 / INT8 where viable)
+- Hybrid pipeline:
+  - Higher quality analysis on load
+  - Streaming lightweight inference during playback
 - Runtime: ONNX Runtime
 - Execution provider hierarchy:
 
@@ -233,6 +276,7 @@ If rapid jog motion is detected:
 
 - Temporarily reduce stem intensity internally
 - Crossfade toward full mix during scratch
+- Smoothly return to stems after motion stabilizes
 - Smooth return to stems after motion stabilizes
 - If rapid jog motion detected:
   - Temporarily reduce stem intensity internally
@@ -255,6 +299,12 @@ Per deck:
 
 - Large jog wheel with LED ring
 - OLED center display (BPM, Key, Time, Pitch)
+- Play/Pause button (LED)
+- Cue button (LED)
+- Loop In/Out
+- Auto loop
+- Slip mode
+- Pitch fader (100 mm visual equivalent)
 - Play/Pause (LED)
 - Cue (LED)
 - Instantaneous gain steps are prohibited
@@ -290,6 +340,12 @@ Per deck requirements:
 
 ### 6.2 Mixer Layout (DJM Inspired)
 
+Per channel:
+
+- Trim (Gain)
+- 3-band EQ (full kill)
+- Dedicated Filter
+- 60 mm channel fader
 Per-channel controls:
 
 - Trim (Gain)
@@ -307,6 +363,7 @@ Master section:
 - Headphone cue mix
 - Headphone level
 
+## 7. Touch Optimization
 ---
 
 ## 7. Touch Optimization
@@ -402,6 +459,9 @@ Initial FX set:
 - Memory cap target: < 1.5 GB
 - No audio dropouts under load
 
+## 11. Hardware Integration
+
+- MIDI mapping system
 ---
 
 ## 11. Hardware Integration
@@ -426,6 +486,7 @@ Initial FX set:
 - Custom mapping editor
 - HID mode support (future phase)
 
+## 12. Modes of Operation
 ---
 
 ## 12. Modes of Operation
@@ -473,6 +534,7 @@ Initial FX set:
 - AI transition suggestions
 - Hardware ecosystem expansion
 
+## 14. Reliability & Safeguards
 ---
 
 ## 14. Reliability & Safeguards
@@ -484,6 +546,8 @@ Initial FX set:
 - Graceful degradation under overload
 - Autosave cue/loop metadata
 - Recovery mode after crash
+
+## 15. Minimum Hardware Target
 
 ---
 
@@ -514,6 +578,9 @@ Performance modes:
 
 This document represents the finalized product requirements baseline for engineering handoff.
 
+Potential downstream artifacts:
+
+- Sprint breakdown plan
 If required, this can be converted into:
 
 - Sprint breakdown plan
