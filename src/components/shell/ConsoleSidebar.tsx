@@ -4,7 +4,6 @@ import type { ElementType } from 'react';
 import { motion } from 'framer-motion';
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { GorillaLogo } from './GorillaLogo';
 import type { ConsoleNavItem, ConsoleViewMode } from '@/components/console/types';
 
 interface ConsoleSidebarProps {
@@ -32,18 +31,18 @@ function SidebarIcon({
             onClick={onClick}
             title={label}
             className={cn(
-                'relative w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 group',
+                'relative w-10 h-10 rounded-md flex items-center justify-center transition-all duration-200 group border',
                 active
-                    ? 'bg-lime-500/10 text-lime-400 shadow-[0_0_15px_rgba(170,255,0,0.08)]'
-                    : 'text-zinc-600 hover:text-zinc-200 hover:bg-white/[0.03]'
+                    ? 'bg-cyan-500/12 border-cyan-400/30 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.15)]'
+                    : 'border-transparent text-zinc-600 hover:text-zinc-200 hover:bg-white/[0.03] hover:border-white/[0.07]'
             )}
         >
-            <Icon size={17} strokeWidth={active ? 2.2 : 1.5} />
+            <Icon size={17} strokeWidth={active ? 2.1 : 1.5} />
             {active && (
                 <motion.div
                     layoutId="sidebar-active"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[2.5px] h-5 rounded-r-full bg-lime-500"
-                    style={{ boxShadow: '0 0 8px rgba(170,255,0,0.5)' }}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[2.5px] h-5 rounded-r-full bg-cyan-300"
+                    style={{ boxShadow: '0 0 8px rgba(34, 211, 238, 0.6)' }}
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                 />
             )}
@@ -60,6 +59,20 @@ function SidebarIcon({
     );
 }
 
+function DgnDjConsoleBadge() {
+    return (
+        <div className="w-full px-3 pb-2">
+            <div className="rounded-md border border-white/[0.09] bg-gradient-to-b from-[#111726] to-[#0a0e17] px-2 py-2">
+                <div className="text-[14px] font-semibold text-zinc-100 tracking-tight leading-none">DGN-DJ</div>
+                <div className="text-[8px] uppercase tracking-[0.12em] text-zinc-400 mt-1">Console V2 Studio Mode</div>
+                <div className="mt-2 h-[3px] rounded-full bg-black/40 overflow-hidden">
+                    <div className="h-full w-[6%] bg-cyan-300" />
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export function ConsoleSidebar({
     navItems,
     utilityItems,
@@ -67,19 +80,12 @@ export function ConsoleSidebar({
     onViewChange,
 }: ConsoleSidebarProps) {
     return (
-        <aside className="w-[56px] bg-black/40 border-r border-white/[0.04] flex flex-col items-center py-3 gap-0.5 shrink-0 backdrop-blur-md z-10">
-            <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-                className="mb-5 cursor-pointer hover:scale-110 transition-transform"
-            >
-                <GorillaLogo size={28} />
-            </motion.div>
+        <aside className="w-[76px] bg-[#08090c] border-r border-white/[0.08] flex flex-col items-center py-2 gap-1 shrink-0 backdrop-blur-md z-10">
+            <DgnDjConsoleBadge />
 
-            <div className="w-6 h-[1px] bg-gradient-to-r from-transparent via-zinc-700 to-transparent mb-2" />
+            <div className="w-8 h-[1px] bg-gradient-to-r from-transparent via-zinc-700 to-transparent mb-1" />
 
-            <div className="flex-1 flex flex-col gap-0.5">
+            <div className="flex-1 flex flex-col gap-1">
                 {navItems.map((item, index) => (
                     <motion.div
                         key={item.view}
@@ -98,9 +104,9 @@ export function ConsoleSidebar({
                 ))}
             </div>
 
-            <div className="w-6 h-[1px] bg-gradient-to-r from-transparent via-zinc-700 to-transparent mb-2" />
+            <div className="w-8 h-[1px] bg-gradient-to-r from-transparent via-zinc-700 to-transparent mb-1" />
 
-            <div className="flex flex-col gap-0.5">
+            <div className="flex flex-col gap-1">
                 {utilityItems.map((item) => (
                     <SidebarIcon key={item.label} icon={item.icon} label={item.label} />
                 ))}
