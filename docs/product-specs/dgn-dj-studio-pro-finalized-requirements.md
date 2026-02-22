@@ -1,3 +1,4 @@
+# DGN-DJ Studio Pro — Finalized Product Requirements
 # DGN-DJ Studio Pro — Finalized Product Requirements Baseline
 
 ## 1. Product Overview
@@ -66,6 +67,12 @@ The system must operate with distinct execution domains:
 4. Background Analysis Thread (BPM/Key)
 5. UI Thread
 
+No shared blocking resources between threads.
+Audio thread must never wait on inference or network.
+
+---
+
+## 3. Streaming Integration
 **Hard constraint:** No shared blocking resources between threads. The audio thread must never wait on inference or network operations.
 
 ## 3) Streaming Integration
@@ -75,6 +82,7 @@ The system must operate with distinct execution domains:
 - Beatport Streaming
 - Beatsource
 - SoundCloud Go+
+- TIDAL (if licensing permitted)
 - TIDAL (Targeted for Phase 2, pending licensing)
 
 Architecture must support modular addition of new services.
@@ -174,6 +182,15 @@ Model lifecycle strategy:
 
 Priority-based quality scaling:
 
+- Active audible decks = highest quality
+- Queued decks = reduced quality
+- Muted decks = inference suspended
+
+Additional constraints:
+
+- GPU batching when possible
+- Pre-allocated memory buffers at launch
+- No dynamic allocation during performance
 - Audible active decks: highest quality
 - Queued decks: reduced quality
 - Muted decks: inference suspended
@@ -191,10 +208,13 @@ Fallback hierarchy:
 3. Disable stems on affected deck
 4. UI notification
 
+---
+
 ## 5. Stem Artifact Control
 
 ### 5.1 Overlap-Add Processing
 
+- Chunk size: 512–8192 samples (configurable)
 - Chunk size: 2048–8192 samples (configurable)
 - Overlap: 25–50%
 - Windowed crossfade (equal-power or sqrt-Hann)
@@ -209,6 +229,11 @@ Fallback hierarchy:
 
 ### 5.3 Scratch Protection Mode
 
+If rapid jog motion is detected:
+
+- Temporarily reduce stem intensity internally
+- Crossfade toward full mix during scratch
+- Smooth return to stems after motion stabilizes
 - If rapid jog motion detected:
   - Temporarily reduce stem intensity internally
   - Crossfade toward full mix during scratch
@@ -219,6 +244,8 @@ Fallback hierarchy:
 - Preserve kick/snare transients
 - Short gain smoothing
 - Optional lightweight post-processing filter
+
+---
 
 ## 6. Hardware-Emulation UI Requirements
 
@@ -275,12 +302,14 @@ Per-channel controls:
 Master section:
 
 - Crossfader (adjustable curve)
-- Crossfader with adjustable curve
 - Master VU
 - Booth level
 - Headphone cue mix
 - Headphone level
 
+---
+
+## 7. Touch Optimization
 ## 7. Touch Optimization
 ## 7) Touch Optimization
 
@@ -288,6 +317,7 @@ Master section:
 
 - Primary buttons: ≥ 80 px
 - Knobs: ≥ 60 px
+- Faders: ≥ 40 px width
 - Faders: ≥ 20 px width
 - Performance pads: ≥ 60 px with 8 px spacing
 
@@ -307,6 +337,11 @@ Master section:
 - Micro-interaction (120–300 ms)
 - Optional haptic feedback (supported devices)
 
+---
+
+## 8. Performance Pads (8 Per Deck)
+
+Modes:
 ## 8. Performance Pads (8 Per Deck)
 
 Modes:
@@ -343,6 +378,7 @@ All state transitions must use equal-power fades to avoid artifacts.
 - Channel routing
 - No phase drift allowed
 
+Initial FX types:
 FX types (initial):
 - No phase drift under synced operation
 
@@ -356,6 +392,22 @@ Initial FX set:
 - Filter
 - Roll
 
+---
+
+## 10. System Performance Requirements
+
+- GPU-accelerated waveform rendering
+- Touch response < 16 ms
+- Stable 4-deck playback for 4+ hours
+- Memory cap target: < 1.5 GB
+- No audio dropouts under load
+
+---
+
+## 11. Hardware Integration
+
+- MIDI mapping system
+- Plug-and-play compatibility:
 ## 10) System Performance Requirements
 
 - GPU-accelerated waveform rendering
@@ -374,6 +426,9 @@ Initial FX set:
 - Custom mapping editor
 - HID mode support (future phase)
 
+---
+
+## 12. Modes of Operation
 ## 12. Modes of Operation
 ## 12) Modes of Operation
 
@@ -393,6 +448,9 @@ Initial FX set:
 - Maximum manual control
 - Reduced automatic masking
 
+---
+
+## 13. Scalability Roadmap
 ## 13) Scalability Roadmap
 
 ### Phase 1
@@ -415,6 +473,9 @@ Initial FX set:
 - AI transition suggestions
 - Hardware ecosystem expansion
 
+---
+
+## 14. Reliability & Safeguards
 ## 14) Reliability & Safeguards
 
 - No blocking calls in audio thread
@@ -423,6 +484,8 @@ Initial FX set:
 - Graceful degradation under overload
 - Autosave cue/loop metadata
 - Recovery mode after crash
+
+---
 
 ## 15. Minimum Hardware Target
 
@@ -441,6 +504,19 @@ Recommended baseline:
 - Dedicated GPU recommended
 - SSD storage
 
+Performance modes:
+
+- Standard
+- Performance (reduced visuals)
+- Studio (max quality inference)
+
+---
+
+This document represents the finalized product requirements baseline for engineering handoff.
+
+If required, this can be converted into:
+
+- Sprint breakdown plan
 Runtime performance profiles:
 
 - Standard
