@@ -8,23 +8,23 @@ interface DeckContainerProps {
 }
 
 export const DeckContainer: React.FC<DeckContainerProps> = ({ deck, children, className }) => {
-    const borderColor = deck === 'A' ? 'border-deck-a/30' : 'border-deck-b/30';
-    const glowColor = deck === 'A' ? 'shadow-[0_0_30px_rgba(0,145,255,0.05)]' : 'shadow-[0_0_30px_rgba(255,85,0,0.05)]';
-
     return (
         <div className={cn(
-            "relative flex flex-col h-full bg-surface-glass backdrop-blur-xl border rounded-xl overflow-hidden transition-all duration-300",
-            borderColor,
-            glowColor,
+            "relative flex flex-col bg-dark-metal premium-panel rounded-xl overflow-hidden p-0.5",
+            deck === 'A' ? "deck-glow-A" : "deck-glow-B",
             className
         )}>
-            {/* Top Identity Bar */}
-            <div className={cn(
-                "h-1 w-full absolute top-0 left-0 right-0 z-10",
-                deck === 'A' ? "bg-deck-a" : "bg-deck-b"
-            )} />
+            {/* Corner Screws for Hardware aesthetics */}
+            <div className="hardware-screw top-2 left-2" />
+            <div className="hardware-screw top-2 right-2" />
+            <div className="hardware-screw bottom-2 left-2" />
+            <div className="hardware-screw bottom-2 right-2" />
 
-            {children}
+            <div className="absolute inset-x-0 h-8 top-0 bg-linear-to-b from-white/5 to-transparent pointer-events-none" />
+
+            <div className="relative z-10 w-full h-full p-2 bg-panel-2/50 backdrop-blur-md rounded-lg shadow-inner">
+                {children}
+            </div>
         </div>
     );
 };
