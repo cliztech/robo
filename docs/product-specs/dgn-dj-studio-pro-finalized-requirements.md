@@ -46,7 +46,7 @@ Audio thread must never wait on inference or network.
 - Beatport Streaming
 - Beatsource
 - SoundCloud Go+
-- TIDAL (if licensing permitted)
+- TIDAL (Targeted for Phase 2, pending licensing)
 
 Architecture must support modular addition of new services.
 
