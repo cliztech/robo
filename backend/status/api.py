@@ -4,10 +4,11 @@ from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import Dict, List
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
+from backend.security.auth import verify_api_key
 
-router = APIRouter(prefix="/api/v1/status", tags=["status"])
+router = APIRouter(prefix="/api/v1/status", tags=["status"], dependencies=[Depends(verify_api_key)])
 
 
 class ServiceHealth(str, Enum):
