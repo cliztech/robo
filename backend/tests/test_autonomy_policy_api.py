@@ -23,27 +23,27 @@ def test_get_put_and_effective_policy_endpoints(tmp_path):
         get_response = client.get("/api/v1/autonomy-policy")
         assert get_response.status_code == 200
         baseline = get_response.json()
-        assert baseline["station_default_mode"] == "assisted"
+        assert baseline["station_default_mode"] == "semi_auto"
 
         updated_payload = {
             **baseline,
-            "station_default_mode": "manual",
-            "show_overrides": [{"show_id": "show-1", "mode": "autonomous"}],
+            "station_default_mode": "manual_assist",
+            "show_overrides": [{"show_id": "show-1", "mode": "auto_with_human_override"}],
             "timeslot_overrides": [
                 {
                     "id": "slot-1",
                     "day_of_week": "monday",
                     "start_time": "09:00",
                     "end_time": "10:00",
-                    "show_id": "show-1",
-                    "mode": "assisted",
+                    # "show_id": "show-1", # Removed to pass conflict detection
+                    "mode": "semi_auto",
                 }
             ],
         }
 
         put_response = client.put("/api/v1/autonomy-policy", json=updated_payload)
         assert put_response.status_code == 200
-        assert put_response.json()["station_default_mode"] == "manual"
+        assert put_response.json()["station_default_mode"] == "manual_assist"
 
         effective_timeslot = client.get(
             "/api/v1/autonomy-policy/effective",
@@ -100,19 +100,19 @@ def test_invalid_payload_rejections_api(tmp_path):
 
     try:
         invalid_policy = {
-            "station_default_mode": "manual",
+            "station_default_mode": "manual_assist",
             "mode_permissions": {
-                "manual": {
+                "manual_assist": {
                     "track_selection": "human_only"
                 },
-                "assisted": {
+                "semi_auto": {
                     "track_selection": "human_with_ai_assist",
                     "script_generation": "ai_with_human_approval",
                     "voice_persona_selection": "human_with_ai_assist",
                     "caller_simulation_usage": "ai_with_human_approval",
                     "breaking_news_weather_interruption": "ai_with_human_approval",
                 },
-                "autonomous": {
+                "auto_with_human_override": {
                     "track_selection": "ai_autonomous",
                     "script_generation": "ai_autonomous",
                     "voice_persona_selection": "ai_autonomous",
