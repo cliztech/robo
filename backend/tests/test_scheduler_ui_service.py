@@ -84,6 +84,37 @@ def test_update_schedules_validates_schema_before_write(tmp_path) -> None:
         service.update_schedules([bad])
 
 
+
+
+def test_build_timeline_blocks_supports_numeric_cron() -> None:
+    service = SchedulerUiService()
+
+    blocks = service._build_timeline_blocks([_schedule("sch_numeric", "Numeric Cron", cron="0 9 * * 1")])
+
+    assert len(blocks) == 1
+    assert blocks[0].schedule_id == "sch_numeric"
+    assert blocks[0].start_time == "09:00"
+
+
+def test_build_timeline_blocks_skips_wildcard_cron_without_crashing(caplog: pytest.LogCaptureFixture) -> None:
+    service = SchedulerUiService()
+
+    with caplog.at_level("WARNING"):
+        blocks = service._build_timeline_blocks([_schedule("sch_wild", "Wildcard Cron", cron="* * * * *")])
+
+    assert blocks == []
+    assert "Skipping timeline block for schedule_id=sch_wild" in caplog.text
+
+
+def test_build_timeline_blocks_skips_step_cron_without_crashing(caplog: pytest.LogCaptureFixture) -> None:
+    service = SchedulerUiService()
+
+    with caplog.at_level("WARNING"):
+        blocks = service._build_timeline_blocks([_schedule("sch_step", "Step Cron", cron="*/15 * * * *")])
+
+    assert blocks == []
+    assert "Skipping timeline block for schedule_id=sch_step" in caplog.text
+
 def test_publish_schedules_passes_for_template_primitive(tmp_path) -> None:
     service = SchedulerUiService(schedules_path=tmp_path / "schedules.json")
     template_schedules = service.apply_template(
@@ -98,3 +129,32 @@ def test_publish_schedules_passes_for_template_primitive(tmp_path) -> None:
 
     assert result["status"] == "published"
     assert result["schedule_count"] == 5
+
+
+@pytest.mark.parametrize(
+    ("day_token", "expected_day"),
+    [
+        ("0", "sunday"),
+        ("1", "monday"),
+        ("2", "tuesday"),
+        ("3", "wednesday"),
+        ("4", "thursday"),
+        ("5", "friday"),
+        ("6", "saturday"),
+        ("7", "sunday"),
+    ],
+)
+def test_cron_single_day_tokens_map_without_fallback(day_token: str, expected_day: str) -> None:
+    service = SchedulerUiService()
+
+    block = service._build_timeline_blocks([_schedule("sch_valid", "Valid", cron=f"0 9 * * {day_token}")])[0]
+
+    assert block.day_of_week == expected_day
+
+
+@pytest.mark.parametrize("unsupported_token", ["*", "1,2", "1-5", "*/2", "MON"])
+def test_cron_unsupported_day_patterns_raise_clear_error(unsupported_token: str) -> None:
+    service = SchedulerUiService()
+
+    with pytest.raises(ValueError, match="supports only a single numeric day-of-week token in range 0-7"):
+        service._build_timeline_blocks([_schedule("sch_invalid", "Invalid", cron=f"0 9 * * {unsupported_token}")])
