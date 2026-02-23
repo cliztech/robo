@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Product Guidelines: AetherRadio
 
 ## 1. Visual Identity & Aesthetic
@@ -34,3 +35,11 @@
 *   **Keyboard Navigation:** Full support for keyboard shortcuts for all critical functions (Play, Pause, Cue, Crossfade).
 *   **Screen Reader Support:** ARIA labels for all controls.
 *   **Color Blindness:** Ensure critical status indicators (e.g., Record, On Air) rely on more than just color (use icons or text labels).
+=======
+# Product Guidelines
+
+Strict adherence to the following is required:
+- [AGENTS.md](../AGENTS.md) (Multi-agent pipeline)
+- [SKILLS.md](../SKILLS.md) (Reusable skill definitions)
+- [SECURITY.md](../SECURITY.md) (Secrets and audit protocols)
+>>>>>>> c287a1eb05d08b6cbcc6791eaa232a28b977e8b5

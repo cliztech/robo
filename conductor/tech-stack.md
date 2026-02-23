@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Technology Stack: AetherRadio
 
 ## 1. Application Architecture
@@ -37,3 +38,13 @@
 *   **Linting:** ESLint & Prettier.
 *   **Database Tooling:** Supabase CLI for migrations and type generation.
 *   **Agentic Framework:** BMAD (Base Model Agentic Development) for autonomous operation.
+=======
+# Tech Stack
+
+- **Primary Executable**: RoboDJ Automation.exe
+- **Backend**: Python (backend/)
+- **Frontend/Console**: Next.js / Tailwind (apps/dj-console/)
+- **Configuration**: JSON / SQLite (config/)
+
+Refer to [TECH_STACK.md](../TECH_STACK.md) for full details.
+>>>>>>> c287a1eb05d08b6cbcc6791eaa232a28b977e8b5

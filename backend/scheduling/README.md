@@ -66,10 +66,12 @@ uvicorn backend.app:app --reload
 Then read/edit policy and record decision-origin audit events using the endpoints above.
 
 
-## TODO: structured scheduler events
+## Structured scheduler events
 
-- TODO: Implement event emission using `docs/scheduling_alert_events.md` for startup validation results (`scheduler.startup_validation.succeeded|failed`).
-- TODO: Emit `scheduler.schedule_parse.failed` on schedule/policy decode failures before returning API errors.
-- TODO: Emit backup lifecycle events `scheduler.backup.created` and `scheduler.backup.restored` for config protection flows.
-- TODO: Emit `scheduler.crash_recovery.activated` whenever recovery mode is triggered.
+- Implemented startup validation events (`scheduler.startup_validation.succeeded|failed`) using the schema in `docs/scheduling_alert_events.md`.
+- `scheduler.backup.created` is emitted before autonomy policy writes when an existing policy file is snapshotted.
+- `scheduler.backup.restored` is emitted if a write failure triggers rollback to the pre-write snapshot.
+- `scheduler.crash_recovery.activated` is emitted when startup detects invalid policy state and auto-recovers by moving the invalid file and bootstrapping defaults.
+- Pending: `scheduler.schedule_parse.failed` emission on schedule parsing paths not yet instrumented by this module.
+
 Then read/edit policy and scheduler state through the endpoints above.

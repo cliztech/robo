@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Project Workflow
 
 ## Guiding Principles
@@ -331,3 +332,10 @@ A task is complete when:
 - Document lessons learned
 - Optimize for user happiness
 - Keep things simple and maintainable
+=======
+# Workflow
+
+The project follows a multi-agent orchestration workflow.
+
+Refer to [MASSIVE_WORKFLOW_BLUEPRINT.md](../MASSIVE_WORKFLOW_BLUEPRINT.md) and [AGENTS.md](../AGENTS.md) for detailed operational protocols.
+>>>>>>> c287a1eb05d08b6cbcc6791eaa232a28b977e8b5

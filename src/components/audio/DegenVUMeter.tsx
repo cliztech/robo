@@ -87,7 +87,8 @@ export function DegenVUMeter({
                                     : isPeak
                                         ? `0 0 8px ${ratio > 0.8 ? 'hsla(0, 85%, 60%, 0.5)' : 'hsla(207, 98%, 45%, 0.5)'}`
                                         : 'none',
-                                borderTop: '1px solid rgba(255,255,255,0.05)'
+                                borderTop: isVert ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                                borderLeft: !isVert ? '1px solid rgba(255,255,255,0.05)' : 'none'
                             }}
                         />
                     );

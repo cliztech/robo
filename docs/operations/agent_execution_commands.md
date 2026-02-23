@@ -2,6 +2,30 @@
 
 Short, runnable command sequences for execution workflows, plus an operational matrix for all DGN-DJ teams (managers, subagents, tools, skills, personalities, tech stack, and trusted references).
 
+## Canonical BMAD startup policy (Codex/Gemini/Jules)
+
+Use this as the single startup snippet for repository-level agent bootstrap instructions.
+
+> Use BMAD as the default execution framework for this repository.
+> Load `_bmad/_config/bmad-help.csv` at session start.
+> Match command/workflow first, then fall back to free-form execution.
+> Treat `_bmad/` as the workflow source of truth.
+
+### Quick verification checklist
+
+- [ ] Given request X, expected BMAD command Y is selected.
+- [ ] If no match exists, fallback path is used.
+
+### Slash-command normalization
+
+When users issue short slash commands (for example, `/bmad build`) that are not literal entries in `_bmad/_config/bmad-help.csv`, normalize to the closest canonical BMAD command before execution.
+
+| Incoming slash command | Canonical BMAD command | Rationale |
+| --- | --- | --- |
+| `/bmad build` | `bmad-bmm-quick-dev` | Implies immediate implementation/delivery intent in a one-off flow. |
+
+If no safe mapping is obvious, run `bmad-help` behavior and present nearest valid commands from `_bmad/_config/bmad-help.csv`.
+
 ## 0) Fast start and repository sanity checks
 
 ```bash
@@ -27,6 +51,28 @@ Failure recovery notes:
 
 - If branch is detached, create or checkout a branch before editing.
 - If paths are missing, pull latest main and retry.
+
+---
+
+## 0.5) BMAD route-to-command matrix (canonical selection guide)
+
+Use this table to map the intake route (`QA`, `Proposal`, `Change`) to the correct BMAD-style command flow in this playbook.
+
+| Route | Primary intent | BMAD command flow (this playbook) | Trigger examples (request phrasing → selected command) |
+| --- | --- | --- | --- |
+| `QA` | Analysis + validation without implementation | `2) Parallel subagent analysis workflow` → `6) Self-healing + self-research + self-critique loop` → `7) Final verification commands` | "Audit this spec for gaps and risks" → Section 2 analysis packets + Section 6 checks; "Run readiness checks before we start implementation" → Section 6 + Section 7; "Do a read-only quality review of this plan" → Section 2 risk/research lanes |
+| `Proposal` | PRD/architecture/epic definition and planning artifacts | `1) Non-trivial task planning kickoff` → `2) Parallel subagent analysis workflow` (optional evidence lanes) → `3) Draft PR lifecycle` | "Draft a PRD and architecture outline for feature X" → Section 1 plan artifact, then Section 3 draft PR; "Write epics and dependency plan for next release" → Section 1 + Section 2 dependency/research packet; "Propose a rollout approach with risks" → Section 1 + Section 2 + Section 3 |
+| `Change` | Implement scoped changes with delivery/review workflow | `1) Non-trivial task planning kickoff` → implementation workstream → `6) Self-healing + self-research + self-critique loop` → `7) Final verification commands` → `3) Draft PR lifecycle` | "Implement this bug fix" → Section 1 plan + Section 6/7 validation + Section 3 PR; "Ship this doc/config update" → Section 1 for scope + Section 7 checks; "Complete sprint story and prep review" → Section 1 planning + Section 3 review lifecycle |
+
+### Tie-break rules when multiple BMAD flows match
+
+1. **Prefer prerequisite phases first:** run the lowest-sequence valid phase before later phases (`1` before `2`, `2` before `3`, etc.).
+2. **If request mixes route intent, anchor to the highest-risk requirement:**
+   - Validation-heavy language ("audit", "readiness", "review") defaults to `QA` command order.
+   - Spec-heavy language ("proposal", "PRD", "architecture", "epic") defaults to `Proposal` order.
+   - Delivery language ("implement", "fix", "ship") defaults to `Change` order.
+3. **Never skip mandatory verification:** whenever edits happen, include Sections `6` and `7` before PR readiness in Section `3`.
+4. **Escalate only after prerequisites are satisfied:** if uncertain between two commands, execute the earlier prerequisite command and re-evaluate with its output.
 
 ---
 

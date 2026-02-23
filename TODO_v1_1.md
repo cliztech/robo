@@ -8,6 +8,20 @@ See [docs/operations/execution_index.md](docs/operations/execution_index.md) for
 
 ## Active TODO checklist
 
+## Parallel workstreams (current build)
+
+- **Lane A — startup diagnostics + operator hints**
+  - Parallelized DB/key/audio checks to reduce boot-time wait.
+  - Added failure hints and structured diagnostics log output.
+- **Lane B — launch config validation gate**
+  - Continue validating `schedules.json` and `prompt_variables.json` at launch.
+  - Keep runtime blocked on invalid config and print actionable errors.
+- **Lane C — crash recovery and LKG restore**
+  - Keep automated restore flow from latest snapshot.
+  - Added restore event logging under `config/logs/`.
+- **Lane D — one-click backup snapshots**
+  - Keep timestamped snapshots in `config/backups/` for restore readiness.
+
 ### 1) Startup diagnostics panel (`feature_startup_diagnostics`)
 
 - [x] Add boot-time diagnostics runner for:
@@ -50,10 +64,14 @@ See [docs/operations/execution_index.md](docs/operations/execution_index.md) for
 
 ### 3) Crash recovery: restore last known good config (`feature_crash_recovery_restore_lkg`)
 
-- [ ] Add guided restore flow in launcher/runtime startup path.
+- [x] Add guided restore flow in launcher/runtime startup path.
 - [x] Restore last known good `schedules.json` and `prompt_variables.json` from backup.
 - [x] Log restore event under `config/logs/` with timestamp and source snapshot.
-- [ ] Verify post-restore readiness state can be reached in under 2 minutes.
+- [ ] Verify post-restore readiness state can be reached in under 2 minutes. _(instrumented with recovery duration logging; manual timing validation pending)_
+- [ ] **Subtask 3.2 — Recovery SLA run documented and passed**
+  - **Owner:** QA lead
+  - **Due date:** 2026-03-12
+  - **Pass criteria (measurable):** At least one deterministic manual run in `config/BACKUP_RECOVERY.md` records launch-gate start/ready-state stop timestamps with elapsed time `<= 120s`, plus matching restore success evidence in `config/logs/startup_safety_events.jsonl`.
 
 **Owner:** Runtime engineer  
 **Target date:** 2026-03-12  
@@ -61,10 +79,12 @@ See [docs/operations/execution_index.md](docs/operations/execution_index.md) for
 
 **Validation path**
 
+- Follow `docs/recovery_manual_test_protocol.md`.
+- Record run evidence in `config/BACKUP_RECOVERY.md`.
 - Manual scenario:
   1. Corrupt `config/schedules.json` or `config/prompt_variables.json`.
   2. Run `./RoboDJ_Launcher.bat`.
-  3. Execute restore flow.
+  3. Execute restore flow (`python config/scripts/startup_safety.py --guided-restore`).
   4. Verify app reaches ready state and restore is logged.
 
 ---
@@ -97,5 +117,5 @@ See [docs/operations/execution_index.md](docs/operations/execution_index.md) for
 
 - [x] Invalid config is blocked before runtime start.
 - [x] Startup issues are visible with clear remediation.
-- [ ] Last known good restore is guided and logged.
+- [x] Last known good restore is guided and logged.
 - [ ] End-to-end recovery path consistently completes in under 2 minutes.

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # AetherRadio — Product Definition (product.md)
 
 ## 0. Document Purpose
@@ -331,3 +332,10 @@ Key integrations include:
 *   **Stage-Gated Pipeline:** All AI-driven changes (playlist updates, new features) follow the 5-stage pipeline: Intake -> Planner -> Executor -> Verifier -> Handoff.
 *   **Autonomy Modes:** Strict adherence to the 5-level autonomy modes defined in `docs/autonomy_modes.md`.
 *   **Quality Gates:** "Brutal Review" and "QA" gates ensure high standards for code, documentation, and UX before release.
+=======
+# Product Definition
+
+This project is an AI-powered radio automation platform (DGN-DJ).
+
+Refer to the root [README.md](../README.md) and [DGN-DJ_BRANDING.md](../DGN-DJ_BRANDING.md) for full product details.
+>>>>>>> c287a1eb05d08b6cbcc6791eaa232a28b977e8b5

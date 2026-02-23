@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useCallback } from 'react';
 import { motion, useMotionValue } from 'framer-motion';
 import { cn } from '../../lib/utils';
 import { Clock, Radio, Mic2, Music2, Megaphone, Newspaper, ChevronLeft, ChevronRight, GripVertical } from 'lucide-react';
@@ -204,7 +204,6 @@ export function DegenScheduleTimeline({
 
     const viewHours = 12;
     const viewEnd = viewStart + viewHours;
-    const hourWidth = 100 / viewHours;
 
     const visibleSegments = useMemo(
         () => segments.filter((s) => {
@@ -269,6 +268,7 @@ export function DegenScheduleTimeline({
                 <div className="flex items-center gap-1">
                     <button
                         onClick={() => setViewStart(Math.max(0, viewStart - 6))}
+                        aria-label="Show earlier schedule window"
                         className="p-1 rounded text-zinc-600 hover:text-zinc-300 hover:bg-white/[0.04] transition-colors"
                     >
                         <ChevronLeft size={12} />
@@ -278,6 +278,7 @@ export function DegenScheduleTimeline({
                     </span>
                     <button
                         onClick={() => setViewStart(Math.min(18, viewStart + 6))}
+                        aria-label="Show later schedule window"
                         className="p-1 rounded text-zinc-600 hover:text-zinc-300 hover:bg-white/[0.04] transition-colors"
                     >
                         <ChevronRight size={12} />

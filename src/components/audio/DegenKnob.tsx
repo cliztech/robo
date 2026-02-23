@@ -30,7 +30,11 @@ export function DegenKnob({
 
     const ratio = (value - min) / (max - min);
     const angle = ratio * 270 - 135;
-    const accentColor = color || '#aaff00';
+    
+    // Use the provided color or fall back to accent
+    const accentColor = color || 'var(--color-accent)';
+
+    const clampValue = (nextValue: number) => Math.max(min, Math.min(max, nextValue));
 
     const handleMouseDown = (e: React.MouseEvent) => {
         setIsDragging(true);
@@ -40,7 +44,7 @@ export function DegenKnob({
             const deltaY = startY.current - ev.clientY;
             const range = max - min;
             const step = range / 200;
-            const newVal = Math.max(min, Math.min(max, startVal.current + deltaY * step));
+            const newVal = clampValue(startVal.current + deltaY * step);
             onChange?.(newVal);
         };
         const handleMouseUp = () => {
@@ -50,6 +54,34 @@ export function DegenKnob({
         };
         document.addEventListener('mousemove', handleMouseMove);
         document.addEventListener('mouseup', handleMouseUp);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        const range = max - min;
+        const step = Math.max(1, Math.round(range / 20));
+
+        if (e.key === 'ArrowUp' || e.key === 'ArrowRight') {
+            e.preventDefault();
+            onChange?.(clampValue(value + step));
+            return;
+        }
+
+        if (e.key === 'ArrowDown' || e.key === 'ArrowLeft') {
+            e.preventDefault();
+            onChange?.(clampValue(value - step));
+            return;
+        }
+
+        if (e.key === 'Home') {
+            e.preventDefault();
+            onChange?.(min);
+            return;
+        }
+
+        if (e.key === 'End') {
+            e.preventDefault();
+            onChange?.(max);
+        }
     };
 
     // SVG arc path for the value track
@@ -76,10 +108,18 @@ export function DegenKnob({
         <div className="flex flex-col items-center gap-0.5 select-none">
             <div
                 className={cn(
-                    'relative cursor-ns-resize group',
+                    'relative cursor-ns-resize group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded-full',
                     isDragging && 'scale-105'
                 )}
                 onMouseDown={handleMouseDown}
+                onKeyDown={handleKeyDown}
+                role="slider"
+                tabIndex={0}
+                aria-label={`${label} control`}
+                aria-valuemin={min}
+                aria-valuemax={max}
+                aria-valuenow={Math.round(value)}
+                aria-valuetext={`${Math.round(value)}${unit}`}
                 style={{ width: size, height: size, transition: 'transform 0.1s ease' }}
             >
                 <svg viewBox="0 0 100 100" className="w-full h-full">
@@ -117,7 +157,7 @@ export function DegenKnob({
                     {/* Inner cap - Brushed aluminum feel */}
                     <circle cx="50" cy="50" r="32" fill="rgba(20,20,22,0.6)" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5" />
 
-                    {/* Value track - Sapphire Blue */}
+                    {/* Value track */}
                     <path
                         d={describeArc(50, 50, arcRadius, startAngle, endAngle)}
                         fill="none"
@@ -130,7 +170,7 @@ export function DegenKnob({
                         <path
                             d={describeArc(50, 50, arcRadius, startAngle, valueAngle)}
                             fill="none"
-                            stroke="var(--color-accent)"
+                            stroke={accentColor}
                             strokeWidth="3.5"
                             strokeLinecap="round"
                             style={{ filter: `drop-shadow(0 0 6px hsla(var(--accent), 0.5))` }}
@@ -141,7 +181,7 @@ export function DegenKnob({
                     <g transform={`rotate(${angle} 50 50)`}>
                         <rect
                             x="48.5" y="16" width="3" height="12" rx="1.5"
-                            fill="var(--color-accent)"
+                            fill={accentColor}
                             style={{ filter: `drop-shadow(0 0 3px hsla(var(--accent), 0.4))` }}
                         />
                     </g>

@@ -155,6 +155,17 @@ Main agent is the reconciler of record and applies these rules in order.
 - Update packet schema or queue policy if systemic issue is confirmed.
 - Resume only after revised acceptance criteria are explicit.
 
+
+## 6) BMAD Config Consistency Check
+
+Run this check when touching any `_bmad/**` config files and before opening a PR that includes BMAD config edits:
+
+```bash
+python scripts/validate_bmad_config.py
+```
+
+The command fails if required BMAD config files are missing, if `_bmad/bmm/config.yaml` is missing required keys or diverges from `_bmad/core/config.yaml`, or if `_bmad/_config/manifest.yaml` contains duplicate/non-canonical installation/modules sections.
+
 ## Operational Notes
 
 - This playbook governs execution behavior for roadmap-to-task translation.

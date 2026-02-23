@@ -1,6 +1,4 @@
-'use client';
-
-import React, { useState, useEffect } from 'react'; // Removed unused hooks for cleaner code
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../lib/utils';
 import { DegenEffectRack } from '../components/audio/DegenEffectRack';
@@ -33,9 +31,38 @@ import {
     Zap,
     Signal,
     AlertTriangle,
+    Music2,
+    Play,
+    Square,
+    ChevronLeft,
+    ChevronRight,
+    Search,
+    ListMusic,
+    Volume2
 } from 'lucide-react';
 
 type ViewMode = 'dashboard' | 'decks' | 'mixer' | 'library' | 'schedule' | 'ai-host' | 'personas';
+
+// Helper data from Rekordbox-style view
+const tracks = [
+    ['Jin (Original Mix)', 'Arche', '128.0', 'Gm', '05:31'],
+    ['Womanloop (Original Mix)', 'Sergio Saffe', '128.0', 'D', '06:03'],
+    ['Pelusa (Original Mix)', 'Nacho Scoppa', '128.0', 'Db', '07:00'],
+    ['Slow Down (Original Mix)', "GuyMac, Murphy's Law", '125.0', 'Abm', '06:54'],
+    ['Closing Doors (Original Mix)', 'Imanol Molina', '122.0', 'Fm', '06:50'],
+    ['All Nighter (Original Mix)', 'Mescal Kids', '123.0', 'F#m', '05:48'],
+];
+
+const memoryPoints = [
+    { label: 'A', time: '00:00', color: 'bg-red-500/90' },
+    { label: 'B', time: '00:30', color: 'bg-blue-500/90' },
+    { label: 'C', time: '01:45', color: 'bg-green-500/90' },
+    { label: 'D', time: '02:30', color: 'bg-purple-500/90' },
+    { label: 'E', time: '03:00', color: 'bg-emerald-500/90' },
+    { label: 'F', time: '03:30', color: 'bg-orange-500/90' },
+    { label: 'G', time: '04:15', color: 'bg-indigo-500/90' },
+    { label: 'H', time: '04:52', color: 'bg-yellow-500/90' },
+];
 
 /* ═══════════════════════════════════════════════
    SIDEBAR ICON
@@ -365,10 +392,12 @@ function DeckView() {
                 <div className="p-3">
                     <DegenBeatGrid decks={4} steps={16} />
                 </div>
+
             </div>
         </div>
     );
 }
+
 
 /* ═══════════════════════════════════════════════
    SECTION HEADER
@@ -568,111 +597,70 @@ export default function StudioPage() {
     ];
 
     return (
-        <div className="flex h-screen bg-[hsl(0,0%,3%)] text-white overflow-hidden ambient-bg">
-            {/* ── SIDEBAR ──────────────────────────────── */}
-            <aside className="w-[56px] bg-black/40 border-r border-white/[0.04] flex flex-col items-center py-3 gap-0.5 shrink-0 backdrop-blur-md z-10">
-                {/* Logo */}
-                <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-                    className="mb-5 cursor-pointer hover:scale-110 transition-transform"
-                >
-                    <GorillaLogo size={28} />
-                </motion.div>
+        <div className="flex h-screen w-full bg-[#030304] text-zinc-100 overflow-hidden font-sans selection:bg-lime-500/30">
+            {/* Left Sidebar */}
+            <aside className="w-[72px] flex flex-col items-center py-6 border-r border-white/[0.04] bg-[#080809] z-50">
+                <div className="mb-10 hover:scale-110 transition-transform duration-300">
+                    <GorillaLogo className="w-10 h-10" />
+                </div>
 
-                {/* Separator */}
-                <div className="w-6 h-[1px] bg-gradient-to-r from-transparent via-zinc-700 to-transparent mb-2" />
-
-                {/* Nav items with stagger animation */}
-                <div className="flex-1 flex flex-col gap-0.5">
-                    {navItems.map((item, i) => (
-                        <motion.div
+                <div className="flex-1 flex flex-col gap-5">
+                    {navItems.map((item) => (
+                        <SidebarIcon
                             key={item.view}
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.1 + i * 0.04, duration: 0.3 }}
-                        >
-                            <SidebarIcon
-                                icon={item.icon}
-                                label={item.label}
-                                active={currentView === item.view}
-                                onClick={() => setCurrentView(item.view)}
-                                badge={item.badge}
-                            />
-                        </motion.div>
+                            icon={item.icon}
+                            label={item.label}
+                            active={currentView === item.view}
+                            onClick={() => setCurrentView(item.view)}
+                            badge={item.badge}
+                        />
                     ))}
                 </div>
 
-                {/* Separator */}
-                <div className="w-6 h-[1px] bg-gradient-to-r from-transparent via-zinc-700 to-transparent mb-2" />
-
-                {/* Bottom icons */}
-                <div className="flex flex-col gap-0.5">
-                    <SidebarIcon icon={Headphones} label="Monitor" />
-                    <SidebarIcon icon={SettingsIcon} label="Settings" />
+                <div className="flex flex-col gap-5 mt-auto">
+                    <SidebarIcon icon={Radio} label="Broadcast Settings" />
+                    <SidebarIcon icon={SettingsIcon} label="System Settings" />
                 </div>
             </aside>
 
-            {/* ── MAIN AREA ────────────────────────────── */}
-            <div className="flex-1 flex flex-col min-w-0 relative z-[1]">
-                {/* TOPBAR */}
-                <header className="h-11 bg-black/30 backdrop-blur-md border-b border-white/[0.04] flex items-center justify-between px-5 shrink-0 z-10">
-                    <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-2">
-                            <span className="text-[11px] font-black uppercase tracking-[0.25em] text-zinc-400">
-                                DGN-DJ
-                            </span>
-                            <span className="text-[11px] font-light uppercase tracking-[0.15em] text-zinc-600">
-                                Studio
-                            </span>
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col relative min-w-0">
+                {/* Global Top Bar */}
+                <header className="h-[52px] border-b border-white/[0.04] bg-[#09090A]/80 backdrop-blur-md flex items-center justify-between px-6 z-40">
+                    <div className="flex items-center gap-8">
+                        <div className="flex flex-col">
+                            <span className="text-[10px] uppercase font-black tracking-widest text-zinc-600 leading-none mb-1">Station ID</span>
+                            <span className="text-[11px] font-bold text-zinc-200">DGN-01 ALPHA</span>
                         </div>
-                        <div className="w-[1px] h-4 bg-zinc-800" />
-                        <motion.span
-                            key={currentView}
-                            initial={{ opacity: 0, y: -4 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="text-[10px] font-mono font-medium text-zinc-500 uppercase"
-                        >
-                            {currentView.replace('-', ' ')}
-                        </motion.span>
+                        <div className="flex flex-col">
+                            <span className="text-[10px] uppercase font-black tracking-widest text-zinc-600 leading-none mb-1">Network</span>
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-1 h-1 rounded-full bg-lime-500" />
+                                <span className="text-[11px] font-bold text-zinc-200">Stable</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="flex items-center gap-4">
-                        {/* Alerts placeholder */}
-                        <button
-                            aria-label="Alerts"
-                            className="relative p-1.5 text-zinc-600 hover:text-zinc-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded"
-                        >
-                            <AlertTriangle size={13} />
-                            <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-lime-500 rounded-full" />
-                        </button>
-
-                        {/* On-Air toggle */}
-                        <button
+                        <motion.button
                             onClick={() => setIsOnAir(!isOnAir)}
-                            aria-pressed={isOnAir}
-                            aria-label="On-air broadcast toggle"
+                            whileTap={{ scale: 0.95 }}
                             className={cn(
-                                'relative flex items-center gap-2 px-3 py-1.5 rounded-md border text-[9px] font-black uppercase tracking-[0.2em] transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
-                                isOnAir
-                                    ? 'bg-red-600/15 border-red-500/25 text-red-400 pulse-ring'
-                                    : 'bg-zinc-900/50 border-zinc-700/50 text-zinc-500 hover:border-zinc-600 hover:text-zinc-400'
+                                "px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-300 border flex items-center gap-2",
+                                isOnAir 
+                                    ? "bg-red-500/10 border-red-500/30 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.15)]"
+                                    : "bg-zinc-800/50 border-white/5 text-zinc-500"
                             )}
                         >
-                            <Radio size={11} className={isOnAir ? 'animate-pulse' : ''} />
-                            {isOnAir ? 'On Air' : 'Off Air'}
-                        </button>
-
-                        {/* CPU indicator */}
-                        <div className="flex items-center gap-2 px-2 py-1 rounded bg-white/[0.02] border border-white/[0.04]">
-                            <Activity size={10} className="text-lime-500/70" />
-                            <span className="text-[9px] font-mono text-zinc-500 tabular-nums">12%</span>
+                            <div className={cn("w-1.5 h-1.5 rounded-full", isOnAir ? "bg-red-500 animate-pulse" : "bg-zinc-600")} />
+                            {isOnAir ? "On Air" : "Offline"}
+                        </motion.button>
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-lime-400 to-cyan-400 p-[1px] cursor-pointer hover:rotate-12 transition-transform duration-300">
+                             <div className="w-full h-full rounded-full bg-[#080809] flex items-center justify-center text-[10px] font-black">AI</div>
                         </div>
                     </div>
                 </header>
 
-                {/* CONTENT */}
                 <main className="flex-1 overflow-y-auto p-5 custom-scrollbar relative">
                     <AnimatePresence mode="wait">
                         <motion.div
@@ -710,9 +698,6 @@ export default function StudioPage() {
                         </motion.div>
                     </AnimatePresence>
                 </main>
-
-                {/* TRANSPORT BAR */}
-                <DegenTransport isOnAir={isOnAir} />
             </div>
         </div>
     );
