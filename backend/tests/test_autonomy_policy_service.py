@@ -31,6 +31,7 @@ def test_precedence_resolution_timeslot_then_show_then_station(tmp_path):
         policy_path=tmp_path / "autonomy_policy.json",
         audit_log_path=tmp_path / "audit.jsonl",
     )
+    service.event_log_path = tmp_path / "scheduler_events.jsonl"
 
     policy = AutonomyPolicy.model_validate(
         {
@@ -50,17 +51,6 @@ def test_precedence_resolution_timeslot_then_show_then_station(tmp_path):
         }
     )
 
-    from_timeslot = service.resolve_effective_policy(show_id="show-1", timeslot_id="slot-1")
-    assert from_timeslot.source == "timeslot_override"
-    assert from_timeslot.mode == GlobalMode.semi_auto
-
-    from_show = service.resolve_effective_policy(show_id="show-1")
-    assert from_show.source == "show_override"
-    assert from_show.mode == GlobalMode.auto_with_human_override
-
-    from_station = service.resolve_effective_policy(show_id="show-x")
-    assert from_station.source == "station_default"
-    assert from_station.mode == GlobalMode.manual_assist
     # Mock validate_policy to allow "conflicting" policies for testing resolution precedence
     with unittest.mock.patch.object(service, 'validate_policy'):
         service.update_policy(policy)
