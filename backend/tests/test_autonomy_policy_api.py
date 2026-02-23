@@ -172,4 +172,4 @@ def test_get_policy_auto_recovers_invalid_policy_file(tmp_path, monkeypatch):
     assert get_response.json()["station_default_mode"] == "semi_auto"
 
     recovered_files = list(tmp_path.glob("autonomy_policy.crash_recovery_*.json"))
-    assert recovered_files
+    assert len(recovered_files) == 1
