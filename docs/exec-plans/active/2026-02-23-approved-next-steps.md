@@ -9,7 +9,8 @@
   3. `bmad-bmm-sprint-planning` (if no active sprint)
 
 ## Current Sprint Snapshot
-All items in `docs/exec-plans/active/sprint-status.yaml` are currently in `backlog`, so the immediate action is to start Sprint Planning and open the first story packet.
+All items in `docs/exec-plans/active/sprint-status.yaml` are currently in `backlog`.
+Therefore, the immediate action is to start Sprint Planning and open the first story packet.
 
 ## Immediate Execution Steps
 1. Run **Sprint Status** and confirm active work item:
