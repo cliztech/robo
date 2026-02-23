@@ -15,7 +15,7 @@ describe('StudioPage', () => {
     expect(within(header as HTMLElement).getByText('mixer')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'AI Host' }));
-    expect(within(header as HTMLElement).getByText('ai host')).toBeInTheDocument();
+    expect(within(header as HTMLElement).getByText('ai-host')).toBeInTheDocument();
   });
 
   it('toggles on-air state and keeps status token classes stable', async () => {

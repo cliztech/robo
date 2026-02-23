@@ -141,3 +141,18 @@ def test_duplicate_override_keys_helper():
     kwargs = _create_base_schedule_kwargs()
     standalone = ScheduleRecord(**kwargs)
     assert standalone.duplicate_override_keys() == set()
+
+
+def test_schedule_spec_allows_wildcard_and_step_cron_fields():
+    wildcard = ScheduleSpec(mode="cron", cron="* * * * *")
+    step = ScheduleSpec(mode="cron", cron="*/15 * * * *")
+
+    assert wildcard.cron == "* * * * *"
+    assert step.cron == "*/15 * * * *"
+
+
+def test_schedule_spec_rejects_invalid_cron_time_token():
+    with pytest.raises(ValidationError) as excinfo:
+        ScheduleSpec(mode="cron", cron="foo 9 * * 1")
+
+    assert "cron minute/hour fields must be numeric, wildcard, range, or step expressions" in str(excinfo.value)
