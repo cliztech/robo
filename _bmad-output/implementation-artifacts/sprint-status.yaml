@@ -1,0 +1,39 @@
+# generated: 2026-02-23
+# project: DGN-DJ Open Dependency-Ready Sprint Queue
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+generated: 2026-02-23
+project: DGN-DJ Open Dependency-Ready Sprint Queue
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  epic-todo-open-dependency-ready: backlog
+  todo-01-create-tracked-issues-track-a-b-c-d: backlog
+  todo-02-role-aware-settings-visibility: backlog
+  todo-03-idle-timeout-reauth-sensitive-actions: backlog
+  todo-04-key-rotation-workflow-cli-checklist: backlog
+  todo-05-redaction-policy-contract-tests: backlog
+  todo-06-pre-release-security-gate-docs: backlog
+  todo-07-human-in-the-loop-checkpoints: backlog
+  todo-08-task-route-templates-qa-change-proposal: backlog
+  todo-09-one-click-rollback-assistant-config: backlog
+  todo-10-guided-troubleshooting: backlog
+  todo-11-operator-guides-by-persona: backlog
+  todo-12-runbook-index-common-failures: backlog
+  todo-13-support-triage-workflow-sla: backlog
+  todo-14-packaging-tiers-feature-gates: backlog
+  todo-15-telemetry-ethics-opt-in-policy: backlog
+  todo-16-weekly-readiness-updates: backlog
+  todo-17-bi-weekly-blocked-item-pruning: backlog
+  todo-18-monthly-roadmap-variation-reassessment: backlog
+  epic-todo-open-dependency-ready-retrospective: optional
+
+  epic-v12-ui-open-dependency-ready: backlog
+  v12-01-drag-drop-weekly-timeline-normalized-api: backlog
+  v12-02-inline-conflict-objects-fix-actions: backlog
+  v12-03-keyboard-parity-move-resize-resolve: backlog
+  epic-v12-ui-open-dependency-ready-retrospective: optional
