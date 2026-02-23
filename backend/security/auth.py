@@ -1,6 +1,10 @@
 import functools
 import hmac
 import os
+
+from fastapi import HTTPException, Security, status
+import hmac
+import os
 import secrets
 
 from fastapi import HTTPException, Security, status
@@ -18,29 +22,38 @@ api_key_header = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
 
 @functools.lru_cache(maxsize=1)
 def _get_secret_key() -> str | None:
-    # 1. Try environment variable
+    """Resolve the canonical scheduler/API key source.
+
+    Source of truth: use `ROBODJ_SECRET_KEY` from environment. If
+    `ROBODJ_ALLOW_FILE_SECRET_FALLBACK` is enabled, allow fallback to
+    `config/secret.key` for local/legacy deployments.
+    """
     secret = os.environ.get("ROBODJ_SECRET_KEY")
     if secret:
         return secret
 
+    allow_fallback = os.environ.get("ROBODJ_ALLOW_FILE_SECRET_FALLBACK", "").lower() in {
     # 2. Try file fallback if allowed
     allow_fallback = os.environ.get("ROBODJ_ALLOW_FILE_SECRET_FALLBACK", "").lower() in (
         "true",
         "1",
         "yes",
         "on",
+    }
     )
     if allow_fallback:
         secret_file = CONFIG_DIR / "secret.key"
         if secret_file.exists():
             try:
                 return secret_file.read_text(encoding="utf-8").strip()
-            except IOError:
+            except OSError:
                 return None
 
     return None
 
 
+async def verify_api_key(api_key: str | None = Security(api_key_header)) -> str:
+    """FastAPI dependency entrypoint for API-key authorization checks."""
 async def verify_api_key(api_key: str = Security(api_key_header)):
 async def verify_api_key(api_key: str = Security(api_key_header)) -> str:
     """Validate global API key used by status and other operator endpoints."""
@@ -59,7 +72,6 @@ async def verify_api_key(api_key: str = Security(api_key_header)) -> str:
             detail="Server configuration error: API Key not configured",
         )
 
-    # Constant-time comparison to prevent timing attacks.
     if not hmac.compare_digest(api_key, expected_key):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
