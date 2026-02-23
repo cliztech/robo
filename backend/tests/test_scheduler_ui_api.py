@@ -30,7 +30,7 @@ def _sample_schedule(schedule_id="sch_1", name="Test Show"):
 
 @pytest.fixture(autouse=True)
 def mock_env_api_key():
-    with mock.patch.dict(os.environ, {"ROBODJ_SCHEDULER_API_KEY": TEST_API_KEY}):
+    with mock.patch.dict(os.environ, {"ROBODJ_SCHEDULER_API_KEY": TEST_API_KEY, "ROBODJ_SECRET_KEY": TEST_API_KEY}):
         yield
 
 def test_unauthenticated_request(tmp_path):
