@@ -84,6 +84,37 @@ def test_update_schedules_validates_schema_before_write(tmp_path) -> None:
         service.update_schedules([bad])
 
 
+
+
+def test_build_timeline_blocks_supports_numeric_cron() -> None:
+    service = SchedulerUiService()
+
+    blocks = service._build_timeline_blocks([_schedule("sch_numeric", "Numeric Cron", cron="0 9 * * 1")])
+
+    assert len(blocks) == 1
+    assert blocks[0].schedule_id == "sch_numeric"
+    assert blocks[0].start_time == "09:00"
+
+
+def test_build_timeline_blocks_skips_wildcard_cron_without_crashing(caplog: pytest.LogCaptureFixture) -> None:
+    service = SchedulerUiService()
+
+    with caplog.at_level("WARNING"):
+        blocks = service._build_timeline_blocks([_schedule("sch_wild", "Wildcard Cron", cron="* * * * *")])
+
+    assert blocks == []
+    assert "Skipping timeline block for schedule_id=sch_wild" in caplog.text
+
+
+def test_build_timeline_blocks_skips_step_cron_without_crashing(caplog: pytest.LogCaptureFixture) -> None:
+    service = SchedulerUiService()
+
+    with caplog.at_level("WARNING"):
+        blocks = service._build_timeline_blocks([_schedule("sch_step", "Step Cron", cron="*/15 * * * *")])
+
+    assert blocks == []
+    assert "Skipping timeline block for schedule_id=sch_step" in caplog.text
+
 def test_publish_schedules_passes_for_template_primitive(tmp_path) -> None:
     service = SchedulerUiService(schedules_path=tmp_path / "schedules.json")
     template_schedules = service.apply_template(
