@@ -13,8 +13,11 @@ TEST_API_KEY = "test-secret-key"
 
 @pytest.fixture(autouse=True)
 def mock_env_api_key():
+    from backend.security.auth import _get_secret_key
+    _get_secret_key.cache_clear()
     with unittest.mock.patch.dict(os.environ, {"ROBODJ_SECRET_KEY": TEST_API_KEY}):
         yield
+    _get_secret_key.cache_clear()
 
 def _override_service(tmp_path):
     policy_path = tmp_path / "autonomy_policy.json"
