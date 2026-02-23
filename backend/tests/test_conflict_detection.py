@@ -196,3 +196,98 @@ def test_no_conflicts_valid_policy():
 
     conflicts = detect_policy_conflicts(policy)
     assert len(conflicts) == 0
+
+def test_detect_show_timeslot_contradictions_implicit_defaults():
+    """Test conflict when timeslot inherits default permissions that contradict show override's explicit permissions."""
+    # Show overrides 'semi_auto' to be stricter (HUMAN_ONLY for track selection)
+    show_permissions = {
+        DecisionType.track_selection: DecisionAuthority.human_only,
+        DecisionType.script_generation: DecisionAuthority.ai_with_human_approval,
+        DecisionType.voice_persona_selection: DecisionAuthority.ai_with_human_approval,
+        DecisionType.caller_simulation_usage: DecisionAuthority.ai_with_human_approval,
+        DecisionType.breaking_news_weather_interruption: DecisionAuthority.ai_with_human_approval,
+    }
+
+    policy = AutonomyPolicy(
+        show_overrides=[
+            ShowOverride(
+                show_id="show-A",
+                mode=GlobalMode.semi_auto,
+                permissions=show_permissions
+            ),
+        ],
+        timeslot_overrides=[
+            TimeslotOverride(
+                id="slot-1",
+                day_of_week="monday",
+                start_time="09:00",
+                end_time="10:00",
+                show_id="show-A",
+                mode=GlobalMode.semi_auto,
+                permissions=None,  # Implicitly uses default semi_auto permissions (AI_WITH_HUMAN_APPROVAL for track_selection)
+            ),
+        ],
+    )
+
+    conflicts = detect_policy_conflicts(policy)
+    assert len(conflicts) == 1
+    assert conflicts[0].conflict_type == "show_timeslot_intent_conflict"
+    assert conflicts[0].show_id == "show-A"
+
+
+def test_no_conflict_between_global_and_show_specific_slots():
+    """Test that a global timeslot (no show_id) does not conflict with a show-specific timeslot at the same time."""
+    policy = AutonomyPolicy(
+        timeslot_overrides=[
+            TimeslotOverride(
+                id="global-slot",
+                day_of_week="monday",
+                start_time="09:00",
+                end_time="10:00",
+                show_id=None,  # Global scope
+                mode=GlobalMode.manual_assist,
+            ),
+            TimeslotOverride(
+                id="show-slot",
+                day_of_week="monday",
+                start_time="09:00",
+                end_time="10:00",
+                show_id="show-A",  # Show scope
+                mode=GlobalMode.semi_auto,
+            ),
+        ]
+    )
+
+    conflicts = detect_policy_conflicts(policy)
+    # The current implementation groups by (day_of_week, show_id), so (Mon, None) and (Mon, "show-A") are separate groups.
+    # Therefore, no overlap conflict should be detected between them.
+    assert len(conflicts) == 0
+
+
+def test_detect_contained_overlap():
+    """Test overlap detection when one timeslot is fully contained within another."""
+    policy = AutonomyPolicy(
+        timeslot_overrides=[
+            TimeslotOverride(
+                id="outer-slot",
+                day_of_week="monday",
+                start_time="09:00",
+                end_time="12:00",
+                show_id="show-A",
+                mode=GlobalMode.manual_assist,
+            ),
+            TimeslotOverride(
+                id="inner-slot",
+                day_of_week="monday",
+                start_time="10:00",
+                end_time="11:00",
+                show_id="show-A",
+                mode=GlobalMode.semi_auto,
+            ),
+        ]
+    )
+
+    conflicts = detect_policy_conflicts(policy)
+    assert len(conflicts) == 1
+    assert conflicts[0].conflict_type == "overlapping_timeslot_overrides"
+    assert set(conflicts[0].override_ids) == {"outer-slot", "inner-slot"}
