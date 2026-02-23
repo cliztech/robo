@@ -5,6 +5,7 @@ import threading
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
+import logging
 
 from fastapi import APIRouter, Depends, Query
 from fastapi import HTTPException
@@ -54,6 +55,22 @@ def get_policy_service() -> AutonomyPolicyService:
                     service.update_policy(AutonomyPolicy())
 
                 _service_instance = service
+                _service_instance = AutonomyPolicyService()
+                try:
+                    _service_instance.get_policy()
+                except Exception as error:
+                    logger.exception("Autonomy policy preload failed; entering degraded-mode handlers.")
+                    emit_scheduler_event(
+                        event_name="scheduler.crash_recovery.activated",
+                        level="critical",
+                        message="Scheduler crash-recovery handlers activated during API startup.",
+                        metadata={
+                            "trigger": "policy_preload_failure",
+                            "recovery_plan": "degraded_mode",
+                            "last_known_checkpoint": "autonomy_policy_bootstrap",
+                            "error_type": type(error).__name__,
+                        },
+                    )
     return _service_instance
 
 

@@ -1,5 +1,6 @@
 import json
 import unittest.mock
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -236,3 +237,52 @@ def test_get_policy_emits_startup_validation_failed_event(tmp_path, caplog):
             service.get_policy()
 
     assert any('"event_name": "scheduler.startup_validation.failed"' in rec.message for rec in caplog.records)
+def test_get_policy_emits_startup_success_event(tmp_path):
+    policy_path = tmp_path / "autonomy_policy.json"
+    audit_path = tmp_path / "audit.jsonl"
+    event_path = tmp_path / "scheduler_events.jsonl"
+    service = AutonomyPolicyService(policy_path=policy_path, audit_log_path=audit_path)
+    service.event_log_path = event_path
+
+    service.get_policy()
+
+    events = [json.loads(line) for line in event_path.read_text(encoding="utf-8").splitlines()]
+    assert any(event["event_name"] == "scheduler.startup_validation.succeeded" for event in events)
+
+
+def test_get_policy_emits_failure_events_when_policy_invalid(tmp_path):
+    policy_path = tmp_path / "autonomy_policy.json"
+    audit_path = tmp_path / "audit.jsonl"
+    event_path = tmp_path / "scheduler_events.jsonl"
+    policy_path.write_text("{not-json", encoding="utf-8")
+
+    service = AutonomyPolicyService(policy_path=policy_path, audit_log_path=audit_path)
+    service.event_log_path = event_path
+
+    with pytest.raises(ValidationError):
+        service.get_policy()
+
+    events = [json.loads(line) for line in event_path.read_text(encoding="utf-8").splitlines()]
+    names = [event["event_name"] for event in events]
+    assert "scheduler.schedule_parse.failed" in names
+    assert "scheduler.startup_validation.failed" in names
+
+
+def test_update_policy_emits_backup_created_and_restored(tmp_path):
+    policy_path = tmp_path / "autonomy_policy.json"
+    audit_path = tmp_path / "audit.jsonl"
+    event_path = tmp_path / "scheduler_events.jsonl"
+
+    policy_path.write_text(AutonomyPolicy().model_dump_json(indent=2), encoding="utf-8")
+
+    service = AutonomyPolicyService(policy_path=policy_path, audit_log_path=audit_path)
+    service.event_log_path = event_path
+
+    with unittest.mock.patch.object(Path, "write_text", side_effect=OSError("disk full")):
+        with pytest.raises(OSError):
+            service.update_policy(AutonomyPolicy())
+
+    events = [json.loads(line) for line in event_path.read_text(encoding="utf-8").splitlines()]
+    names = [event["event_name"] for event in events]
+    assert "scheduler.backup.created" in names
+    assert "scheduler.backup.restored" in names

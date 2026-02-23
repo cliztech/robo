@@ -3,6 +3,9 @@ from fastapi.testclient import TestClient
 from backend.app import app
 from backend.scheduling.api import get_policy_service
 from backend.scheduling.autonomy_service import AutonomyPolicyService
+from backend.scheduling import api as autonomy_api
+
+import unittest.mock
 
 
 def _override_service(tmp_path):
