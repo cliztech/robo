@@ -1,5 +1,6 @@
 'use client';
 
+import React, { useMemo, useState, useEffect } from 'react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { cn } from '../../lib/utils';
 import { DegenStereoMeter } from './DegenVUMeter';
@@ -21,6 +22,8 @@ import {
     Volume1,
     Volume2,
     VolumeX,
+    Volume1,
+    Radio
 } from 'lucide-react';
 
 interface DegenTransportProps {
@@ -48,7 +51,6 @@ function adaptDJTelemetryToTransportTelemetry(telemetry?: DJTelemetry): Partial<
 
 export function DegenTransport({
     currentTrack,
-    telemetry,
     telemetryTick,
     isPlaying = true,
     isOnAir = true,
@@ -60,11 +62,6 @@ export function DegenTransport({
     const track = resolveTransportTrack(currentTrack);
     const transportTelemetry = resolveTransportTelemetry(adaptDJTelemetryToTransportTelemetry(telemetry));
 
-    const [progress, setProgress] = useState(transportTelemetry.progress);
-    const [volume, setVolume] = useState(transportTelemetry.volume);
-    const [isMuted, setIsMuted] = useState(false);
-    const [repeat, setRepeat] = useState(false);
-    const [shuffle, setShuffle] = useState(false);
     const [telemetryStep, setTelemetryStep] = useState(0);
 
     useEffect(() => {
@@ -86,6 +83,14 @@ export function DegenTransport({
     }, [isPlaying, telemetryTick]);
 
     const phase = typeof telemetryTick === 'number' ? telemetryTick : telemetryStep;
+    const [progressOverride, setProgressOverride] = useState<number | null>(null);
+    const [volume, setVolume] = useState(85);
+    const [isMuted, setIsMuted] = useState(false);
+    const [repeat, setRepeat] = useState(false);
+    const [shuffle, setShuffle] = useState(false);
+
+    const progress = progressOverride ?? telemetry?.transport.progress ?? 0;
+    const elapsed = telemetry?.transport.elapsedSeconds ?? progress * (currentTrack?.duration || 0);
     const vuLeft =
         telemetry?.stereoLevels.leftLevel ??
         Math.max(0.1, Math.min(1, transportTelemetry.vuLeft + Math.sin(phase / 5) * 0.08));
@@ -110,6 +115,7 @@ export function DegenTransport({
         const s = Math.floor(safeSeconds % 60);
         return `${m}:${s.toString().padStart(2, '0')}`;
     };
+
 
     const VolumeIcon = isMuted ? VolumeX : volume < 40 ? Volume1 : Volume2;
 
@@ -148,11 +154,12 @@ export function DegenTransport({
                     aria-pressed={shuffle}
                     className={cn(
                         'p-1.5 rounded transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
-                        shuffle ? 'text-lime-400' : 'text-zinc-600 hover:text-zinc-300'
+                        shuffle ? 'text-deck-a' : 'text-zinc-600 hover:text-zinc-300'
                     )}
                 >
                     <Shuffle size={12} />
                 </button>
+
                 <button
                     type="button"
                     onClick={onPrev}
@@ -173,6 +180,7 @@ export function DegenTransport({
                 >
                     {isPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" className="ml-0.5" />}
                 </button>
+
                 <button
                     type="button"
                     onClick={onNext}
@@ -181,6 +189,7 @@ export function DegenTransport({
                 >
                     <SkipForward size={14} fill="currentColor" />
                 </button>
+
                 <button
                     type="button"
                     onClick={() => setRepeat(!repeat)}
@@ -188,7 +197,7 @@ export function DegenTransport({
                     aria-pressed={repeat}
                     className={cn(
                         'p-1.5 rounded transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
-                        repeat ? 'text-purple-400' : 'text-zinc-600 hover:text-zinc-300'
+                        repeat ? 'text-deck-b' : 'text-zinc-600 hover:text-zinc-300'
                     )}
                 >
                     <Repeat size={12} />
@@ -215,6 +224,7 @@ export function DegenTransport({
                         max={1}
                         step={0.001}
                         value={progress}
+                        onChange={(e) => setProgressOverride(parseFloat(e.target.value))}
                         onChange={(e) => setProgress(parseFloat(e.target.value))}
                         className="absolute inset-x-0 h-7 w-full opacity-0 cursor-pointer z-10"
                     />
@@ -236,6 +246,9 @@ export function DegenTransport({
                 </div>
                 <div className="flex flex-col items-center px-2 py-1 rounded bg-deck-b-soft border border-deck-b-soft">
                     <span className="text-[8px] text-zinc-600 uppercase font-bold tracking-widest">Key</span>
+                    <span className="text-[12px] font-mono font-black text-[hsl(var(--color-deck-b))] tabular-nums">
+                        {currentTrack?.key || '—'}
+                    </span>
                     <span className="text-[12px] font-mono font-black text-[hsl(var(--color-deck-b))] tabular-nums">{track.key || '—'}</span>
                 </div>
                 <div className="flex flex-col gap-0.5 ml-1">
