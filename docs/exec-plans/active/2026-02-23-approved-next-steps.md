@@ -38,7 +38,7 @@ Suggested first story order:
 
 ## Quality Gates (must pass before Ready-for-Review)
 - Plan completeness = 100% (scope + constraints + rollback + verification)
-- Subagent evidence completeness = 100%
+- Subagent evidence completeness = 100% (Refer to AGENTS.md for detailed definition)
 - Draft PR maturity checklist fully passed
 - Worktree hygiene checks passed
 - Validation commands + outputs documented
