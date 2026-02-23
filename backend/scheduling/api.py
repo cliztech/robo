@@ -42,7 +42,6 @@ def get_policy_service() -> AutonomyPolicyService:
                         policy_path.replace(recovery_path)
 
                     emit_scheduler_event(
-                        logger,
                         event_name="scheduler.crash_recovery.activated",
                         level="critical",
                         message="Autonomy API crash recovery activated due to invalid policy state.",
