@@ -5,6 +5,10 @@ import os
 from fastapi import HTTPException, Security, status
 import hmac
 import os
+
+from fastapi import HTTPException, Security, status
+import hmac
+import os
 import secrets
 
 from fastapi import HTTPException, Security, status
@@ -32,6 +36,9 @@ def _get_secret_key() -> str | None:
     if secret:
         return secret
 
+    allow_fallback = os.environ.get(
+        "ROBODJ_ALLOW_FILE_SECRET_FALLBACK", ""
+    ).lower() in ("true", "1", "yes", "on")
     allow_fallback = os.environ.get("ROBODJ_ALLOW_FILE_SECRET_FALLBACK", "").lower() in {
     # 2. Try file fallback if allowed
     allow_fallback = os.environ.get("ROBODJ_ALLOW_FILE_SECRET_FALLBACK", "").lower() in (
@@ -52,6 +59,7 @@ def _get_secret_key() -> str | None:
     return None
 
 
+async def verify_api_key(api_key: str = Security(api_key_header)) -> str:
 async def verify_api_key(api_key: str | None = Security(api_key_header)) -> str:
     """FastAPI dependency entrypoint for API-key authorization checks."""
 async def verify_api_key(api_key: str = Security(api_key_header)):
@@ -79,6 +87,22 @@ async def verify_api_key(api_key: str = Security(api_key_header)) -> str:
         )
 
     return api_key
+
+
+def get_scheduler_api_key(api_key: str = Security(api_key_header)) -> str:
+    if not api_key:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing API Key",
+        )
+
+    expected_key = os.environ.get("ROBODJ_SCHEDULER_API_KEY")
+    if not expected_key:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Server configuration error: Scheduler API key not configured",
+        )
+
 
 
 def get_scheduler_api_key(api_key: str = Security(api_key_header)) -> str:
