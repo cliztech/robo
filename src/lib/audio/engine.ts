@@ -117,6 +117,17 @@ export class AudioEngine extends TypedEmitter {
 
   private config: Required<AudioEngineConfig>;
 
+  private attachSourceHandlers(source: AudioBufferSourceNode, track: Track): void {
+    source.onended = () => {
+      const isCurrentSource = this.currentSource === source;
+      const isCurrentTrack = this.currentTrack === track;
+
+      if (!this.crossfading && isCurrentSource && isCurrentTrack) {
+        this.emit('track-ended', { track });
+      }
+    };
+  }
+
   constructor(config: AudioEngineConfig = {}) {
     super();
     this.config = {
@@ -255,6 +266,7 @@ export class AudioEngine extends TypedEmitter {
     this.currentSource = this.context.createBufferSource();
     this.currentSource.buffer = buffer;
     this.currentSource.connect(this.currentGain);
+    this.attachSourceHandlers(this.currentSource, track);
 
     const gainValue = track.gain ?? 1;
     this.currentGain.gain.setValueAtTime(gainValue, this.context.currentTime);
@@ -271,12 +283,6 @@ export class AudioEngine extends TypedEmitter {
     this.currentTrack = track;
     this.startTime = this.context.currentTime - startAt;
     this.isPaused = false;
-
-    this.currentSource.onended = () => {
-      if (!this.crossfading) {
-        this.emit('track-ended', { track: this.currentTrack });
-      }
-    };
 
     this.emit('track-started', { track });
   }
@@ -335,6 +341,11 @@ export class AudioEngine extends TypedEmitter {
 
     this.currentSource = this.nextSource;
     this.currentTrack = this.nextTrack;
+
+    if (this.currentSource && this.currentTrack) {
+      this.attachSourceHandlers(this.currentSource, this.currentTrack);
+    }
+
     this.nextSource = null;
     this.nextTrack = null;
 
@@ -391,6 +402,7 @@ export class AudioEngine extends TypedEmitter {
     this.currentSource = this.context.createBufferSource();
     this.currentSource.buffer = buffer;
     this.currentSource.connect(this.currentGain);
+    this.attachSourceHandlers(this.currentSource, this.currentTrack);
 
     const remainingDuration = Math.max(0, buffer.duration - this.pauseTime);
     this.currentSource.start(this.context.currentTime, this.pauseTime, remainingDuration);
