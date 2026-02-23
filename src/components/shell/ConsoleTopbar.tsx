@@ -36,18 +36,18 @@ export function ConsoleTopbar({ currentView, isOnAir, onToggleOnAir }: ConsoleTo
             </div>
 
             <div className="flex items-center gap-3">
-                <button className="relative p-1.5 text-zinc-500 hover:text-zinc-300 transition-colors">
+                <button className="relative p-1.5 text-zinc-500 hover:text-zinc-400 transition-colors">
                     <AlertTriangle size={13} />
                     <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-lime-400 rounded-full" />
                 </button>
 
                 <button
                     onClick={onToggleOnAir}
-                    className={cn(
+                    aria-label="On-air broadcast toggle" aria-pressed={isOnAir} className={cn(
                         'relative flex items-center gap-2 px-3 py-1.5 rounded-md border text-[9px] font-black uppercase tracking-[0.2em] transition-all duration-300',
                         isOnAir
-                            ? 'bg-red-600/20 border-red-500/40 text-red-300 pulse-ring'
-                            : 'bg-zinc-900/70 border-zinc-700/60 text-zinc-400 hover:border-zinc-600 hover:text-zinc-300'
+                            ? 'bg-red-600/15 border-red-500/25 text-red-400 pulse-ring'
+                            : 'bg-zinc-900/50 border-zinc-700/50 text-zinc-500 hover:border-zinc-600 hover:text-zinc-400'
                     )}
                 >
                     <Radio size={11} className={isOnAir ? 'animate-pulse' : ''} />
@@ -56,7 +56,7 @@ export function ConsoleTopbar({ currentView, isOnAir, onToggleOnAir }: ConsoleTo
 
                 <div className="flex items-center gap-2 px-2 py-1 rounded bg-white/[0.02] border border-white/[0.06]">
                     <Activity size={10} className="text-lime-400/80" />
-                    <span className="text-[9px] font-mono text-zinc-400 tabular-nums">06%</span>
+                    <span className="text-[9px] font-mono text-zinc-500 tabular-nums">06%</span>
                 </div>
             </div>
         </header>

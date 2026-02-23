@@ -29,7 +29,7 @@ function SidebarIcon({
     return (
         <button
             onClick={onClick}
-            title={label}
+            title={label} aria-label={label}
             className={cn(
                 'relative w-10 h-10 rounded-md flex items-center justify-center transition-all duration-200 group border',
                 active
