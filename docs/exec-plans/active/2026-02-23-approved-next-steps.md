@@ -1,7 +1,7 @@
 # Approved Next Steps
 
 ## Route Selection
-- **Selected route:** Change (planning artifact only).
+- **Selected route:** Change (planning artifact for sprint execution).
 - **Reason:** User approved proceeding and requested the next steps.
 - **BMAD-first mapping used:**
   1. `bmad-help`
