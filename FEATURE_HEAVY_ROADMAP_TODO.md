@@ -68,6 +68,25 @@ This roadmap translates the feature backlog into a release-by-release plan with 
 - [x] Crash-recovery flow with “restore last known good config” **(M)**
 - [x] One-click config backup snapshot (timestamped) **(S)**
 
+> Note: The checklist above preserves prior roadmap status. Active execution and completion gates for this cycle are controlled by the ordered queue and QA evidence requirements below.
+
+### Execution queue + QA gate (must follow in order)
+
+Progression order requested for v1.1 implementation:
+1. `R11-04` One-click timestamped backup snapshot
+2. `R11-02` Launch-time config validator
+3. `R11-03` Crash recovery restore-last-known-good flow
+4. `R11-01` Startup diagnostics panel
+
+| Ticket | Acceptance criteria source of truth | Definition-of-done gate | QA evidence required before status can move to Done |
+| --- | --- | --- | --- |
+| `R11-04` | Use the exact bullets under **Ticket R11-04 — One-click timestamped backup snapshot** above (no wording drift). | Do not mark done until: one-click backup is available + logged; snapshots are verified under `config/backups/`; restore compatibility is confirmed. | Include test/proof of snapshot creation path, timestamp collision safety, and checksum-compatible restore validation. |
+| `R11-02` | Use the exact bullets under **Ticket R11-02 — Launch-time config validator** above (no wording drift). | Do not mark done until: invalid configs are blocked at launch and known-good sample configs pass automated checks. | Include failing + passing config test captures with startup block behavior and remediation UX proof. |
+| `R11-03` | Use the exact bullets under **Ticket R11-03 — Crash recovery with restore-last-known-good** above (no wording drift). | Do not mark done until: simulated crash recovery reaches operable state in under 2 minutes using only in-app prompts. | Include crash simulation logs, snapshot selection evidence, restore success confirmation, and relaunch validation. |
+| `R11-01` | Use the exact bullets under **Ticket R11-01 — Startup diagnostics panel** above (no wording drift). | Do not mark done until: QA evidence confirms pass/warn/fail states and operator can act on each state without reading logs. | Include startup traces/screenshots for pass/warn/fail plus actionability checks for each remediation path. |
+
+Backup/restore implementation and QA evidence must comply with `config/BACKUP_RESTORE_CONTRACT.md`, preserve `config/backups/` directory conventions, and satisfy restore success criteria (restored files validated and system operable in under 2 minutes).
+
 ### Current Sprint (v1.1 Now)
 
 #### Ticket V11-01 — Startup Diagnostics Panel
