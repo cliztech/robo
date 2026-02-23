@@ -6,7 +6,7 @@
  * or disable the default devtool with "devtool: false".
  * If you are looking for production-ready output files, see mode: "production" (https://webpack.js.org/configuration/mode/).
  */
-(self["webpackChunk_N_E"] = self["webpackChunk_N_E"] || []).push([["app/page"],{
+self["webpackHotUpdate_N_E"]("app/page",{
 
 /***/ "(app-pages-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-client-entry-loader.js?modules=%7B%22request%22%3A%22C%3A%5C%5CUsers%5C%5Cjocli%5C%5COneDrive%5C%5Cads%5C%5Crobo%5C%5Csrc%5C%5Capp%5C%5Cpage.tsx%22%2C%22ids%22%3A%5B%5D%7D&server=false!":
 /*!************************************************************************************************************************************************************************************************************************************************************!*\
@@ -3636,11 +3636,4 @@ eval(__webpack_require__.ts("__webpack_require__.r(__webpack_exports__);\n/* har
 
 /***/ })
 
-},
-/******/ function(__webpack_require__) { // webpackRuntimeModules
-/******/ var __webpack_exec__ = function(moduleId) { return __webpack_require__(__webpack_require__.s = moduleId); }
-/******/ __webpack_require__.O(0, ["main-app"], function() { return __webpack_exec__("(app-pages-browser)/./node_modules/next/dist/build/webpack/loaders/next-flight-client-entry-loader.js?modules=%7B%22request%22%3A%22C%3A%5C%5CUsers%5C%5Cjocli%5C%5COneDrive%5C%5Cads%5C%5Crobo%5C%5Csrc%5C%5Capp%5C%5Cpage.tsx%22%2C%22ids%22%3A%5B%5D%7D&server=false!"); });
-/******/ var __webpack_exports__ = __webpack_require__.O();
-/******/ _N_E = __webpack_exports__;
-/******/ }
-]);
+});

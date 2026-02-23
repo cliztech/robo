@@ -44,11 +44,6 @@ export function DegenEffectRack({ title, deck, controls, initialValues, isActive
             ? '--color-deck-a'
             : '--color-accent-3';
     const deckColor = `hsl(var(${deckColorToken}))`;
-    const deckColor = deck === 'A' || deck === 'MST'
-        ? 'hsl(var(--color-deck-a))'
-        : deck === 'B'
-            ? 'hsl(var(--color-deck-b))'
-            : 'hsl(var(--color-deck-mic))';
 
     return (
         <div className="glass-panel overflow-hidden">
@@ -86,7 +81,6 @@ export function DegenEffectRack({ title, deck, controls, initialValues, isActive
                     <button
                         onClick={handleReset}
                         aria-label="Reset effect controls"
-                        className="p-1 rounded text-zinc-600 hover:text-zinc-400 hover:bg-white/[0.03] transition-all"
                         className="p-1 rounded-sm border border-transparent text-zinc-600 hover:text-zinc-400 hover:border-[hsl(var(--color-control-border))] hover:bg-white/[0.02] transition-all"
                         title="Reset"
                     >
