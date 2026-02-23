@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import logging
+import re
 from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
@@ -34,6 +36,10 @@ TEMPLATE_PRIMITIVES: dict[TemplateType, list[tuple[str, str, str, bool]]] = {
     TemplateType.weekend: [(day, "10:00", "14:00", False) for day in WEEK_DAYS[5:]],
     TemplateType.overnight: [(day, "22:00", "06:00", True) for day in WEEK_DAYS],
 }
+
+CRON_NUMERIC_RE = re.compile(r"^\d+$")
+
+logger = logging.getLogger(__name__)
 
 
 class SchedulerUiService:
@@ -240,7 +246,10 @@ class SchedulerUiService:
                 )
             elif spec.mode == ScheduleSpecMode.cron and spec.cron:
                 minute, hour, _, _, day_of_week = spec.cron.split()
-                time_val = f"{int(hour):02d}:{int(minute):02d}"
+                parsed_time = self._parse_numeric_cron_time(hour=hour, minute=minute, schedule_id=schedule.id, cron=spec.cron)
+                if parsed_time is None:
+                    continue
+                time_val = f"{parsed_time[0]:02d}:{parsed_time[1]:02d}"
                 blocks.append(
                     TimelineBlock(
                         schedule_id=schedule.id,
@@ -254,6 +263,39 @@ class SchedulerUiService:
             elif spec.mode == ScheduleSpecMode.rrule and spec.rrule:
                 blocks.append(self._rrule_to_block(schedule.id, spec.rrule))
         return blocks
+
+    def _parse_numeric_cron_time(
+        self,
+        *,
+        hour: str,
+        minute: str,
+        schedule_id: str,
+        cron: str,
+    ) -> tuple[int, int] | None:
+        """Return exact hour/minute for timeline blocks, else skip unsupported cron forms.
+
+        Timeline blocks represent a single point-in-time anchor. Wildcard, step, or range
+        expressions in minute/hour fields are valid cron, but not representable as one
+        deterministic point. In those cases we emit a warning and skip timeline projection.
+        """
+        if not CRON_NUMERIC_RE.fullmatch(hour) or not CRON_NUMERIC_RE.fullmatch(minute):
+            logger.warning(
+                "Skipping timeline block for schedule_id=%s: unsupported cron time fields (%s)",
+                schedule_id,
+                cron,
+            )
+            return None
+
+        parsed_hour = int(hour)
+        parsed_minute = int(minute)
+        if not (0 <= parsed_hour <= 23 and 0 <= parsed_minute <= 59):
+            logger.warning(
+                "Skipping timeline block for schedule_id=%s: out-of-range cron time fields (%s)",
+                schedule_id,
+                cron,
+            )
+            return None
+        return parsed_hour, parsed_minute
 
     def _rrule_to_block(self, schedule_id: str, rrule: str) -> TimelineBlock:
         parts = dict(part.split("=", 1) for part in rrule.split(";") if "=" in part)
@@ -303,7 +345,15 @@ class SchedulerUiService:
         return f"{int(minute)} {int(hour)} * * {cron_day}"
 
     def _cron_day_to_name(self, day_of_week: str) -> str:
-        return {
+        supported_token_description = "single numeric day-of-week token in range 0-7"
+        unsupported_pattern_tokens = ("*", ",", "-", "/")
+        if any(token in day_of_week for token in unsupported_pattern_tokens):
+            raise ValueError(
+                "Unsupported cron day-of-week pattern "
+                f"'{day_of_week}'. Scheduler UI supports only a {supported_token_description}."
+            )
+
+        day_name = {
             "0": "sunday",
             "1": "monday",
             "2": "tuesday",
@@ -312,7 +362,15 @@ class SchedulerUiService:
             "5": "friday",
             "6": "saturday",
             "7": "sunday",
-        }.get(day_of_week, "monday")
+        }.get(day_of_week)
+
+        if day_name is None:
+            raise ValueError(
+                "Unsupported cron day-of-week token "
+                f"'{day_of_week}'. Scheduler UI supports only a {supported_token_description}."
+            )
+
+        return day_name
 
     def _format_conflict_error(self, conflicts: list[ScheduleConflict]) -> str:
         hard_types = {

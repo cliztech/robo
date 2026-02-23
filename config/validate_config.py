@@ -40,6 +40,28 @@ TYPE_NAMES = {
     "null": "null",
 }
 
+SUPPORTED_SCHEMA_KEYWORDS = {
+    "$schema",
+    "$id",
+    "title",
+    "description",
+    "type",
+    "properties",
+    "required",
+    "additionalProperties",
+    "items",
+    "enum",
+    "const",
+    "anyOf",
+    "pattern",
+    "minimum",
+    "maximum",
+    "minLength",
+    "maxLength",
+    "minItems",
+    "maxItems",
+}
+
 SCHEDULE_UI_STATES = {"draft", "active", "paused", "archived"}
 SCHEDULE_SPEC_MODES = {"one_off", "rrule", "cron"}
 CONTENT_REF_TYPES = {"prompt", "script", "playlist", "music_bed"}
@@ -130,6 +152,10 @@ def _type_matches(value: Any, expected_type: str) -> bool:
 
 
 def _validate(instance: Any, schema: dict[str, Any], path: str, errors: list[str]) -> None:
+    unknown_keywords = sorted(set(schema.keys()) - SUPPORTED_SCHEMA_KEYWORDS)
+    for keyword in unknown_keywords:
+        errors.append(f"{path}: unsupported schema keyword '{keyword}'")
+
     if "anyOf" in schema:
         any_of_schemas: list[dict[str, Any]] = schema["anyOf"]
         branch_errors: list[list[str]] = []
@@ -168,11 +194,22 @@ def _validate(instance: Any, schema: dict[str, Any], path: str, errors: list[str
             f"{path}: value {instance!r} is invalid, expected one of {schema['enum']}"
         )
 
+    if "const" in schema and instance != schema["const"]:
+        errors.append(f"{path}: value {instance!r} must equal constant {schema['const']!r}")
+
     pattern = schema.get("pattern")
     if pattern and isinstance(instance, str) and re.search(pattern, instance) is None:
         errors.append(
             f"{path}: value {instance!r} does not match expected pattern /{pattern}/"
         )
+
+    min_length = schema.get("minLength")
+    if min_length is not None and isinstance(instance, str) and len(instance) < min_length:
+        errors.append(f"{path}: string length {len(instance)} is below minLength {min_length}")
+
+    max_length = schema.get("maxLength")
+    if max_length is not None and isinstance(instance, str) and len(instance) > max_length:
+        errors.append(f"{path}: string length {len(instance)} is above maxLength {max_length}")
 
     minimum = schema.get("minimum")
     if minimum is not None and isinstance(instance, (int, float)) and instance < minimum:
@@ -181,6 +218,14 @@ def _validate(instance: Any, schema: dict[str, Any], path: str, errors: list[str
     maximum = schema.get("maximum")
     if maximum is not None and isinstance(instance, (int, float)) and instance > maximum:
         errors.append(f"{path}: value {instance} is above maximum {maximum}")
+
+    min_items = schema.get("minItems")
+    if min_items is not None and isinstance(instance, list) and len(instance) < min_items:
+        errors.append(f"{path}: array length {len(instance)} is below minItems {min_items}")
+
+    max_items = schema.get("maxItems")
+    if max_items is not None and isinstance(instance, list) and len(instance) > max_items:
+        errors.append(f"{path}: array length {len(instance)} is above maxItems {max_items}")
 
     if isinstance(instance, dict):
         required = schema.get("required", [])

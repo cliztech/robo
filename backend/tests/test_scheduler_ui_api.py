@@ -38,7 +38,7 @@ def test_unauthenticated_request(tmp_path):
     client = TestClient(app)
     try:
         response = client.get("/api/v1/scheduler-ui/state")
-        assert response.status_code == 403
+        assert response.status_code == 401
     finally:
         app.dependency_overrides.clear()
 

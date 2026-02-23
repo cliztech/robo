@@ -40,7 +40,6 @@ export function DegenWaveform({
     const [isDragging, setIsDragging] = useState(false);
 
     const data = useMemo(
-        () => waveformData || createDeterministicWaveform(250),
         () => waveformData || deterministicWaveformSample(250),
         [waveformData]
     );
@@ -219,8 +218,7 @@ export function DegenWaveform({
                                 width={Math.max(0.15, barWidth - 0.12)}
                                 height={height}
                                 rx={0.1}
-                                fill={isPast ? waveColor : '#ffffff'}
-                                fill={isPast ? 'hsl(var(--color-waveform-played-strong))' : 'hsl(var(--color-waveform-unplayed-strong))'}
+                                                                fill={isPast ? 'hsl(var(--color-waveform-played-strong))' : 'hsl(var(--color-waveform-unplayed-strong))'}
                                 opacity={isPast ? 0.06 : 0.02}
                             />
                         );
@@ -259,8 +257,7 @@ export function DegenWaveform({
                                 width={Math.max(0.15, barWidth - 0.12)}
                                 height={height}
                                 rx={0.1}
-                                fill={waveColor}
-                                fill="hsl(var(--color-waveform-played-strong))"
+                                                                fill="hsl(var(--color-waveform-played-strong))"
                                 opacity={0.15}
                                 filter="url(#wf-glow)"
                             />
@@ -325,28 +322,19 @@ export function DegenWaveform({
                         <div
                             className="w-[2px] h-full opacity-50"
                             style={{
-                                backgroundColor: cue.color || 'hsl(var(--color-warning))',
-                                boxShadow: `0 0 4px ${cue.color || 'hsl(var(--color-warning))'}`,
-                                backgroundColor: cue.color || 'hsl(var(--color-waveform-cue-default))',
+                                                                backgroundColor: cue.color || 'hsl(var(--color-waveform-cue-default))',
                                 boxShadow: `0 0 6px ${cue.color || 'hsl(var(--color-waveform-cue-default))'}40`,
                             }}
                         />
                         {/* Cue diamond marker */}
                         <div
                             className="absolute bottom-2 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 opacity-60 group-hover/cue:opacity-100 transition-opacity"
-                            style={{ backgroundColor: cue.color || 'hsl(var(--color-warning))' }}
-                            className="absolute bottom-2 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 opacity-60 group-hover/cue:opacity-100 transition-opacity motion-reduce:transition-none"
-                            style={{ backgroundColor: cue.color || '#ff6b00' }}
-                            className="absolute bottom-2 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 opacity-60 group-hover/cue:opacity-100 transition-opacity"
                             style={{ backgroundColor: cue.color || 'hsl(var(--color-waveform-cue-default))' }}
                         />
                         <div
                             className="absolute bottom-5 left-1/2 -translate-x-1/2 px-1.5 py-0.5 text-[7px] font-black uppercase rounded opacity-0 group-hover/cue:opacity-100 transition-all duration-150 motion-reduce:transition-none whitespace-nowrap"
                             style={{
-                                backgroundColor: cue.color || 'hsl(var(--color-warning))',
-                                color: 'hsl(var(--color-bg))',
-                                boxShadow: `0 0 6px ${cue.color || 'hsl(var(--color-warning))'}`,
-                                backgroundColor: cue.color || 'hsl(var(--color-waveform-cue-default))',
+                                                                backgroundColor: cue.color || 'hsl(var(--color-waveform-cue-default))',
                                 color: 'hsl(var(--black-rgb))',
                                 boxShadow: `0 0 10px ${cue.color || 'hsl(var(--color-waveform-cue-default))'}40`,
                             }}
@@ -377,10 +365,7 @@ export function DegenWaveform({
                             key={i}
                             className="text-[7px] font-black uppercase px-2 py-0.5 rounded-sm border transition-all hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/80 focus-visible:ring-offset-1 focus-visible:ring-offset-black"
                             style={{
-                                borderColor: cue.color || 'hsla(var(--color-warning), 0.45)',
-                                color: cue.color || 'hsl(var(--color-warning))',
-                                background: cue.color ? `${cue.color}14` : 'hsla(var(--color-warning), 0.1)',
-                                borderColor: `${cue.color || 'hsl(var(--color-waveform-cue-default))'}50`,
+                                                                borderColor: `${cue.color || 'hsl(var(--color-waveform-cue-default))'}50`,
                                 color: cue.color || 'hsl(var(--color-waveform-cue-default))',
                                 background: `${cue.color || 'hsl(var(--color-waveform-cue-default))'}08`,
                             }}
