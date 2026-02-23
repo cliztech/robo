@@ -31,7 +31,6 @@ export function DegenKnob({
     const ratio = (value - min) / (max - min);
     const angle = ratio * 270 - 135;
     const accentColor = color || 'hsl(var(--color-control-active))';
-    const accentColor = color || 'hsl(var(--color-deck-a))';
 
     const clampValue = (nextValue: number) => Math.max(min, Math.min(max, nextValue));
 
@@ -165,8 +164,7 @@ export function DegenKnob({
                             strokeWidth="4"
                             strokeLinecap="round"
                             opacity={0.8}
-                            style={{ filter: `drop-shadow(0 0 2px ${accentColor})` }}
-                            style={{ filter: `drop-shadow(0 0 4px color-mix(in srgb, ${accentColor} 35%, transparent))` }}
+                                                        style={{ filter: `drop-shadow(0 0 4px color-mix(in srgb, ${accentColor} 35%, transparent))` }}
                         />
                     )}
 

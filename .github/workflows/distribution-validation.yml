@@ -36,6 +36,22 @@ jobs:
         run: |
           python -m py_compile config/inspect_db.py pyinstxtractor.py
 
+      - name: Fail on accidental *.py_patch artifacts in source/test paths
+        run: |
+          set -euo pipefail
+          mapfile -t py_patch_files < <(
+            find . -type f -name '*.py_patch' \
+              \( -path './backend/*' -o -path '*/tests/*' \)
+          )
+
+          if [ "${#py_patch_files[@]}" -gt 0 ]; then
+            echo 'Found forbidden *.py_patch artifact(s) in source/test directories:'
+            printf ' - %s\n' "${py_patch_files[@]}"
+            exit 1
+          fi
+
+          echo 'No forbidden *.py_patch artifacts detected in source/test directories.'
+
       - name: Verify expected distribution files
         run: |
           test -f "RoboDJ_Launcher.bat"
