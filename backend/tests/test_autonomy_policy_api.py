@@ -149,3 +149,27 @@ def test_invalid_payload_rejections_api(tmp_path):
         assert post_response.status_code == 422
     finally:
         app.dependency_overrides.clear()
+
+
+def test_get_policy_auto_recovers_invalid_policy_file(tmp_path, monkeypatch):
+    from backend.scheduling import api as policy_api
+
+    policy_path = tmp_path / "autonomy_policy.json"
+    policy_path.write_text('{"station_default_mode": "not-a-mode"}', encoding="utf-8")
+
+    def _factory() -> AutonomyPolicyService:
+        return AutonomyPolicyService(
+            policy_path=policy_path,
+            audit_log_path=tmp_path / "autonomy_audit_events.jsonl",
+        )
+
+    monkeypatch.setattr(policy_api, "_service_instance", None)
+    monkeypatch.setattr(policy_api, "AutonomyPolicyService", _factory)
+
+    client = TestClient(app)
+    get_response = client.get("/api/v1/autonomy-policy")
+    assert get_response.status_code == 200
+    assert get_response.json()["station_default_mode"] == "semi_auto"
+
+    recovered_files = list(tmp_path.glob("autonomy_policy.crash_recovery_*.json"))
+    assert recovered_files
