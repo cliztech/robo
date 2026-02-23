@@ -67,26 +67,27 @@ export function DegenVUMeter({
                     const isPeak = i === peakSegment - 1;
                     const ratio = i / segments;
 
-                    // Color gradient: green -> yellow -> orange -> red
+                    // Color gradient: Sapphire -> Cyan -> Amber -> Red
                     let color: string;
-                    if (ratio < 0.6) color = isActive ? '#aaff00' : 'rgba(255,255,255,0.04)';
-                    else if (ratio < 0.8) color = isActive ? '#ffcc00' : 'rgba(255,255,255,0.04)';
-                    else if (ratio < 0.9) color = isActive ? '#ff8800' : 'rgba(255,255,255,0.04)';
-                    else color = isActive ? '#ff3333' : 'rgba(255,255,255,0.04)';
+                    if (ratio < 0.6) color = isActive ? 'var(--color-accent)' : 'rgba(255,255,255,0.02)';
+                    else if (ratio < 0.8) color = isActive ? 'var(--color-accent-2)' : 'rgba(255,255,255,0.02)';
+                    else if (ratio < 0.9) color = isActive ? 'var(--color-warning)' : 'rgba(255,255,255,0.02)';
+                    else color = isActive ? 'var(--color-danger)' : 'rgba(255,255,255,0.02)';
 
                     return (
                         <div
                             key={i}
-                            className="rounded-[1px] transition-colors duration-75"
+                            className="rounded-[0.5px] transition-colors duration-75"
                             style={{
                                 flex: 1,
-                                backgroundColor: isPeak ? (ratio > 0.8 ? '#ff3333' : '#aaff00') : color,
-                                opacity: isPeak ? 0.9 : isActive ? (0.5 + ratio * 0.5) : 1,
+                                backgroundColor: isPeak ? (ratio > 0.8 ? 'var(--color-danger)' : 'var(--color-accent)') : color,
+                                opacity: isPeak ? 1 : isActive ? (0.7 + ratio * 0.3) : 1,
                                 boxShadow: isActive && ratio > 0.85
-                                    ? '0 0 4px rgba(255,51,51,0.3)'
+                                    ? `0 0 6px hsla(0, 85%, 60%, 0.4)`
                                     : isPeak
-                                        ? `0 0 4px ${ratio > 0.8 ? 'rgba(255,51,51,0.3)' : 'rgba(170,255,0,0.3)'}`
+                                        ? `0 0 8px ${ratio > 0.8 ? 'hsla(0, 85%, 60%, 0.5)' : 'hsla(207, 98%, 45%, 0.5)'}`
                                         : 'none',
+                                borderTop: '1px solid rgba(255,255,255,0.05)'
                             }}
                         />
                     );

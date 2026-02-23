@@ -27,11 +27,11 @@ interface DegenMixerProps {
 }
 
 const DEFAULT_CHANNELS: MixerChannel[] = [
-    { id: 'deck-a', label: 'DECK A', color: '#aaff00', type: 'deck' },
-    { id: 'deck-b', label: 'DECK B', color: '#9933ff', type: 'deck' },
-    { id: 'mic', label: 'MIC', color: '#00bfff', type: 'mic' },
-    { id: 'aux', label: 'AUX', color: '#ffcc00', type: 'aux' },
-    { id: 'master', label: 'MASTER', color: '#ffffff', type: 'master' },
+    { id: 'deck-a', label: 'DECK A', color: '#027de1', type: 'deck' },
+    { id: 'deck-b', label: 'DECK B', color: '#10b981', type: 'deck' },
+    { id: 'mic', label: 'MIC', color: '#9ca3af', type: 'mic' },
+    { id: 'aux', label: 'AUX', color: '#f59e0b', type: 'aux' },
+    { id: 'master', label: 'MASTER', color: '#f8fafc', type: 'master' },
 ];
 
 /* ── Fader Track SVG ───────── */
@@ -90,14 +90,18 @@ function ChannelStrip({
     return (
         <div
             className={cn(
-                'flex flex-col items-center gap-2 py-3 px-2 rounded-lg transition-all',
+                'flex flex-col items-center gap-2 py-3 px-2 rounded-lg transition-all relative overflow-hidden',
                 'border',
                 isMaster
-                    ? 'bg-white/[0.03] border-white/[0.06] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]'
-                    : 'bg-white/[0.015] border-white/[0.03] hover:border-white/[0.06]'
+                    ? 'bg-white/[0.04] border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.05),0_10px_20px_rgba(0,0,0,0.4)]'
+                    : 'bg-white/[0.02] border-white/[0.04] hover:bg-white/[0.035] hover:border-white/[0.08]'
             )}
-            style={{ minWidth: isMaster ? '88px' : '70px' }}
+            style={{ 
+                minWidth: isMaster ? '96px' : '74px',
+            }}
         >
+            {/* Fine hardware grain overlay */}
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[var(--noise-texture)]" />
             {/* Channel label with color dot */}
             <div className="flex items-center gap-1.5 w-full justify-center">
                 <div
@@ -270,17 +274,26 @@ export function DegenMixer({ channels = DEFAULT_CHANNELS, className }: DegenMixe
 
     return (
         <div className={cn(
-            'glass-panel overflow-hidden',
+            'relative overflow-hidden border border-white/[0.08] rounded-xl shadow-2xl',
+            'bg-[var(--metal-bg)]', // Use the new hardware metal background
             className
         )}>
+            {/* Global Noise Overlay for hardware feel */}
+            <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[var(--noise-texture)] z-0" />
+
             {/* Header */}
-            <div className="panel-header">
-                <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-lime-500" style={{ boxShadow: '0 0 6px rgba(170,255,0,0.4)' }} />
-                    <span className="panel-header-title">Mixer Console</span>
+            <div className="relative z-10 flex items-center justify-between px-4 py-3 bg-white/[0.02] border-b border-white/[0.06]">
+                <div className="flex items-center gap-2.5">
+                    <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-100">
+                        Aether Studio <span className="text-zinc-500 font-medium">Mixer</span>
+                    </span>
                 </div>
-                <div className="flex items-center gap-2">
-                    <span className="text-[8px] font-mono text-zinc-600">{channels.length} CH</span>
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-black/40 border border-white/[0.05]">
+                        <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="text-[8px] font-mono font-bold text-emerald-500/80">32-BIT FLOAT</span>
+                    </div>
                 </div>
             </div>
 

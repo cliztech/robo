@@ -2,24 +2,30 @@
   color-scheme: dark;
 
   /* ── Degen Design Tokens ── Hard Dark & Acid Green ── */
-  --bg: 0 0% 2%;
-  --bg-elevated: 0 0% 4%;
-  --surface: 0 0% 7%;
-  --surface-2: 0 0% 12%;
-  --surface-3: 0 0% 16%;
-  --text: 0 0% 95%;
-  --text-muted: 0 0% 55%;
-  --text-dim: 0 0% 30%;
-  --accent: 82 100% 50%;
-  /* Acid Green #aaff00 */
-  --accent-secondary: 270 100% 60%;
-  /* Electric Purple #9933ff */
-  --accent-tertiary: 195 100% 50%;
-  /* Cyber Cyan #00bfff */
-  --danger: 0 72% 51%;
-  /* Alert Red */
-  --warning: 38 92% 50%;
-  /* Amber */
+  --bg: 240 10% 2%;
+  /* Deep Obsidian */
+  --bg-elevated: 240 8% 4%;
+  --surface: 240 6% 7%;
+  --surface-2: 240 5% 10%;
+  --surface-3: 240 5% 15%;
+  --text: 210 20% 98%;
+  --text-muted: 210 10% 65%;
+  --text-dim: 210 10% 35%;
+  
+  /* Aether Sapphire — Rekordbox 7 Standard */
+  --accent: 207 98% 45%; 
+  /* #027de1 */
+  --accent-secondary: 207 81% 79%; 
+  /* #A1CFF5 - Sapphire Glow */
+  --accent-tertiary: 182 70% 38%; 
+  /* Deep Teal focus */
+  
+  --danger: 0 85% 60%;
+  --warning: 35 100% 50%;
+  
+  /* Hardware Surfaces */
+  --metal-bg: radial-gradient(circle at 50% 0%, hsla(0, 0%, 100%, 0.05) 0%, transparent 100%), #0A0A0B;
+  --noise-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 
   /* Glow tokens */
   --glow-accent: 0 0 20px hsla(82, 100%, 50%, 0.25),
