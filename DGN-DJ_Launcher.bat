@@ -2,26 +2,26 @@
 setlocal
 
 :: Directory assumptions:
-::   - This launcher sits beside "RoboDJ Automation.exe".
+::   - This launcher sits beside "DGN-DJ Automation.exe".
 ::   - Runtime config assets live under ".\config" from this launcher directory.
 :: Resolve launcher location (%~dp0) so startup is portable across machines/drives.
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
-set "EXE_PATH=%SCRIPT_DIR%\RoboDJ Automation.exe"
+set "APP_EXE_PATH=%SCRIPT_DIR%\DGN-DJ Automation.exe"
 set "CONFIG_DIR=%SCRIPT_DIR%\config"
 set "SCRIPTS_DIR=%CONFIG_DIR%\scripts"
 set "SAFETY_SCRIPT=%SCRIPTS_DIR%\startup_safety.py"
 
-if not exist "%EXE_PATH%" (
-    echo [RoboDJ] ERROR: Unable to find RoboDJ Automation executable.
-    echo [RoboDJ] Expected path: "%EXE_PATH%"
+if not exist "%APP_EXE_PATH%" (
+    echo [DGN-DJ] ERROR: Unable to find DGN-DJ Automation executable.
+    echo [DGN-DJ] Expected path: "%APP_EXE_PATH%"
     exit /b 1
 )
 
 if not exist "%SAFETY_SCRIPT%" (
-    echo [RoboDJ] ERROR: Missing startup safety script.
-    echo [RoboDJ] Expected path: "%SAFETY_SCRIPT%"
+    echo [DGN-DJ] ERROR: Missing startup safety script.
+    echo [DGN-DJ] Expected path: "%SAFETY_SCRIPT%"
     exit /b 1
 )
 
@@ -36,8 +36,8 @@ if %ERRORLEVEL%==0 (
 )
 
 if "%PYTHON_CMD%"=="" (
-    echo [RoboDJ] ERROR: Python runtime was not found.
-    echo [RoboDJ] Install Python 3.x and rerun this launcher.
+    echo [DGN-DJ] ERROR: Python runtime was not found.
+    echo [DGN-DJ] Install Python 3.x and rerun this launcher.
     exit /b 1
 )
 
@@ -49,14 +49,14 @@ set "SAFETY_EXIT=%ERRORLEVEL%"
 popd
 
 if not "%SAFETY_EXIT%"=="0" (
-    echo [RoboDJ] Startup blocked by reliability safety gate.
+    echo [DGN-DJ] Startup blocked by reliability safety gate.
     endlocal & exit /b %SAFETY_EXIT%
 )
 
-:: Launch RoboDJ Automation as Administrator to handle permission-sensitive operations.
-set "ROBO_EXE_PATH=%EXE_PATH%"
-set "ROBO_WORK_DIR=%SCRIPT_DIR%"
-powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath $env:ROBO_EXE_PATH -WorkingDirectory $env:ROBO_WORK_DIR -Verb RunAs"
+:: Launch DGN-DJ Automation as Administrator to handle permission-sensitive operations.
+set "DGNDJ_EXE_PATH=%APP_EXE_PATH%"
+set "DGNDJ_WORK_DIR=%SCRIPT_DIR%"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath $env:DGNDJ_EXE_PATH -WorkingDirectory $env:DGNDJ_WORK_DIR -Verb RunAs"
 set "PS_EXIT=%ERRORLEVEL%"
 
 endlocal & exit /b %PS_EXIT%
