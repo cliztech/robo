@@ -12,7 +12,7 @@ Use the roadmap helper to continuously surface the next open tasks while you wor
 
 ## P0 — Foundations (Start Here)
 
-- [ ] Create tracked issues for all Track A/B/C/D tasks from `PRODUCT_READINESS_PLAN.md`.
+- [ ] Create tracked issues for all Track A/B/C/D tasks from `PRODUCT_READINESS_PLAN.md` ([TI-001](docs/exec-plans/active/tracked-issues/TI-001.md)).
 - [x] Add a versioned readiness scorecard in `docs/` and define update cadence.
 - [x] Publish runtime/deployment matrix (`dev`, `staging`, `prod`) with compatibility constraints.
 - [x] Define API/config contract versioning policy and breaking-change checklist.
@@ -20,11 +20,11 @@ Use the roadmap helper to continuously surface the next open tasks while you wor
 
 ## P1 — Security & Compliance
 
-- [ ] Add role-aware settings visibility model (`admin`, `operator`, `viewer`).
-- [ ] Implement idle timeout + re-auth requirements for sensitive actions.
-- [ ] Implement key-rotation workflow CLI + operator checklist integration.
-- [ ] Add redaction policy contract tests for logs/API responses.
-- [ ] Add a pre-release security gate in release documentation.
+- [ ] Add role-aware settings visibility model (`admin`, `operator`, `viewer`) ([TI-002](docs/exec-plans/active/tracked-issues/TI-002.md)).
+- [ ] Implement idle timeout + re-auth requirements for sensitive actions ([TI-003](docs/exec-plans/active/tracked-issues/TI-003.md)).
+- [ ] Implement key-rotation workflow CLI + operator checklist integration ([TI-004](docs/exec-plans/active/tracked-issues/TI-004.md)).
+- [ ] Add redaction policy contract tests for logs/API responses ([TI-005](docs/exec-plans/active/tracked-issues/TI-005.md)).
+- [ ] Add a pre-release security gate in release documentation ([TI-006](docs/exec-plans/active/tracked-issues/TI-006.md)).
 
 ## P1 — Reliability & Observability
 
@@ -51,5 +51,6 @@ Use the roadmap helper to continuously surface the next open tasks while you wor
 ## Tracking Cadence
 
 - [ ] Weekly: update readiness percentages by category.
+- [ ] Weekly backlog hygiene review owner/date: Project Coordinator — every Friday (next review: 2026-02-27).
 - [ ] Bi-weekly: remove blocked items or split oversized tasks.
 - [ ] Monthly: reassess roadmap variation (Security-first, UX-first, Scale-first, Balanced).
