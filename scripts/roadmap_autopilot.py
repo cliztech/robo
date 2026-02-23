@@ -65,6 +65,7 @@ class QueueItem:
     source: Path
     line_number: int
     section: str
+    phase: str
     text: str
     kind: str
 
@@ -119,21 +120,18 @@ def render_queue(tasks: list[QueueItem], limit: int) -> str:
         lines.append(f"Next unfinished phase: {next_phase}")
     lines.append(render_phase_summary(phase_totals))
 
-    lines: list[str] = [
-        f"Open task queue ({min(limit, len(tasks))}/{len(tasks)} shown):"
-    ]
     for index, task in enumerate(tasks[:limit], start=1):
         rel_source = task.source.relative_to(ROOT)
         lines.append(
             f"{index:>2}. [{rel_source}:{task.line_number}] "
             f"{task.phase} | {task.section} -> {task.text}"
-            f"{task.section} ({task.kind}) -> {task.text}"
+            f" ({task.kind})"
         )
 
     return "\n".join(lines)
 
 
-def summarize_phases(tasks: list[OpenTask]) -> dict[str, int]:
+def summarize_phases(tasks: list[QueueItem]) -> dict[str, int]:
     phase_totals: dict[str, int] = {}
     for task in tasks:
         phase_totals[task.phase] = phase_totals.get(task.phase, 0) + 1
@@ -274,6 +272,7 @@ def collect_workflow_actions(markdown_path: Path) -> list[QueueItem]:
                 source=markdown_path,
                 line_number=line_number,
                 section=current_section,
+                phase="Unphased",
                 text=normalized,
                 kind="workflow",
             )
@@ -293,6 +292,7 @@ def run_once(todo_files: list[Path], workflow_files: list[Path], limit: int) -> 
                     source=task.source,
                     line_number=task.line_number,
                     section=task.section,
+                    phase=task.phase,
                     text=task.text,
                     kind="todo",
                 )
