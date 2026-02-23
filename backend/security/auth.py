@@ -1,5 +1,6 @@
 import os
 import hmac
+import functools
 from fastapi import Security, HTTPException, status
 from fastapi.security import APIKeyHeader
 from backend.security.secret_integrity import CONFIG_DIR
