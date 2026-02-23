@@ -1,4 +1,4 @@
-# 2026-02-23 Approved Next Steps
+# Approved Next Steps
 
 ## Route Selection
 - **Selected route:** Change (planning artifact only).
