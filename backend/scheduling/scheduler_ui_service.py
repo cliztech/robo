@@ -345,7 +345,15 @@ class SchedulerUiService:
         return f"{int(minute)} {int(hour)} * * {cron_day}"
 
     def _cron_day_to_name(self, day_of_week: str) -> str:
-        return {
+        supported_token_description = "single numeric day-of-week token in range 0-7"
+        unsupported_pattern_tokens = ("*", ",", "-", "/")
+        if any(token in day_of_week for token in unsupported_pattern_tokens):
+            raise ValueError(
+                "Unsupported cron day-of-week pattern "
+                f"'{day_of_week}'. Scheduler UI supports only a {supported_token_description}."
+            )
+
+        day_name = {
             "0": "sunday",
             "1": "monday",
             "2": "tuesday",
@@ -354,7 +362,15 @@ class SchedulerUiService:
             "5": "friday",
             "6": "saturday",
             "7": "sunday",
-        }.get(day_of_week, "monday")
+        }.get(day_of_week)
+
+        if day_name is None:
+            raise ValueError(
+                "Unsupported cron day-of-week token "
+                f"'{day_of_week}'. Scheduler UI supports only a {supported_token_description}."
+            )
+
+        return day_name
 
     def _format_conflict_error(self, conflicts: list[ScheduleConflict]) -> str:
         hard_types = {
