@@ -86,9 +86,9 @@ function SidebarIcon({
             title={label}
             aria-label={label}
             className={cn(
-                'relative w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
+                'relative w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
                 active
-                    ? 'bg-lime-500/10 text-lime-400 shadow-[0_0_15px_rgba(170,255,0,0.08)]'
+                    ? 'bg-accent/10 text-accent shadow-[0_0_15px_rgba(2,125,225,0.08)]'
                     : 'text-zinc-600 hover:text-zinc-200 hover:bg-white/[0.03]'
             )}
         >
@@ -97,8 +97,8 @@ function SidebarIcon({
             {active && (
                 <motion.div
                     layoutId="sidebar-active"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[2.5px] h-5 rounded-r-full bg-lime-500"
-                    style={{ boxShadow: '0 0 8px rgba(170,255,0,0.5)' }}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[2.5px] h-5 rounded-r-full bg-accent"
+                    style={{ boxShadow: '0 0 8px rgba(2,125,225,0.5)' }}
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                 />
             )}
@@ -125,7 +125,7 @@ function StatCard({
     value,
     unit,
     icon: Icon,
-    color = 'lime',
+    color = 'accent',
     trend,
     sparkline,
     delay = 0,
@@ -134,19 +134,19 @@ function StatCard({
     value: string | number;
     unit?: string;
     icon: React.ElementType;
-    color?: 'lime' | 'purple' | 'cyan' | 'orange' | 'red';
+    color?: 'accent' | 'purple' | 'cyan' | 'orange' | 'red';
     trend?: 'up' | 'down' | 'stable';
     sparkline?: number[];
     delay?: number;
 }) {
     const colorMap = {
-        lime: {
-            gradient: 'from-lime-500/8 via-lime-500/3 to-transparent',
-            border: 'border-lime-500/15',
-            text: 'text-lime-400',
-            icon: 'text-lime-500/70',
-            glow: 'shadow-[0_0_20px_rgba(170,255,0,0.04)]',
-            spark: '#aaff00',
+        accent: {
+            gradient: 'from-accent/8 via-accent/3 to-transparent',
+            border: 'border-accent/15',
+            text: 'text-accent',
+            icon: 'text-accent/70',
+            glow: 'shadow-[0_0_20px_rgba(2,125,225,0.04)]',
+            spark: '#027de1',
         },
         purple: {
             gradient: 'from-purple-500/8 via-purple-500/3 to-transparent',
@@ -186,7 +186,7 @@ function StatCard({
     const defaultSparkline = [30, 45, 38, 52, 48, 60, 55, 70, 65, 75, 72, 80];
 
     const TrendIcon = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : Minus;
-    const trendColor = trend === 'up' ? 'text-lime-500' : trend === 'down' ? 'text-red-400' : 'text-zinc-600';
+    const trendColor = trend === 'up' ? 'text-accent' : trend === 'down' ? 'text-red-400' : 'text-zinc-600';
 
     return (
         <motion.div
@@ -334,7 +334,7 @@ function DeckView() {
     return (
         <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-                <DeckPanel label="Deck A" color="#aaff00" bpm="128.0" musicalKey="Am" isActive={true}>
+                <DeckPanel label="Deck A" color="#027de1" bpm="128.0" musicalKey="Am" isActive={true}>
                     <DegenWaveform
                         progress={0.42}
                         duration={234}
@@ -442,7 +442,7 @@ function DashboardView() {
             >
                 <div>
                     <h1 className="text-2xl font-black tracking-tight text-white">
-                        Station <span className="glow-text text-lime-400">Overview</span>
+                        Station <span className="glow-text text-accent">Overview</span>
                     </h1>
                     <p className="text-[11px] text-zinc-500 mt-0.5">
                         Live monitoring · All systems nominal
@@ -465,7 +465,7 @@ function DashboardView() {
                     value="99.8"
                     unit="%"
                     icon={Activity}
-                    color="lime"
+                    color="accent"
                     trend="stable"
                     sparkline={[95, 96, 98, 97, 99, 99, 100, 99, 100, 100, 99, 100]}
                     delay={0}
@@ -494,7 +494,7 @@ function DashboardView() {
                     value="320"
                     unit="kbps"
                     icon={Wifi}
-                    color="lime"
+                    color="accent"
                     trend="stable"
                     sparkline={[80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80]}
                     delay={0.15}
@@ -519,11 +519,11 @@ function DashboardView() {
                     <div className="glass-panel overflow-hidden">
                         <div className="panel-header">
                             <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-lime-500 animate-pulse" style={{ boxShadow: '0 0 8px rgba(170,255,0,0.5)' }} />
+                                <div className="w-2 h-2 rounded-full bg-accent animate-pulse" style={{ boxShadow: '0 0 8px rgba(2,125,225,0.5)' }} />
                                 <span className="panel-header-title">Master Output</span>
                             </div>
                             <div className="flex items-center gap-2">
-                                <Signal size={10} className="text-lime-500" />
+                                <Signal size={10} className="text-accent" />
                                 <span className="text-[9px] font-mono text-zinc-500">AAC 320k</span>
                             </div>
                         </div>
@@ -597,7 +597,7 @@ export default function StudioPage() {
     ];
 
     return (
-        <div className="flex h-screen w-full bg-[#030304] text-zinc-100 overflow-hidden font-sans selection:bg-lime-500/30">
+        <div className="flex h-screen w-full bg-[#030304] text-zinc-100 overflow-hidden font-sans selection:bg-accent/30">
             {/* Left Sidebar */}
             <aside className="w-[72px] flex flex-col items-center py-6 border-r border-white/[0.04] bg-[#080809] z-50">
                 <div className="mb-10 hover:scale-110 transition-transform duration-300">
@@ -635,7 +635,7 @@ export default function StudioPage() {
                         <div className="flex flex-col">
                             <span className="text-[10px] uppercase font-black tracking-widest text-zinc-600 leading-none mb-1">Network</span>
                             <div className="flex items-center gap-1.5">
-                                <div className="w-1 h-1 rounded-full bg-lime-500" />
+                                <div className="w-1 h-1 rounded-full bg-accent" />
                                 <span className="text-[11px] font-bold text-zinc-200">Stable</span>
                             </div>
                         </div>
@@ -655,7 +655,7 @@ export default function StudioPage() {
                             <div className={cn("w-1.5 h-1.5 rounded-full", isOnAir ? "bg-red-500 animate-pulse" : "bg-zinc-600")} />
                             {isOnAir ? "On Air" : "Offline"}
                         </motion.button>
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-lime-400 to-cyan-400 p-[1px] cursor-pointer hover:rotate-12 transition-transform duration-300">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-cyan-400 p-[1px] cursor-pointer hover:rotate-12 transition-transform duration-300">
                              <div className="w-full h-full rounded-full bg-[#080809] flex items-center justify-center text-[10px] font-black">AI</div>
                         </div>
                     </div>
