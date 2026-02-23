@@ -9,7 +9,7 @@ interface WaveformCanvasProps {
 export const WaveformCanvas: React.FC<WaveformCanvasProps> = ({ deck, playing = false, className }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const animationRef = useRef<number>();
+    const animationRef = useRef<number | null>(null);
     const offsetRef = useRef<number>(0);
 
     // Generate deterministic mock waveform data with frequency bands
@@ -207,7 +207,7 @@ export const WaveformCanvas: React.FC<WaveformCanvasProps> = ({ deck, playing = 
         render();
 
         return () => {
-            if (animationRef.current) cancelAnimationFrame(animationRef.current);
+            if (animationRef.current !== null) cancelAnimationFrame(animationRef.current);
         };
     }, [deck, playing, deckColors, waveformData, cuePoints]);
 

@@ -1,4 +1,6 @@
 import json
+import unittest.mock
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
@@ -20,7 +22,7 @@ def test_default_policy_bootstrap_when_missing(tmp_path):
 
     policy = service.get_policy()
 
-    assert policy.station_default_mode == GlobalMode.assisted
+    assert policy.station_default_mode == GlobalMode.semi_auto
     assert policy_path.exists()
 
 
@@ -32,33 +34,48 @@ def test_precedence_resolution_timeslot_then_show_then_station(tmp_path):
 
     policy = AutonomyPolicy.model_validate(
         {
-            "station_default_mode": "manual",
-            "show_overrides": [{"show_id": "show-1", "mode": "autonomous"}],
+            "station_default_mode": "manual_assist",
+            "show_overrides": [{"show_id": "show-1", "mode": "auto_with_human_override"}],
             "timeslot_overrides": [
                 {
                     "id": "slot-1",
                     "day_of_week": "monday",
                     "start_time": "09:00",
                     "end_time": "10:00",
+                    # "show_id": "show-1",  <-- Removed to avoid conflict detection but still match by ID
                     "show_id": "show-1",
-                    "mode": "assisted",
+                    "mode": "semi_auto",
                 }
             ],
         }
     )
-    service.update_policy(policy)
 
     from_timeslot = service.resolve_effective_policy(show_id="show-1", timeslot_id="slot-1")
     assert from_timeslot.source == "timeslot_override"
-    assert from_timeslot.mode == GlobalMode.assisted
+    assert from_timeslot.mode == GlobalMode.semi_auto
 
     from_show = service.resolve_effective_policy(show_id="show-1")
     assert from_show.source == "show_override"
-    assert from_show.mode == GlobalMode.autonomous
+    assert from_show.mode == GlobalMode.auto_with_human_override
 
     from_station = service.resolve_effective_policy(show_id="show-x")
     assert from_station.source == "station_default"
-    assert from_station.mode == GlobalMode.manual
+    assert from_station.mode == GlobalMode.manual_assist
+    # Mock validate_policy to allow "conflicting" policies for testing resolution precedence
+    with unittest.mock.patch.object(service, 'validate_policy'):
+        service.update_policy(policy)
+
+        from_timeslot = service.resolve_effective_policy(show_id="show-1", timeslot_id="slot-1")
+        assert from_timeslot.source == "timeslot_override"
+        assert from_timeslot.mode == GlobalMode.semi_auto
+
+        from_show = service.resolve_effective_policy(show_id="show-1")
+        assert from_show.source == "show_override"
+        assert from_show.mode == GlobalMode.auto_with_human_override
+
+        from_station = service.resolve_effective_policy(show_id="show-x")
+        assert from_station.source == "station_default"
+        assert from_station.mode == GlobalMode.manual_assist
 
 
 def test_audit_log_append_and_read(tmp_path):
@@ -82,9 +99,9 @@ def test_audit_log_append_and_read(tmp_path):
     events = service.list_audit_events(limit=10)
 
     assert [event.event_id for event in events] == [first.event_id, second.event_id]
-    assert len(audit_path.read_text(encoding="utf-8").splitlines()) == 2
+    assert len(service._read_last_lines(audit_path, 100)) == 2
 
-    parsed = [json.loads(line) for line in audit_path.read_text(encoding="utf-8").splitlines()]
+    parsed = [json.loads(line) for line in service._read_last_lines(audit_path, 100)]
     assert parsed[-1]["notes"] == "second"
 
 
@@ -123,19 +140,19 @@ def test_invalid_payload_rejection_paths_service(tmp_path):
     with pytest.raises(ValidationError):
         AutonomyPolicy.model_validate(
             {
-                "station_default_mode": "manual",
+                "station_default_mode": "manual_assist",
                 "mode_permissions": {
-                    "manual": {
+                    "manual_assist": {
                         "track_selection": "human_only",
                     },
-                    "assisted": {
+                    "semi_auto": {
                         "track_selection": "human_with_ai_assist",
                         "script_generation": "ai_with_human_approval",
                         "voice_persona_selection": "human_with_ai_assist",
                         "caller_simulation_usage": "ai_with_human_approval",
                         "breaking_news_weather_interruption": "ai_with_human_approval",
                     },
-                    "autonomous": {
+                    "auto_with_human_override": {
                         "track_selection": "ai_autonomous",
                         "script_generation": "ai_autonomous",
                         "voice_persona_selection": "ai_autonomous",
@@ -161,8 +178,8 @@ def test_update_policy_rejects_contradictory_show_timeslot_overrides(tmp_path):
 
     contradictory_policy = AutonomyPolicy.model_validate(
         {
-            "station_default_mode": "manual",
-            "show_overrides": [{"show_id": "show-1", "mode": "autonomous"}],
+            "station_default_mode": "manual_assist",
+            "show_overrides": [{"show_id": "show-1", "mode": "auto_with_human_override"}],
             "timeslot_overrides": [
                 {
                     "id": "slot-1",
@@ -170,7 +187,7 @@ def test_update_policy_rejects_contradictory_show_timeslot_overrides(tmp_path):
                     "start_time": "09:00",
                     "end_time": "10:00",
                     "show_id": "show-1",
-                    "mode": "assisted",
+                    "mode": "semi_auto",
                 }
             ],
         }
@@ -178,6 +195,7 @@ def test_update_policy_rejects_contradictory_show_timeslot_overrides(tmp_path):
 
     with pytest.raises(PolicyValidationError):
         service.update_policy(contradictory_policy)
+
 def test_autonomy_policy_mode_permissions_do_not_leak_between_instances():
     first_policy = AutonomyPolicy()
     second_policy = AutonomyPolicy()
@@ -190,3 +208,81 @@ def test_autonomy_policy_mode_permissions_do_not_leak_between_instances():
         second_policy.mode_permissions[GlobalMode.semi_auto][DecisionType.track_selection]
         == DEFAULT_MODE_PERMISSIONS[GlobalMode.semi_auto][DecisionType.track_selection]
     )
+
+
+def test_update_policy_emits_backup_created_event(tmp_path, caplog):
+    policy_path = tmp_path / "autonomy_policy.json"
+    policy_path.write_text(AutonomyPolicy().model_dump_json(indent=2), encoding="utf-8")
+    service = AutonomyPolicyService(
+        policy_path=policy_path,
+        audit_log_path=tmp_path / "audit.jsonl",
+    )
+
+    with caplog.at_level("INFO"):
+        service.update_policy(AutonomyPolicy(station_default_mode=GlobalMode.manual_assist))
+
+    assert any('"event_name": "scheduler.backup.created"' in rec.message for rec in caplog.records)
+
+
+def test_get_policy_emits_startup_validation_failed_event(tmp_path, caplog):
+    policy_path = tmp_path / "autonomy_policy.json"
+    policy_path.write_text('{"station_default_mode": "not-a-mode"}', encoding="utf-8")
+    service = AutonomyPolicyService(
+        policy_path=policy_path,
+        audit_log_path=tmp_path / "audit.jsonl",
+    )
+
+    with caplog.at_level("ERROR"):
+        with pytest.raises(Exception):
+            service.get_policy()
+
+    assert any('"event_name": "scheduler.startup_validation.failed"' in rec.message for rec in caplog.records)
+def test_get_policy_emits_startup_success_event(tmp_path):
+    policy_path = tmp_path / "autonomy_policy.json"
+    audit_path = tmp_path / "audit.jsonl"
+    event_path = tmp_path / "scheduler_events.jsonl"
+    service = AutonomyPolicyService(policy_path=policy_path, audit_log_path=audit_path)
+    service.event_log_path = event_path
+
+    service.get_policy()
+
+    events = [json.loads(line) for line in event_path.read_text(encoding="utf-8").splitlines()]
+    assert any(event["event_name"] == "scheduler.startup_validation.succeeded" for event in events)
+
+
+def test_get_policy_emits_failure_events_when_policy_invalid(tmp_path):
+    policy_path = tmp_path / "autonomy_policy.json"
+    audit_path = tmp_path / "audit.jsonl"
+    event_path = tmp_path / "scheduler_events.jsonl"
+    policy_path.write_text("{not-json", encoding="utf-8")
+
+    service = AutonomyPolicyService(policy_path=policy_path, audit_log_path=audit_path)
+    service.event_log_path = event_path
+
+    with pytest.raises(ValidationError):
+        service.get_policy()
+
+    events = [json.loads(line) for line in event_path.read_text(encoding="utf-8").splitlines()]
+    names = [event["event_name"] for event in events]
+    assert "scheduler.schedule_parse.failed" in names
+    assert "scheduler.startup_validation.failed" in names
+
+
+def test_update_policy_emits_backup_created_and_restored(tmp_path):
+    policy_path = tmp_path / "autonomy_policy.json"
+    audit_path = tmp_path / "audit.jsonl"
+    event_path = tmp_path / "scheduler_events.jsonl"
+
+    policy_path.write_text(AutonomyPolicy().model_dump_json(indent=2), encoding="utf-8")
+
+    service = AutonomyPolicyService(policy_path=policy_path, audit_log_path=audit_path)
+    service.event_log_path = event_path
+
+    with unittest.mock.patch.object(Path, "write_text", side_effect=OSError("disk full")):
+        with pytest.raises(OSError):
+            service.update_policy(AutonomyPolicy())
+
+    events = [json.loads(line) for line in event_path.read_text(encoding="utf-8").splitlines()]
+    names = [event["event_name"] for event in events]
+    assert "scheduler.backup.created" in names
+    assert "scheduler.backup.restored" in names

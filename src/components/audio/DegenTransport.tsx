@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { cn } from '../../lib/utils';
 import { DegenStereoMeter } from './DegenVUMeter';
 import {
@@ -11,12 +12,14 @@ import {
 } from '../../lib/degenDataAdapters';
 import type { DJTelemetry } from '../../lib/audio/telemetry';
 import {
-    Play,
     Pause,
+    Play,
+    Radio,
+    Repeat,
+    Shuffle,
     SkipBack,
     SkipForward,
-    Shuffle,
-    Repeat,
+    Volume1,
     Volume2,
     VolumeX,
     Volume1,
@@ -25,14 +28,25 @@ import {
 
 interface DegenTransportProps {
     currentTrack?: TransportTrack;
+    telemetry?: DJTelemetry;
     telemetryTick?: number;
     isPlaying?: boolean;
     isOnAir?: boolean;
     onPlayPause?: () => void;
     onNext?: () => void;
     onPrev?: () => void;
-    telemetry?: DJTelemetry;
     className?: string;
+}
+
+function adaptDJTelemetryToTransportTelemetry(telemetry?: DJTelemetry): Partial<TransportTelemetry> | undefined {
+    if (!telemetry) return undefined;
+
+    return {
+        progress: telemetry.transport.progress,
+        volume: 85,
+        vuLeft: telemetry.stereoLevels.leftLevel,
+        vuRight: telemetry.stereoLevels.rightLevel,
+    };
 }
 
 export function DegenTransport({
@@ -43,19 +57,28 @@ export function DegenTransport({
     onPlayPause,
     onNext,
     onPrev,
-    telemetry,
     className,
 }: DegenTransportProps) {
     const track = resolveTransportTrack(currentTrack);
-    const transportTelemetry = resolveTransportTelemetry(telemetry);
+    const transportTelemetry = resolveTransportTelemetry(adaptDJTelemetryToTransportTelemetry(telemetry));
 
     const [telemetryStep, setTelemetryStep] = useState(0);
 
     useEffect(() => {
+        setProgress(transportTelemetry.progress);
+    }, [transportTelemetry.progress]);
+
+    useEffect(() => {
+        setVolume(transportTelemetry.volume);
+    }, [transportTelemetry.volume]);
+
+    useEffect(() => {
         if (!isPlaying || typeof telemetryTick === 'number') return;
+
         const id = setInterval(() => {
             setTelemetryStep((prev) => prev + 1);
         }, 80);
+
         return () => clearInterval(id);
     }, [isPlaying, telemetryTick]);
 
@@ -68,17 +91,23 @@ export function DegenTransport({
 
     const progress = progressOverride ?? telemetry?.transport.progress ?? 0;
     const elapsed = telemetry?.transport.elapsedSeconds ?? progress * (currentTrack?.duration || 0);
+    const vuLeft =
+        telemetry?.stereoLevels.leftLevel ??
+        Math.max(0.1, Math.min(1, transportTelemetry.vuLeft + Math.sin(phase / 5) * 0.08));
+    const vuRight =
+        telemetry?.stereoLevels.rightLevel ??
+        Math.max(0.1, Math.min(1, transportTelemetry.vuRight + Math.cos(phase / 6) * 0.08));
+    const peakLeft = telemetry?.stereoLevels.leftPeak ?? vuLeft;
+    const peakRight = telemetry?.stereoLevels.rightPeak ?? vuRight;
+
+    const elapsed = telemetry?.transport.elapsedSeconds ?? progress * (track.duration || 0);
     const remaining = useMemo(() => {
         if (telemetry) {
             return telemetry.transport.remainingSeconds;
         }
-        return (currentTrack?.duration || 0) - elapsed;
-    }, [currentTrack?.duration, elapsed, telemetry]);
 
-    const vuLeft = telemetry?.stereoLevels.leftLevel ?? 0;
-    const vuRight = telemetry?.stereoLevels.rightLevel ?? 0;
-    const peakLeft = telemetry?.stereoLevels.leftPeak ?? vuLeft;
-    const peakRight = telemetry?.stereoLevels.rightPeak ?? vuRight;
+        return (track.duration || 0) - elapsed;
+    }, [elapsed, telemetry, track.duration]);
 
     const formatTime = (seconds: number) => {
         const safeSeconds = Math.max(0, seconds);
@@ -119,6 +148,7 @@ export function DegenTransport({
 
             <div className="flex items-center gap-1 px-3 shrink-0">
                 <button
+                    type="button"
                     onClick={() => setShuffle(!shuffle)}
                     aria-label="Toggle shuffle"
                     aria-pressed={shuffle}
@@ -131,29 +161,28 @@ export function DegenTransport({
                 </button>
 
                 <button
+                    type="button"
                     onClick={onPrev}
                     aria-label="Previous track"
                     className="p-1.5 rounded text-zinc-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
                 >
                     <SkipBack size={14} fill="currentColor" />
                 </button>
-
                 <button
+                    type="button"
                     onClick={onPlayPause}
                     aria-label={isPlaying ? 'Pause playback' : 'Start playback'}
                     aria-pressed={isPlaying}
                     className={cn(
-                        'relative w-10 h-10 rounded-full flex items-center justify-center transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
-                        isPlaying
-                            ? 'bg-deck-a-soft border border-deck-a-soft text-deck-a hover:bg-[hsla(var(--color-deck-a),0.2)]'
-                            : 'bg-white/5 border border-white/10 text-white hover:bg-white/10'
+                        'p-2 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
+                        isPlaying ? 'bg-lime-400/90 text-black hover:bg-lime-300' : 'bg-zinc-700 text-white hover:bg-zinc-600'
                     )}
-                    style={isPlaying ? { boxShadow: 'var(--glow-deck-a-ring)' } : {}}
                 >
                     {isPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" className="ml-0.5" />}
                 </button>
 
                 <button
+                    type="button"
                     onClick={onNext}
                     aria-label="Next track"
                     className="p-1.5 rounded text-zinc-400 hover:text-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black"
@@ -162,6 +191,7 @@ export function DegenTransport({
                 </button>
 
                 <button
+                    type="button"
                     onClick={() => setRepeat(!repeat)}
                     aria-label="Toggle repeat"
                     aria-pressed={repeat}
@@ -195,6 +225,7 @@ export function DegenTransport({
                         step={0.001}
                         value={progress}
                         onChange={(e) => setProgressOverride(parseFloat(e.target.value))}
+                        onChange={(e) => setProgress(parseFloat(e.target.value))}
                         className="absolute inset-x-0 h-7 w-full opacity-0 cursor-pointer z-10"
                     />
                     <div
@@ -208,7 +239,6 @@ export function DegenTransport({
                 <span className="text-[10px] font-mono text-zinc-600 tabular-nums w-9 shrink-0">-{formatTime(remaining)}</span>
             </div>
 
-            {/* ── BPM / Key + flags ─── */}
             <div className="flex items-center gap-2 px-3 shrink-0 border-l border-white/[0.04]">
                 <div className="flex flex-col items-center px-2 py-1 rounded bg-white/[0.02]">
                     <span className="text-[8px] text-zinc-600 uppercase font-bold tracking-widest">BPM</span>
@@ -219,15 +249,35 @@ export function DegenTransport({
                     <span className="text-[12px] font-mono font-black text-[hsl(var(--color-deck-b))] tabular-nums">
                         {currentTrack?.key || '—'}
                     </span>
+                    <span className="text-[12px] font-mono font-black text-[hsl(var(--color-deck-b))] tabular-nums">{track.key || '—'}</span>
                 </div>
                 <div className="flex flex-col gap-0.5 ml-1">
                     <div className="flex items-center gap-1">
                         <Radio size={10} className={cn(telemetry?.signalFlags.clipDetected ? 'text-red-400' : 'text-zinc-700')} />
-                        <span className={cn('text-[8px] font-black uppercase tracking-wider', telemetry?.signalFlags.clipDetected ? 'text-red-400' : 'text-zinc-600')}>Clip</span>
+                        <span
+                            className={cn(
+                                'text-[8px] font-black uppercase tracking-wider',
+                                telemetry?.signalFlags.clipDetected ? 'text-red-400' : 'text-zinc-600'
+                            )}
+                        >
+                            Clip
+                        </span>
                     </div>
                     <div className="flex items-center gap-1">
-                        <div className={cn('w-1.5 h-1.5 rounded-full', telemetry?.signalFlags.limiterEngaged ? 'bg-orange-400' : 'bg-zinc-700')} />
-                        <span className={cn('text-[8px] font-black uppercase tracking-wider', telemetry?.signalFlags.limiterEngaged ? 'text-orange-400' : 'text-zinc-600')}>Lim</span>
+                        <div
+                            className={cn(
+                                'w-1.5 h-1.5 rounded-full',
+                                telemetry?.signalFlags.limiterEngaged ? 'bg-orange-400' : 'bg-zinc-700'
+                            )}
+                        />
+                        <span
+                            className={cn(
+                                'text-[8px] font-black uppercase tracking-wider',
+                                telemetry?.signalFlags.limiterEngaged ? 'text-orange-400' : 'text-zinc-600'
+                            )}
+                        >
+                            Lim
+                        </span>
                     </div>
                 </div>
             </div>
@@ -245,6 +295,7 @@ export function DegenTransport({
 
             <div className="flex items-center gap-2 px-3 w-36 shrink-0 border-l border-white/[0.04]">
                 <button
+                    type="button"
                     onClick={() => setIsMuted(!isMuted)}
                     aria-label={isMuted ? 'Unmute output' : 'Mute output'}
                     aria-pressed={isMuted}

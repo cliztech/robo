@@ -83,6 +83,11 @@ pnpm supabase db reset
 pnpm dev
 ```
 
+### Windows launcher (EXE-style startup)
+
+- Run `DGNDJ_Fullstack_Launcher.bat` from the repo root to boot the full-stack runtime with dependency checks.
+- The launcher validates `node`/`npm`, installs dependencies when `node_modules` is missing, and starts `npm run dev`.
+
 ### Environment Variables
 
 ```bash
