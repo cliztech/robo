@@ -5,7 +5,6 @@ import threading
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
-import logging
 
 from fastapi import APIRouter, Depends, Query
 from fastapi import HTTPException
@@ -42,7 +41,6 @@ def get_policy_service() -> AutonomyPolicyService:
                         policy_path.replace(recovery_path)
 
                     emit_scheduler_event(
-                        logger,
                         event_name="scheduler.crash_recovery.activated",
                         level="critical",
                         message="Autonomy API crash recovery activated due to invalid policy state.",
@@ -54,23 +52,23 @@ def get_policy_service() -> AutonomyPolicyService:
                     )
                     service.update_policy(AutonomyPolicy())
 
+                    try:
+                        service.get_policy()
+                    except Exception as preload_error:
+                        logger.exception("Autonomy policy preload failed; entering degraded-mode handlers.")
+                        emit_scheduler_event(
+                            event_name="scheduler.crash_recovery.activated",
+                            level="critical",
+                            message="Scheduler crash-recovery handlers activated during API startup.",
+                            metadata={
+                                "trigger": "policy_preload_failure",
+                                "recovery_plan": "degraded_mode",
+                                "last_known_checkpoint": "autonomy_policy_bootstrap",
+                                "error_type": type(preload_error).__name__,
+                            },
+                        )
+
                 _service_instance = service
-                _service_instance = AutonomyPolicyService()
-                try:
-                    _service_instance.get_policy()
-                except Exception as error:
-                    logger.exception("Autonomy policy preload failed; entering degraded-mode handlers.")
-                    emit_scheduler_event(
-                        event_name="scheduler.crash_recovery.activated",
-                        level="critical",
-                        message="Scheduler crash-recovery handlers activated during API startup.",
-                        metadata={
-                            "trigger": "policy_preload_failure",
-                            "recovery_plan": "degraded_mode",
-                            "last_known_checkpoint": "autonomy_policy_bootstrap",
-                            "error_type": type(error).__name__,
-                        },
-                    )
     return _service_instance
 
 
