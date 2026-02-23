@@ -83,6 +83,17 @@ pnpm supabase db reset
 pnpm dev
 ```
 
+### Windows launcher (EXE-style startup)
+
+- Run `DGNDJ_Fullstack_Launcher.bat` from the repo root for one-command startup.
+- The launcher validates `node`/`npm`, enforces Node.js 20+, checks key project paths (`package.json` and optional `next.config.js`), warns if `.env.local` is missing, and installs dependencies when `node_modules` is missing.
+- Supported modes:
+  - `DGNDJ_Fullstack_Launcher.bat dev` (default): starts `npm run dev`
+  - `DGNDJ_Fullstack_Launcher.bat prod`: runs `npm run build` then `npm run start`
+- Port override options:
+  - CLI argument: `DGNDJ_Fullstack_Launcher.bat dev --port 3001`
+  - Environment variable: `set PORT=3001 && DGNDJ_Fullstack_Launcher.bat dev`
+
 ### Environment Variables
 
 ```bash
