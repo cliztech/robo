@@ -10,11 +10,13 @@ from fastapi import APIRouter, Depends, Query
 from fastapi import HTTPException
 from fastapi.responses import HTMLResponse
 
+from backend.security.auth import verify_api_key
+
 from .autonomy_policy import AutonomyPolicy, DecisionOrigin, DecisionType, PolicyAuditEvent, MODE_DEFINITIONS
 from .autonomy_service import AutonomyPolicyService, PolicyValidationError
 from .observability import emit_scheduler_event
 
-router = APIRouter(prefix="/api/v1/autonomy-policy", tags=["autonomy-policy"])
+router = APIRouter(prefix="/api/v1/autonomy-policy", tags=["autonomy-policy"], dependencies=[Depends(verify_api_key)])
 
 logger = logging.getLogger(__name__)
 
