@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import threading
 from datetime import datetime, timezone
+from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
@@ -172,7 +173,16 @@ def get_audit_events(
     return service.list_audit_events(limit=limit)
 
 
+@lru_cache(maxsize=1)
+def _get_control_center_html() -> str:
+    """
+    Cache the control center HTML content to avoid disk I/O on every request.
+    This optimization ensures faster response times by serving the static asset from memory.
+    """
+    html_path = Path(__file__).with_name("control_center.html")
+    return html_path.read_text(encoding="utf-8")
+
+
 @router.get("/control-center", response_class=HTMLResponse)
 def get_control_center() -> HTMLResponse:
-    html_path = Path(__file__).with_name("control_center.html")
-    return HTMLResponse(content=html_path.read_text(encoding="utf-8"))
+    return HTMLResponse(content=_get_control_center_html())
