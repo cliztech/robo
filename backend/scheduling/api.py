@@ -17,7 +17,7 @@ from .autonomy_policy import AutonomyPolicy, DecisionOrigin, DecisionType, Polic
 from .autonomy_service import AutonomyPolicyService, PolicyValidationError
 from .observability import emit_scheduler_event
 
-router = APIRouter(prefix="/api/v1/autonomy-policy", tags=["autonomy-policy"])
+router = APIRouter(prefix="/api/v1/autonomy-policy", tags=["autonomy-policy"], dependencies=[Depends(verify_api_key)])
 
 logger = logging.getLogger(__name__)
 

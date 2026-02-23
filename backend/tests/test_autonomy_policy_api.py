@@ -1,3 +1,5 @@
+import os
+import pytest
 from fastapi.testclient import TestClient
 
 from backend.app import app
@@ -8,6 +10,15 @@ from backend.security.auth import verify_api_key
 
 import unittest.mock
 
+TEST_API_KEY = "test-secret-key"
+
+@pytest.fixture(autouse=True)
+def mock_env_api_key():
+    from backend.security.auth import _get_secret_key
+    _get_secret_key.cache_clear()
+    with unittest.mock.patch.dict(os.environ, {"ROBODJ_SECRET_KEY": TEST_API_KEY}):
+        yield
+    _get_secret_key.cache_clear()
 
 def _override_service(tmp_path):
     policy_path = tmp_path / "autonomy_policy.json"
@@ -18,14 +29,25 @@ def _override_service(tmp_path):
 
     return _factory
 
+def test_unauthenticated_request_is_rejected(tmp_path):
+    """Ensure that requests without an API key are rejected (401)."""
+    app.dependency_overrides[get_policy_service] = _override_service(tmp_path)
+    client = TestClient(app)
+    try:
+        # No header provided
+        response = client.get("/api/v1/autonomy-policy")
+        assert response.status_code == 401
+    finally:
+        app.dependency_overrides.clear()
 
 def test_get_put_and_effective_policy_endpoints(tmp_path):
     app.dependency_overrides[get_policy_service] = _override_service(tmp_path)
     app.dependency_overrides[verify_api_key] = lambda: "test-key"
     client = TestClient(app)
+    auth_headers = {"X-API-Key": TEST_API_KEY}
 
     try:
-        get_response = client.get("/api/v1/autonomy-policy")
+        get_response = client.get("/api/v1/autonomy-policy", headers=auth_headers)
         assert get_response.status_code == 200
         baseline = get_response.json()
         assert baseline["station_default_mode"] == "semi_auto"
@@ -38,12 +60,13 @@ def test_get_put_and_effective_policy_endpoints(tmp_path):
             "timeslot_overrides": [],
         }
 
-        put_response = client.put("/api/v1/autonomy-policy", json=show_payload)
+        put_response = client.put("/api/v1/autonomy-policy", json=show_payload, headers=auth_headers)
         assert put_response.status_code == 200
 
         effective_show = client.get(
             "/api/v1/autonomy-policy/effective",
             params={"show_id": "show-1"},
+            headers=auth_headers
         )
         assert effective_show.status_code == 200
         assert effective_show.json()["source"] == "show_override"
@@ -60,19 +83,19 @@ def test_get_put_and_effective_policy_endpoints(tmp_path):
                     "day_of_week": "monday",
                     "start_time": "09:00",
                     "end_time": "10:00",
-                    # "show_id": "show-1", # Removed to pass conflict detection
                     "show_id": "show-1",
                     "mode": "semi_auto",
                 }
             ],
         }
 
-        put_response = client.put("/api/v1/autonomy-policy", json=timeslot_payload)
+        put_response = client.put("/api/v1/autonomy-policy", json=timeslot_payload, headers=auth_headers)
         assert put_response.status_code == 200
 
         effective_timeslot = client.get(
             "/api/v1/autonomy-policy/effective",
             params={"show_id": "show-1", "timeslot_id": "slot-1"},
+            headers=auth_headers
         )
         assert effective_timeslot.status_code == 200
         assert effective_timeslot.json()["source"] == "timeslot_override"
@@ -86,6 +109,7 @@ def test_audit_event_create_and_list_endpoints(tmp_path):
     app.dependency_overrides[get_policy_service] = _override_service(tmp_path)
     app.dependency_overrides[verify_api_key] = lambda: "test-key"
     client = TestClient(app)
+    auth_headers = {"X-API-Key": TEST_API_KEY}
 
     try:
         create = client.post(
@@ -97,6 +121,7 @@ def test_audit_event_create_and_list_endpoints(tmp_path):
                 "timeslot_id": "slot-1",
                 "notes": "automated test",
             },
+            headers=auth_headers
         )
         assert create.status_code == 200
         body = create.json()
@@ -106,6 +131,7 @@ def test_audit_event_create_and_list_endpoints(tmp_path):
         list_response = client.get(
             "/api/v1/autonomy-policy/audit-events",
             params={"limit": 10},
+            headers=auth_headers
         )
         assert list_response.status_code == 200
         events = list_response.json()
@@ -119,6 +145,7 @@ def test_invalid_payload_rejections_api(tmp_path):
     app.dependency_overrides[get_policy_service] = _override_service(tmp_path)
     app.dependency_overrides[verify_api_key] = lambda: "test-key"
     client = TestClient(app)
+    auth_headers = {"X-API-Key": TEST_API_KEY}
 
     try:
         invalid_policy = {
@@ -146,12 +173,13 @@ def test_invalid_payload_rejections_api(tmp_path):
             "timeslot_overrides": [],
         }
 
-        put_response = client.put("/api/v1/autonomy-policy", json=invalid_policy)
+        put_response = client.put("/api/v1/autonomy-policy", json=invalid_policy, headers=auth_headers)
         assert put_response.status_code == 422
 
         post_response = client.post(
             "/api/v1/autonomy-policy/audit-events",
             params={"decision_type": "track_selection", "origin": "robot"},
+            headers=auth_headers
         )
         assert post_response.status_code == 422
     finally:
@@ -175,6 +203,11 @@ def test_get_policy_auto_recovers_invalid_policy_file(tmp_path, monkeypatch):
 
     app.dependency_overrides[verify_api_key] = lambda: "test-key"
     client = TestClient(app)
+    auth_headers = {"X-API-Key": TEST_API_KEY}
+
+    get_response = client.get("/api/v1/autonomy-policy", headers=auth_headers)
+    assert get_response.status_code == 200
+    assert get_response.json()["station_default_mode"] == "semi_auto"
     try:
         get_response = client.get("/api/v1/autonomy-policy")
         assert get_response.status_code == 200
