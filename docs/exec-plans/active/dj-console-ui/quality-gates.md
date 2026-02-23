@@ -4,6 +4,82 @@ Status: active
 Applies to: release advancement for DJ Console UI increments  
 Sources merged: `docs/ui/dj_console_ui_research_plan.md` ("Perfect = measurable"), `docs/visual_regression_token_checklist.md`, and accessibility guardrails in `REACT_BROWSER_UI_TEAM_BLUEPRINT.md`.
 
+## Rekordbox 7 Review Baseline
+
+Use this baseline when triaging quality issues so fixes move the UI toward a Rekordbox 7-style operator experience (dense, precise, low-latency, and immediately scannable) without copying proprietary branding.
+
+### Rekordbox-style review dimensions
+
+Score each dimension `Pass` / `At Risk` / `Fail` during every UI quality review:
+
+1. **Information density fidelity**
+   - Operator-critical controls are visible above the fold at 1280x720.
+   - Deck, mixer, and browser zoning is obvious in one glance.
+2. **Contrast and hierarchy discipline**
+   - Functional hierarchy is created through tone/contrast and separators, not decorative effects.
+   - Active deck/state accents are strong but limited to actionable states.
+3. **Control precision and tactile clarity**
+   - Faders, knobs, transport buttons, and cue states have unambiguous affordances.
+   - Labels remain legible under dense layouts and accessibility profiles.
+4. **Waveform and timing readability**
+   - Waveform rails, playheads, and markers are readable with clear A/B differentiation.
+   - Timing telemetry (BPM, phase/key/time) uses stable numeric rendering.
+5. **Low-motion, high-feedback interaction feel**
+   - State changes feel immediate; animation is secondary and short-lived.
+   - Reduced-motion mode preserves equivalent clarity and response confidence.
+
+
+### Rekordbox-style scoring rubric (required)
+
+Use the 5-point rubric below for each dimension to reduce subjective reviews.
+
+| Score | Meaning | Release interpretation |
+| --- | --- | --- |
+| 5 | Matches target operator feel with no notable friction. | Safe; no follow-up required. |
+| 4 | Minor polish gap, no task risk. | Pass with tracked follow-up. |
+| 3 | Noticeable quality gap that slows scanability or confidence. | At risk; fix before Ready-for-Review. |
+| 2 | Material usability issue affecting speed/clarity for core flows. | Fail; blocks gate progression. |
+| 1 | Critical breakdown of hierarchy, readability, or control confidence. | Fail; immediate remediation required. |
+
+**Release threshold:**
+
+- No dimension may score below **4** for release candidate.
+- Any dimension at **3** must have an owner + due date before Ready-for-Review.
+- Any dimension at **1-2** is an automatic gate fail.
+
+### Rekordbox-style review packet template
+
+Attach this compact packet to every visual/UX quality review:
+
+```md
+#### Rekordbox-style review packet
+
+- Scope: <deck/mixer/waveform/browser/utility>
+- Reviewer: <name>
+- Build/artifact: <commit, branch, preview link>
+
+| Dimension | Score (1-5) | Notes | Evidence |
+| --- | --- | --- | --- |
+| Information density fidelity |  |  |  |
+| Contrast and hierarchy discipline |  |  |  |
+| Control precision and tactile clarity |  |  |  |
+| Waveform and timing readability |  |  |  |
+| Low-motion, high-feedback interaction feel |  |  |  |
+
+- Decision: `approved` / `needs-rework` / `blocked`
+- Gate impact: <gate numbers impacted>
+- Follow-ups: <owner + due date>
+```
+
+### Mandatory design-review artifacts for quality issues
+
+Every quality issue tagged as visual/UX must include:
+
+- Before/after screenshots with the impacted review dimension(s) called out.
+- A short design rationale describing how the change improves Rekordbox-style scanability or control confidence.
+- Any token/component adjustments mapped to impacted shell zones (deck, mixer, waveform, browser, utilities).
+- Reviewer disposition (`approved`, `needs-rework`, `blocked`) and next action owner.
+
 ## Gate Policy
 
 - A release increment can advance only when **all gates pass**.
@@ -19,6 +95,7 @@ Sources merged: `docs/ui/dj_console_ui_research_plan.md` ("Perfect = measurable"
 - Layout regions remain recognizable and stable across supported resolutions (minimum 1280x720, target 1920x1080).
 - Typography, spacing, and token use match approved density/hierarchy expectations for module headers, transport controls, waveform region, and browser tables.
 - Visual hierarchy remains clear in all accessibility profiles (`default`, `high_contrast`, `large_text`, `reduced_motion`, `simplified_density`).
+- Review output explicitly records the Rekordbox-style dimension scores for density and hierarchy.
 
 ### Fail conditions
 
@@ -124,3 +201,14 @@ Before moving an increment to Ready-for-Review or release candidate, provide a g
 
 - If **any gate** fails or evidence is missing: release advancement is blocked.
 - If all gates pass with complete evidence: release advancement may proceed.
+
+## Quality-Issue Remediation Format (Required)
+
+When filing or resolving a DJ console quality issue, use this structure:
+
+1. **Issue statement:** what feels off versus Rekordbox-style expectations.
+2. **Impacted surface:** deck/mixer/waveform/browser/utility shell region.
+3. **Broken review dimensions:** list from the five Rekordbox-style dimensions above.
+4. **Design correction:** specific visual/interaction changes proposed.
+5. **Evidence:** links to screenshots, test output, and profiling artifacts.
+6. **Gate impact:** which gate(s) this issue blocks or unlocks.
