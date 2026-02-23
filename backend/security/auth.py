@@ -41,6 +41,7 @@ def _get_secret_key() -> str | None:
     return None
 
 
+async def verify_api_key(api_key: str = Security(api_key_header)):
 async def verify_api_key(api_key: str = Security(api_key_header)) -> str:
     """Validate global API key used by status and other operator endpoints."""
     if not api_key:
@@ -71,8 +72,26 @@ async def verify_api_key(api_key: str = Security(api_key_header)) -> str:
 def get_scheduler_api_key(api_key: str = Security(api_key_header)) -> str:
     """Validate scheduler-specific API key for scheduler UI routes only."""
 def get_scheduler_api_key(api_key: str = Security(api_key_header)):
+    if not api_key:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing API Key",
+        )
+
     expected_key = os.environ.get("ROBODJ_SCHEDULER_API_KEY")
     if not expected_key:
+        # If the key is not set in the environment, fail securely.
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Server configuration error: Scheduler API key not configured",
+        )
+
+    if not hmac.compare_digest(api_key, expected_key):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid API Key",
+        )
+
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Server configuration error: Scheduler API key not configured",
