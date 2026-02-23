@@ -3,20 +3,15 @@ from __future__ import annotations
 import json
 import logging
 from datetime import datetime, timezone
-from typing import Any, Optional
-
-
-def emit_scheduler_event(
-    logger: logging.Logger,
 from pathlib import Path
 from typing import Any, Mapping, Optional
 
-logger = logging.getLogger(__name__)
-
+LOGGER = logging.getLogger(__name__)
 DEFAULT_EVENT_LOG_PATH = Path("config/logs/scheduler_events.jsonl")
 
 
 def emit_scheduler_event(
+    logger: Optional[logging.Logger] = None,
     *,
     event_name: str,
     level: str,
@@ -40,9 +35,11 @@ def emit_scheduler_event(
     if metadata:
         payload["metadata"] = dict(metadata)
 
+    active_logger = logger or LOGGER
+
     try:
         event_log_path.parent.mkdir(parents=True, exist_ok=True)
         with event_log_path.open("a", encoding="utf-8") as handle:
             handle.write(json.dumps(payload) + "\n")
     except OSError:
-        logger.exception("Failed to write scheduler structured event: %s", event_name)
+        active_logger.exception("Failed to write scheduler structured event: %s", event_name)

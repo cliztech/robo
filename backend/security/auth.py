@@ -4,6 +4,10 @@ import os
 import secrets
 
 from fastapi import HTTPException, Security, status
+import os
+import hmac
+import functools
+from fastapi import Security, HTTPException, status
 from fastapi.security import APIKeyHeader
 
 from backend.security.secret_integrity import CONFIG_DIR
@@ -56,7 +60,6 @@ async def verify_api_key(api_key: str = Security(api_key_header)) -> str:
 
     # Constant-time comparison to prevent timing attacks.
     if not hmac.compare_digest(api_key, expected_key):
-        # Invalid credentials are also 401 for consistent authentication semantics.
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid API Key",
@@ -67,6 +70,7 @@ async def verify_api_key(api_key: str = Security(api_key_header)) -> str:
 
 def get_scheduler_api_key(api_key: str = Security(api_key_header)) -> str:
     """Validate scheduler-specific API key for scheduler UI routes only."""
+def get_scheduler_api_key(api_key: str = Security(api_key_header)):
     expected_key = os.environ.get("ROBODJ_SCHEDULER_API_KEY")
     if not expected_key:
         raise HTTPException(
@@ -83,6 +87,16 @@ def get_scheduler_api_key(api_key: str = Security(api_key_header)) -> str:
 
     if not secrets.compare_digest(api_key, expected_key):
         # Align with verify_api_key: incorrect credentials are unauthenticated (401).
+            detail="Server configuration error: Scheduler API key not configured"
+        )
+
+    if not api_key:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing API Key",
+        )
+
+    if not hmac.compare_digest(api_key, expected_key):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid API Key",
