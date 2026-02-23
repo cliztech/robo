@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, time
 from enum import Enum
+import re
 from typing import Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -26,6 +27,14 @@ SCHEDULE_OVERRIDE_FIELDS = (
     "content_refs",
     "schedule_spec",
 )
+
+CRON_WILDCARD_OR_INT = re.compile(r"^(\*|\d+)$")
+CRON_RANGE = re.compile(r"^\d+-\d+$")
+CRON_STEP = re.compile(r"^(\*|\d+|\d+-\d+)/(\d+)$")
+
+
+def _is_valid_cron_token(token: str) -> bool:
+    return bool(CRON_WILDCARD_OR_INT.fullmatch(token) or CRON_RANGE.fullmatch(token) or CRON_STEP.fullmatch(token))
 
 
 class UiState(str, Enum):
@@ -88,8 +97,14 @@ class ScheduleSpec(BaseModel):
                 raise ValueError("mode=cron requires cron")
             if self.run_at or self.rrule:
                 raise ValueError("mode=cron only allows cron")
-            if len(self.cron.split()) != 5:
+            fields = self.cron.split()
+            if len(fields) != 5:
                 raise ValueError("cron must use five fields")
+            minute, hour, _, _, _ = fields
+            if not _is_valid_cron_token(minute) or not _is_valid_cron_token(hour):
+                raise ValueError(
+                    "cron minute/hour fields must be numeric, wildcard, range, or step expressions"
+                )
         return self
 
 
