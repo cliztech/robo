@@ -150,18 +150,21 @@ class AutonomyPolicyService:
             )
         except Exception:
             if backup_path and backup_path.exists():
-                shutil.copy2(backup_path, self.policy_path)
-                emit_scheduler_event(
-                    logger,
-                    event_name="scheduler.backup.restored",
-                    level="warning",
-                    message="Autonomy policy backup restored after failed update.",
-                    metadata={
-                        "backup_path": str(backup_path),
-                        "restore_target": str(self.policy_path),
-                        "initiator": "autonomy_policy_update_rollback",
-                    },
-                )
+                try:
+                    shutil.copy2(backup_path, self.policy_path)
+                    emit_scheduler_event(
+                        logger,
+                        event_name="scheduler.backup.restored",
+                        level="warning",
+                        message="Autonomy policy backup restored after failed update.",
+                        metadata={
+                            "backup_path": str(backup_path),
+                            "restore_target": str(self.policy_path),
+                            "initiator": "autonomy_policy_update_rollback",
+                        },
+                    )
+                except Exception as restore_error:
+                    logger.critical("Failed to restore autonomy policy from backup: %s", restore_error)
             raise
 
         # Proactively update cache after successful write
