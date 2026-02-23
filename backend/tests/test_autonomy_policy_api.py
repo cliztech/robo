@@ -3,6 +3,9 @@ from fastapi.testclient import TestClient
 from backend.app import app
 from backend.scheduling.api import get_policy_service
 from backend.scheduling.autonomy_service import AutonomyPolicyService
+from backend.scheduling import api as autonomy_api
+
+import unittest.mock
 
 
 def _override_service(tmp_path):
@@ -149,3 +152,15 @@ def test_invalid_payload_rejections_api(tmp_path):
         assert post_response.status_code == 422
     finally:
         app.dependency_overrides.clear()
+
+
+def test_policy_service_startup_emits_crash_recovery_event_on_preload_failure(tmp_path):
+    app.dependency_overrides.clear()
+    autonomy_api._service_instance = None
+
+    with unittest.mock.patch.object(AutonomyPolicyService, "get_policy", side_effect=RuntimeError("boom")):
+        with unittest.mock.patch("backend.scheduling.api.emit_scheduler_event") as mock_emit:
+            autonomy_api.get_policy_service()
+
+    assert mock_emit.called
+    assert mock_emit.call_args.kwargs["event_name"] == "scheduler.crash_recovery.activated"
