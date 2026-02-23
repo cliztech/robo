@@ -51,6 +51,6 @@ Use the roadmap helper to continuously surface the next open tasks while you wor
 ## Tracking Cadence
 
 - [ ] Weekly: update readiness percentages by category.
-- [ ] Weekly backlog hygiene review owner/date: Project Coordinator — every Friday.
+- [ ] Weekly backlog hygiene review owner/date: Project Coordinator — every Friday (next review: 2026-02-27).
 - [ ] Bi-weekly: remove blocked items or split oversized tasks.
 - [ ] Monthly: reassess roadmap variation (Security-first, UX-first, Scale-first, Balanced).
