@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import logging
 import threading
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 import logging
@@ -27,6 +29,32 @@ def get_policy_service() -> AutonomyPolicyService:
     if _service_instance is None:
         with _service_lock:
             if _service_instance is None:
+                service = AutonomyPolicyService()
+                try:
+                    service.get_policy()
+                except Exception as error:
+                    policy_path = service.policy_path
+                    recovery_stamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+                    recovery_path = policy_path.with_name(
+                        f"{policy_path.stem}.crash_recovery_{recovery_stamp}{policy_path.suffix}"
+                    )
+                    if policy_path.exists():
+                        policy_path.replace(recovery_path)
+
+                    emit_scheduler_event(
+                        logger,
+                        event_name="scheduler.crash_recovery.activated",
+                        level="critical",
+                        message="Autonomy API crash recovery activated due to invalid policy state.",
+                        metadata={
+                            "trigger": type(error).__name__,
+                            "recovery_plan": "rename_invalid_policy_and_bootstrap_defaults",
+                            "last_known_checkpoint": str(recovery_path),
+                        },
+                    )
+                    service.update_policy(AutonomyPolicy())
+
+                _service_instance = service
                 _service_instance = AutonomyPolicyService()
                 try:
                     _service_instance.get_policy()

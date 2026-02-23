@@ -3,6 +3,11 @@ from __future__ import annotations
 import json
 import logging
 from datetime import datetime, timezone
+from typing import Any, Optional
+
+
+def emit_scheduler_event(
+    logger: logging.Logger,
 from pathlib import Path
 from typing import Any, Mapping, Optional
 

@@ -154,13 +154,25 @@ def test_invalid_payload_rejections_api(tmp_path):
         app.dependency_overrides.clear()
 
 
-def test_policy_service_startup_emits_crash_recovery_event_on_preload_failure(tmp_path):
-    app.dependency_overrides.clear()
-    autonomy_api._service_instance = None
+def test_get_policy_auto_recovers_invalid_policy_file(tmp_path, monkeypatch):
+    from backend.scheduling import api as policy_api
 
-    with unittest.mock.patch.object(AutonomyPolicyService, "get_policy", side_effect=RuntimeError("boom")):
-        with unittest.mock.patch("backend.scheduling.api.emit_scheduler_event") as mock_emit:
-            autonomy_api.get_policy_service()
+    policy_path = tmp_path / "autonomy_policy.json"
+    policy_path.write_text('{"station_default_mode": "not-a-mode"}', encoding="utf-8")
 
-    assert mock_emit.called
-    assert mock_emit.call_args.kwargs["event_name"] == "scheduler.crash_recovery.activated"
+    def _factory() -> AutonomyPolicyService:
+        return AutonomyPolicyService(
+            policy_path=policy_path,
+            audit_log_path=tmp_path / "autonomy_audit_events.jsonl",
+        )
+
+    monkeypatch.setattr(policy_api, "_service_instance", None)
+    monkeypatch.setattr(policy_api, "AutonomyPolicyService", _factory)
+
+    client = TestClient(app)
+    get_response = client.get("/api/v1/autonomy-policy")
+    assert get_response.status_code == 200
+    assert get_response.json()["station_default_mode"] == "semi_auto"
+
+    recovered_files = list(tmp_path.glob("autonomy_policy.crash_recovery_*.json"))
+    assert len(recovered_files) == 1

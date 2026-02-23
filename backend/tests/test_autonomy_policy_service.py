@@ -210,6 +210,33 @@ def test_autonomy_policy_mode_permissions_do_not_leak_between_instances():
     )
 
 
+def test_update_policy_emits_backup_created_event(tmp_path, caplog):
+    policy_path = tmp_path / "autonomy_policy.json"
+    policy_path.write_text(AutonomyPolicy().model_dump_json(indent=2), encoding="utf-8")
+    service = AutonomyPolicyService(
+        policy_path=policy_path,
+        audit_log_path=tmp_path / "audit.jsonl",
+    )
+
+    with caplog.at_level("INFO"):
+        service.update_policy(AutonomyPolicy(station_default_mode=GlobalMode.manual_assist))
+
+    assert any('"event_name": "scheduler.backup.created"' in rec.message for rec in caplog.records)
+
+
+def test_get_policy_emits_startup_validation_failed_event(tmp_path, caplog):
+    policy_path = tmp_path / "autonomy_policy.json"
+    policy_path.write_text('{"station_default_mode": "not-a-mode"}', encoding="utf-8")
+    service = AutonomyPolicyService(
+        policy_path=policy_path,
+        audit_log_path=tmp_path / "audit.jsonl",
+    )
+
+    with caplog.at_level("ERROR"):
+        with pytest.raises(Exception):
+            service.get_policy()
+
+    assert any('"event_name": "scheduler.startup_validation.failed"' in rec.message for rec in caplog.records)
 def test_get_policy_emits_startup_success_event(tmp_path):
     policy_path = tmp_path / "autonomy_policy.json"
     audit_path = tmp_path / "audit.jsonl"
