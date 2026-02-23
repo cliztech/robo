@@ -53,6 +53,22 @@ def get_policy_service() -> AutonomyPolicyService:
                     )
                     service.update_policy(AutonomyPolicy())
 
+                    try:
+                        service.get_policy()
+                    except Exception as preload_error:
+                        logger.exception("Autonomy policy preload failed; entering degraded-mode handlers.")
+                        emit_scheduler_event(
+                            event_name="scheduler.crash_recovery.activated",
+                            level="critical",
+                            message="Scheduler crash-recovery handlers activated during API startup.",
+                            metadata={
+                                "trigger": "policy_preload_failure",
+                                "recovery_plan": "degraded_mode",
+                                "last_known_checkpoint": "autonomy_policy_bootstrap",
+                                "error_type": type(preload_error).__name__,
+                            },
+                        )
+
                 _service_instance = service
     return _service_instance
 
