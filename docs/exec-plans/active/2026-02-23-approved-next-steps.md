@@ -37,7 +37,7 @@ Suggested first story order:
 3. `c1-3-environment-profile-docs`
 
 ## Quality Gates (must pass before Ready-for-Review)
-- Plan completeness = 100% (scope + constraints + rollback + verification)
+- Plan completeness = 100% (scope + constraints + rollback + verification) (Refer to AGENTS.md for detailed definition)
 - Subagent evidence completeness = 100% (Refer to AGENTS.md for detailed definition)
 - Draft PR maturity checklist fully passed
 - Worktree hygiene checks passed
