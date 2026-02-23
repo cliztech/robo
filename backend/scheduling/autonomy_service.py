@@ -280,42 +280,44 @@ class AutonomyPolicyService:
             return []
 
         chunk_size = 8192
+        chunks: List[bytes] = []
+        lines_found = 0
 
         with file_path.open("rb") as f:
             if file_size <= chunk_size:
                 f.seek(0)
-                content = f.read().decode("utf-8")
-                return content.splitlines()[-limit:]
+                # Decode and splitlines for small files directly
+                return f.read().decode("utf-8").splitlines()[-limit:]
 
             remaining_bytes = file_size
-            buffer = b""
 
             while remaining_bytes > 0:
                 read_size = min(chunk_size, remaining_bytes)
                 remaining_bytes -= read_size
                 f.seek(remaining_bytes)
                 chunk = f.read(read_size)
-                buffer = chunk + buffer
 
-                parts = buffer.split(b'\n')
-                # If the last part is empty (because file ends with newline), don't count it as a line yet
-                valid_count = len(parts)
-                if parts and parts[-1] == b'':
-                    valid_count -= 1
+                lines_found += chunk.count(b'\n')
+                chunks.append(chunk)
 
-                # We need > limit lines to ensure the last 'limit' lines are complete
-                # (since the first one in 'parts' might be partial)
-                if valid_count > limit:
+                # We need limit + 1 newlines to guarantee limit full lines
+                # (since the first one in the reversed stream might be partial)
+                if lines_found >= limit + 1:
                     break
 
-            parts = buffer.split(b'\n')
-            if parts and parts[-1] == b'':
-                parts.pop()
+        # Join chunks in correct order (reversed because we appended backwards)
+        full_buffer = b"".join(reversed(chunks))
 
-            if len(parts) > limit:
-                parts = parts[-limit:]
+        parts = full_buffer.split(b'\n')
 
-            return [line.decode("utf-8") for line in parts]
+        # Handle trailing empty string if file ends with newline
+        if parts and parts[-1] == b'':
+            parts.pop()
+
+        if len(parts) > limit:
+            parts = parts[-limit:]
+
+        return [line.decode("utf-8") for line in parts]
 
     def list_audit_events(self, limit: int = 100) -> List[PolicyAuditEvent]:
         if not self.audit_log_path.exists():

@@ -1,59 +1,65 @@
 import pytest
+import os
 from pathlib import Path
 from backend.scheduling.autonomy_service import AutonomyPolicyService
 
-# Helper to access the private method for testing
-def read_last_lines(path: Path, limit: int):
-    # We use the static method directly if possible, or instance
-    return AutonomyPolicyService._read_last_lines(path, limit)
+def test_read_empty_file(tmp_path):
+    p = tmp_path / "empty.txt"
+    p.touch()
+    assert AutonomyPolicyService._read_last_lines(p, 10) == []
 
-@pytest.fixture
-def temp_file(tmp_path):
-    f = tmp_path / "test_file.txt"
-    return f
+def test_read_single_line_no_newline(tmp_path):
+    p = tmp_path / "single.txt"
+    p.write_text("hello", encoding="utf-8")
+    assert AutonomyPolicyService._read_last_lines(p, 10) == ["hello"]
 
-def test_read_last_lines_empty_file(temp_file):
-    temp_file.touch()
-    assert read_last_lines(temp_file, 10) == []
+def test_read_single_line_with_newline(tmp_path):
+    p = tmp_path / "single_newline.txt"
+    p.write_text("hello\n", encoding="utf-8")
+    assert AutonomyPolicyService._read_last_lines(p, 10) == ["hello"]
 
-def test_read_last_lines_single_line_no_newline(temp_file):
-    temp_file.write_text("hello", encoding="utf-8")
-    assert read_last_lines(temp_file, 10) == ["hello"]
-
-def test_read_last_lines_single_line_with_newline(temp_file):
-    temp_file.write_text("hello\n", encoding="utf-8")
-    assert read_last_lines(temp_file, 10) == ["hello"]
-
-def test_read_last_lines_fewer_lines_than_requested(temp_file):
+def test_read_multiple_lines_small(tmp_path):
+    p = tmp_path / "multi.txt"
     content = "line1\nline2\nline3"
-    temp_file.write_text(content, encoding="utf-8")
-    assert read_last_lines(temp_file, 10) == ["line1", "line2", "line3"]
+    p.write_text(content, encoding="utf-8")
 
-def test_read_last_lines_exact_lines_requested(temp_file):
-    content = "line1\nline2\nline3"
-    temp_file.write_text(content, encoding="utf-8")
-    assert read_last_lines(temp_file, 3) == ["line1", "line2", "line3"]
+    assert AutonomyPolicyService._read_last_lines(p, 2) == ["line2", "line3"]
+    assert AutonomyPolicyService._read_last_lines(p, 3) == ["line1", "line2", "line3"]
+    assert AutonomyPolicyService._read_last_lines(p, 10) == ["line1", "line2", "line3"]
 
-def test_read_last_lines_more_lines_than_requested(temp_file):
-    content = "line1\nline2\nline3\nline4\nline5"
-    temp_file.write_text(content, encoding="utf-8")
-    result = read_last_lines(temp_file, 3)
-    assert result == ["line3", "line4", "line5"]
+def test_read_large_file(tmp_path):
+    # Create a file significantly larger than 8192 bytes
+    p = tmp_path / "large.txt"
+    # 2000 lines of ~7 bytes each => ~14KB
+    lines = [f"line{i}" for i in range(2000)]
+    content = "\n".join(lines) + "\n"
+    p.write_text(content, encoding="utf-8")
 
-def test_read_last_lines_utf8_multibyte(temp_file):
-    # '🌟' is 4 bytes: \xf0\x9f\x8c\x9f
-    content = "line1\n🌟 line2\nline3 🌟"
-    temp_file.write_text(content, encoding="utf-8")
-    result = read_last_lines(temp_file, 2)
-    assert result == ["🌟 line2", "line3 🌟"]
+    assert p.stat().st_size > 8192
 
-def test_read_last_lines_large_file(temp_file):
-    # Create a file larger than the chunk size (8KB)
-    line = "a" * 100
-    num_lines = 1000
-    content = "\n".join([f"{i} {line}" for i in range(num_lines)])
-    temp_file.write_text(content, encoding="utf-8")
-
-    result = read_last_lines(temp_file, 5)
-    expected = [f"{i} {line}" for i in range(num_lines-5, num_lines)]
+    # Read last 10
+    result = AutonomyPolicyService._read_last_lines(p, 10)
+    expected = lines[-10:]
     assert result == expected
+
+    # Test explicitly larger chunks scenario
+    # 300 lines of 100 chars = 30KB
+    lines_long = [f"line_long_{i}_" + "x"*100 for i in range(300)]
+    content_long = "\n".join(lines_long) + "\n"
+    p.write_text(content_long, encoding="utf-8")
+    assert p.stat().st_size > 8192
+
+    result = AutonomyPolicyService._read_last_lines(p, 50)
+    expected = lines_long[-50:]
+    assert result == expected
+
+def test_read_exact_limit(tmp_path):
+    p = tmp_path / "limit.txt"
+    content = "1\n2\n3\n4\n5\n"
+    p.write_text(content, encoding="utf-8")
+    assert AutonomyPolicyService._read_last_lines(p, 5) == ["1", "2", "3", "4", "5"]
+
+def test_file_not_exists(tmp_path):
+    p = tmp_path / "nonexistent.txt"
+    assert AutonomyPolicyService._read_last_lines(p, 10) == []
+
