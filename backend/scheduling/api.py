@@ -3,6 +3,7 @@ from __future__ import annotations
 import threading
 from pathlib import Path
 from typing import Optional
+import logging
 
 from fastapi import APIRouter, Depends, Query
 from fastapi import HTTPException
@@ -10,11 +11,11 @@ from fastapi.responses import HTMLResponse
 
 from .autonomy_policy import AutonomyPolicy, DecisionOrigin, DecisionType, PolicyAuditEvent, MODE_DEFINITIONS
 from .autonomy_service import AutonomyPolicyService, PolicyValidationError
+from .observability import emit_scheduler_event
 
 router = APIRouter(prefix="/api/v1/autonomy-policy", tags=["autonomy-policy"])
 
-# TODO(observability): emit scheduler.crash_recovery.activated when API startup
-# enters degraded-mode handlers after scheduler/runtime crash detection.
+logger = logging.getLogger(__name__)
 
 
 _service_instance: Optional[AutonomyPolicyService] = None
@@ -27,6 +28,21 @@ def get_policy_service() -> AutonomyPolicyService:
         with _service_lock:
             if _service_instance is None:
                 _service_instance = AutonomyPolicyService()
+                try:
+                    _service_instance.get_policy()
+                except Exception as error:
+                    logger.exception("Autonomy policy preload failed; entering degraded-mode handlers.")
+                    emit_scheduler_event(
+                        event_name="scheduler.crash_recovery.activated",
+                        level="critical",
+                        message="Scheduler crash-recovery handlers activated during API startup.",
+                        metadata={
+                            "trigger": "policy_preload_failure",
+                            "recovery_plan": "degraded_mode",
+                            "last_known_checkpoint": "autonomy_policy_bootstrap",
+                            "error_type": type(error).__name__,
+                        },
+                    )
     return _service_instance
 
 

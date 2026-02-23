@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 import logging
+import shutil
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional
@@ -17,6 +19,7 @@ from .autonomy_policy import (
     PolicyAuditEvent,
 )
 from .conflict_detection import PolicyConflict, detect_policy_conflicts
+from .observability import emit_scheduler_event
 
 
 class PolicyValidationError(ValueError):
@@ -43,17 +46,29 @@ class AutonomyPolicyService:
     ) -> None:
         self.policy_path = policy_path
         self.audit_log_path = audit_log_path
+        self.event_log_path = Path("config/logs/scheduler_events.jsonl")
         self.policy_path.parent.mkdir(parents=True, exist_ok=True)
         self.audit_log_path.parent.mkdir(parents=True, exist_ok=True)
         self._cached_policy: Optional[AutonomyPolicy] = None
         self._last_mtime: Optional[float] = None
 
     def get_policy(self) -> AutonomyPolicy:
-        # TODO(observability): emit scheduler.startup_validation.succeeded/failed
-        # during scheduler bootstrap policy/config validation.
+        started = time.perf_counter()
         if not self.policy_path.exists():
             default_policy = AutonomyPolicy()
             self.update_policy(default_policy)
+            duration_ms = int((time.perf_counter() - started) * 1000)
+            emit_scheduler_event(
+                event_name="scheduler.startup_validation.succeeded",
+                level="info",
+                message="Autonomy policy bootstrap validation succeeded with default policy.",
+                metadata={
+                    "validation_target": str(self.policy_path),
+                    "validation_stage": "bootstrap",
+                    "duration_ms": duration_ms,
+                },
+                event_log_path=self.event_log_path,
+            )
             return default_policy
 
         try:
@@ -64,8 +79,34 @@ class AutonomyPolicyService:
             # Handle cases where file is inaccessible or deleted between calls
             pass
 
-        policy = AutonomyPolicy.model_validate_json(self.policy_path.read_text(encoding="utf-8"))
-        self.validate_policy(policy)
+        try:
+            policy = AutonomyPolicy.model_validate_json(self.policy_path.read_text(encoding="utf-8"))
+            self.validate_policy(policy)
+        except Exception as error:
+            duration_ms = int((time.perf_counter() - started) * 1000)
+            emit_scheduler_event(
+                event_name="scheduler.schedule_parse.failed",
+                level="error",
+                message="Failed to parse or validate autonomy policy during scheduler startup.",
+                metadata={
+                    "schedule_path": str(self.policy_path),
+                    "error_type": type(error).__name__,
+                    "error_excerpt": str(error)[:500],
+                },
+                event_log_path=self.event_log_path,
+            )
+            emit_scheduler_event(
+                event_name="scheduler.startup_validation.failed",
+                level="error",
+                message="Autonomy policy startup validation failed.",
+                metadata={
+                    "validation_target": str(self.policy_path),
+                    "validation_stage": "load_and_validate",
+                    "duration_ms": duration_ms,
+                },
+                event_log_path=self.event_log_path,
+            )
+            raise
 
         # Update cache
         self._cached_policy = policy
@@ -74,19 +115,63 @@ class AutonomyPolicyService:
         except OSError:
             self._last_mtime = None
 
+        duration_ms = int((time.perf_counter() - started) * 1000)
+        emit_scheduler_event(
+            event_name="scheduler.startup_validation.succeeded",
+            level="info",
+            message="Autonomy policy startup validation succeeded.",
+            metadata={
+                "validation_target": str(self.policy_path),
+                "validation_stage": "load_and_validate",
+                "duration_ms": duration_ms,
+            },
+            event_log_path=self.event_log_path,
+        )
+
         return policy
 
     def update_policy(self, policy: AutonomyPolicy) -> AutonomyPolicy:
-        # TODO(observability): emit scheduler.backup.created before write and
-        # scheduler.backup.restored on rollback/restore workflows.
         self.validate_policy(policy)
         payload = policy.model_copy(
             update={"updated_at": datetime.now(timezone.utc).isoformat()}
         )
-        self.policy_path.write_text(
-            payload.model_dump_json(indent=2),
-            encoding="utf-8",
-        )
+        backup_path: Optional[Path] = None
+        if self.policy_path.exists():
+            backup_stamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+            backup_path = self.policy_path.with_name(f"{self.policy_path.stem}.{backup_stamp}.bak")
+            shutil.copy2(self.policy_path, backup_path)
+            emit_scheduler_event(
+                event_name="scheduler.backup.created",
+                level="info",
+                message="Autonomy policy backup created before policy update.",
+                metadata={
+                    "backup_path": str(backup_path),
+                    "source_path": str(self.policy_path),
+                    "backup_size_bytes": backup_path.stat().st_size,
+                },
+                event_log_path=self.event_log_path,
+            )
+
+        try:
+            self.policy_path.write_text(
+                payload.model_dump_json(indent=2),
+                encoding="utf-8",
+            )
+        except OSError:
+            if backup_path and backup_path.exists():
+                shutil.copy2(backup_path, self.policy_path)
+                emit_scheduler_event(
+                    event_name="scheduler.backup.restored",
+                    level="warning",
+                    message="Autonomy policy backup restored after failed policy update.",
+                    metadata={
+                        "backup_path": str(backup_path),
+                        "restore_target": str(self.policy_path),
+                        "initiator": "autonomy_policy_service",
+                    },
+                    event_log_path=self.event_log_path,
+                )
+            raise
 
         # Proactively update cache after successful write
         self._cached_policy = payload
