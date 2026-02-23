@@ -56,7 +56,7 @@ export default function StreamStatus({ className = '' }: StreamStatusProps) {
             {/* ── Header row: status dot + label + uptime ── */}
             <div className="flex items-center gap-2 px-3 py-1.5 border-b border-white/5">
                 {/* Pulsing status dot — VirtualDJ style */}
-                <div className="relative flex-shrink-0">
+                <div className="relative shrink-0">
                     <div className={`w-2.5 h-2.5 rounded-full ${state === 'live' ? 'animate-live-dot' : ''}`}
                         style={{ background: cfg.color, boxShadow: `0 0 6px ${cfg.color}80` }} />
                     {state === 'live' && (
@@ -79,7 +79,7 @@ export default function StreamStatus({ className = '' }: StreamStatusProps) {
             {/* ── Detail row: server, bitrate, format ── */}
             <div className="flex items-center gap-1.5 px-3 py-1.5 flex-wrap">
                 {/* Server endpoint */}
-                <span className="font-mono text-[9px] text-white/35 truncate max-w-[120px]"
+                <span className="font-mono text-[9px] text-white/35 truncate max-w-30"
                     title={`${server}${mount}`}>
                     {server}{mount}
                 </span>
@@ -111,23 +111,23 @@ export default function StreamStatus({ className = '' }: StreamStatusProps) {
 
             {/* ── Audio level mini-meter ── */}
             <div className="px-3 pb-1.5 flex items-center gap-1.5">
-                <span className="text-[8px] text-white/25 font-mono w-[12px]">L</span>
-                <div className="flex-1 h-[3px] bg-white/5 rounded-full overflow-hidden">
+                <span className="text-[8px] text-white/25 font-mono w-3">L</span>
+                <div className="flex-1 h-0.75 bg-white/5 rounded-full overflow-hidden">
                     <div className="h-full rounded-full transition-all duration-75"
                         style={{
                             width: '72%',
                             background: 'linear-gradient(90deg, #2ECC71 0%, #2ECC71 70%, #F1C40F 85%, #E54848 100%)',
                         }} />
                 </div>
-                <span className="text-[8px] text-white/25 font-mono w-[12px]">R</span>
-                <div className="flex-1 h-[3px] bg-white/5 rounded-full overflow-hidden">
+                <span className="text-[8px] text-white/25 font-mono w-3">R</span>
+                <div className="flex-1 h-0.75 bg-white/5 rounded-full overflow-hidden">
                     <div className="h-full rounded-full transition-all duration-75"
                         style={{
                             width: '68%',
                             background: 'linear-gradient(90deg, #2ECC71 0%, #2ECC71 70%, #F1C40F 85%, #E54848 100%)',
                         }} />
                 </div>
-                <span className="font-mono text-[8px] text-white/30 w-[32px] text-right tabular-nums">-3.2dB</span>
+                <span className="font-mono text-[8px] text-white/30 w-8 text-right tabular-nums">-3.2dB</span>
             </div>
         </div>
     );

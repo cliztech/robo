@@ -120,7 +120,7 @@ export default function ScheduleTimeline({ className = '' }: ScheduleTimelinePro
                                 <div className="text-[10px] text-white/40 truncate">{currentSeg.artist}</div>
                             )}
                         </div>
-                        <div className="flex-shrink-0 text-right">
+                        <div className="shrink-0 text-right">
                             <span className="font-mono text-[11px] text-white/70 tabular-nums">
                                 -{formatDur(currentSeg.duration - (currentSeg.elapsed || 0))}
                             </span>
@@ -130,7 +130,7 @@ export default function ScheduleTimeline({ className = '' }: ScheduleTimelinePro
                         </div>
                     </div>
                     {/* Progress bar */}
-                    <div className="mt-1.5 h-[3px] bg-white/5 rounded-full overflow-hidden">
+                    <div className="mt-1.5 h-0.75 bg-white/5 rounded-full overflow-hidden">
                         <div className="h-full rounded-full transition-all duration-1000 ease-linear"
                             style={{
                                 width: `${progress}%`,
@@ -146,14 +146,14 @@ export default function ScheduleTimeline({ className = '' }: ScheduleTimelinePro
                 {upcoming.map((seg, idx) => (
                     <div key={seg.id}
                         className={`segment-${seg.type} flex items-center gap-2 px-3 py-1.5 
-                 border-b border-white/3 hover:bg-white/[0.02] transition-colors cursor-default`}>
+                 border-b border-white/3 hover:bg-white/2 transition-colors cursor-default`}>
                         {/* Position indicator */}
-                        <span className="text-[9px] text-white/20 font-mono w-[14px] text-center tabular-nums">
+                        <span className="text-[9px] text-white/20 font-mono w-3.5 text-center tabular-nums">
                             {idx + 1}
                         </span>
 
                         {/* Icon + type */}
-                        <span className="text-[10px] flex-shrink-0">{seg.icon}</span>
+                        <span className="text-[10px] shrink-0">{seg.icon}</span>
 
                         {/* Title */}
                         <div className="flex-1 min-w-0">
@@ -162,7 +162,7 @@ export default function ScheduleTimeline({ className = '' }: ScheduleTimelinePro
                         </div>
 
                         {/* Duration */}
-                        <span className="font-mono text-[10px] text-white/35 tabular-nums flex-shrink-0">
+                        <span className="font-mono text-[10px] text-white/35 tabular-nums shrink-0">
                             {formatDur(seg.duration)}
                         </span>
                     </div>

@@ -2,7 +2,6 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://robodj.local/contracts/frontend_responses/frontend_config_response.schema.json",
   "title": "frontend_config_response",
-  "description": "Response wrapper for frontend-safe configuration and optional server-side preference resolution metadata.",
   "description": "Envelope for frontend-safe configuration. Optional config keys may be omitted by producers; consumers should apply defaults documented in public_frontend_config.schema.json.",
   "type": "object",
   "additionalProperties": false,
@@ -12,21 +11,6 @@
       "$ref": "../public_frontend_config.schema.json",
       "description": "Frontend-safe runtime config payload, including optional appearance controls under config.ui (theme, accent_color, density, font_scale, surface_style)."
     },
-    "preference_resolution": {
-      "type": "object",
-      "description": "Optional metadata describing how user/system preferences should be applied. `reduced_motion_effective` should reflect precedence: user preference (`ui.reduced_motion_mode` on/off) overrides system preference; `system` delegates to client system preference.",
-      "additionalProperties": false,
-      "properties": {
-        "reduced_motion_effective": {
-          "type": "string",
-          "enum": ["reduce", "no_preference", "defer_to_client_system"]
-        },
-        "unsupported_client_behavior": {
-          "type": "string",
-          "description": "Server guidance for unsupported clients. Expected default is to ignore unknown flags and fall back to baseline accessible behavior."
-        }
-      }
-    },
     "generated_at": {
       "type": "string",
       "format": "date-time"
@@ -34,10 +18,6 @@
   },
   "examples": [
     {
-      "config": {
-        "station": {
-          "display_name": "RoboDJ Radio",
-          "tagline": "Automation with personality",
       "generated_at": "2026-01-01T00:00:00Z",
       "config": {
         "station": {
@@ -46,16 +26,6 @@
         },
         "ui": {
           "theme": "auto",
-          "show_weather_widget": false,
-          "refresh_interval_seconds": 30,
-          "tokens": {
-            "primary_color": "#2B6CB0",
-            "accent_color": "#D69E2E",
-            "surface_style": "flat",
-            "density": "comfortable",
-            "corner_radius_scale": 1,
-            "font_stack": "system_ui"
-          }
           "accent_color": "#2AA9FF",
           "density": "comfortable",
           "font_scale": 1,
@@ -65,19 +35,6 @@
           "enable_request_queue": true,
           "enable_now_playing": true
         }
-      },
-      "generated_at": "2026-01-01T00:00:00Z"
-    },
-    {
-      "config": {
-        "station": {
-          "display_name": "RoboDJ Radio",
-          "time_zone": "UTC"
-        },
-        "ui": {},
-        "features": {}
-      },
-      "generated_at": "2026-01-01T00:00:00Z"
       }
     }
   ]

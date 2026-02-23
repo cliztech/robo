@@ -78,7 +78,7 @@ export const MixerChannel: React.FC<MixerChannelProps> = ({
             <button
                 onClick={() => setFxAssign(!fxAssign)}
                 className={cn(
-                    "transport-btn !h-5 !w-full text-[8px] font-mono font-bold tracking-micro",
+                    "transport-btn h-5! w-full! text-[8px] font-mono font-bold tracking-micro",
                     fxAssign
                         ? "text-white border"
                         : "text-zinc-600 border border-white/5 bg-panel-2"

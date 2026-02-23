@@ -74,7 +74,7 @@ export const PerformancePadGrid: React.FC<PerformancePadGridProps> = ({ deck }) 
                         className={cn(
                             "bg-silicone-pad noise-grain relative overflow-hidden",
                             "flex flex-col items-center justify-center gap-0.5",
-                            pressedPad === i && "!transform !translate-y-[2px]"
+                            pressedPad === i && "transform! translate-y-0.5!"
                         )}
                         style={{
                             width: '56px',
@@ -87,7 +87,7 @@ export const PerformancePadGrid: React.FC<PerformancePadGridProps> = ({ deck }) 
                     >
                         {/* LED diffusion layer */}
                         <div
-                            className="absolute inset-0 rounded-[6px] transition-opacity"
+                            className="absolute inset-0 rounded-md transition-opacity"
                             style={{
                                 background: pad.active
                                     ? `radial-gradient(circle at center, ${pad.color}${pressedPad === i ? 'DD' : '66'} 0%, transparent 70%)`

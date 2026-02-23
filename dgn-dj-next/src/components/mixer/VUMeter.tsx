@@ -62,7 +62,7 @@ export const VUMeter: React.FC<VUMeterProps> = ({
     const peakSegment = Math.floor(peakLevel * segments);
 
     return (
-        <div className={cn("flex flex-col-reverse gap-[2px]", className)}>
+        <div className={cn("flex flex-col-reverse gap-0.5", className)}>
             {Array.from({ length: segments }).map((_, i) => {
                 const isActive = i < activeSegments;
                 const isPeak = i === peakSegment - 1 && peakLevel > 0;

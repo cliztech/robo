@@ -88,6 +88,8 @@ function StatCard({
     const TrendIcon = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : Minus;
     const trendColor = trend === 'up' ? 'text-lime-500' : trend === 'down' ? 'text-red-400' : 'text-zinc-600';
 
+    const sparkId = React.useId();
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 16, scale: 0.97 }}
@@ -132,24 +134,7 @@ function StatCard({
             <div className="relative z-10 mt-3 h-6">
                 <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="w-full h-full">
                     <defs>
-                        const sparkId = React.useId();
-                        return (
-                            <linearGradient id={sparkId} x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor={c.spark} stopOpacity="0.15" />
-                                <stop offset="100%" stopColor={c.spark} stopOpacity="0" />
-                            </linearGradient>
-                        );
-                    })()}
-                </defs>
-                <path
-                    d={`M 0 30 ${(sparkline || defaultSparkline)
-                        .map(
-                            (v, i, arr) =>
-                                `L ${(i / (arr.length - 1)) * 100} ${30 - (v / 100) * 28}`
-                        )
-                        .join(' ')} L 100 30 Z`}
-                    fill={`url(#${sparkId})`}
-                />
+                        <linearGradient id={sparkId} x1="0" y1="0" x2="0" y2="1">
                             <stop offset="0%" stopColor={c.spark} stopOpacity="0.15" />
                             <stop offset="100%" stopColor={c.spark} stopOpacity="0" />
                         </linearGradient>
@@ -161,7 +146,7 @@ function StatCard({
                                     `L ${(i / (arr.length - 1)) * 100} ${30 - (v / 100) * 28}`
                             )
                             .join(' ')} L 100 30 Z`}
-                        fill={`url(#spark-fill-${label})`}
+                        fill={`url(#${sparkId})`}
                     />
                     <polyline
                         points={(sparkline || defaultSparkline)
@@ -196,7 +181,7 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
     );
 }
 
-export function DashboardView() {
+export function DashboardView({ telemetry }: { telemetry?: any }) {
     const [currentTime, setCurrentTime] = useState('');
 
     useEffect(() => {

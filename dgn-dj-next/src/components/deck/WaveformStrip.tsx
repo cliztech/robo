@@ -70,7 +70,7 @@ export const WaveformStrip: React.FC<WaveformStripProps> = ({ playingA, playingB
     return (
         <div className="flex flex-col bg-panel-1 border-b border-white/5" style={{ height: 'var(--layout-waveform-h)' }}>
             {/* Info Bar (60px) */}
-            <div className="h-[60px] shrink-0 flex items-center justify-between px-4 border-b border-white/5">
+            <div className="h-15 shrink-0 flex items-center justify-between px-4 border-b border-white/5">
                 {/* Deck A info */}
                 <div className="flex items-center gap-3">
                     <div className="w-2 h-2 rounded-full bg-deck-a" />
@@ -147,7 +147,7 @@ export const WaveformStrip: React.FC<WaveformStripProps> = ({ playingA, playingB
             </div>
 
             {/* Zoom Control Strip (72px) */}
-            <div className="h-[72px] shrink-0 flex items-center justify-between px-4 border-t border-white/5">
+            <div className="h-18 shrink-0 flex items-center justify-between px-4 border-t border-white/5">
                 {/* Zoom selector */}
                 <div className="flex items-center gap-2">
                     <span className="text-xxs font-mono text-zinc-600 tracking-micro">ZOOM</span>

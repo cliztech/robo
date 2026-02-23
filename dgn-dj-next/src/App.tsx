@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
+import { DeckProvider, useDeck } from './contexts/DeckContext';
 import { MainLayout } from './components/layout/MainLayout';
 import { TopNavBar } from './components/layout/TopNavBar';
 import { WaveformStrip } from './components/deck/WaveformStrip';
@@ -15,25 +16,62 @@ import { BrowserPanel } from './components/browser/BrowserPanel';
 import BroadcastPanel from './components/broadcast/BroadcastPanel';
 import { ToastNotification } from './components/ui/ToastNotification';
 import type { Toast } from './components/ui/ToastNotification';
+import { useState } from 'react';
+import { formatTime } from './data/demoTracks';
+import { DECK_COLORS } from './types';
 
-function App() {
-  // Deck state
-  const [playingA, setPlayingA] = useState(false);
-  const [playingB, setPlayingB] = useState(false);
-  const [volumeA, setVolumeA] = useState(80);
-  const [volumeB, setVolumeB] = useState(75);
-  const [volumeC, setVolumeC] = useState(0);
-  const [volumeD, setVolumeD] = useState(0);
-  const [crossfader, setCrossfader] = useState(50);
+/** Inner app component — has access to DeckContext */
+function DJApp() {
+  const {
+    decks,
+    crossfader,
+    engineReady,
+    togglePlay,
+    setVolume,
+    setCrossfader,
+    initEngine,
+  } = useDeck();
 
   // Toast system
-  const [toasts, setToasts] = useState<Toast[]>([
-    { id: '1', message: 'Engine ready', type: 'success', duration: 3000 },
-  ]);
+  const [toasts, setToasts] = useState<Toast[]>([]);
 
   const dismissToast = useCallback((id: string) => {
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
+
+  const addToast = useCallback((message: string, type: Toast['type'] = 'info') => {
+    const id = Date.now().toString();
+    setToasts(prev => [...prev, { id, message, type, duration: 3000 }]);
+  }, []);
+
+  // Initialize audio engine on first user interaction
+  useEffect(() => {
+    const handler = async () => {
+      if (!engineReady) {
+        await initEngine();
+        addToast('Audio engine ready', 'success');
+      }
+      document.removeEventListener('click', handler);
+      document.removeEventListener('keydown', handler);
+    };
+    document.addEventListener('click', handler, { once: true });
+    document.addEventListener('keydown', handler, { once: true });
+    return () => {
+      document.removeEventListener('click', handler);
+      document.removeEventListener('keydown', handler);
+    };
+  }, [engineReady, initEngine, addToast]);
+
+  const deckA = decks.A;
+  const deckB = decks.B;
+
+  // Compute remaining time
+  const timeRemainingA = deckA.track
+    ? formatTime(Math.max(0, (deckA.track.duration ?? 0) - deckA.position))
+    : '0:00';
+  const timeRemainingB = deckB.track
+    ? formatTime(Math.max(0, (deckB.track.duration ?? 0) - deckB.position))
+    : '0:00';
 
   return (
     <MainLayout>
@@ -41,7 +79,7 @@ function App() {
       <TopNavBar />
 
       {/* ═══ ROW 2: Waveform Engine — ~37.6% viewport ═══ */}
-      <WaveformStrip playingA={playingA} playingB={playingB} />
+      <WaveformStrip playingA={deckA.playing} playingB={deckB.playing} />
 
       {/* ═══ ROW 3: Decks + Mixer — ~24% viewport ═══ */}
       <div className="flex gap-[--layout-gutter] p-[--layout-padding]"
@@ -54,20 +92,20 @@ function App() {
               <div className="flex flex-col justify-between shrink-0">
                 <DeckInfoPanel
                   deck="A"
-                  trackTitle="Strobe"
-                  artist="deadmau5"
-                  bpm={128.00}
-                  musicalKey="Am"
-                  camelotKey="8A"
-                  timeRemaining="3:42"
-                  pitch={0.0}
-                  isMaster
-                  isSynced
+                  trackTitle={deckA.track?.title}
+                  artist={deckA.track?.artist}
+                  bpm={deckA.track?.bpm ?? 0}
+                  musicalKey={deckA.track?.key}
+                  camelotKey={deckA.track?.camelotKey}
+                  timeRemaining={timeRemainingA}
+                  pitch={deckA.pitch}
+                  isMaster={deckA.isMaster}
+                  isSynced={deckA.isSynced}
                 />
-                <TransportControls deck="A" playing={playingA} onPlayPause={() => setPlayingA(!playingA)} />
+                <TransportControls deck="A" playing={deckA.playing} onPlayPause={() => togglePlay('A')} />
               </div>
               <div className="flex-1 flex items-center justify-center">
-                <JogWheel deck="A" playing={playingA} />
+                <JogWheel deck="A" playing={deckA.playing} />
               </div>
             </div>
           </DeckContainer>
@@ -82,11 +120,35 @@ function App() {
           </div>
 
           {/* 4 Channel Strips */}
-          <div className="flex-1 flex gap-[8px] justify-center items-stretch">
-            <MixerChannel channel={1} deck="A" volume={volumeA} onVolumeChange={setVolumeA} accentColor="#0091FF" />
-            <MixerChannel channel={2} deck="B" volume={volumeB} onVolumeChange={setVolumeB} accentColor="#FF5500" />
-            <MixerChannel channel={3} deck="C" volume={volumeC} onVolumeChange={setVolumeC} accentColor="#2ECC71" />
-            <MixerChannel channel={4} deck="D" volume={volumeD} onVolumeChange={setVolumeD} accentColor="#9B59B6" />
+          <div className="flex-1 flex gap-2 justify-center items-stretch">
+            <MixerChannel
+              channel={1}
+              deck="A"
+              volume={deckA.volume}
+              onVolumeChange={(v) => setVolume('A', v)}
+              accentColor={DECK_COLORS.A}
+            />
+            <MixerChannel
+              channel={2}
+              deck="B"
+              volume={deckB.volume}
+              onVolumeChange={(v) => setVolume('B', v)}
+              accentColor={DECK_COLORS.B}
+            />
+            <MixerChannel
+              channel={3}
+              deck="C"
+              volume={decks.C.volume}
+              onVolumeChange={(v) => setVolume('C', v)}
+              accentColor={DECK_COLORS.C}
+            />
+            <MixerChannel
+              channel={4}
+              deck="D"
+              volume={decks.D.volume}
+              onVolumeChange={(v) => setVolume('D', v)}
+              accentColor={DECK_COLORS.D}
+            />
           </div>
 
           {/* Crossfader */}
@@ -100,21 +162,22 @@ function App() {
           <DeckContainer deck="B">
             <div className="flex gap-2 h-full">
               <div className="flex-1 flex items-center justify-center">
-                <JogWheel deck="B" playing={playingB} />
+                <JogWheel deck="B" playing={deckB.playing} />
               </div>
               <div className="flex flex-col justify-between shrink-0">
                 <DeckInfoPanel
                   deck="B"
-                  trackTitle="Midnight City"
-                  artist="M83"
-                  bpm={126.50}
-                  musicalKey="Dbm"
-                  camelotKey="3B"
-                  timeRemaining="5:18"
-                  pitch={-1.2}
-                  isSynced
+                  trackTitle={deckB.track?.title}
+                  artist={deckB.track?.artist}
+                  bpm={deckB.track?.bpm ?? 0}
+                  musicalKey={deckB.track?.key}
+                  camelotKey={deckB.track?.camelotKey}
+                  timeRemaining={timeRemainingB}
+                  pitch={deckB.pitch}
+                  isMaster={deckB.isMaster}
+                  isSynced={deckB.isSynced}
                 />
-                <TransportControls deck="B" playing={playingB} onPlayPause={() => setPlayingB(!playingB)} />
+                <TransportControls deck="B" playing={deckB.playing} onPlayPause={() => togglePlay('B')} />
               </div>
             </div>
           </DeckContainer>
@@ -151,6 +214,15 @@ function App() {
       {/* Toast Notifications (fixed overlay) */}
       <ToastNotification toasts={toasts} onDismiss={dismissToast} />
     </MainLayout>
+  );
+}
+
+/** Root app with DeckProvider wrapper */
+function App() {
+  return (
+    <DeckProvider>
+      <DJApp />
+    </DeckProvider>
   );
 }
 

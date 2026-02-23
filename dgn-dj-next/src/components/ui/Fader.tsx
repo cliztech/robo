@@ -88,18 +88,18 @@ export const Fader: React.FC<FaderProps> = ({
                 {/* Scale Indicators (Tick Marks) */}
                 <div className="absolute inset-y-4 left-2 flex flex-col justify-between py-1 opacity-20 group-hover:opacity-40 transition-opacity">
                     {[...Array(11)].map((_, i) => (
-                        <div key={i} className={cn("w-2 h-[1px] bg-white", i % 5 === 0 ? "w-3 h-[1.5px]" : "")}></div>
+                        <div key={i} className={cn("w-2 h-px bg-white", i % 5 === 0 ? "w-3 h-[1.5px]" : "")}></div>
                     ))}
                 </div>
                 <div className="absolute inset-y-4 right-2 flex flex-col justify-between py-1 opacity-20 group-hover:opacity-40 transition-opacity">
                     {[...Array(11)].map((_, i) => (
-                        <div key={i} className={cn("w-2 h-[1px] bg-white", i % 5 === 0 ? "w-3 h-[1.5px]" : "")}></div>
+                        <div key={i} className={cn("w-2 h-px bg-white", i % 5 === 0 ? "w-3 h-[1.5px]" : "")}></div>
                     ))}
                 </div>
 
                 {/* Track Groove */}
                 <div className="absolute top-4 bottom-4 w-4 bg-[#050505] rounded-full border border-white/5 shadow-inner overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-black/50"></div>
+                    <div className="absolute inset-0 bg-linear-to-r from-black/50 via-transparent to-black/50"></div>
                 </div>
 
                 {/* Fader Cap (Premium Metal) */}
@@ -120,12 +120,12 @@ export const Fader: React.FC<FaderProps> = ({
                         <div className="absolute inset-x-2 inset-y-4 bg-black/40 rounded-sm border border-black/60 shadow-inner flex items-center justify-center">
                             {/* Color Indicator Line */}
                             <div className={cn("w-full h-1 blur-[1px] opacity-80", colorClass)}></div>
-                            <div className={cn("absolute w-full h-[2px]", colorClass.split(' ')[0])}></div>
+                            <div className={cn("absolute w-full h-0.5", colorClass.split(' ')[0])}></div>
                         </div>
                     </div>
 
                     {/* Top Lighting Reflection */}
-                    <div className="absolute top-0 inset-x-0 h-[2px] bg-white/10 rounded-t"></div>
+                    <div className="absolute top-0 inset-x-0 h-0.5 bg-white/10 rounded-t"></div>
                 </div>
             </div>
             {label && <span className="text-[9px] font-bold uppercase text-zinc-500 tracking-wider select-none group-hover:text-zinc-300 transition-colors">{label}</span>}
