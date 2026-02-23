@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import threading
 from datetime import datetime, timezone
+from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
@@ -103,7 +104,7 @@ def get_policy_service() -> AutonomyPolicyService:
     return _service_instance
 
 
-@router.get("", response_model=AutonomyPolicy)
+@router.get("", response_model=AutonomyPolicy, dependencies=[Depends(verify_api_key)])
 def read_policy(service: AutonomyPolicyService = Depends(get_policy_service)) -> AutonomyPolicy:
     try:
         return service.get_policy()
@@ -117,7 +118,7 @@ def read_policy(service: AutonomyPolicyService = Depends(get_policy_service)) ->
         ) from error
 
 
-@router.put("", response_model=AutonomyPolicy)
+@router.put("", response_model=AutonomyPolicy, dependencies=[Depends(verify_api_key)])
 def write_policy(
     payload: AutonomyPolicy,
     service: AutonomyPolicyService = Depends(get_policy_service),
@@ -134,7 +135,7 @@ def write_policy(
         ) from error
 
 
-@router.get("/effective")
+@router.get("/effective", dependencies=[Depends(verify_api_key)])
 def read_effective_policy(
     show_id: Optional[str] = Query(default=None),
     timeslot_id: Optional[str] = Query(default=None),
@@ -143,12 +144,12 @@ def read_effective_policy(
     return service.resolve_effective_policy(show_id=show_id, timeslot_id=timeslot_id)
 
 
-@router.get("/mode-definitions")
+@router.get("/mode-definitions", dependencies=[Depends(verify_api_key)])
 def get_mode_definitions():
     return {"source": "docs/autonomy_modes.md", "modes": MODE_DEFINITIONS}
 
 
-@router.post("/audit-events", response_model=PolicyAuditEvent)
+@router.post("/audit-events", response_model=PolicyAuditEvent, dependencies=[Depends(verify_api_key)])
 def create_audit_event(
     decision_type: DecisionType,
     origin: DecisionOrigin,
@@ -166,7 +167,7 @@ def create_audit_event(
     )
 
 
-@router.get("/audit-events", response_model=list[PolicyAuditEvent])
+@router.get("/audit-events", response_model=list[PolicyAuditEvent], dependencies=[Depends(verify_api_key)])
 def get_audit_events(
     limit: int = Query(default=100, ge=1, le=1000),
     service: AutonomyPolicyService = Depends(get_policy_service),
@@ -174,7 +175,16 @@ def get_audit_events(
     return service.list_audit_events(limit=limit)
 
 
+@lru_cache(maxsize=1)
+def _get_control_center_html() -> str:
+    """
+    Cache the control center HTML content to avoid disk I/O on every request.
+    This optimization ensures faster response times by serving the static asset from memory.
+    """
+    html_path = Path(__file__).with_name("control_center.html")
+    return html_path.read_text(encoding="utf-8")
+
+
 @router.get("/control-center", response_class=HTMLResponse)
 def get_control_center() -> HTMLResponse:
-    html_path = Path(__file__).with_name("control_center.html")
-    return HTMLResponse(content=html_path.read_text(encoding="utf-8"))
+    return HTMLResponse(content=_get_control_center_html())

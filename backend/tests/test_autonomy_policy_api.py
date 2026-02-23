@@ -6,6 +6,7 @@ from backend.app import app
 from backend.scheduling.api import get_policy_service
 from backend.scheduling.autonomy_service import AutonomyPolicyService
 from backend.scheduling import api as autonomy_api
+from backend.security.auth import verify_api_key
 
 import unittest.mock
 
@@ -41,6 +42,7 @@ def test_unauthenticated_request_is_rejected(tmp_path):
 
 def test_get_put_and_effective_policy_endpoints(tmp_path):
     app.dependency_overrides[get_policy_service] = _override_service(tmp_path)
+    app.dependency_overrides[verify_api_key] = lambda: "test-key"
     client = TestClient(app)
     auth_headers = {"X-API-Key": TEST_API_KEY}
 
@@ -105,6 +107,7 @@ def test_get_put_and_effective_policy_endpoints(tmp_path):
 
 def test_audit_event_create_and_list_endpoints(tmp_path):
     app.dependency_overrides[get_policy_service] = _override_service(tmp_path)
+    app.dependency_overrides[verify_api_key] = lambda: "test-key"
     client = TestClient(app)
     auth_headers = {"X-API-Key": TEST_API_KEY}
 
@@ -140,6 +143,7 @@ def test_audit_event_create_and_list_endpoints(tmp_path):
 
 def test_invalid_payload_rejections_api(tmp_path):
     app.dependency_overrides[get_policy_service] = _override_service(tmp_path)
+    app.dependency_overrides[verify_api_key] = lambda: "test-key"
     client = TestClient(app)
     auth_headers = {"X-API-Key": TEST_API_KEY}
 
@@ -197,12 +201,19 @@ def test_get_policy_auto_recovers_invalid_policy_file(tmp_path, monkeypatch):
     monkeypatch.setattr(policy_api, "_service_instance", None)
     monkeypatch.setattr(policy_api, "AutonomyPolicyService", _factory)
 
+    app.dependency_overrides[verify_api_key] = lambda: "test-key"
     client = TestClient(app)
     auth_headers = {"X-API-Key": TEST_API_KEY}
 
     get_response = client.get("/api/v1/autonomy-policy", headers=auth_headers)
     assert get_response.status_code == 200
     assert get_response.json()["station_default_mode"] == "semi_auto"
+    try:
+        get_response = client.get("/api/v1/autonomy-policy")
+        assert get_response.status_code == 200
+        assert get_response.json()["station_default_mode"] == "semi_auto"
 
-    recovered_files = list(tmp_path.glob("autonomy_policy.crash_recovery_*.json"))
-    assert len(recovered_files) == 1
+        recovered_files = list(tmp_path.glob("autonomy_policy.crash_recovery_*.json"))
+        assert len(recovered_files) == 1
+    finally:
+        app.dependency_overrides.clear()
