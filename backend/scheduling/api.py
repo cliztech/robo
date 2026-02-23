@@ -10,6 +10,8 @@ from fastapi import APIRouter, Depends, Query
 from fastapi import HTTPException
 from fastapi.responses import HTMLResponse
 
+from backend.security.auth import verify_api_key
+
 from .autonomy_policy import AutonomyPolicy, DecisionOrigin, DecisionType, PolicyAuditEvent, MODE_DEFINITIONS
 from .autonomy_service import AutonomyPolicyService, PolicyValidationError
 from .observability import emit_scheduler_event
@@ -101,7 +103,7 @@ def get_policy_service() -> AutonomyPolicyService:
     return _service_instance
 
 
-@router.get("", response_model=AutonomyPolicy)
+@router.get("", response_model=AutonomyPolicy, dependencies=[Depends(verify_api_key)])
 def read_policy(service: AutonomyPolicyService = Depends(get_policy_service)) -> AutonomyPolicy:
     try:
         return service.get_policy()
@@ -115,7 +117,7 @@ def read_policy(service: AutonomyPolicyService = Depends(get_policy_service)) ->
         ) from error
 
 
-@router.put("", response_model=AutonomyPolicy)
+@router.put("", response_model=AutonomyPolicy, dependencies=[Depends(verify_api_key)])
 def write_policy(
     payload: AutonomyPolicy,
     service: AutonomyPolicyService = Depends(get_policy_service),
@@ -132,7 +134,7 @@ def write_policy(
         ) from error
 
 
-@router.get("/effective")
+@router.get("/effective", dependencies=[Depends(verify_api_key)])
 def read_effective_policy(
     show_id: Optional[str] = Query(default=None),
     timeslot_id: Optional[str] = Query(default=None),
@@ -141,12 +143,12 @@ def read_effective_policy(
     return service.resolve_effective_policy(show_id=show_id, timeslot_id=timeslot_id)
 
 
-@router.get("/mode-definitions")
+@router.get("/mode-definitions", dependencies=[Depends(verify_api_key)])
 def get_mode_definitions():
     return {"source": "docs/autonomy_modes.md", "modes": MODE_DEFINITIONS}
 
 
-@router.post("/audit-events", response_model=PolicyAuditEvent)
+@router.post("/audit-events", response_model=PolicyAuditEvent, dependencies=[Depends(verify_api_key)])
 def create_audit_event(
     decision_type: DecisionType,
     origin: DecisionOrigin,
@@ -164,7 +166,7 @@ def create_audit_event(
     )
 
 
-@router.get("/audit-events", response_model=list[PolicyAuditEvent])
+@router.get("/audit-events", response_model=list[PolicyAuditEvent], dependencies=[Depends(verify_api_key)])
 def get_audit_events(
     limit: int = Query(default=100, ge=1, le=1000),
     service: AutonomyPolicyService = Depends(get_policy_service),
