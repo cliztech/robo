@@ -64,7 +64,7 @@ class AutonomyPolicyService:
                 message="Autonomy policy bootstrap validation succeeded with default policy.",
                 metadata={
                     "validation_target": str(self.policy_path),
-                    "validation_stage": "bootstrap",
+                    "validation_stage": "bootstrap_default",
                     "duration_ms": duration_ms,
                 },
                 event_log_path=self.event_log_path,
@@ -96,6 +96,7 @@ class AutonomyPolicyService:
                 event_log_path=self.event_log_path,
             )
             emit_scheduler_event(
+                logger,
                 event_name="scheduler.startup_validation.failed",
                 level="error",
                 message="Autonomy policy startup validation failed.",
@@ -117,6 +118,7 @@ class AutonomyPolicyService:
 
         duration_ms = int((time.perf_counter() - started) * 1000)
         emit_scheduler_event(
+            logger,
             event_name="scheduler.startup_validation.succeeded",
             level="info",
             message="Autonomy policy startup validation succeeded.",
@@ -141,6 +143,8 @@ class AutonomyPolicyService:
             snapshot_dir.mkdir(parents=True, exist_ok=True)
             timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             backup_path = snapshot_dir / f"autonomy_policy_{timestamp}.json"
+            backup_stamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
+            backup_path = snapshot_dir / f"autonomy_policy_{backup_stamp}.json"
             shutil.copy2(self.policy_path, backup_path)
             emit_scheduler_event(
                 event_name="scheduler.backup.created",
@@ -163,6 +167,7 @@ class AutonomyPolicyService:
             if backup_path and backup_path.exists():
                 shutil.copy2(backup_path, self.policy_path)
                 emit_scheduler_event(
+                    logger,
                     event_name="scheduler.backup.restored",
                     level="warning",
                     message="Autonomy policy backup restored after failed policy update.",
