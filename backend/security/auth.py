@@ -1,7 +1,11 @@
-import os
+import functools
 import hmac
+import os
+import secrets
+
 from fastapi import Security, HTTPException, status
 from fastapi.security import APIKeyHeader
+
 from backend.security.secret_integrity import CONFIG_DIR
 
 API_KEY_NAME = "X-API-Key"
@@ -47,12 +51,6 @@ async def verify_api_key(api_key: str = Security(api_key_header)):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid API Key",
         )
-
-import secrets
-from fastapi import HTTPException, Security
-from fastapi.security import APIKeyHeader
-
-api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 def get_scheduler_api_key(api_key: str = Security(api_key_header)):
     expected_key = os.environ.get("ROBODJ_SCHEDULER_API_KEY")
