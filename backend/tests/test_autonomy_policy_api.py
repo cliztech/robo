@@ -9,6 +9,7 @@ from backend.scheduling import api as autonomy_api
 from backend.security.auth import verify_api_key
 
 import unittest.mock
+import os
 
 TEST_API_KEY = "test-secret-key"
 
@@ -168,11 +169,23 @@ def test_invalid_payload_rejections_api(tmp_path):
                     "caller_simulation_usage": "ai_autonomous",
                     "breaking_news_weather_interruption": "ai_with_human_approval",
                 },
-            },
-            "show_overrides": [],
-            "timeslot_overrides": [],
-        }
+                "show_overrides": [],
+                "timeslot_overrides": [],
+            }
 
+            put_response = client.put(
+                "/api/v1/autonomy-policy", json=invalid_policy, headers=headers
+            )
+            assert put_response.status_code == 422
+
+            post_response = client.post(
+                "/api/v1/autonomy-policy/audit-events",
+                params={"decision_type": "track_selection", "origin": "robot"},
+                headers=headers,
+            )
+            assert post_response.status_code == 422
+        finally:
+            app.dependency_overrides.clear()
         put_response = client.put("/api/v1/autonomy-policy", json=invalid_policy, headers=auth_headers)
         assert put_response.status_code == 422
 
@@ -201,6 +214,11 @@ def test_get_policy_auto_recovers_invalid_policy_file(tmp_path, monkeypatch):
     monkeypatch.setattr(policy_api, "_service_instance", None)
     monkeypatch.setattr(policy_api, "AutonomyPolicyService", _factory)
 
+    with unittest.mock.patch.dict(os.environ, {"ROBODJ_SECRET_KEY": "test-secret-key"}):
+        client = TestClient(app)
+        headers = {"X-API-Key": "test-secret-key"}
+
+        get_response = client.get("/api/v1/autonomy-policy", headers=headers)
     app.dependency_overrides[verify_api_key] = lambda: "test-key"
     client = TestClient(app)
     auth_headers = {"X-API-Key": TEST_API_KEY}
