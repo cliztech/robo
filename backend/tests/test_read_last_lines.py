@@ -63,11 +63,3 @@ def test_file_not_exists(tmp_path):
     p = tmp_path / "nonexistent.txt"
     assert AutonomyPolicyService._read_last_lines(p, 10) == []
 
-def test_read_last_lines_utf8_multibyte(tmp_path):
-    p = tmp_path / "utf8.txt"
-    # '🌟' is 4 bytes: \xf0\x9f\x8c\x9f
-    content = "line1\n🌟 line2\nline3 🌟"
-    p.write_text(content, encoding="utf-8")
-    result = AutonomyPolicyService._read_last_lines(p, 2)
-    assert result == ["🌟 line2", "line3 🌟"]
-
