@@ -9,6 +9,9 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 
+logger = logging.getLogger(__name__)
+
+
 @dataclass
 class ExternalEvent:
     headline: str
@@ -153,6 +156,7 @@ class WeatherAdapter(BaseAdapter):
                         parse_float(
                             item.get("safety_score", safety),
                             safety,
+                            source=item.get("source") or self.source_name,
                             source=self.source_name,
                             field="safety_score",
                         )
@@ -187,6 +191,7 @@ class NewsAdapter(BaseAdapter):
                         parse_float(
                             item.get("relevance", 0.6),
                             0.6,
+                            source=item.get("source") or self.source_name,
                             source=self.source_name,
                             field="relevance",
                         )
@@ -195,6 +200,7 @@ class NewsAdapter(BaseAdapter):
                         parse_float(
                             item.get("safety_score", 0.97),
                             0.97,
+                            source=item.get("source") or self.source_name,
                             source=self.source_name,
                             field="safety_score",
                         )
@@ -229,6 +235,7 @@ class TrendAdapter(BaseAdapter):
                         parse_float(
                             item.get("relevance", 0.5),
                             0.5,
+                            source=item.get("source") or self.source_name,
                             source=self.source_name,
                             field="relevance",
                         )
@@ -237,6 +244,7 @@ class TrendAdapter(BaseAdapter):
                         parse_float(
                             item.get("safety_score", 0.9),
                             0.9,
+                            source=item.get("source") or self.source_name,
                             source=self.source_name,
                             field="safety_score",
                         )
@@ -245,6 +253,17 @@ class TrendAdapter(BaseAdapter):
                 )
             )
         return normalized
+
+
+def parse_float(value: Any, default: float, *, source: str = "unknown", field: str = "unknown") -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        logger.debug(
+            "Invalid numeric value encountered; using default",
+            extra={"source": source, "field": field, "value": value},
+        )
+        return default
 
 
 def clamp(value: float) -> float:
