@@ -52,6 +52,7 @@ function adaptDJTelemetryToTransportTelemetry(telemetry?: DJTelemetry): Partial<
 export function DegenTransport({
     currentTrack,
     telemetryTick,
+    telemetry,
     isPlaying = true,
     isOnAir = true,
     onPlayPause,
@@ -60,12 +61,13 @@ export function DegenTransport({
     className,
 }: DegenTransportProps) {
     const track = resolveTransportTrack(currentTrack);
-    const transportTelemetry = resolveTransportTelemetry(adaptDJTelemetryToTransportTelemetry(telemetry));
+    const transportTelemetry = resolveTransportTelemetry(telemetry ? adaptDJTelemetryToTransportTelemetry(telemetry) : undefined);
 
     const [telemetryStep, setTelemetryStep] = useState(0);
+    const [playbackProgress, setPlaybackProgress] = useState(0);
 
     useEffect(() => {
-        setProgress(transportTelemetry.progress);
+        setPlaybackProgress(transportTelemetry.progress);
     }, [transportTelemetry.progress]);
 
     useEffect(() => {
@@ -89,8 +91,8 @@ export function DegenTransport({
     const [repeat, setRepeat] = useState(false);
     const [shuffle, setShuffle] = useState(false);
 
-    const progress = progressOverride ?? telemetry?.transport.progress ?? 0;
-    const elapsed = telemetry?.transport.elapsedSeconds ?? progress * (currentTrack?.duration || 0);
+    const progress = progressOverride ?? transportTelemetry.progress ?? 0;
+    const elapsed = telemetry?.transport.elapsedSeconds ?? progress * (track.duration || 0);
     const vuLeft =
         telemetry?.stereoLevels.leftLevel ??
         Math.max(0.1, Math.min(1, transportTelemetry.vuLeft + Math.sin(phase / 5) * 0.08));
@@ -100,14 +102,14 @@ export function DegenTransport({
     const peakLeft = telemetry?.stereoLevels.leftPeak ?? vuLeft;
     const peakRight = telemetry?.stereoLevels.rightPeak ?? vuRight;
 
-    const elapsed = telemetry?.transport.elapsedSeconds ?? progress * (track.duration || 0);
+    const elapsedTime = telemetry?.transport.elapsedSeconds ?? progress * (track.duration || 0);
     const remaining = useMemo(() => {
         if (telemetry) {
             return telemetry.transport.remainingSeconds;
         }
 
-        return (track.duration || 0) - elapsed;
-    }, [elapsed, telemetry, track.duration]);
+        return (track.duration || 0) - elapsedTime;
+    }, [elapsedTime, telemetry, track.duration]);
 
     const formatTime = (seconds: number) => {
         const safeSeconds = Math.max(0, seconds);
@@ -205,7 +207,7 @@ export function DegenTransport({
             </div>
 
             <div className="flex-1 flex items-center gap-3 px-4 min-w-0">
-                <span className="text-[10px] font-mono text-zinc-500 tabular-nums w-9 text-right shrink-0">{formatTime(elapsed)}</span>
+                <span className="text-[10px] font-mono text-zinc-500 tabular-nums w-9 text-right shrink-0">{formatTime(elapsedTime)}</span>
                 <div className="flex-1 group relative h-7 flex items-center">
                     <div className="absolute inset-x-0 h-[3px] rounded-full bg-white/[0.06] overflow-hidden">
                         <div
@@ -224,8 +226,8 @@ export function DegenTransport({
                         max={1}
                         step={0.001}
                         value={progress}
-                        onChange={(e) => setProgressOverride(parseFloat(e.target.value))}
-                        onChange={(e) => setProgress(parseFloat(e.target.value))}
+
+                        onChange={(e) => setPlaybackProgress(parseFloat(e.target.value))}
                         className="absolute inset-x-0 h-7 w-full opacity-0 cursor-pointer z-10"
                     />
                     <div
