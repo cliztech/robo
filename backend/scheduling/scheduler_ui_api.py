@@ -5,7 +5,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from backend.security.auth import verify_api_key
+from backend.security.auth import get_scheduler_api_key
 
 from .scheduler_models import (
     PreviewRequest,
@@ -19,7 +19,7 @@ from .scheduler_ui_service import SchedulerUiService
 router = APIRouter(
     prefix="/api/v1/scheduler-ui",
     tags=["scheduler-ui"],
-    dependencies=[Depends(verify_api_key)]
+    dependencies=[Depends(get_scheduler_api_key)]
 )
 
 _service_instance: Optional[SchedulerUiService] = None
