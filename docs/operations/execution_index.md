@@ -51,3 +51,9 @@ Use this compact template when posting weekly updates in the SoT file for that t
 - Changed metrics: recovery SLA pass rate `0% (0/1) -> 50% (1/2)` after timed recovery run `2026-02-24T01:34:19Z-02` (0.85s to ready state)
 - Blockers: launcher `--on-launch` path can hit same-second snapshot-name collision during restore + post-pass snapshot creation; unblock target 2026-02-26
 - Next step: harden snapshot naming to avoid collisions and rerun launcher-gate SLA drill for a second passing sample
+
+- Date (UTC): 2026-02-24
+- Owner: Runtime engineer
+- Changed metrics: snapshot collision blocker resolved via collision-resistant naming + retry guard; rapid snapshot creation tests added and passing
+- Blockers: none (previous same-second snapshot-name collision closed)
+- Next step: rerun launcher `--on-launch` recovery SLA drill and attach second passing sample to readiness scorecard
