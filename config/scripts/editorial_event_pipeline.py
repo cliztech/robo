@@ -4,6 +4,7 @@ import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, List, Optional
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 
@@ -21,6 +22,7 @@ class ExternalEvent:
 
 class BaseAdapter:
     source_name = "external"
+    default_timeout_seconds = 10.0
 
     def __init__(self, config: Dict[str, Any]):
         self.config = config
@@ -30,18 +32,55 @@ class BaseAdapter:
         if not endpoint:
             return []
 
+        timeout_raw = self.config.get("timeout_seconds", self.default_timeout_seconds)
+        try:
+            timeout = max(0.1, float(timeout_raw))
+        except (TypeError, ValueError):
+            timeout = self.default_timeout_seconds
         headers = self.config.get("headers", {})
         request_obj = Request(endpoint, headers=headers)
-        request = urlopen(request_obj)
-        data = request.read().decode("utf-8")
-        if not data:
+        try:
+            request = urlopen(request_obj, timeout=timeout)
+            data = request.read().decode("utf-8")
+            if not data:
+                return []
+            payload = json.loads(data)
+        except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
+            self._emit_fetch_diagnostic(endpoint=endpoint, error=exc)
             return []
-        payload = json.loads(data)
+
         if isinstance(payload, list):
-            return payload
+            return [item for item in payload if isinstance(item, dict)]
+
         if isinstance(payload, dict):
-            return payload.get("items", [])
+            items = payload.get("items", [])
+            if isinstance(items, list):
+                return [item for item in items if isinstance(item, dict)]
+            self._emit_fetch_diagnostic(
+                endpoint=endpoint,
+                error=TypeError(f"payload.items must be list, got {type(items).__name__}"),
+            )
+            return []
+
+        self._emit_fetch_diagnostic(
+            endpoint=endpoint,
+            error=TypeError(f"payload must be list or dict, got {type(payload).__name__}"),
+        )
         return []
+
+    def _emit_fetch_diagnostic(self, endpoint: str, error: Exception) -> None:
+        print(
+            json.dumps(
+                {
+                    "event": "adapter_fetch_failed",
+                    "source": self.source_name,
+                    "endpoint": endpoint,
+                    "error_class": type(error).__name__,
+                    "error_message": str(error),
+                },
+                ensure_ascii=False,
+            )
+        )
 
     def normalize(self, records: Iterable[Dict[str, Any]]) -> List[ExternalEvent]:
         raise NotImplementedError
