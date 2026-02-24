@@ -1,6 +1,7 @@
 'use client';
 
-import type { ElementType, ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import { DegenTransport } from '@/components/audio/DegenTransport';
 import { ConsoleSidebar } from './ConsoleSidebar';
 import { ConsoleTopbar } from './ConsoleTopbar';
@@ -8,7 +9,7 @@ import type { ConsoleNavItem, ConsoleViewMode } from '@/components/console/types
 
 interface ConsoleLayoutProps {
     navItems: ConsoleNavItem[];
-    utilityItems: { icon: ElementType; label: string }[];
+    utilityItems: { icon: LucideIcon; label: string }[];
     currentView: ConsoleViewMode;
     isOnAir: boolean;
     onViewChange: (view: ConsoleViewMode) => void;
