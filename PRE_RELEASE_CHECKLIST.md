@@ -244,21 +244,34 @@ When launching via `RoboDJ_Launcher.bat`, startup now runs config validation bef
 
 > This gate is mandatory for readiness scoring and release approval.
 
-- [ ] **PASS/FAIL:** Redaction contract enforcement is verified.
+- [ ] **PASS/FAIL:** Redaction + role-visibility contract enforcement is verified.
   - Command: `python config/spec_check_frontend_contracts.py`
-  - Pass criteria: command exits 0 and reports denylist checks passed for all files in `contracts/frontend_responses/*.schema.json`.
-  - Fail criteria: any denylisted key/path fragment is found, command errors, or coverage is incomplete.
+  - Pass criteria: command exits 0 and confirms denylist and role-visibility contracts across all files in `contracts/frontend_responses/*.schema.json`.
+  - Fail criteria: any denylisted key/path fragment is found, role-visibility contract is missing, command errors, or coverage is incomplete.
+
+- [ ] **PASS/FAIL:** Key-rotation readiness and env-only secret loading are verified.
+  - Command: `python config/check_runtime_secrets.py --require-env-only`
+  - Pass criteria: command exits 0, reports env-backed key material only, and records no unauthorized fallback usage.
+  - Fail criteria: command exits non-zero, fallback secret files are used without approved break-glass incident, or verification evidence is missing.
 
 - [ ] **PASS/FAIL:** Redaction source-of-truth artifacts are unchanged or reviewed.
-  - Files: `contracts/redaction_rules.md`, `contracts/redaction_denylist.json`
-  - Command: git diff main --name-only -- contracts/redaction_rules.md contracts/redaction_denylist.json contracts/frontend_responses/*.schema.json
+  - Files: `contracts/redaction_rules.md`, `contracts/redaction_denylist.json`, `contracts/shared_settings_visibility.schema.json`
+  - Command: `git diff main --name-only -- contracts/redaction_rules.md contracts/redaction_denylist.json contracts/shared_settings_visibility.schema.json contracts/frontend_responses/*.schema.json`
   - Pass criteria: any touched file has reviewer sign-off from SecOps Compliance Agent.
   - Fail criteria: touched redaction artifacts lack security review sign-off.
 
+### Security gate sign-off record (required before RC cut)
+
+| Gate item | Result (PASS/FAIL) | Evidence link or command output | Signer | UTC timestamp |
+| --- | --- | --- | --- | --- |
+| Redaction + role-visibility contract check |  |  | Release Manager Agent |  |
+| Key-rotation/env-only secret readiness |  |  | SecOps Compliance Agent |  |
+| Artifact review/sign-off completeness |  |  | Release Manager Agent + SecOps Compliance Agent |  |
+
 - [ ] **PASS/FAIL:** Security gate sign-off recorded.
   - Required signers: **Release Manager Agent** and **SecOps Compliance Agent**
-  - Pass criteria: both signers are recorded with UTC timestamp before release candidate creation.
-  - Fail criteria: missing signer, missing timestamp, or sign-off captured after release candidate creation.
+  - Pass criteria: all rows in the sign-off record are completed with PASS and UTC timestamps before release candidate creation.
+  - Fail criteria: missing signer, missing timestamp, FAIL result, or sign-off captured after release candidate creation.
 - [ ] Accessibility QA matrix in `REACT_BROWSER_UI_TEAM_BLUEPRINT.md` completed for shell, overlays, and scheduler interactions.
 - [ ] Keyboard-only flow verified for all release-critical paths.
 - [ ] Focus order and focus restoration behavior verified for overlays/modals.
