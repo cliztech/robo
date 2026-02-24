@@ -30,7 +30,7 @@ This scorecard provides a versioned, repeatable way to track progress from roadm
 | --- | ---: | ---: | --- | --- |
 | Startup diagnostics pass rate | 100% | 100% | `config/scripts/startup_safety.py --on-launch` output archive | Runtime engineer |
 | Config validation block rate (invalid configs) | 100% | 100% | `config/validate_config.py` + launch gate logs | Config owner |
-| **Recovery SLA pass rate (`<=120s` launch gate to ready)** | **100% of documented runs** | **0% (0/1)** | `config/BACKUP_RECOVERY.md` evidence table + `config/logs/startup_safety_events.jsonl` | QA lead |
+| **Recovery SLA pass rate (`<=120s` launch gate to ready)** | **100% of documented runs** | **50% (1/2) as of 2026-02-24T01:34:19Z** | `config/BACKUP_RECOVERY.md` evidence table + `config/logs/startup_safety_events.jsonl` | QA lead |
 
 ## Weekly update workflow
 
