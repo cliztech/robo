@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import threading
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException
 
 from backend.security.auth import verify_api_key
@@ -19,9 +22,17 @@ router = APIRouter(
     dependencies=[Depends(verify_api_key)]
 )
 
+_service_instance: Optional[SchedulerUiService] = None
+_service_lock = threading.Lock()
+
 
 def get_scheduler_service() -> SchedulerUiService:
-    return SchedulerUiService()
+    global _service_instance
+    if _service_instance is None:
+        with _service_lock:
+            if _service_instance is None:
+                _service_instance = SchedulerUiService()
+    return _service_instance
 
 
 @router.get("/state", response_model=SchedulerUiState)

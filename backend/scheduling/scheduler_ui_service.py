@@ -149,7 +149,8 @@ class SchedulerUiService:
             # File might be inaccessible or deleted, proceed to try reading/creating
             pass
 
-        raw = json.loads(self.schedules_path.read_text(encoding="utf-8"))
+        content = self.schedules_path.read_text(encoding="utf-8")
+        raw = json.loads(content)
         envelope = ScheduleEnvelope.model_validate(self._migrate_payload(raw))
         self._validate_schema(envelope)
 
@@ -158,9 +159,10 @@ class SchedulerUiService:
             raise ValueError(self._format_conflict_error(conflicts))
 
         # Only write back if the content has changed or we want to enforce formatting/migration
-        # The original code always writes back, which ensures migration persistence.
-        # We continue to write back, but update our cache with the new mtime.
-        self.schedules_path.write_text(envelope.model_dump_json(indent=2), encoding="utf-8")
+        serialized = envelope.model_dump_json(indent=2)
+        # Check if semantic content or formatting differs before writing
+        if serialized != content:
+            self.schedules_path.write_text(serialized, encoding="utf-8")
 
         self._cached_envelope = envelope
         try:
