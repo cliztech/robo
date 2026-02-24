@@ -10,6 +10,13 @@ output_location: "_bmad-output/implementation-artifacts"
 
 # Sprint Plan (Open + Dependency-Ready Tickets)
 
+
+## Phase-3 Readiness Gate Reference
+
+- Final gate command: `bmad-bmm-check-implementation-readiness`
+- Evidence: `_bmad-output/planning-artifacts/implementation-readiness-phase3-gate-2026-02-24.md`
+- Current decision: **NO-GO** until critical planning gaps are closed via `bmad-bmm-edit-prd` and `bmad-bmm-create-epics-and-stories`, then gate re-run.
+
 ## Selection rules applied
 1. Ticket/task is currently open (`[ ]`) in source files.
 2. Dependency is either not listed (treated as ready), or explicitly unblocked in-source.
