@@ -194,6 +194,14 @@ Backup/restore implementation and QA evidence must comply with `config/BACKUP_RE
 - Publish confirmation must show a preflight summary of warnings and conflicts prevented, requiring explicit operator acknowledgment.
 - System must prevent accidental destructive edits via undo support and confirmation prompts for delete/publish actions.
 
+### Acceptance checks (v1.2 conflict resolution + error prevention gate)
+- [ ] Verify inline conflict states refresh in **<=200 ms p95** after drag/drop, resize, and paste operations using normalized `/validate` responses.
+- [ ] Verify common conflict resolution paths complete in **<=3 operator actions** (clicks/keystrokes) from first conflict banner focus to resolved state.
+- [ ] Verify publish remains hard-blocked while any unresolved `hard_conflict` entries are returned by backend preflight checks.
+- [ ] Verify publish confirmation includes normalized preflight summary of warnings + prevented conflicts and requires explicit acknowledgment.
+- [ ] Verify delete/publish destructive operations require confirmation and are recoverable through undo/redo without contract drift.
+
+
 ### Must
 - [ ] Visual weekly scheduler timeline (drag/drop blocks) **(L)**
 - [ ] Conflict detector with actionable suggestions **(M)**
@@ -206,16 +214,16 @@ Backup/restore implementation and QA evidence must comply with `config/BACKUP_RE
 - [x] Enforce schema + conflict validation before save/publish.
 
 ### UI Scope (unblocked only after backend foundation)
-- [ ] Implement drag/drop weekly timeline using normalized blocks from scheduler API.
-- [ ] Surface conflict objects inline with fix actions from backend response.
-- [ ] Add keyboard parity for move/resize/resolve actions in timeline editor.
+- [ ] Implement drag/drop weekly timeline using normalized `timeline_blocks` contracts from backend scheduler API ([TI-007](docs/exec-plans/active/tracked-issues/TI-007.md)).
+- [ ] Surface normalized conflict objects inline with backend-provided fix actions and severity mapping ([TI-008](docs/exec-plans/active/tracked-issues/TI-008.md)).
+- [ ] Add keyboard parity for move/resize/resolve actions in timeline editor using the same normalized schedule/conflict model ([TI-009](docs/exec-plans/active/tracked-issues/TI-009.md)).
 
 #### Scoped UI tasks (post-foundation sequencing)
-1. Build read-only week timeline shell fed by normalized `timeline_blocks` from `/api/v1/scheduler-ui/state`.
-2. Add drag/resize interactions with 15-minute snap and 5-minute modifier, then wire live `/validate` calls.
-3. Render conflict lane states mapped to normalized backend conflict types and suggestion actions.
-4. Add publish preflight panel using `/publish` and blocking conflict details.
-5. Add keyboard parity for move/resize/conflict resolution against the same normalized block model.
+1. Build read-only week timeline shell fed by normalized `timeline_blocks` from `/api/v1/scheduler-ui/state` ([TI-007](docs/exec-plans/active/tracked-issues/TI-007.md)).
+2. Add drag/resize interactions with 15-minute snap and 5-minute modifier, then wire live `/validate` calls using normalized request/response contracts from `docs/schedule_schema.md` ([TI-007](docs/exec-plans/active/tracked-issues/TI-007.md)).
+3. Render conflict lane states mapped to normalized backend conflict types and suggestion actions (`hard_conflict`, `soft_conflict`, `suggested_resolution`) ([TI-008](docs/exec-plans/active/tracked-issues/TI-008.md)).
+4. Add publish preflight panel using `/publish` and blocking conflict details sourced from normalized conflict payloads ([TI-008](docs/exec-plans/active/tracked-issues/TI-008.md)).
+5. Add keyboard parity for move/resize/conflict resolution against the same normalized block/conflict model and backend action contracts ([TI-009](docs/exec-plans/active/tracked-issues/TI-009.md)).
 
 ### Should
 - [ ] Holiday and special-event override calendar **(M)**
