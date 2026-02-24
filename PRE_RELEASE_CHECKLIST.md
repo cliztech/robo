@@ -4,6 +4,8 @@
 
 Run the following commands in order before release sign-off.
 
+Dependency gate: verify current Python/Node/Docker toolchain versions satisfy `docs/product-specs/dependency-compatibility-contract.md` before sign-off.
+
 1. `python config/validate_config.py`  
    Expected output string: `Configuration validation passed for schedules.json and prompt_variables.json.`
 2. `python config/check_runtime_secrets.py --require-env-only`  
