@@ -67,6 +67,13 @@ class _TimeProfile:
     target_energy: int
 
 
+@dataclass(slots=True)
+class _OptimizedTrack:
+    track: TrackCandidate
+    genre_lower: str
+    mood_lower: str
+
+
 TIME_OF_DAY_PROFILE: dict[int, _TimeProfile] = {
     0: _TimeProfile(("ambient", "lofi", "chill"), 3),
     1: _TimeProfile(("ambient", "lofi", "chill"), 3),
@@ -97,13 +104,26 @@ TIME_OF_DAY_PROFILE: dict[int, _TimeProfile] = {
 
 class PlaylistGenerationService:
     def generate(self, request: PlaylistGenerationRequest) -> PlaylistGenerationResult:
-        remaining = request.tracks.copy()
+        # Pre-process tracks into optimized structures (O(N))
+        remaining = [
+            _OptimizedTrack(track=t, genre_lower=t.genre.lower(), mood_lower=t.mood.lower())
+            for t in request.tracks
+        ]
         output: list[PlaylistEntry] = []
         transition_scores: list[float] = []
+
+        # Pre-compute invariants to avoid re-calculating them in the inner loop (O(N) * K times)
+        profile = TIME_OF_DAY_PROFILE[request.start_hour]
+        requested_genres = {genre.lower() for genre in request.preferred_genres}
 
         for slot in range(request.desired_count):
             target_energy = self._target_energy_for_slot(request, slot)
             previous_track = output[-1] if output else None
+
+            # Pre-compute previous track attributes to avoid re-calculating in inner loop
+            prev_mood_lower = previous_track.mood.lower() if previous_track else None
+            prev_genre_lower = previous_track.genre.lower() if previous_track else None
+
             recent_artists = {entry.artist for entry in output[-request.avoid_recent_artist_window :]}
 
             hard_filtered = [
@@ -113,36 +133,41 @@ class PlaylistGenerationService:
             ]
             candidate_pool = hard_filtered if hard_filtered else remaining
 
-            scored_candidates = sorted(
+            # Optimized: Use max() instead of sorted() since we only need the top candidate.
+            # This reduces complexity from O(N log N) to O(N) per slot.
+            chosen = max(
                 candidate_pool,
                 key=lambda candidate: self._candidate_score(
-                    request=request,
                     candidate=candidate,
                     previous_track=previous_track,
                     target_energy=target_energy,
                     recent_artists=recent_artists,
+                    profile=profile,
+                    requested_genres=requested_genres,
+                    prev_mood_lower=prev_mood_lower,
+                    prev_genre_lower=prev_genre_lower,
                 ),
-                reverse=True,
             )
-            chosen = scored_candidates[0]
 
-            transition = 1.0 if previous_track is None else self._transition_score(previous_track, chosen)
+            transition = 1.0 if previous_track is None else self._transition_score(previous_track, chosen, prev_mood_lower, prev_genre_lower)
             transition_scores.append(transition)
+
+            chosen_track = chosen.track
             output.append(
                 PlaylistEntry(
-                    track_id=chosen.id,
-                    title=chosen.title,
-                    artist=chosen.artist,
-                    genre=chosen.genre,
-                    mood=chosen.mood,
-                    energy=chosen.energy,
-                    bpm=chosen.bpm,
-                    duration_seconds=chosen.duration_seconds,
+                    track_id=chosen_track.id,
+                    title=chosen_track.title,
+                    artist=chosen_track.artist,
+                    genre=chosen_track.genre,
+                    mood=chosen_track.mood,
+                    energy=chosen_track.energy,
+                    bpm=chosen_track.bpm,
+                    duration_seconds=chosen_track.duration_seconds,
                     transition_score=round(transition, 3),
                     selection_reason=self._selection_reason(request, target_energy, previous_track, chosen),
                 )
             )
-            remaining = [track for track in remaining if track.id != chosen.id]
+            remaining = [track for track in remaining if track.track.id != chosen_track.id]
 
         return PlaylistGenerationResult(
             entries=output,
@@ -156,15 +181,15 @@ class PlaylistGenerationService:
         request: PlaylistGenerationRequest,
         output: list[PlaylistEntry],
         previous_track: PlaylistEntry | None,
-        candidate: TrackCandidate,
+        candidate: _OptimizedTrack,
     ) -> bool:
-        if previous_track is not None and abs(previous_track.bpm - candidate.bpm) > request.max_bpm_delta:
+        if previous_track is not None and abs(previous_track.bpm - candidate.track.bpm) > request.max_bpm_delta:
             return False
 
         if output:
             run_length = 0
             for existing in reversed(output):
-                if existing.genre.lower() == candidate.genre.lower():
+                if existing.genre.lower() == candidate.genre_lower:
                     run_length += 1
                 else:
                     break
@@ -174,7 +199,7 @@ class PlaylistGenerationService:
         if request.target_duration_seconds is not None:
             accumulated = sum(entry.duration_seconds for entry in output)
             remaining_slots = request.desired_count - len(output)
-            projected = accumulated + candidate.duration_seconds
+            projected = accumulated + candidate.track.duration_seconds
             min_future = (remaining_slots - 1) * 30
             if projected + min_future > request.target_duration_seconds:
                 return False
@@ -195,39 +220,50 @@ class PlaylistGenerationService:
 
     def _candidate_score(
         self,
-        request: PlaylistGenerationRequest,
-        candidate: TrackCandidate,
+        candidate: _OptimizedTrack,
         previous_track: PlaylistEntry | None,
         target_energy: int,
         recent_artists: set[str],
+        profile: _TimeProfile,
+        requested_genres: set[str],
+        prev_mood_lower: str | None,
+        prev_genre_lower: str | None,
     ) -> float:
-        profile = TIME_OF_DAY_PROFILE[request.start_hour]
-        requested_genres = {genre.lower() for genre in request.preferred_genres}
-        track_genre = candidate.genre.lower()
-
         score = 0.0
-        energy_delta = abs(candidate.energy - target_energy)
+        energy_delta = abs(candidate.track.energy - target_energy)
         score += max(0, 1 - (energy_delta / 10))
 
         if requested_genres:
-            score += 0.5 if track_genre in requested_genres else -0.2
-        elif track_genre in profile.preferred_genres:
+            score += 0.5 if candidate.genre_lower in requested_genres else -0.2
+        elif candidate.genre_lower in profile.preferred_genres:
             score += 0.35
 
-        if candidate.artist in recent_artists:
+        if candidate.track.artist in recent_artists:
             score -= 0.6
 
         if previous_track is not None:
-            score += self._transition_score(previous_track, candidate)
+            score += self._transition_score(previous_track, candidate, prev_mood_lower, prev_genre_lower)
 
         return score
 
-    def _transition_score(self, previous: PlaylistEntry, current: TrackCandidate) -> float:
-        bpm_gap = abs(previous.bpm - current.bpm)
+    def _transition_score(
+        self,
+        previous: PlaylistEntry,
+        current: _OptimizedTrack,
+        prev_mood_lower: str | None = None,
+        prev_genre_lower: str | None = None,
+    ) -> float:
+        bpm_gap = abs(previous.bpm - current.track.bpm)
         bpm_score = max(0.0, 1 - (bpm_gap / 35))
-        mood_score = 1.0 if previous.mood.lower() == current.mood.lower() else 0.65
-        artist_score = 0.0 if previous.artist == current.artist else 1.0
-        genre_score = 1.0 if previous.genre.lower() == current.genre.lower() else 0.75
+
+        p_mood = prev_mood_lower if prev_mood_lower is not None else previous.mood.lower()
+        mood_score = 1.0 if p_mood == current.mood_lower else 0.65
+
+        artist_score = 0.0 if previous.artist == current.track.artist else 1.0
+
+        p_genre = prev_genre_lower if prev_genre_lower is not None else previous.genre.lower()
+        genre_score = 1.0 if p_genre == current.genre_lower else 0.75
+
         return round((bpm_score * 0.35) + (mood_score * 0.25) + (artist_score * 0.25) + (genre_score * 0.15), 3)
 
     def _selection_reason(
@@ -235,10 +271,10 @@ class PlaylistGenerationService:
         request: PlaylistGenerationRequest,
         target_energy: int,
         previous_track: PlaylistEntry | None,
-        chosen: TrackCandidate,
+        chosen: _OptimizedTrack,
     ) -> str:
         parts = [f"target_energy={target_energy}"]
-        if request.preferred_genres and chosen.genre.lower() in {genre.lower() for genre in request.preferred_genres}:
+        if request.preferred_genres and chosen.genre_lower in {genre.lower() for genre in request.preferred_genres}:
             parts.append("matched_preferred_genre")
         if previous_track is not None:
             parts.append(f"transition={self._transition_score(previous_track, chosen):.2f}")
