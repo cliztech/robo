@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { Activity, Gauge, Radio, Signal, SlidersHorizontal } from 'lucide-react';
 
 interface MainLayoutProps {
@@ -6,10 +6,10 @@ interface MainLayoutProps {
 }
 
 const libraryRows = [
-    { title: 'Jin (Original Mix)', artist: 'Arche', bpm: '128.00', key: 'Gm', rating: '★★★★★', time: '05:31' },
-    { title: 'Womanloop (Original Mix)', artist: 'Sergio Saffe', bpm: '128.00', key: 'D', rating: '★★★★☆', time: '06:03' },
-    { title: 'Slow Down (Original Mix)', artist: "GuyMac, Murphy's Law", bpm: '125.00', key: 'Abm', rating: '★★★★☆', time: '06:54' },
-    { title: 'Closing Doors (Original Mix)', artist: 'Imanol Molina', bpm: '122.00', key: 'Fm', rating: '★★★☆☆', time: '06:50' },
+    { title: 'Jin (Original Mix)', artist: 'Arche', bpm: '128.00', key: 'Gm', rating: '*****', time: '05:31' },
+    { title: 'Womanloop (Original Mix)', artist: 'Sergio Saffe', bpm: '128.00', key: 'D', rating: '****+', time: '06:03' },
+    { title: 'Slow Down (Original Mix)', artist: "GuyMac, Murphy\'s Law", bpm: '125.00', key: 'Abm', rating: '****+', time: '06:54' },
+    { title: 'Closing Doors (Original Mix)', artist: 'Imanol Molina', bpm: '122.00', key: 'Fm', rating: '***++', time: '06:50' },
 ];
 
 export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
@@ -74,14 +74,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                     </table>
                 </div>
             </section>
-        <div className="flex flex-col h-screen w-screen bg-carbon-fiber text-white overflow-hidden select-none relative">
-            {/* Ambient console glow */}
-            <div className="absolute inset-0 pointer-events-none" style={{
-                background: 'radial-gradient(circle at 50% 10%, rgba(255,255,255,0.02) 0%, transparent 60%)'
-            }} />
-            <div className="relative z-10 flex flex-col h-full w-full">
-                {children}
-            </div>
         </div>
     );
 };

@@ -36,17 +36,17 @@ Use the roadmap helper to continuously surface the next open tasks while you wor
 
 - [x] Build stage timeline UI (Intake → Plan → Execute → Verify → Handoff).
 - [ ] Add human-in-the-loop checkpoints for high-impact decisions.
-- [ ] Add task route templates (QA / Change / Proposal).
+- [x] Add task route templates (QA / Change / Proposal).
 - [ ] Add one-click rollback assistant for config-level changes.
 - [ ] Add guided troubleshooting for schedules/personas/autonomy policies.
 
 ## P2 — Productization
 
 - [ ] Publish operator guides by persona (Admin, Producer, Reviewer).
-- [ ] Build runbook index for common failures.
-- [ ] Define support triage workflow + SLA targets.
+- [x] Build runbook index for common failures.
+- [x] Define support triage workflow + SLA targets.
 - [ ] Document packaging tiers and feature-gate boundaries.
-- [ ] Define telemetry ethics + opt-in policy.
+- [x] Define telemetry ethics + opt-in policy.
 
 ## Tracking Cadence
 

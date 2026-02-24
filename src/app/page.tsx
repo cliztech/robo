@@ -1,818 +1,423 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { ConsoleWorkspaceView } from '@/components/console/ConsoleWorkspaceView';
-import { CONSOLE_NAV_ITEMS, CONSOLE_UTILITY_ITEMS } from '@/components/console/consoleNav';
-import { ConsoleLayout } from '@/components/shell/ConsoleLayout';
-import { useConsoleViewState } from '@/hooks/useConsoleViewState';
-import {
-    LayoutDashboard, Disc, Music, Sliders, Clock, Bot, Headphones, Gauge, Wifi, Users, TrendingUp, TrendingDown, Minus, Zap, Signal, AlertTriangle, Activity, Radio, Mic2, Settings as SettingsIcon, Play, Pause, SkipBack, SkipForward, Repeat, Shuffle, Volume2, VolumeX, Volume1
-} from 'lucide-react';
-import { DegenAIHost } from '../components/ai/DegenAIHost';
-import { LibraryBrowser } from '../components/shell/library-browser';
-import { MixerPanel } from '../components/shell/mixer-panel';
-import { DegenScheduleTimeline } from '../components/schedule/DegenScheduleTimeline';
-import { AppShell, type ShellNavItem } from '../components/shell/app-shell';
-import { DashboardView, DecksView } from '../components/shell/console-views';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { useAudioEngine } from '../hooks/useAudioEngine';
-import { createDJTelemetry, type DJTelemetry } from '../lib/audio/telemetry';
-import { createMockTelemetry } from '../lib/audio/mockTelemetry';
-import { cn } from '../lib/utils';
-import { DegenEffectRack } from '../components/audio/DegenEffectRack';
-import { DegenBeatGrid } from '../components/audio/DegenBeatGrid';
-import { DegenWaveform } from '../components/audio/DegenWaveform';
-import { DegenMixer } from '../components/audio/DegenMixer';
-import { DegenTransport } from '../components/audio/DegenTransport';
-import { DegenTrackList } from '../components/audio/DegenTrackList';
-import { StageTimeline } from '../components/workflow/StageTimeline';
-import { DegenButton } from '../components/primitives/DegenButton';
-import { GorillaLogo, Sidebar, TabStrip, Topbar, Workspace } from '../components/shell';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Mic, Pause, Play, Radio, RotateCcw, SkipBack, SkipForward, Sparkles, Volume2 } from 'lucide-react';
+
+type DeckId = 'A' | 'B' | 'C' | 'D';
+type ProfileId = 'starter' | 'essentials' | 'pro4' | 'vertical' | 'broadcast';
+
+type WaveMode = 'h' | 'v';
+
+type Track = { id: string; t: string; a: string; b: number; k: string; u: string };
+type Deck = {
+  id: DeckId; label: string; i: number; t: string; a: string; b: number; k: string; u: string;
+  p: boolean; v: number; r: number;
+};
+type Meter = { c: number; d: number };
+type Profile = { id: ProfileId; n: string; d: string; decks: DeckId[]; wm: WaveMode; s: boolean; f: boolean; b: boolean };
+type Pad = { id: string; l: string; u: string; cls: string };
+type Persist = {
+  profileId?: ProfileId; crossfader?: number; cursor?: number; onAir?: boolean; autoMix?: boolean;
+  rec?: boolean; uhd?: boolean; decks?: Partial<Record<DeckId, Partial<Deck>>>;
+};
+
+const STORAGE = 'dgn_console_v2';
+const IDS: DeckId[] = ['A', 'B', 'C', 'D'];
+const TRACKS: Track[] = [
+  { id: 't1', t: 'Neon Transit', a: 'DGN Lab', b: 126, k: '8A', u: 'https://cdn.pixabay.com/download/audio/2022/02/16/audio_d1718ab41b.mp3?filename=lofi-study-112191.mp3' },
+  { id: 't2', t: 'Afterhours Carrier', a: 'DGN Ops', b: 128, k: '10A', u: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=future-bass-logo-116997.mp3' },
+  { id: 't3', t: 'Gridline Surge', a: 'DGN Motion', b: 124, k: '9A', u: 'https://cdn.pixabay.com/download/audio/2022/07/31/audio_8e4f9d3a68.mp3?filename=deep-house-fashion-show-ambient-130155.mp3' },
+  { id: 't4', t: 'Pulse Control', a: 'DGN Night', b: 130, k: '11A', u: 'https://cdn.pixabay.com/download/audio/2023/03/09/audio_a5ac5fe3f3.mp3?filename=technology-house-139458.mp3' },
+];
+const PADS: Pad[] = [
+  { id: 'p1', l: 'Stinger', u: 'https://cdn.pixabay.com/download/audio/2022/03/10/audio_f7416df17c.mp3?filename=notification-1-126505.mp3', cls: 'bg-fuchsia-600/30 border-fuchsia-500/40 text-fuchsia-200' },
+  { id: 'p2', l: 'Sweep', u: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_4e93850f23.mp3?filename=whoosh-transition-118607.mp3', cls: 'bg-cyan-600/30 border-cyan-500/40 text-cyan-200' },
+];
+const PROFILES: Profile[] = [
+  { id: 'starter', n: 'DGN Starter', d: '2 deck basic shell', decks: ['A', 'B'], wm: 'h', s: false, f: false, b: true },
+  { id: 'essentials', n: 'DGN Essentials', d: '2 deck + pads + fx', decks: ['A', 'B'], wm: 'h', s: true, f: true, b: true },
+  { id: 'pro4', n: 'DGN Pro 4', d: '4 deck pro layout', decks: ['A', 'B', 'C', 'D'], wm: 'h', s: true, f: true, b: true },
+  { id: 'vertical', n: 'DGN Vertical', d: '4 deck vertical wave', decks: ['A', 'B', 'C', 'D'], wm: 'v', s: true, f: true, b: false },
+  { id: 'broadcast', n: 'DGN Broadcast', d: 'radio operations rail', decks: ['A', 'B'], wm: 'h', s: true, f: true, b: true },
+];
+const KEYMAP = [
+  'Space master play/pause', 'Q/W cue/play A', 'O/P cue/play B', 'A/S cue/play C', 'K/L cue/play D',
+  'Arrow Left/Right crossfader', '1/2/3/4 load next', 'M automix', 'V cycle version', 'R record'
+];
+
+const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
+const fmt = (s: number) => `${Math.floor(Math.max(0, s) / 60)}:${Math.floor(Math.max(0, s) % 60).toString().padStart(2, '0')}`;
+const mkDeck = (id: DeckId, i: number): Deck => {
+  const tr = TRACKS[((i % TRACKS.length) + TRACKS.length) % TRACKS.length];
+  return { id, label: `Deck ${id}`, i, t: tr.t, a: tr.a, b: tr.b, k: tr.k, u: tr.u, p: false, v: 0.8, r: 1 };
+};
 
 export default function StudioPage() {
-    const { currentView, isOnAir, setCurrentView, toggleOnAir } = useConsoleViewState();
-    const shouldReduceMotion = useReducedMotion();
+  const refs = useRef<Record<DeckId, HTMLAudioElement | null>>({ A: null, B: null, C: null, D: null });
+  const dirRef = useRef<1 | -1>(1);
 
-    // Mock telemetry for now as we don't have the full engine context in this view
-    const [telemetry, setTelemetry] = useState<any>({
-        transport: { isPlaying: false, progress: 0, elapsedSeconds: 0, durationSeconds: 234, remainingSeconds: 234 },
-        stereoLevels: { leftLevel: 0, rightLevel: 0, leftPeak: 0, rightPeak: 0 },
-        signalFlags: { clipDetected: false, limiterEngaged: false }
+  const [profileId, setProfileId] = useState<ProfileId>('starter');
+  const [decks, setDecks] = useState<Record<DeckId, Deck>>({ A: mkDeck('A', 0), B: mkDeck('B', 1), C: mkDeck('C', 2), D: mkDeck('D', 3) });
+  const [meters, setMeters] = useState<Record<DeckId, Meter>>({ A: { c: 0, d: 0 }, B: { c: 0, d: 0 }, C: { c: 0, d: 0 }, D: { c: 0, d: 0 } });
+  const [cursor, setCursor] = useState(3);
+  const [xf, setXf] = useState(0.5);
+  const [autoMix, setAutoMix] = useState(false);
+  const [onAir, setOnAir] = useState(false);
+  const [rec, setRec] = useState(false);
+  const [uhd, setUhd] = useState(true);
+  const [padVol, setPadVol] = useState(0.6);
+  const [padHot, setPadHot] = useState<string | null>(null);
+  const [targetDeck, setTargetDeck] = useState<DeckId>('A');
+  const [hydrated, setHydrated] = useState(false);
+
+  const profile = useMemo(() => PROFILES.find((p) => p.id === profileId) ?? PROFILES[0], [profileId]);
+  const vols = useMemo(() => ({ A: decks.A.v * (1 - xf), B: decks.B.v * xf, C: decks.C.v, D: decks.D.v }), [decks, xf]);
+
+  useEffect(() => {
+    IDS.forEach((id) => {
+      const n = refs.current[id];
+      if (!n) return;
+      n.volume = clamp(vols[id], 0, 1);
+      n.playbackRate = clamp(decks[id].r, 0.8, 1.25);
     });
+  }, [decks, vols]);
 
-    // Sidebar items
-    const navItems = [
-        { view: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { view: 'decks', label: 'Decks', icon: Disc, badge: 'LIVE' },
-        { view: 'mixer', label: 'Mixer', icon: Sliders },
-        { view: 'library', label: 'Library', icon: Music },
-        { view: 'schedule', label: 'Schedule', icon: Clock },
-        { view: 'ai-host', label: 'AI Host', icon: Bot },
-    ];
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(STORAGE);
+      if (!raw) {
+        setHydrated(true);
+        return;
+      }
+      const p = JSON.parse(raw) as Persist;
+      if (p.profileId && PROFILES.some((x) => x.id === p.profileId)) setProfileId(p.profileId);
+      if (typeof p.crossfader === 'number') setXf(clamp(p.crossfader, 0, 1));
+      if (typeof p.cursor === 'number') setCursor(Math.max(0, p.cursor));
+      if (typeof p.autoMix === 'boolean') setAutoMix(p.autoMix);
+      if (typeof p.onAir === 'boolean') setOnAir(p.onAir);
+      if (typeof p.rec === 'boolean') setRec(p.rec);
+      if (typeof p.uhd === 'boolean') setUhd(p.uhd);
+      if (p.decks) {
+        setDecks((prev) => ({ A: { ...prev.A, ...p.decks?.A }, B: { ...prev.B, ...p.decks?.B }, C: { ...prev.C, ...p.decks?.C }, D: { ...prev.D, ...p.decks?.D } }));
+      }
+    } catch {
+      // ignore
+    } finally {
+      setHydrated(true);
+    }
+  }, []);
 
-    return (
-        <div className="flex h-screen bg-black text-white font-sans selection:bg-lime-500/30 overflow-hidden">
-            {/* SIDEBAR */}
-            <Sidebar>
-                <div className="mb-5 cursor-pointer hover:scale-110 transition-transform">
-                    <GorillaLogo size={28} />
-                </div>
-
-                <div className="w-6 h-[1px] bg-gradient-to-r from-transparent via-zinc-700 to-transparent mb-2" />
-
-                <div className="flex-1 flex flex-col gap-0.5">
-                    {navItems.map((item) => (
-                        <button
-                            key={item.view}
-                            onClick={() => setCurrentView(item.view as any)}
-                            className={cn(
-                                'relative w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
-                                currentView === item.view
-                                    ? 'bg-deck-a-soft text-deck-a shadow-glow-deck-a-ring'
-                                    : 'text-zinc-600 hover:text-zinc-200 hover:bg-white/[0.03]'
-                            )}
-                            aria-label={item.label}
-                            aria-pressed={currentView === item.view}
-                        >
-                            <item.icon size={17} />
-                        </button>
-                    ))}
-                </div>
-
-                <div className="w-6 h-[1px] bg-gradient-to-r from-transparent via-zinc-700 to-transparent mb-2" />
-
-                <div className="flex flex-col gap-0.5">
-                     <button className="relative w-10 h-10 rounded-lg flex items-center justify-center text-zinc-600 hover:text-zinc-200 hover:bg-white/[0.03]">
-                        <Headphones size={17} />
-                     </button>
-                     <button className="relative w-10 h-10 rounded-lg flex items-center justify-center text-zinc-600 hover:text-zinc-200 hover:bg-white/[0.03]">
-                        <SettingsIcon size={17} />
-                     </button>
-                </div>
-            </Sidebar>
-
-            {/* MAIN CONTENT */}
-            <div className="flex-1 flex flex-col min-w-0 relative z-[1]">
-                <Topbar height="comfortable" ariaLabel="Studio top bar">
-                    <TabStrip ariaLabel="View context" region="secondary" align="start" className="pr-3">
-                        <span className="text-[10px] font-mono font-medium text-zinc-500 uppercase">
-                            {currentView}
-                        </span>
-                    </TabStrip>
-
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={toggleOnAir}
-                            aria-label="On-air broadcast toggle"
-                            aria-pressed={isOnAir}
-                            className={cn(
-                                'relative flex items-center gap-2 px-3 py-1.5 rounded-md border text-[9px] font-black uppercase tracking-[0.2em] transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
-                                isOnAir
-                                    ? 'bg-red-600/15 border-red-500/25 text-red-400 pulse-ring'
-                                    : 'bg-zinc-900/50 border-zinc-700/50 text-zinc-500 hover:border-zinc-600 hover:text-zinc-400'
-                            )}
-                        >
-                            <Radio size={11} className={isOnAir ? 'animate-pulse' : ''} />
-                            {isOnAir ? 'On Air' : 'Off Air'}
-                        </button>
-                    </div>
-                </Topbar>
-
-                <Workspace
-                    ariaLabel="Studio workspace"
-                    padding="comfortable"
-                    focusOnContentChange
-                    focusKey={currentView}
-                >
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={currentView}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            transition={{ duration: 0.2 }}
-                            className="h-full"
-                        >
-                            {currentView === 'dashboard' && <DashboardView telemetry={telemetry} />}
-                            {currentView === 'decks' && <DeckView telemetry={telemetry} />}
-                            {currentView === 'mixer' && <div className="max-w-4xl mx-auto"><DegenMixer telemetry={telemetry} /></div>}
-                            {currentView === 'library' && <DegenTrackList />}
-                            {currentView === 'schedule' && <div className="max-w-5xl mx-auto"><DegenScheduleTimeline /></div>}
-                            {currentView === 'ai-host' && <div className="max-w-3xl mx-auto"><DegenAIHost /></div>}
-                        </motion.div>
-                    </AnimatePresence>
-                </Workspace>
-
-                <DegenTransport
-                    isOnAir={isOnAir}
-                    isPlaying={false}
-                    telemetry={telemetry}
-                />
-import { Music2, Play, Square, ChevronLeft, ChevronRight, Search, ListMusic, Volume2 } from 'lucide-react';
-
-type ViewMode = 'dashboard' | 'decks' | 'mixer' | 'library' | 'schedule' | 'ai-host' | 'personas';
-
-// Helper data from Rekordbox-style view
-const tracks = [
-    ['Jin (Original Mix)', 'Arche', '128.0', 'Gm', '05:31'],
-    ['Womanloop (Original Mix)', 'Sergio Saffe', '128.0', 'D', '06:03'],
-    ['Pelusa (Original Mix)', 'Nacho Scoppa', '128.0', 'Db', '07:00'],
-    ['Slow Down (Original Mix)', "GuyMac, Murphy's Law", '125.0', 'Abm', '06:54'],
-    ['Closing Doors (Original Mix)', 'Imanol Molina', '122.0', 'Fm', '06:50'],
-    ['All Nighter (Original Mix)', 'Mescal Kids', '123.0', 'F#m', '05:48'],
-];
-
-const memoryPoints = [
-    { label: 'A', time: '00:00', color: 'bg-red-500/90' },
-    { label: 'B', time: '00:30', color: 'bg-blue-500/90' },
-    { label: 'C', time: '01:45', color: 'bg-green-500/90' },
-    { label: 'D', time: '02:30', color: 'bg-purple-500/90' },
-    { label: 'E', time: '03:00', color: 'bg-emerald-500/90' },
-    { label: 'F', time: '03:30', color: 'bg-orange-500/90' },
-    { label: 'G', time: '04:15', color: 'bg-indigo-500/90' },
-    { label: 'H', time: '04:52', color: 'bg-yellow-500/90' },
-];
-
-/* ═══════════════════════════════════════════════
-   SIDEBAR ICON
-   ═══════════════════════════════════════════════ */
-function SidebarIcon({
-    icon: Icon,
-    label,
-    active,
-    onClick,
-    badge,
-}: {
-    icon: React.ElementType;
-    label: string;
-    active?: boolean;
-    onClick?: () => void;
-    badge?: string;
-}) {
-    return (
-        <button
-            onClick={onClick}
-            title={label}
-            aria-label={label}
-            className={cn(
-                'relative w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black',
-                active
-                    ? 'bg-accent/10 text-accent shadow-[0_0_15px_rgba(2,125,225,0.08)]'
-                    : 'text-zinc-600 hover:text-zinc-200 hover:bg-white/[0.03]'
-            )}
-        >
-            <Icon size={17} strokeWidth={active ? 2.2 : 1.5} />
-            {/* Active indicator bar */}
-            {active && (
-                <motion.div
-                    layoutId="sidebar-active"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 w-[2.5px] h-5 rounded-r-full bg-accent"
-                    style={{ boxShadow: '0 0 8px rgba(2,125,225,0.5)' }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                />
-            )}
-            {/* Badge */}
-            {badge && (
-                <div className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-red-500 flex items-center justify-center">
-                    <span className="text-[6px] font-black text-white">{badge}</span>
-                </div>
-            )}
-            {/* Tooltip */}
-            <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-zinc-900/95 border border-zinc-700/50 rounded-md text-[9px] font-bold text-zinc-200 whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 z-50 shadow-lg backdrop-blur-sm translate-x-1 group-hover:translate-x-0">
-                {label}
-                <div className="absolute right-full top-1/2 -translate-y-1/2 w-0 h-0 border-t-[4px] border-t-transparent border-b-[4px] border-b-transparent border-r-[4px] border-r-zinc-700/50" />
-            </div>
-        </button>
-    );
-}
-
-/* ═══════════════════════════════════════════════
-   STAT CARD
-   ═══════════════════════════════════════════════ */
-function StatCard({
-    label,
-    value,
-    unit,
-    icon: Icon,
-    color = 'accent',
-    trend,
-    sparkline,
-    delay = 0,
-}: {
-    label: string;
-    value: string | number;
-    unit?: string;
-    icon: React.ElementType;
-    color?: 'accent' | 'purple' | 'cyan' | 'orange' | 'red';
-    trend?: 'up' | 'down' | 'stable';
-    sparkline?: number[];
-    delay?: number;
-}) {
-    const colorMap = {
-        accent: {
-            gradient: 'from-accent/8 via-accent/3 to-transparent',
-            border: 'border-accent/15',
-            text: 'text-accent',
-            icon: 'text-accent/70',
-            glow: 'shadow-[0_0_20px_rgba(2,125,225,0.04)]',
-            spark: '#027de1',
-        },
-        purple: {
-            gradient: 'from-purple-500/8 via-purple-500/3 to-transparent',
-            border: 'border-purple-500/15',
-            text: 'text-purple-400',
-            icon: 'text-purple-500/70',
-            glow: 'shadow-[0_0_20px_rgba(153,51,255,0.04)]',
-            spark: '#9933ff',
-        },
-        cyan: {
-            gradient: 'from-cyan-500/8 via-cyan-500/3 to-transparent',
-            border: 'border-cyan-500/15',
-            text: 'text-cyan-400',
-            icon: 'text-cyan-500/70',
-            glow: 'shadow-[0_0_20px_rgba(0,191,255,0.04)]',
-            spark: '#00bfff',
-        },
-        orange: {
-            gradient: 'from-orange-500/8 via-orange-500/3 to-transparent',
-            border: 'border-orange-500/15',
-            text: 'text-orange-400',
-            icon: 'text-orange-500/70',
-            glow: 'shadow-[0_0_20px_rgba(255,107,0,0.04)]',
-            spark: '#ff6b00',
-        },
-        red: {
-            gradient: 'from-red-500/8 via-red-500/3 to-transparent',
-            border: 'border-red-500/15',
-            text: 'text-red-400',
-            icon: 'text-red-500/70',
-            glow: 'shadow-[0_0_20px_rgba(239,68,68,0.04)]',
-            spark: '#ef4444',
-        },
+  useEffect(() => {
+    if (!hydrated) return;
+    const payload: Persist = {
+      profileId,
+      crossfader: xf,
+      cursor,
+      autoMix,
+      onAir,
+      rec,
+      uhd,
+      decks: {
+        A: { i: decks.A.i, t: decks.A.t, a: decks.A.a, b: decks.A.b, k: decks.A.k, u: decks.A.u, v: decks.A.v, r: decks.A.r },
+        B: { i: decks.B.i, t: decks.B.t, a: decks.B.a, b: decks.B.b, k: decks.B.k, u: decks.B.u, v: decks.B.v, r: decks.B.r },
+        C: { i: decks.C.i, t: decks.C.t, a: decks.C.a, b: decks.C.b, k: decks.C.k, u: decks.C.u, v: decks.C.v, r: decks.C.r },
+        D: { i: decks.D.i, t: decks.D.t, a: decks.D.a, b: decks.D.b, k: decks.D.k, u: decks.D.u, v: decks.D.v, r: decks.D.r },
+      },
     };
+    window.localStorage.setItem(STORAGE, JSON.stringify(payload));
+  }, [profileId, xf, cursor, autoMix, onAir, rec, uhd, decks, hydrated]);
 
-    const c = colorMap[color];
-    const defaultSparkline = [30, 45, 38, 52, 48, 60, 55, 70, 65, 75, 72, 80];
+  const setDeck = useCallback((id: DeckId, partial: Partial<Deck>) => {
+    setDecks((p) => ({ ...p, [id]: { ...p[id], ...partial } }));
+  }, []);
 
-    const TrendIcon = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : Minus;
-    const trendColor = trend === 'up' ? 'text-accent' : trend === 'down' ? 'text-red-400' : 'text-zinc-600';
+  const syncPlay = useCallback((id: DeckId, p: boolean) => {
+    setDecks((s) => ({ ...s, [id]: { ...s[id], p } }));
+  }, []);
 
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 16, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ delay, duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-            className={cn(
-                'relative overflow-hidden rounded-xl border p-4',
-                'bg-gradient-to-br',
-                c.gradient,
-                c.border,
-                c.glow,
-                'hover:scale-[1.02] hover:shadow-lg transition-all duration-300'
-            )}
-        >
-            {/* Shimmer overlay */}
-            <div className="absolute inset-0 shimmer opacity-30 pointer-events-none" />
+  const setRef = useCallback((id: DeckId, n: HTMLAudioElement | null) => { refs.current[id] = n; }, []);
 
-            <div className="relative z-10 flex items-start justify-between">
-                <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-1.5">
-                        <Icon size={13} className={c.icon} />
-                        <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-zinc-500">
-                            {label}
-                        </span>
-                    </div>
-                    <div className="flex items-baseline gap-1.5 mt-1">
-                        <span className="text-2xl font-black text-white tabular-nums tracking-tight">
-                            {value}
-                        </span>
-                        {unit && (
-                            <span className="text-[10px] font-medium text-zinc-500">{unit}</span>
-                        )}
-                    </div>
-                </div>
+  const onTime = useCallback((id: DeckId) => {
+    const n = refs.current[id];
+    if (!n) return;
+    setMeters((m) => ({ ...m, [id]: { c: n.currentTime, d: Number.isFinite(n.duration) ? n.duration : m[id].d } }));
+  }, []);
 
-                {/* Trend */}
-                {trend && (
-                    <div className={cn('flex items-center gap-0.5 mt-1', trendColor)}>
-                        <TrendIcon size={10} />
-                    </div>
-                )}
-            </div>
+  const onMeta = useCallback((id: DeckId) => {
+    const n = refs.current[id];
+    if (!n) return;
+    setMeters((m) => ({ ...m, [id]: { ...m[id], d: Number.isFinite(n.duration) ? n.duration : 0 } }));
+  }, []);
 
-            {/* Sparkline */}
-            <div className="relative z-10 mt-3 h-6">
-                <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="w-full h-full">
-                    <defs>
-                        <linearGradient id={`spark-fill-${label}`} x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor={c.spark} stopOpacity="0.15" />
-                            <stop offset="100%" stopColor={c.spark} stopOpacity="0" />
-                        </linearGradient>
-                    </defs>
-                    <path
-                        d={`M 0 30 ${(sparkline || defaultSparkline)
-                            .map(
-                                (v, i, arr) =>
-                                    `L ${(i / (arr.length - 1)) * 100} ${30 - (v / 100) * 28}`
-                            )
-                            .join(' ')} L 100 30 Z`}
-                        fill={`url(#spark-fill-${label})`}
-                    />
-                    <polyline
-                        points={(sparkline || defaultSparkline)
-                            .map(
-                                (v, i, arr) =>
-                                    `${(i / (arr.length - 1)) * 100},${30 - (v / 100) * 28}`
-                            )
-                            .join(' ')}
-                        fill="none"
-                        stroke={c.spark}
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="sparkline-animate"
-                        opacity="0.5"
-                    />
-                </svg>
-            </div>
-        </motion.div>
-    );
-}
+  const toggleDeck = useCallback(async (id: DeckId) => {
+    const n = refs.current[id];
+    if (!n) return;
+    if (n.paused) {
+      try {
+        await n.play();
+        syncPlay(id, true);
+      } catch {
+        syncPlay(id, false);
+      }
+      return;
+    }
+    n.pause();
+    syncPlay(id, false);
+  }, [syncPlay]);
 
-/* ═══════════════════════════════════════════════
-   DECK PANEL
-   ═══════════════════════════════════════════════ */
-function DeckPanel({
-    label,
-    color,
-    bpm,
-    musicalKey,
-    isActive,
-    children,
-}: {
-    label: string;
-    color: string;
-    bpm: string;
-    musicalKey: string;
-    isActive: boolean;
-    children: React.ReactNode;
-}) {
-    return (
-        <div className="glass-panel overflow-hidden">
-            <div className="panel-header">
-                <div className="flex items-center gap-2.5">
-                    <div className="relative">
-                        <div
-                            className={cn('w-2.5 h-2.5 rounded-full', isActive && 'animate-pulse')}
-                            style={{
-                                backgroundColor: color,
-                                boxShadow: isActive ? `0 0 10px ${color}80` : 'none',
-                            }}
-                        />
-                    </div>
-                    <span
-                        className="text-[10px] font-black uppercase tracking-[0.2em]"
-                        style={{ color }}
-                    >
-                        {label}
-                    </span>
-                </div>
-                <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-white/[0.03] border border-white/[0.05]">
-                        <span className="text-[9px] font-mono font-bold text-zinc-300 tabular-nums">
-                            {bpm}
-                        </span>
-                        <span className="text-[8px] text-zinc-600">BPM</span>
-                    </div>
-                    <div className="px-1.5 py-0.5 rounded bg-purple-500/10 border border-purple-500/15">
-                        <span className="text-[9px] font-mono font-bold text-purple-400">
-                            {musicalKey}
-                        </span>
-                    </div>
-                </div>
-            </div>
-            <div className="p-3 space-y-3">{children}</div>
+  const cue = useCallback((id: DeckId) => {
+    const n = refs.current[id];
+    if (!n) return;
+    n.currentTime = 0;
+    onTime(id);
+  }, [onTime]);
+
+  const ensure = useCallback(async (id: DeckId) => {
+    const n = refs.current[id];
+    if (!n || !n.paused) return;
+    try {
+      await n.play();
+      syncPlay(id, true);
+    } catch {
+      syncPlay(id, false);
+    }
+  }, [syncPlay]);
+
+  const loadTo = useCallback((id: DeckId, i: number) => {
+    const idx = ((i % TRACKS.length) + TRACKS.length) % TRACKS.length;
+    const tr = TRACKS[idx];
+    setDecks((d) => ({ ...d, [id]: { ...d[id], i: idx, t: tr.t, a: tr.a, b: tr.b, k: tr.k, u: tr.u, p: false } }));
+    setMeters((m) => ({ ...m, [id]: { c: 0, d: m[id].d } }));
+    const n = refs.current[id];
+    if (n) {
+      n.pause();
+      n.currentTime = 0;
+      n.load();
+    }
+  }, []);
+
+  const loadNext = useCallback((id: DeckId) => {
+    setCursor((c) => {
+      const i = c % TRACKS.length;
+      loadTo(id, i);
+      return c + 1;
+    });
+  }, [loadTo]);
+
+  const master = useCallback(async () => {
+    const ids = profile.decks;
+    const active = ids.some((id) => decks[id].p);
+    if (active) {
+      ids.forEach((id) => {
+        const n = refs.current[id];
+        if (!n) return;
+        n.pause();
+        syncPlay(id, false);
+      });
+      return;
+    }
+    await ensure('A');
+  }, [profile.decks, decks, ensure, syncPlay]);
+
+  const cycleProfile = useCallback(() => {
+    const i = PROFILES.findIndex((x) => x.id === profileId);
+    setProfileId(PROFILES[(i + 1) % PROFILES.length].id);
+  }, [profileId]);
+
+  const triggerPad = useCallback(async (pad: Pad) => {
+    setPadHot(pad.id);
+    const n = new Audio(pad.u);
+    n.volume = clamp(padVol, 0, 1);
+    try { await n.play(); } catch { /* ignore */ }
+    window.setTimeout(() => setPadHot((p) => (p === pad.id ? null : p)), 350);
+  }, [padVol]);
+
+  useEffect(() => {
+    if (!autoMix) return;
+    void ensure('A');
+    void ensure('B');
+    const t = window.setInterval(() => {
+      setXf((x) => {
+        let nx = x + dirRef.current * 0.02;
+        if (nx >= 1) {
+          nx = 1;
+          dirRef.current = -1;
+          loadNext('A');
+        } else if (nx <= 0) {
+          nx = 0;
+          dirRef.current = 1;
+          loadNext('B');
+        }
+        return nx;
+      });
+    }, 280);
+    return () => window.clearInterval(t);
+  }, [autoMix, ensure, loadNext]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const k = e.key.toLowerCase();
+      if (e.code === 'Space') { e.preventDefault(); void master(); return; }
+      if (k === 'q') cue('A'); if (k === 'w') void toggleDeck('A');
+      if (k === 'o') cue('B'); if (k === 'p') void toggleDeck('B');
+      if (k === 'a') cue('C'); if (k === 's') void toggleDeck('C');
+      if (k === 'k') cue('D'); if (k === 'l') void toggleDeck('D');
+      if (k === 'arrowleft') setXf((x) => clamp(x - 0.05, 0, 1));
+      if (k === 'arrowright') setXf((x) => clamp(x + 0.05, 0, 1));
+      if (k === '1') loadNext('A'); if (k === '2') loadNext('B'); if (k === '3') loadNext('C'); if (k === '4') loadNext('D');
+      if (k === 'm') setAutoMix((v) => !v); if (k === 'r') setRec((v) => !v); if (k === 'v') cycleProfile();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [cue, toggleDeck, loadNext, master, cycleProfile]);
+
+  return (
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#111827_0%,_#030712_45%,_#02030a_100%)] text-zinc-100 px-4 py-5 md:px-8">
+      <header className="mb-5 rounded-xl border border-white/10 bg-black/35 backdrop-blur px-4 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-black tracking-tight">DGN-DJ Ultra Console Studio</h1>
+            <p className="text-xs md:text-sm text-zinc-400 mt-1">Rekordbox/VirtualDJ inspired workflows, original DGN implementation.</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button type="button" aria-pressed={onAir} onClick={() => setOnAir((v) => !v)} className={`rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wide ${onAir ? 'bg-red-600 text-white' : 'bg-zinc-800 text-zinc-300'}`}>{onAir ? 'On Air' : 'Off Air'}</button>
+            <button type="button" aria-pressed={rec} onClick={() => setRec((v) => !v)} className={`rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wide ${rec ? 'bg-rose-600 text-white' : 'bg-zinc-800 text-zinc-300'}`}>{rec ? 'Recording' : 'Record'}</button>
+            <button type="button" aria-pressed={autoMix} onClick={() => setAutoMix((v) => !v)} className={`rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wide ${autoMix ? 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-300'}`}>{autoMix ? 'AutoMix On' : 'AutoMix Off'}</button>
+            <button type="button" aria-pressed={uhd} onClick={() => setUhd((v) => !v)} className={`rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wide ${uhd ? 'bg-emerald-600 text-white' : 'bg-zinc-800 text-zinc-300'}`}>{uhd ? 'UHD Density' : 'Compact Density'}</button>
+          </div>
         </div>
-    );
-}
-
-/* ═══════════════════════════════════════════════
-   DECK VIEW
-   ═══════════════════════════════════════════════ */
-function DeckView() {
-    return (
-        <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-                <DeckPanel label="Deck A" color="#027de1" bpm="128.0" musicalKey="Am" isActive={true}>
-                    <DegenWaveform
-                        progress={0.42}
-                        duration={234}
-                        trackTitle="Neural Drift v2.1 — SynthKong"
-                        isPlaying
-                        cuePoints={[
-                            { position: 0.12, label: 'CUE 1', color: '#ff6b00' },
-                            { position: 0.68, label: 'DROP', color: '#bf00ff' },
-                        ]}
-                    />
-                    <DegenEffectRack
-                        title="FX Bank A"
-                        deck="A"
-                        isActive
-                        controls={[
-                            { key: 'reverb', label: 'Reverb', unit: '%' },
-                            { key: 'delay', label: 'Delay', unit: 'ms', max: 500 },
-                            { key: 'rate', label: 'Rate', unit: 'Hz', max: 20 },
-                            { key: 'filter', label: 'Filter', unit: 'Hz', max: 20000 },
-                            { key: 'drive', label: 'Drive', unit: '%' },
-                        ]}
-                    />
-                </DeckPanel>
-
-                <DeckPanel label="Deck B" color="#9933ff" bpm="140.0" musicalKey="Fm" isActive={false}>
-                    <DegenWaveform
-                        progress={0.15}
-                        duration={198}
-                        trackTitle="Bass Gorilla — DJ DegenApe"
-                        isPlaying={false}
-                        cuePoints={[
-                            { position: 0.08, label: 'INTRO', color: '#3b82f6' },
-                            { position: 0.52, label: 'BUILD', color: '#bf00ff' },
-                        ]}
-                    />
-                    <DegenEffectRack
-                        title="FX Bank B"
-                        deck="B"
-                        isActive={false}
-                        controls={[
-                            { key: 'chorus', label: 'Chorus', unit: '%' },
-                            { key: 'phaser', label: 'Phaser', unit: '%' },
-                            { key: 'rate', label: 'Rate', unit: 'Hz', max: 20 },
-                            { key: 'flanger', label: 'Flanger', unit: '%' },
-                            { key: 'bitcrush', label: 'Crush', unit: 'bit', max: 16 },
-                        ]}
-                    />
-                </DeckPanel>
-            </div>
-
-            <div className="glass-panel">
-                <div className="panel-header">
-                    <span className="panel-header-title">Beat Sequencer</span>
-                </div>
-                <div className="p-3">
-                    <DegenBeatGrid decks={4} steps={16} />
-                </div>
-
-            </div>
+        <div className="mt-4 grid gap-2 md:grid-cols-3 xl:grid-cols-5">
+          {PROFILES.map((p) => (
+            <button key={p.id} type="button" onClick={() => setProfileId(p.id)} className={`rounded-lg border px-3 py-3 text-left transition-colors ${p.id === profileId ? 'border-emerald-400/60 bg-emerald-500/15' : 'border-white/10 bg-black/30 hover:border-white/30'}`}>
+              <div className="text-sm font-semibold">{p.n}</div>
+              <div className="text-[11px] text-zinc-400 mt-1 leading-snug">{p.d}</div>
+            </button>
+          ))}
         </div>
-    );
-}
+      </header>
 
-
-/* ═══════════════════════════════════════════════
-   SECTION HEADER
-   ═══════════════════════════════════════════════ */
-function SectionHeader({ children }: { children: React.ReactNode }) {
-    return (
-        <div className="flex items-center gap-3 mb-3">
-            <div className="h-[1px] flex-1 bg-gradient-to-r from-zinc-800 to-transparent" />
-            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600">
-                {children}
-            </span>
-            <div className="h-[1px] flex-1 bg-gradient-to-l from-zinc-800 to-transparent" />
-        </div>
-    );
-}
-
-/* ═══════════════════════════════════════════════
-   DASHBOARD VIEW
-   ═══════════════════════════════════════════════ */
-function DashboardView() {
-    const [currentTime, setCurrentTime] = useState('');
-
-    useEffect(() => {
-        const tick = () => {
-            const now = new Date();
-            setCurrentTime(
-                now.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
-            );
-        };
-        tick();
-        const id = setInterval(tick, 1000);
-        return () => clearInterval(id);
-    }, []);
-
-    return (
-        <div className="space-y-5">
-            {/* Welcome header */}
-            <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-end justify-between"
-            >
-                <div>
-                    <h1 className="text-2xl font-black tracking-tight text-white">
-                        Station <span className="glow-text text-accent">Overview</span>
-                    </h1>
-                    <p className="text-[11px] text-zinc-500 mt-0.5">
-                        Live monitoring · All systems nominal
-                    </p>
-                </div>
-                <div className="text-right">
-                    <div className="text-lg font-mono font-bold text-zinc-300 tabular-nums tracking-wider">
-                        {currentTime}
+      <main className="grid gap-4 xl:grid-cols-[1fr_360px]">
+        <section className="grid gap-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            {profile.decks.map((id) => {
+              const d = decks[id];
+              const m = meters[id];
+              const prog = m.d > 0 ? clamp(m.c / m.d, 0, 1) : 0;
+              return (
+                <article key={id} className="rounded-xl border border-white/10 bg-black/35 backdrop-blur p-4">
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <div>
+                      <div className="text-xs uppercase tracking-[0.18em] text-zinc-500">{d.label}</div>
+                      <h2 className={`${uhd ? 'text-base' : 'text-sm'} font-semibold text-zinc-100`}>{d.t}</h2>
+                      <p className="text-xs text-zinc-400">{d.a}</p>
                     </div>
-                    <div className="text-[9px] text-zinc-600 uppercase tracking-widest">
-                        Local Time
-                    </div>
-                </div>
-            </motion.div>
+                    <div className="text-right text-xs text-zinc-400"><div>{d.b} BPM</div><div>Key {d.k}</div></div>
+                  </div>
 
-            {/* Stats row */}
-            <div className="grid grid-cols-5 gap-3">
-                <StatCard
-                    label="Uptime"
-                    value="99.8"
-                    unit="%"
-                    icon={Activity}
-                    color="accent"
-                    trend="stable"
-                    sparkline={[95, 96, 98, 97, 99, 99, 100, 99, 100, 100, 99, 100]}
-                    delay={0}
-                />
-                <StatCard
-                    label="Listeners"
-                    value="1,247"
-                    icon={Users}
-                    color="purple"
-                    trend="up"
-                    sparkline={[40, 45, 55, 60, 58, 70, 75, 80, 85, 82, 90, 95]}
-                    delay={0.05}
-                />
-                <StatCard
-                    label="Latency"
-                    value="12"
-                    unit="ms"
-                    icon={Gauge}
-                    color="cyan"
-                    trend="down"
-                    sparkline={[40, 35, 30, 28, 25, 22, 20, 18, 15, 14, 13, 12]}
-                    delay={0.1}
-                />
-                <StatCard
-                    label="Stream"
-                    value="320"
-                    unit="kbps"
-                    icon={Wifi}
-                    color="accent"
-                    trend="stable"
-                    sparkline={[80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80]}
-                    delay={0.15}
-                />
-                <StatCard
-                    label="AI Load"
-                    value="34"
-                    unit="%"
-                    icon={Zap}
-                    color="orange"
-                    trend="up"
-                    sparkline={[15, 20, 25, 22, 30, 28, 35, 32, 38, 36, 35, 34]}
-                    delay={0.2}
-                />
+                  {profile.wm === 'h' ? (
+                    <div className="mb-3 rounded-md bg-zinc-900 border border-white/10 p-2">
+                      <div className="h-3 rounded-full bg-zinc-800 overflow-hidden"><div className="h-full bg-gradient-to-r from-cyan-400 via-emerald-400 to-lime-300" style={{ width: `${Math.round(prog * 100)}%` }} /></div>
+                      <div className="mt-1 flex justify-between text-[11px] text-zinc-500"><span>{fmt(m.c)}</span><span>{fmt(m.d)}</span></div>
+                    </div>
+                  ) : (
+                    <div className="mb-3 rounded-md bg-zinc-900 border border-white/10 p-2 flex items-end gap-2 h-28">
+                      <div className="w-4 h-full rounded bg-zinc-800 overflow-hidden"><div className="w-full bg-gradient-to-t from-fuchsia-500 via-cyan-400 to-lime-300" style={{ height: `${Math.round(prog * 100)}%` }} /></div>
+                      <div className="text-[11px] text-zinc-500"><div>{fmt(m.c)} / {fmt(m.d)}</div><div className="mt-1">Vertical waveform mode</div></div>
+                    </div>
+                  )}
+
+                  <audio
+                    ref={(n) => setRef(id, n)}
+                    src={d.u}
+                    preload="metadata"
+                    controls
+                    className="w-full"
+                    onPlay={() => syncPlay(id, true)}
+                    onPause={() => syncPlay(id, false)}
+                    onTimeUpdate={() => onTime(id)}
+                    onLoadedMetadata={() => onMeta(id)}
+                  />
+
+                  <div className="mt-3 grid grid-cols-3 gap-2">
+                    <button type="button" onClick={() => cue(id)} className="rounded bg-zinc-800 hover:bg-zinc-700 px-2 py-2 text-xs font-semibold"><SkipBack size={13} className="inline mr-1" />CUE</button>
+                    <button type="button" onClick={() => void toggleDeck(id)} className="rounded bg-blue-700 hover:bg-blue-600 px-2 py-2 text-xs font-semibold">{d.p ? <><Pause size={13} className="inline mr-1" />Pause</> : <><Play size={13} className="inline mr-1" />Play</>}</button>
+                    <button type="button" onClick={() => loadNext(id)} className="rounded bg-zinc-800 hover:bg-zinc-700 px-2 py-2 text-xs font-semibold"><SkipForward size={13} className="inline mr-1" />Next</button>
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
+                    <label className="block"><span className="text-zinc-400">Volume</span><input type="range" min={0} max={1} step={0.01} value={d.v} onChange={(e) => setDeck(id, { v: Number(e.target.value) })} className="w-full mt-1" /></label>
+                    <label className="block"><span className="text-zinc-400">Rate</span><input type="range" min={0.8} max={1.25} step={0.01} value={d.r} onChange={(e) => setDeck(id, { r: Number(e.target.value) })} className="w-full mt-1" /></label>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+
+          <section className="rounded-xl border border-white/10 bg-black/35 backdrop-blur p-4">
+            <div className="flex items-center justify-between gap-2 mb-2"><h2 className="text-sm font-semibold">Crossfader A/B</h2><span className="text-xs text-zinc-400">A {Math.round((1 - xf) * 100)}% / B {Math.round(xf * 100)}%</span></div>
+            <input aria-label="Crossfader" type="range" min={0} max={1} step={0.01} value={xf} onChange={(e) => setXf(Number(e.target.value))} className="w-full" />
+            <button type="button" onClick={() => void master()} className="mt-3 rounded bg-emerald-700 hover:bg-emerald-600 px-4 py-2 text-xs font-semibold uppercase tracking-wide">Master Play/Pause</button>
+          </section>
+        </section>
+
+        <aside className="rounded-xl border border-white/10 bg-black/35 backdrop-blur p-4 space-y-4">
+          <section>
+            <h2 className="text-sm font-semibold mb-2">Track Browser</h2>
+            <div className="flex flex-wrap gap-1 mb-2">
+              {profile.decks.map((id) => (
+                <button key={id} type="button" onClick={() => setTargetDeck(id)} className={`rounded px-2 py-1 text-[11px] font-semibold ${targetDeck === id ? 'bg-emerald-600 text-white' : 'bg-zinc-800 text-zinc-300'}`}>Load to {id}</button>
+              ))}
             </div>
-
-            <SectionHeader>Now Playing</SectionHeader>
-
-            {/* Waveform + AI Host */}
-            <div className="grid grid-cols-[1fr_340px] gap-4">
-                <div className="space-y-4">
-                    <div className="glass-panel overflow-hidden">
-                        <div className="panel-header">
-                            <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-accent animate-pulse" style={{ boxShadow: '0 0 8px rgba(2,125,225,0.5)' }} />
-                                <span className="panel-header-title">Master Output</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Signal size={10} className="text-accent" />
-                                <span className="text-[9px] font-mono text-zinc-500">AAC 320k</span>
-                            </div>
-                        </div>
-                        <div className="p-3">
-                            <DegenWaveform
-                                progress={0.42}
-                                duration={234}
-                                trackTitle="Neural Drift v2.1 — SynthKong"
-                                isPlaying
-                                cuePoints={[
-                                    { position: 0.12, label: 'CUE 1', color: '#ff6b00' },
-                                    { position: 0.68, label: 'DROP', color: '#bf00ff' },
-                                ]}
-                            />
-                        </div>
-                    </div>
-
-                    <SectionHeader>On-Air Schedule</SectionHeader>
-                    <DegenScheduleTimeline />
+            <div className="max-h-72 overflow-auto space-y-1">
+              {TRACKS.map((tr, i) => (
+                <div key={tr.id} className="rounded border border-white/10 bg-zinc-900/70 px-2 py-2 text-xs">
+                  <div className="font-medium text-zinc-200">{tr.t}</div>
+                  <div className="text-zinc-400">{tr.a} - {tr.b} BPM - {tr.k}</div>
+                  <button type="button" onClick={() => loadTo(targetDeck, i)} className="mt-1 rounded bg-zinc-800 hover:bg-zinc-700 px-2 py-1 text-[11px]">Load to Deck {targetDeck}</button>
                 </div>
-
-                <div className="space-y-4">
-                    <DegenAIHost className="glass-panel" />
-                </div>
+              ))}
             </div>
+          </section>
 
-            <SectionHeader>Audio Engine</SectionHeader>
+          {profile.f && (
+            <section>
+              <h2 className="text-sm font-semibold mb-2">Performance FX</h2>
+              <div className="space-y-2">
+                {profile.decks.map((id) => (
+                  <div key={`fx-${id}`} className="rounded border border-white/10 bg-zinc-900/70 px-2 py-2 text-xs">
+                    <div className="flex items-center justify-between"><span className="font-medium">Deck {id}</span><span className="text-zinc-400">Rate {decks[id].r.toFixed(2)}x</span></div>
+                    <div className="mt-2 flex gap-1">{[0.9, 1, 1.1].map((n) => <button key={`${id}-${n}`} type="button" onClick={() => setDeck(id, { r: n })} className="rounded bg-zinc-800 hover:bg-zinc-700 px-2 py-1">{n.toFixed(2)}x</button>)}</div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
 
-            {/* Beat Grid + Effects */}
-            <div className="grid grid-cols-2 gap-4">
-                <div className="glass-panel overflow-hidden">
-                    <div className="panel-header">
-                        <span className="panel-header-title">Beat Sequencer</span>
-                    </div>
-                    <div className="p-3">
-                        <DegenBeatGrid decks={4} steps={16} />
-                    </div>
-                </div>
-                <DegenEffectRack
-                    title="Master FX"
-                    deck="MST"
-                    isActive
-                    controls={[
-                        { key: 'reverb', label: 'Reverb', unit: '%' },
-                        { key: 'comp', label: 'Comp', unit: 'dB', max: 30 },
-                        { key: 'rate', label: 'Rate', unit: 'Hz', max: 20 },
-                        { key: 'limit', label: 'Limiter', unit: 'dB', max: 0 },
-                        { key: 'width', label: 'Stereo', unit: '%' },
-                    ]}
-                />
-            </div>
-        </div>
-    );
-}
+          {profile.s && (
+            <section>
+              <div className="flex items-center justify-between gap-2 mb-2"><h2 className="text-sm font-semibold">Sampler Pads</h2><label className="text-[11px] text-zinc-400 flex items-center gap-1"><Volume2 size={12} /><input type="range" min={0} max={1} step={0.01} value={padVol} onChange={(e) => setPadVol(Number(e.target.value))} /></label></div>
+              <div className="grid grid-cols-2 gap-2">{PADS.map((pad) => <button key={pad.id} type="button" onClick={() => void triggerPad(pad)} className={`rounded border px-2 py-2 text-xs font-semibold transition-colors ${padHot === pad.id ? 'bg-emerald-500/30 border-emerald-400/50 text-emerald-100' : pad.cls}`}>{pad.l}</button>)}</div>
+            </section>
+          )}
 
-/* ═══════════════════════════════════════════════
-   MAIN STUDIO PAGE
-   ═══════════════════════════════════════════════ */
-export default function StudioPage() {
-    const [currentView, setCurrentView] = useState<ViewMode>('dashboard');
-    const [isOnAir, setIsOnAir] = useState(true);
+          {profile.b && (
+            <section className="rounded border border-white/10 bg-zinc-900/70 p-3">
+              <h2 className="text-sm font-semibold mb-2">Broadcast Rail</h2>
+              <div className="space-y-2 text-xs text-zinc-300">
+                <div className="flex items-center gap-2"><Radio size={12} className={onAir ? 'text-red-400' : 'text-zinc-500'} /><span>Status: {onAir ? 'On Air Live' : 'Standby'}</span></div>
+                <div className="flex items-center gap-2"><Mic size={12} className={rec ? 'text-rose-400' : 'text-zinc-500'} /><span>Recording: {rec ? 'Enabled' : 'Disabled'}</span></div>
+                <div className="flex items-center gap-2"><Sparkles size={12} className={autoMix ? 'text-indigo-300' : 'text-zinc-500'} /><span>AutoMix: {autoMix ? 'Policy Active' : 'Manual'}</span></div>
+              </div>
+            </section>
+          )}
 
-    const navItems: { view: ViewMode; icon: React.ElementType; label: string; badge?: string }[] = [
-        { view: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-        { view: 'decks', icon: Disc, label: 'Decks' },
-        { view: 'mixer', icon: Sliders, label: 'Mixer' },
-        { view: 'library', icon: Music, label: 'Library' },
-        { view: 'schedule', icon: Clock, label: 'Schedule' },
-        { view: 'ai-host', icon: Bot, label: 'AI Host', badge: '3' },
-        { view: 'personas', icon: Users, label: 'Personas' },
-    ];
-
-    return (
-        <div className="flex h-screen w-full bg-[#030304] text-zinc-100 overflow-hidden font-sans selection:bg-accent/30">
-            {/* Left Sidebar */}
-            <aside className="w-[72px] flex flex-col items-center py-6 border-r border-white/[0.04] bg-[#080809] z-50">
-                <div className="mb-10 hover:scale-110 transition-transform duration-300">
-                    <GorillaLogo className="w-10 h-10" />
-                </div>
-
-                <div className="flex-1 flex flex-col gap-5">
-                    {navItems.map((item) => (
-                        <SidebarIcon
-                            key={item.view}
-                            icon={item.icon}
-                            label={item.label}
-                            active={currentView === item.view}
-                            onClick={() => setCurrentView(item.view)}
-                            badge={item.badge}
-                        />
-                    ))}
-                </div>
-
-                <div className="flex flex-col gap-5 mt-auto">
-                    <SidebarIcon icon={Radio} label="Broadcast Settings" />
-                    <SidebarIcon icon={SettingsIcon} label="System Settings" />
-                </div>
-            </aside>
-
-            {/* Main Content Area */}
-            <div className="flex-1 flex flex-col relative min-w-0">
-                {/* Global Top Bar */}
-                <header className="h-[52px] border-b border-white/[0.04] bg-[#09090A]/80 backdrop-blur-md flex items-center justify-between px-6 z-40">
-                    <div className="flex items-center gap-8">
-                        <div className="flex flex-col">
-                            <span className="text-[10px] uppercase font-black tracking-widest text-zinc-600 leading-none mb-1">Station ID</span>
-                            <span className="text-[11px] font-bold text-zinc-200">DGN-01 ALPHA</span>
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-[10px] uppercase font-black tracking-widest text-zinc-600 leading-none mb-1">Network</span>
-                            <div className="flex items-center gap-1.5">
-                                <div className="w-1 h-1 rounded-full bg-accent" />
-                                <span className="text-[11px] font-bold text-zinc-200">Stable</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                        <motion.button
-                            onClick={() => setIsOnAir(!isOnAir)}
-                            whileTap={{ scale: 0.95 }}
-                            className={cn(
-                                "px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all duration-300 border flex items-center gap-2",
-                                isOnAir 
-                                    ? "bg-red-500/10 border-red-500/30 text-red-500 shadow-[0_0_20px_rgba(239,68,68,0.15)]"
-                                    : "bg-zinc-800/50 border-white/5 text-zinc-500"
-                            )}
-                        >
-                            <div className={cn("w-1.5 h-1.5 rounded-full", isOnAir ? "bg-red-500 animate-pulse" : "bg-zinc-600")} />
-                            {isOnAir ? "On Air" : "Offline"}
-                        </motion.button>
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-cyan-400 p-[1px] cursor-pointer hover:rotate-12 transition-transform duration-300">
-                             <div className="w-full h-full rounded-full bg-[#080809] flex items-center justify-center text-[10px] font-black">AI</div>
-                        </div>
-                    </div>
-                </header>
-
-                <main className="flex-1 overflow-y-auto p-5 custom-scrollbar relative">
-                    <AnimatePresence mode="wait">
-                        <motion.div
-                            key={currentView}
-                            initial={{ opacity: 0, y: 12, filter: 'blur(4px)' }}
-                            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                            exit={{ opacity: 0, y: -8, filter: 'blur(2px)' }}
-                            transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-                        >
-                            {currentView === 'dashboard' && <DashboardView />}
-                            {currentView === 'decks' && <DeckView />}
-                            {currentView === 'mixer' && (
-                                <div className="max-w-4xl mx-auto">
-                                    <DegenMixer />
-                                </div>
-                            )}
-                            {currentView === 'library' && (
-                                <DegenTrackList className="max-h-[calc(100vh-160px)]" />
-                            )}
-                            {currentView === 'schedule' && (
-                                <div className="max-w-5xl mx-auto">
-                                    <DegenScheduleTimeline />
-                                </div>
-                            )}
-                            {currentView === 'ai-host' && (
-                                <div className="max-w-3xl mx-auto">
-                                    <DegenAIHost className="max-h-[calc(100vh-160px)]" />
-                                </div>
-                            )}
-                            {currentView === 'personas' && (
-                                <div className="max-w-4xl mx-auto h-[70vh]">
-                                    <DegenPersonaManager />
-                                </div>
-                            )}
-                        </motion.div>
-                    </AnimatePresence>
-                </main>
-            </div>
-        </div>
-    );
-}
-
-// Minimal DeckView shim if needed, or import it
-function DeckView({ telemetry }: { telemetry: any }) {
-    return <DecksView telemetry={telemetry} />;
+          <section>
+            <h2 className="text-sm font-semibold mb-2">Keyboard Map</h2>
+            <div className="space-y-1 max-h-48 overflow-auto">{KEYMAP.map((k) => <div key={k} className="rounded bg-zinc-900/70 border border-white/10 px-2 py-1 text-[11px] text-zinc-300">{k}</div>)}</div>
+            <button type="button" onClick={() => { window.localStorage.removeItem(STORAGE); window.location.reload(); }} className="mt-3 rounded bg-zinc-800 hover:bg-zinc-700 px-3 py-2 text-xs"><RotateCcw size={12} className="inline mr-1" />Reset Saved Console State</button>
+          </section>
+        </aside>
+      </main>
+    </div>
+  );
 }

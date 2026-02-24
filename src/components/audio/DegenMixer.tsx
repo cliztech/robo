@@ -14,7 +14,11 @@ import type { DJTelemetry } from '../../lib/audio/telemetry';
 
 interface DegenMixerProps {
     channels?: MixerChannel[];
-    telemetry?: any; // Simplified for now
+    telemetry?: {
+        mixer?: {
+            channels?: Array<{ id: string; level: number; peak: number }>;
+        };
+    };
     className?: string;
 }
 
@@ -74,9 +78,7 @@ function ChannelStrip({ channel, state, telemetryLevel, telemetryPeak, onStateCh
                         <DegenVUMeter
                             level={telemetryLevel || (state.mute ? 0 : state.vuLevel * (state.volume / 100))}
                             peak={telemetryPeak}
-                            height={120}
-                            width={4}
-                            segmentGap={1}
+                            size="sm"
                         />
                     </div>
 
@@ -111,7 +113,7 @@ function ChannelStrip({ channel, state, telemetryLevel, telemetryPeak, onStateCh
                             value={state.volume}
                             onChange={(e) => onStateChange({ volume: parseInt(e.target.value, 10) })}
                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                            aria-label="${channel.label} volume"
+                            aria-label={`${channel.label} volume`}
                         />
                     </div>
                 </div>
@@ -119,7 +121,7 @@ function ChannelStrip({ channel, state, telemetryLevel, telemetryPeak, onStateCh
                 <div className="flex gap-1 w-full justify-center">
                     <button
                         onClick={() => onStateChange({ mute: !state.mute })}
-                        aria-label="${channel.label} mute"
+                        aria-label={`${channel.label} mute`}
                         aria-pressed={state.mute}
                         className={cn(
                             'text-[9px] font-black w-6 h-5 flex items-center justify-center rounded-[2px] border transition-all',
@@ -133,7 +135,7 @@ function ChannelStrip({ channel, state, telemetryLevel, telemetryPeak, onStateCh
                     {channel.type !== 'master' && (
                         <button
                             onClick={() => onStateChange({ solo: !state.solo })}
-                            aria-label="${channel.label} solo"
+                            aria-label={`${channel.label} solo`}
                             aria-pressed={state.solo}
                             className={cn(
                                 'text-[9px] font-black w-6 h-5 flex items-center justify-center rounded-[2px] border transition-all',
@@ -179,7 +181,9 @@ export function DegenMixer({ channels = DEFAULT_MIXER_CHANNELS, telemetry, class
     // Map telemetry to channels
     const telemetryMap = useMemo(() => {
         const entries = telemetry?.mixer?.channels ?? [];
-        return new Map(entries.map((channel) => [channel.id, channel]));
+        return new Map<string, { id: string; level: number; peak: number }>(
+            entries.map((channel) => [channel.id, channel])
+        );
     }, [telemetry]);
 
     const handleChannelChange = (channelId: string, partial: Partial<MixerChannelState>) => {
