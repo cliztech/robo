@@ -48,9 +48,20 @@ Use the roadmap helper to continuously surface the next open tasks while you wor
 - [ ] Document packaging tiers and feature-gate boundaries ([TI-033](docs/exec-plans/active/tracked-issues/TI-033.md)).
 - [ ] Define telemetry ethics + opt-in policy ([TI-034](docs/exec-plans/active/tracked-issues/TI-034.md)).
 
+
+## P1 — v1.2 Scheduler UI Execution
+
+- [ ] Start drag/drop weekly timeline implementation on normalized scheduler contracts ([TI-007](docs/exec-plans/active/tracked-issues/TI-007.md)) — **In Progress**.
+- [ ] Implement inline conflict rendering + backend fix actions ([TI-008](docs/exec-plans/active/tracked-issues/TI-008.md)).
+- [ ] Add keyboard parity for move/resize/resolve interactions ([TI-009](docs/exec-plans/active/tracked-issues/TI-009.md)).
+
 ## Tracking Cadence
 
 - [ ] Weekly: update readiness percentages by category ([TI-035](docs/exec-plans/active/tracked-issues/TI-035.md)).
 - [ ] Weekly backlog hygiene review owner/date: Project Coordinator — every Friday (next review: 2026-02-27) ([TI-036](docs/exec-plans/active/tracked-issues/TI-036.md)).
 - [ ] Bi-weekly: remove blocked items or split oversized tasks ([TI-037](docs/exec-plans/active/tracked-issues/TI-037.md)).
 - [ ] Monthly: reassess roadmap variation (Security-first, UX-first, Scale-first, Balanced) ([TI-038](docs/exec-plans/active/tracked-issues/TI-038.md)).
+- [ ] 2026-02-24 (Owner: Management Team — Project Coordinator): Weekly readiness metric refresh posted in `docs/readiness_scorecard.md` (next due: 2026-03-03).
+- [ ] 2026-02-27 (Owner: Management Team — Project Coordinator): Weekly backlog hygiene review completed and stale-track escalations logged per `docs/operations/execution_index.md`.
+- [ ] 2026-03-10 (Owner: Planner Agent): Bi-weekly blocked-item pruning complete (remove blocked items or split oversized tasks).
+- [ ] 2026-03-31 (Owner: Management Team — Sprint Planner): Monthly roadmap-variant reassessment recorded (Security-first / UX-first / Scale-first / Balanced).
