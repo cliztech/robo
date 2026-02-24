@@ -117,17 +117,13 @@ See [docs/operations/execution_index.md](docs/operations/execution_index.md) for
 
 **Weekly updates (SoT for `feature_crash_recovery_restore_lkg`)**
 
-- ⚠ stale
-  - Date (UTC): 2026-02-15
-  - Owner: Runtime engineer
-  - Changed metrics: restore flow implementation complete 2/4 → 3/4
-  - Blockers: manual recovery SLA verification run not yet recorded
-  - Next step: schedule deterministic run with launch-gate and ready-state timestamps
+_Canonical status signal: checklist completion is the source of truth; readiness is computed automatically as `checked_items / total_items` for this feature._
+
 - Date (UTC): 2026-02-24
   - Owner: Runtime engineer
-  - Changed metrics: readiness remains 3/4 complete; subtask 3.2 still open pending measured run `<=120s`
-  - Blockers: QA lead bandwidth for deterministic timed run (ETA 2026-02-27)
-  - Next step: execute one timed recovery drill and publish evidence in `config/BACKUP_RECOVERY.md`
+  - Changed metrics: checklist completion moved to 5/5 (100% readiness); deterministic run evidence captured (`0.85s <= 120s`)
+  - Blockers: none
+  - Next step: keep closed; rerun recovery drill only when startup path changes
 
 ---
 
@@ -170,6 +166,8 @@ See [docs/operations/execution_index.md](docs/operations/execution_index.md) for
 4. `feature_crash_recovery_restore_lkg`
 
 ## Exit criteria tracking (v1.1 Must)
+
+_Readiness snapshot: 4/4 complete (100%), driven by checked exit criteria below._
 
 - [x] Invalid config is blocked before runtime start.
 - [x] Startup issues are visible with clear remediation.

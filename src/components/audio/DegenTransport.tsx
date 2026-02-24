@@ -1,6 +1,5 @@
 'use client';
 
-import React, { useMemo, useState, useEffect } from 'react';
 import React, { useEffect, useMemo, useState } from 'react';
 import { cn } from '../../lib/utils';
 import { DegenStereoMeter } from './DegenVUMeter';
@@ -22,8 +21,6 @@ import {
     Volume1,
     Volume2,
     VolumeX,
-    Volume1,
-    Radio
 } from 'lucide-react';
 
 interface DegenTransportProps {

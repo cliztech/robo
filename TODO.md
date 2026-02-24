@@ -42,9 +42,9 @@ Use the roadmap helper to continuously surface the next open tasks while you wor
 
 ## P2 — Productization
 
-- [ ] Publish operator guides by persona (Admin, Producer, Reviewer) ([TI-030](docs/exec-plans/active/tracked-issues/TI-030.md)).
-- [ ] Build runbook index for common failures ([TI-031](docs/exec-plans/active/tracked-issues/TI-031.md)).
-- [ ] Define support triage workflow + SLA targets ([TI-032](docs/exec-plans/active/tracked-issues/TI-032.md)).
+- [x] Publish operator guides by persona (Admin, Producer, Reviewer) ([TI-030](docs/exec-plans/active/tracked-issues/TI-030.md)).
+- [x] Build runbook index for common failures ([TI-031](docs/exec-plans/active/tracked-issues/TI-031.md)).
+- [x] Define support triage workflow + SLA targets ([TI-032](docs/exec-plans/active/tracked-issues/TI-032.md)).
 - [ ] Document packaging tiers and feature-gate boundaries ([TI-033](docs/exec-plans/active/tracked-issues/TI-033.md)).
 - [ ] Define telemetry ethics + opt-in policy ([TI-034](docs/exec-plans/active/tracked-issues/TI-034.md)).
 

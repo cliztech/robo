@@ -74,9 +74,7 @@ function ChannelStrip({ channel, state, telemetryLevel, telemetryPeak, onStateCh
                         <DegenVUMeter
                             level={telemetryLevel || (state.mute ? 0 : state.vuLevel * (state.volume / 100))}
                             peak={telemetryPeak}
-                            height={120}
-                            width={4}
-                            segmentGap={1}
+                            size="md"
                         />
                     </div>
 
