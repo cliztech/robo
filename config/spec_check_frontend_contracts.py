@@ -16,6 +16,14 @@ REQUIRED_UI_TOKEN_PATHS = [
     "$.properties.ui.properties.tokens.properties.corner_radius_scale",
 ]
 
+ROLE_VISIBILITY_SCHEMAS = [
+    FRONTEND_SCHEMAS_DIR / "frontend_config_response.schema.json",
+    FRONTEND_SCHEMAS_DIR / "frontend_status_response.schema.json",
+    FRONTEND_SCHEMAS_DIR / "listener_feedback_ui_state_response.schema.json",
+]
+SHARED_VISIBILITY_SCHEMA_PATH = CONTRACTS_DIR / "shared_settings_visibility.schema.json"
+RESTRICTED_SECTIONS = {"publish_controls", "integration_metadata"}
+
 
 def flatten_json(value, path="$"):
     yield path, value
@@ -27,13 +35,10 @@ def flatten_json(value, path="$"):
             yield from flatten_json(child, f"{path}[{index}]")
 
 
-def main():
+def _check_denylist_contracts(schema_files: list[Path], violations: list[str]) -> None:
     denylist = json.loads(DENYLIST_PATH.read_text(encoding="utf-8"))
     sensitive_keys = {key.lower() for key in denylist["sensitive_keys"]}
     sensitive_fragments = [fragment.lower() for fragment in denylist["sensitive_path_fragments"]]
-
-    violations = []
-    schema_files = sorted(FRONTEND_SCHEMAS_DIR.glob("*.schema.json"))
 
     for schema_file in schema_files:
         schema = json.loads(schema_file.read_text(encoding="utf-8"))
@@ -53,6 +58,8 @@ def main():
                             f"{schema_file.relative_to(REPO_ROOT)}: denylisted path fragment '{fragment}' in value at {json_path}"
                         )
 
+
+def _check_public_config_contract(violations: list[str]) -> None:
     public_schema = json.loads(PUBLIC_FRONTEND_SCHEMA_PATH.read_text(encoding="utf-8"))
     public_paths = {json_path for json_path, _node in flatten_json(public_schema)}
     missing_token_paths = [path for path in REQUIRED_UI_TOKEN_PATHS if path not in public_paths]
@@ -72,13 +79,59 @@ def main():
             "properties.config.$ref must remain '../public_frontend_config.schema.json'"
         )
 
+
+def _check_role_visibility_contract(violations: list[str]) -> None:
+    if not SHARED_VISIBILITY_SCHEMA_PATH.exists():
+        violations.append("contracts/shared_settings_visibility.schema.json: missing required shared visibility schema")
+        return
+
+    for schema_path in ROLE_VISIBILITY_SCHEMAS:
+        schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        required = set(schema.get("required", []))
+        if "settings_visibility" not in required:
+            violations.append(f"{schema_path.relative_to(REPO_ROOT)}: missing required settings_visibility field")
+            continue
+
+        settings_visibility = schema.get("properties", {}).get("settings_visibility", {})
+        if settings_visibility.get("$ref") != "../shared_settings_visibility.schema.json":
+            violations.append(
+                f"{schema_path.relative_to(REPO_ROOT)}: settings_visibility must $ref ../shared_settings_visibility.schema.json"
+            )
+
+    shared_schema = json.loads(SHARED_VISIBILITY_SCHEMA_PATH.read_text(encoding="utf-8"))
+    role_defs = shared_schema.get("properties", {}).get("roles", {}).get("properties", {})
+    if set(role_defs.keys()) != {"admin", "operator", "viewer"}:
+        violations.append("contracts/shared_settings_visibility.schema.json: roles must be exactly admin/operator/viewer")
+
+    section_enum = set(shared_schema.get("$defs", {}).get("settings_section", {}).get("enum", []))
+    if not RESTRICTED_SECTIONS.issubset(section_enum):
+        violations.append(
+            "contracts/shared_settings_visibility.schema.json: settings_section enum must include restricted sections"
+        )
+
+
+def collect_violations() -> tuple[list[str], int]:
+    violations: list[str] = []
+    schema_files = sorted(FRONTEND_SCHEMAS_DIR.glob("*.schema.json"))
+    _check_denylist_contracts(schema_files, violations)
+    _check_public_config_contract(violations)
+    _check_role_visibility_contract(violations)
+    return violations, len(schema_files)
+
+
+def main() -> None:
+    violations, schema_count = collect_violations()
+
     if violations:
-        print("FAILED: frontend schema contracts expose denylisted key/path material")
+        print("FAILED: frontend schema contracts expose denylisted key/path material or violate role-visibility contract")
         for violation in violations:
             print(f" - {violation}")
         raise SystemExit(1)
 
-    print(f"PASS: checked {len(schema_files)} frontend response schema file(s); no denylisted fields found.")
+    print(
+        "PASS: checked "
+        f"{schema_count} frontend response schema file(s); denylist and role-visibility contracts are satisfied."
+    )
 
 
 if __name__ == "__main__":

@@ -280,6 +280,8 @@ class AutonomyPolicyService:
             return []
 
         chunk_size = 8192
+        chunks = []
+        lines_found = 0
 
         with file_path.open("rb") as f:
             if file_size <= chunk_size:
@@ -288,27 +290,24 @@ class AutonomyPolicyService:
                 return content.splitlines()[-limit:]
 
             remaining_bytes = file_size
-            buffer = b""
 
             while remaining_bytes > 0:
                 read_size = min(chunk_size, remaining_bytes)
                 remaining_bytes -= read_size
                 f.seek(remaining_bytes)
                 chunk = f.read(read_size)
-                buffer = chunk + buffer
 
-                parts = buffer.split(b'\n')
-                # If the last part is empty (because file ends with newline), don't count it as a line yet
-                valid_count = len(parts)
-                if parts and parts[-1] == b'':
-                    valid_count -= 1
+                lines_found += chunk.count(b'\n')
+                chunks.append(chunk)
 
-                # We need > limit lines to ensure the last 'limit' lines are complete
-                # (since the first one in 'parts' might be partial)
-                if valid_count > limit:
+                if lines_found > limit + 1:
                     break
 
+            # Join chunks in correct order (reversed because we appended from end)
+            buffer = b"".join(reversed(chunks))
+
             parts = buffer.split(b'\n')
+
             if parts and parts[-1] == b'':
                 parts.pop()
 
