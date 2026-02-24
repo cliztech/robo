@@ -157,11 +157,15 @@ def test_cron_single_day_tokens_map_without_fallback(day_token: str, expected_da
 
 
 @pytest.mark.parametrize("unsupported_token", ["*", "1,2", "1-5", "*/2", "MON"])
-def test_cron_unsupported_day_patterns_raise_clear_error(unsupported_token: str) -> None:
+def test_cron_unsupported_day_patterns_skip_gracefully(unsupported_token: str, caplog: pytest.LogCaptureFixture) -> None:
     service = SchedulerUiService()
 
-    with pytest.raises(ValueError, match="supports only a single numeric day-of-week token in range 0-7"):
-        service._build_timeline_blocks([_schedule("sch_invalid", "Invalid", cron=f"0 9 * * {unsupported_token}")])
+    with caplog.at_level("WARNING"):
+        blocks = service._build_timeline_blocks([_schedule("sch_invalid", "Invalid", cron=f"0 9 * * {unsupported_token}")])
+
+    assert blocks == []
+    assert "Skipping timeline block for schedule_id=sch_invalid" in caplog.text
+    assert "Unsupported cron day-of-week" in caplog.text
 
 
 def test_load_and_migrate_logs_warning_when_stat_fails_and_continues(tmp_path, monkeypatch, caplog) -> None:

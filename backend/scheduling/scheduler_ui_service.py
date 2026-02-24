@@ -292,21 +292,28 @@ class SchedulerUiService:
                     )
                 )
             elif spec.mode == ScheduleSpecMode.cron and spec.cron:
-                minute, hour, _, _, day_of_week = spec.cron.split()
-                parsed_time = self._parse_numeric_cron_time(hour=hour, minute=minute, schedule_id=schedule.id, cron=spec.cron)
-                if parsed_time is None:
-                    continue
-                time_val = f"{parsed_time[0]:02d}:{parsed_time[1]:02d}"
-                blocks.append(
-                    TimelineBlock(
-                        schedule_id=schedule.id,
-                        day_of_week=self._cron_day_to_name(day_of_week),
-                        start_time=time_val,
-                        end_time=time_val,
-                        overnight=False,
-                        mode_hint=ScheduleSpecMode.cron,
+                try:
+                    minute, hour, _, _, day_of_week = spec.cron.split()
+                    parsed_time = self._parse_numeric_cron_time(hour=hour, minute=minute, schedule_id=schedule.id, cron=spec.cron)
+                    if parsed_time is None:
+                        continue
+                    time_val = f"{parsed_time[0]:02d}:{parsed_time[1]:02d}"
+                    blocks.append(
+                        TimelineBlock(
+                            schedule_id=schedule.id,
+                            day_of_week=self._cron_day_to_name(day_of_week),
+                            start_time=time_val,
+                            end_time=time_val,
+                            overnight=False,
+                            mode_hint=ScheduleSpecMode.cron,
+                        )
                     )
-                )
+                except ValueError as error:
+                    logger.warning(
+                        "Skipping timeline block for schedule_id=%s: %s",
+                        schedule.id,
+                        error,
+                    )
             elif spec.mode == ScheduleSpecMode.rrule and spec.rrule:
                 blocks.append(self._rrule_to_block(schedule.id, spec.rrule))
         return blocks
