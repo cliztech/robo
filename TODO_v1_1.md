@@ -67,8 +67,8 @@ See [docs/operations/execution_index.md](docs/operations/execution_index.md) for
 - [x] Add guided restore flow in launcher/runtime startup path.
 - [x] Restore last known good `schedules.json` and `prompt_variables.json` from backup.
 - [x] Log restore event under `config/logs/` with timestamp and source snapshot.
-- [ ] Verify post-restore readiness state can be reached in under 2 minutes. _(instrumented with recovery duration logging; manual timing validation pending)_
-- [ ] **Subtask 3.2 — Recovery SLA run documented and passed**
+- [x] Verify post-restore readiness state can be reached in under 2 minutes. _(Run `2026-02-24T01:34:19Z-02`: 0.85s end-to-end; evidence in `config/BACKUP_RECOVERY.md` and `config/logs/startup_safety_events.jsonl`.)_
+- [x] **Subtask 3.2 — Recovery SLA run documented and passed**
   - **Owner:** QA lead
   - **Due date:** 2026-03-12
   - **Pass criteria (measurable):** At least one deterministic manual run in `config/BACKUP_RECOVERY.md` records launch-gate start/ready-state stop timestamps with elapsed time `<= 120s`, plus matching restore success evidence in `config/logs/startup_safety_events.jsonl`.
@@ -118,4 +118,4 @@ See [docs/operations/execution_index.md](docs/operations/execution_index.md) for
 - [x] Invalid config is blocked before runtime start.
 - [x] Startup issues are visible with clear remediation.
 - [x] Last known good restore is guided and logged.
-- [ ] End-to-end recovery path consistently completes in under 2 minutes.
+- [x] End-to-end recovery path consistently completes in under 2 minutes.
