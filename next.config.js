@@ -1,8 +1,10 @@
 /** @type {import('next').NextConfig} */
-const path = require('path');
-
 const nextConfig = {
-    outputFileTracingRoot: path.resolve(__dirname),
+    eslint: {
+        // ESLint v10 dropped useEslintrc/extensions used by next lint;
+        // skip during build until next lint adds flat-config support.
+        ignoreDuringBuilds: true,
+    },
 };
 
 module.exports = nextConfig;

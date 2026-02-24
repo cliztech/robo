@@ -272,149 +272,210 @@ export default function StudioPage() {
   }, [cue, toggleDeck, loadNext, master, cycleProfile]);
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#111827_0%,_#030712_45%,_#02030a_100%)] text-zinc-100 px-4 py-5 md:px-8">
-      <header className="mb-5 rounded-xl border border-white/10 bg-black/35 backdrop-blur px-4 py-4">
+    <div className="min-h-screen bg-[hsl(240,10%,2%)] text-zinc-100 px-4 py-5 md:px-8 relative overflow-hidden ambient-bg">
+      {/* Floating ambient orbs */}
+      <div className="floating-orb w-[300px] h-[300px] bg-[#027de1] top-[-80px] left-[10%]" style={{ animationDelay: '0s' }} />
+      <div className="floating-orb w-[250px] h-[250px] bg-[#9933ff] bottom-[10%] right-[5%]" style={{ animationDelay: '5s' }} />
+      <div className="floating-orb w-[200px] h-[200px] bg-[#00bfff] top-[40%] left-[60%]" style={{ animationDelay: '10s' }} />
+
+      <header className="relative z-10 mb-5 glass-panel gradient-border px-5 py-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl md:text-3xl font-black tracking-tight">DGN-DJ Ultra Console Studio</h1>
-            <p className="text-xs md:text-sm text-zinc-400 mt-1">Rekordbox/VirtualDJ inspired workflows, original DGN implementation.</p>
+            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">DGN-DJ <span className="text-[#4da6f0]">Ultra Console</span></h1>
+            <p className="text-[11px] text-zinc-500 mt-0.5">Rekordbox/VirtualDJ inspired workflows · original DGN implementation</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <button type="button" aria-pressed={onAir} onClick={() => setOnAir((v) => !v)} className={`rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wide ${onAir ? 'bg-red-600 text-white' : 'bg-zinc-800 text-zinc-300'}`}>{onAir ? 'On Air' : 'Off Air'}</button>
-            <button type="button" aria-pressed={rec} onClick={() => setRec((v) => !v)} className={`rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wide ${rec ? 'bg-rose-600 text-white' : 'bg-zinc-800 text-zinc-300'}`}>{rec ? 'Recording' : 'Record'}</button>
-            <button type="button" aria-pressed={autoMix} onClick={() => setAutoMix((v) => !v)} className={`rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wide ${autoMix ? 'bg-indigo-600 text-white' : 'bg-zinc-800 text-zinc-300'}`}>{autoMix ? 'AutoMix On' : 'AutoMix Off'}</button>
-            <button type="button" aria-pressed={uhd} onClick={() => setUhd((v) => !v)} className={`rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wide ${uhd ? 'bg-emerald-600 text-white' : 'bg-zinc-800 text-zinc-300'}`}>{uhd ? 'UHD Density' : 'Compact Density'}</button>
+            <button type="button" aria-pressed={onAir} onClick={() => setOnAir((v) => !v)} className={`rounded-sm px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.15em] border transition-all duration-200 ${onAir ? 'bg-red-500/15 border-red-500/25 text-red-400 pulse-ring' : 'bg-white/[0.03] border-white/[0.06] text-zinc-500 hover:text-zinc-300'}`}>{onAir ? 'On Air' : 'Off Air'}</button>
+            <button type="button" aria-pressed={rec} onClick={() => setRec((v) => !v)} className={`rounded-sm px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.15em] border transition-all duration-200 ${rec ? 'bg-rose-500/15 border-rose-500/25 text-rose-400' : 'bg-white/[0.03] border-white/[0.06] text-zinc-500 hover:text-zinc-300'}`}>{rec ? 'Recording' : 'Record'}</button>
+            <button type="button" aria-pressed={autoMix} onClick={() => setAutoMix((v) => !v)} className={`rounded-sm px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.15em] border transition-all duration-200 ${autoMix ? 'bg-[#027de1]/15 border-[#027de1]/25 text-[#4da6f0]' : 'bg-white/[0.03] border-white/[0.06] text-zinc-500 hover:text-zinc-300'}`}>{autoMix ? 'AutoMix On' : 'AutoMix Off'}</button>
+            <button type="button" aria-pressed={uhd} onClick={() => setUhd((v) => !v)} className={`rounded-sm px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.15em] border transition-all duration-200 ${uhd ? 'bg-emerald-500/15 border-emerald-500/25 text-emerald-400' : 'bg-white/[0.03] border-white/[0.06] text-zinc-500 hover:text-zinc-300'}`}>{uhd ? 'UHD' : 'Compact'}</button>
           </div>
         </div>
         <div className="mt-4 grid gap-2 md:grid-cols-3 xl:grid-cols-5">
           {PROFILES.map((p) => (
-            <button key={p.id} type="button" onClick={() => setProfileId(p.id)} className={`rounded-lg border px-3 py-3 text-left transition-colors ${p.id === profileId ? 'border-emerald-400/60 bg-emerald-500/15' : 'border-white/10 bg-black/30 hover:border-white/30'}`}>
-              <div className="text-sm font-semibold">{p.n}</div>
-              <div className="text-[11px] text-zinc-400 mt-1 leading-snug">{p.d}</div>
+            <button key={p.id} type="button" onClick={() => setProfileId(p.id)} className={`rounded-lg border px-3 py-2.5 text-left transition-all duration-200 backdrop-blur-sm ${p.id === profileId ? 'border-[#027de1]/40 bg-[#027de1]/[0.08] shadow-[0_0_15px_rgba(2,125,225,0.08)]' : 'border-white/[0.05] bg-white/[0.02] hover:border-white/[0.1] hover:bg-white/[0.04]'}`}>
+              <div className="text-[11px] font-bold text-zinc-200">{p.n}</div>
+              <div className="text-[9px] text-zinc-500 mt-0.5">{p.d}</div>
             </button>
           ))}
         </div>
       </header>
 
-      <main className="grid gap-4 xl:grid-cols-[1fr_360px]">
+      <main className="relative z-10 grid gap-4 xl:grid-cols-[1fr_340px]">
         <section className="grid gap-4">
           <div className="grid gap-4 md:grid-cols-2">
             {profile.decks.map((id) => {
               const d = decks[id];
               const m = meters[id];
               const prog = m.d > 0 ? clamp(m.c / m.d, 0, 1) : 0;
+              const deckColor = id === 'A' ? '#027de1' : id === 'B' ? '#a1cff5' : id === 'C' ? '#00bfff' : '#ff6b00';
               return (
-                <article key={id} className="rounded-xl border border-white/10 bg-black/35 backdrop-blur p-4">
-                  <div className="flex items-center justify-between gap-2 mb-3">
+                <article key={id} className="glass-panel overflow-hidden">
+                  {/* Deck header */}
+                  <div className="panel-header">
+                    <div className="flex items-center gap-2.5">
+                      <div className={`w-2.5 h-2.5 rounded-full ${d.p ? 'animate-pulse' : ''}`} style={{ backgroundColor: deckColor, boxShadow: d.p ? `0 0 10px ${deckColor}80` : 'none' }} />
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: deckColor }}>{d.label}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-white/[0.03] border border-white/[0.05]">
+                        <span className="text-[9px] font-mono font-bold text-zinc-300 tabular-nums">{d.b}</span>
+                        <span className="text-[8px] text-zinc-600">BPM</span>
+                      </div>
+                      <div className="px-1.5 py-0.5 rounded bg-purple-500/10 border border-purple-500/15">
+                        <span className="text-[9px] font-mono font-bold text-purple-400">{d.k}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-3 space-y-3">
+                    {/* Track info */}
                     <div>
-                      <div className="text-xs uppercase tracking-[0.18em] text-zinc-500">{d.label}</div>
-                      <h2 className={`${uhd ? 'text-base' : 'text-sm'} font-semibold text-zinc-100`}>{d.t}</h2>
-                      <p className="text-xs text-zinc-400">{d.a}</p>
+                      <h2 className={`${uhd ? 'text-sm' : 'text-xs'} font-bold text-zinc-100`}>{d.t}</h2>
+                      <p className="text-[10px] text-zinc-500">{d.a}</p>
                     </div>
-                    <div className="text-right text-xs text-zinc-400"><div>{d.b} BPM</div><div>Key {d.k}</div></div>
-                  </div>
 
-                  {profile.wm === 'h' ? (
-                    <div className="mb-3 rounded-md bg-zinc-900 border border-white/10 p-2">
-                      <div className="h-3 rounded-full bg-zinc-800 overflow-hidden"><div className="h-full bg-gradient-to-r from-cyan-400 via-emerald-400 to-lime-300" style={{ width: `${Math.round(prog * 100)}%` }} /></div>
-                      <div className="mt-1 flex justify-between text-[11px] text-zinc-500"><span>{fmt(m.c)}</span><span>{fmt(m.d)}</span></div>
+                    {/* Waveform / progress */}
+                    {profile.wm === 'h' ? (
+                      <div className="glass-inset p-2">
+                        <div className="h-3 rounded-full bg-black/30 overflow-hidden">
+                          <div className="h-full rounded-full transition-all duration-100" style={{ width: `${Math.round(prog * 100)}%`, background: `linear-gradient(90deg, ${deckColor}, ${deckColor}80)`, boxShadow: `0 0 8px ${deckColor}40` }} />
+                        </div>
+                        <div className="mt-1.5 flex justify-between text-[9px] font-mono text-zinc-600 tabular-nums"><span>{fmt(m.c)}</span><span>{fmt(m.d)}</span></div>
+                      </div>
+                    ) : (
+                      <div className="glass-inset p-2 flex items-end gap-3 h-28">
+                        <div className="w-3 h-full rounded bg-black/30 overflow-hidden">
+                          <div className="w-full rounded transition-all duration-100" style={{ height: `${Math.round(prog * 100)}%`, background: `linear-gradient(to top, ${deckColor}, ${deckColor}60)`, boxShadow: `0 0 6px ${deckColor}40` }} />
+                        </div>
+                        <div className="text-[9px] font-mono text-zinc-600"><div className="tabular-nums">{fmt(m.c)} / {fmt(m.d)}</div><div className="mt-1 text-zinc-700">Vertical mode</div></div>
+                      </div>
+                    )}
+
+                    {/* Audio element */}
+                    <audio
+                      ref={(n) => setRef(id, n)}
+                      src={d.u}
+                      preload="metadata"
+                      controls
+                      className="w-full opacity-70 hover:opacity-100 transition-opacity"
+                      onPlay={() => syncPlay(id, true)}
+                      onPause={() => syncPlay(id, false)}
+                      onTimeUpdate={() => onTime(id)}
+                      onLoadedMetadata={() => onMeta(id)}
+                    />
+
+                    {/* Transport buttons */}
+                    <div className="grid grid-cols-3 gap-1.5">
+                      <button type="button" onClick={() => cue(id)} className="flex items-center justify-center gap-1.5 rounded-sm bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] px-2 py-2 text-[9px] font-black uppercase tracking-wider text-zinc-400 hover:text-zinc-200 transition-all"><SkipBack size={11} />CUE</button>
+                      <button type="button" onClick={() => void toggleDeck(id)} className="flex items-center justify-center gap-1.5 rounded-sm border px-2 py-2 text-[9px] font-black uppercase tracking-wider transition-all" style={{ backgroundColor: d.p ? `${deckColor}20` : 'rgba(255,255,255,0.03)', borderColor: d.p ? `${deckColor}30` : 'rgba(255,255,255,0.06)', color: d.p ? deckColor : '#a1a1aa' }}>{d.p ? <><Pause size={11} />Pause</> : <><Play size={11} />Play</>}</button>
+                      <button type="button" onClick={() => loadNext(id)} className="flex items-center justify-center gap-1.5 rounded-sm bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] px-2 py-2 text-[9px] font-black uppercase tracking-wider text-zinc-400 hover:text-zinc-200 transition-all"><SkipForward size={11} />Next</button>
                     </div>
-                  ) : (
-                    <div className="mb-3 rounded-md bg-zinc-900 border border-white/10 p-2 flex items-end gap-2 h-28">
-                      <div className="w-4 h-full rounded bg-zinc-800 overflow-hidden"><div className="w-full bg-gradient-to-t from-fuchsia-500 via-cyan-400 to-lime-300" style={{ height: `${Math.round(prog * 100)}%` }} /></div>
-                      <div className="text-[11px] text-zinc-500"><div>{fmt(m.c)} / {fmt(m.d)}</div><div className="mt-1">Vertical waveform mode</div></div>
+
+                    {/* Sliders */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <label className="block"><span className="text-[8px] font-black uppercase tracking-wider text-zinc-600">Volume</span><input type="range" min={0} max={1} step={0.01} value={d.v} onChange={(e) => setDeck(id, { v: Number(e.target.value) })} className="w-full mt-1 accent-[#027de1]" /></label>
+                      <label className="block"><span className="text-[8px] font-black uppercase tracking-wider text-zinc-600">Rate</span><input type="range" min={0.8} max={1.25} step={0.01} value={d.r} onChange={(e) => setDeck(id, { r: Number(e.target.value) })} className="w-full mt-1 accent-[#a1cff5]" /></label>
                     </div>
-                  )}
-
-                  <audio
-                    ref={(n) => setRef(id, n)}
-                    src={d.u}
-                    preload="metadata"
-                    controls
-                    className="w-full"
-                    onPlay={() => syncPlay(id, true)}
-                    onPause={() => syncPlay(id, false)}
-                    onTimeUpdate={() => onTime(id)}
-                    onLoadedMetadata={() => onMeta(id)}
-                  />
-
-                  <div className="mt-3 grid grid-cols-3 gap-2">
-                    <button type="button" onClick={() => cue(id)} className="rounded bg-zinc-800 hover:bg-zinc-700 px-2 py-2 text-xs font-semibold"><SkipBack size={13} className="inline mr-1" />CUE</button>
-                    <button type="button" onClick={() => void toggleDeck(id)} className="rounded bg-blue-700 hover:bg-blue-600 px-2 py-2 text-xs font-semibold">{d.p ? <><Pause size={13} className="inline mr-1" />Pause</> : <><Play size={13} className="inline mr-1" />Play</>}</button>
-                    <button type="button" onClick={() => loadNext(id)} className="rounded bg-zinc-800 hover:bg-zinc-700 px-2 py-2 text-xs font-semibold"><SkipForward size={13} className="inline mr-1" />Next</button>
-                  </div>
-
-                  <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
-                    <label className="block"><span className="text-zinc-400">Volume</span><input type="range" min={0} max={1} step={0.01} value={d.v} onChange={(e) => setDeck(id, { v: Number(e.target.value) })} className="w-full mt-1" /></label>
-                    <label className="block"><span className="text-zinc-400">Rate</span><input type="range" min={0.8} max={1.25} step={0.01} value={d.r} onChange={(e) => setDeck(id, { r: Number(e.target.value) })} className="w-full mt-1" /></label>
                   </div>
                 </article>
               );
             })}
           </div>
 
-          <section className="rounded-xl border border-white/10 bg-black/35 backdrop-blur p-4">
-            <div className="flex items-center justify-between gap-2 mb-2"><h2 className="text-sm font-semibold">Crossfader A/B</h2><span className="text-xs text-zinc-400">A {Math.round((1 - xf) * 100)}% / B {Math.round(xf * 100)}%</span></div>
-            <input aria-label="Crossfader" type="range" min={0} max={1} step={0.01} value={xf} onChange={(e) => setXf(Number(e.target.value))} className="w-full" />
-            <button type="button" onClick={() => void master()} className="mt-3 rounded bg-emerald-700 hover:bg-emerald-600 px-4 py-2 text-xs font-semibold uppercase tracking-wide">Master Play/Pause</button>
+          <section className="glass-panel overflow-hidden">
+            <div className="panel-header">
+              <span className="panel-header-title">Crossfader</span>
+              <div className="flex items-center gap-3">
+                <span className="text-[9px] font-mono text-[#027de1] tabular-nums">A {Math.round((1 - xf) * 100)}%</span>
+                <span className="text-[9px] text-zinc-700">|</span>
+                <span className="text-[9px] font-mono text-[#a1cff5] tabular-nums">B {Math.round(xf * 100)}%</span>
+              </div>
+            </div>
+            <div className="p-3 space-y-3">
+              <input aria-label="Crossfader" type="range" min={0} max={1} step={0.01} value={xf} onChange={(e) => setXf(Number(e.target.value))} className="w-full accent-[#027de1]" />
+              <button type="button" onClick={() => void master()} className="w-full flex items-center justify-center gap-2 rounded-sm bg-[#027de1]/10 border border-[#027de1]/20 text-[9px] font-black uppercase tracking-[0.15em] text-[#4da6f0] hover:bg-[#027de1]/20 px-4 py-2 transition-all">Master Play/Pause</button>
+            </div>
           </section>
         </section>
 
-        <aside className="rounded-xl border border-white/10 bg-black/35 backdrop-blur p-4 space-y-4">
-          <section>
-            <h2 className="text-sm font-semibold mb-2">Track Browser</h2>
-            <div className="flex flex-wrap gap-1 mb-2">
-              {profile.decks.map((id) => (
-                <button key={id} type="button" onClick={() => setTargetDeck(id)} className={`rounded px-2 py-1 text-[11px] font-semibold ${targetDeck === id ? 'bg-emerald-600 text-white' : 'bg-zinc-800 text-zinc-300'}`}>Load to {id}</button>
-              ))}
+        <aside className="glass-panel overflow-hidden space-y-0">
+          <div className="panel-header">
+            <span className="panel-header-title">Browser</span>
+          </div>
+          <section className="p-3 border-b border-white/[0.03]">
+            <div className="text-[8px] font-black uppercase tracking-wider text-zinc-600 mb-1.5">Load Target</div>
+            <div className="flex flex-wrap gap-1">
+              {profile.decks.map((id) => {
+                const c = id === 'A' ? '#027de1' : id === 'B' ? '#a1cff5' : id === 'C' ? '#00bfff' : '#ff6b00';
+                return (
+                  <button key={id} type="button" onClick={() => setTargetDeck(id)} className="rounded-sm px-2.5 py-1 text-[8px] font-black uppercase tracking-wider border transition-all" style={targetDeck === id ? { backgroundColor: `${c}15`, borderColor: `${c}30`, color: c } : { backgroundColor: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.05)', color: '#71717a' }}>Deck {id}</button>
+                );
+              })}
             </div>
-            <div className="max-h-72 overflow-auto space-y-1">
+          </section>
+          <section className="p-3 border-b border-white/[0.03]">
+            <div className="text-[8px] font-black uppercase tracking-wider text-zinc-600 mb-1.5">Tracks</div>
+            <div className="max-h-72 overflow-auto custom-scrollbar space-y-1">
               {TRACKS.map((tr, i) => (
-                <div key={tr.id} className="rounded border border-white/10 bg-zinc-900/70 px-2 py-2 text-xs">
-                  <div className="font-medium text-zinc-200">{tr.t}</div>
-                  <div className="text-zinc-400">{tr.a} - {tr.b} BPM - {tr.k}</div>
-                  <button type="button" onClick={() => loadTo(targetDeck, i)} className="mt-1 rounded bg-zinc-800 hover:bg-zinc-700 px-2 py-1 text-[11px]">Load to Deck {targetDeck}</button>
+                <div key={tr.id} className="rounded-md border border-white/[0.04] bg-white/[0.015] px-2.5 py-2 hover:bg-white/[0.03] transition-colors group">
+                  <div className="text-[10px] font-bold text-zinc-200">{tr.t}</div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[9px] text-zinc-500">{tr.a}</span>
+                    <span className="text-[8px] font-mono text-zinc-600 tabular-nums">{tr.b} BPM</span>
+                    <span className="text-[8px] font-mono text-purple-400/60">{tr.k}</span>
+                  </div>
+                  <button type="button" onClick={() => loadTo(targetDeck, i)} className="mt-1.5 rounded-sm bg-white/[0.03] border border-white/[0.05] hover:bg-white/[0.06] px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-zinc-500 hover:text-zinc-300 transition-all opacity-0 group-hover:opacity-100">Load → {targetDeck}</button>
                 </div>
               ))}
             </div>
           </section>
 
           {profile.f && (
-            <section>
-              <h2 className="text-sm font-semibold mb-2">Performance FX</h2>
-              <div className="space-y-2">
-                {profile.decks.map((id) => (
-                  <div key={`fx-${id}`} className="rounded border border-white/10 bg-zinc-900/70 px-2 py-2 text-xs">
-                    <div className="flex items-center justify-between"><span className="font-medium">Deck {id}</span><span className="text-zinc-400">Rate {decks[id].r.toFixed(2)}x</span></div>
-                    <div className="mt-2 flex gap-1">{[0.9, 1, 1.1].map((n) => <button key={`${id}-${n}`} type="button" onClick={() => setDeck(id, { r: n })} className="rounded bg-zinc-800 hover:bg-zinc-700 px-2 py-1">{n.toFixed(2)}x</button>)}</div>
-                  </div>
-                ))}
+            <section className="p-3 border-b border-white/[0.03]">
+              <div className="text-[8px] font-black uppercase tracking-wider text-zinc-600 mb-1.5">Performance FX</div>
+              <div className="space-y-1.5">
+                {profile.decks.map((id) => {
+                  const c = id === 'A' ? '#027de1' : id === 'B' ? '#a1cff5' : id === 'C' ? '#00bfff' : '#ff6b00';
+                  return (
+                    <div key={`fx-${id}`} className="rounded-md border border-white/[0.04] bg-white/[0.015] px-2.5 py-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9px] font-bold" style={{ color: c }}>Deck {id}</span>
+                        <span className="text-[8px] font-mono text-zinc-600 tabular-nums">{decks[id].r.toFixed(2)}x</span>
+                      </div>
+                      <div className="mt-1.5 flex gap-1">{[0.9, 1, 1.1].map((n) => <button key={`${id}-${n}`} type="button" onClick={() => setDeck(id, { r: n })} className={`rounded-sm px-2 py-0.5 text-[8px] font-black border transition-all ${decks[id].r === n ? 'bg-white/[0.06] border-white/[0.1] text-zinc-200' : 'bg-white/[0.02] border-white/[0.04] text-zinc-600 hover:text-zinc-300'}`}>{n.toFixed(2)}x</button>)}</div>
+                    </div>
+                  );
+                })}
               </div>
             </section>
           )}
 
           {profile.s && (
-            <section>
-              <div className="flex items-center justify-between gap-2 mb-2"><h2 className="text-sm font-semibold">Sampler Pads</h2><label className="text-[11px] text-zinc-400 flex items-center gap-1"><Volume2 size={12} /><input type="range" min={0} max={1} step={0.01} value={padVol} onChange={(e) => setPadVol(Number(e.target.value))} /></label></div>
-              <div className="grid grid-cols-2 gap-2">{PADS.map((pad) => <button key={pad.id} type="button" onClick={() => void triggerPad(pad)} className={`rounded border px-2 py-2 text-xs font-semibold transition-colors ${padHot === pad.id ? 'bg-emerald-500/30 border-emerald-400/50 text-emerald-100' : pad.cls}`}>{pad.l}</button>)}</div>
+            <section className="p-3 border-b border-white/[0.03]">
+              <div className="flex items-center justify-between gap-2 mb-1.5">
+                <div className="text-[8px] font-black uppercase tracking-wider text-zinc-600">Sampler Pads</div>
+                <label className="text-[9px] text-zinc-500 flex items-center gap-1"><Volume2 size={10} /><input type="range" min={0} max={1} step={0.01} value={padVol} onChange={(e) => setPadVol(Number(e.target.value))} className="w-16 accent-[#027de1]" /></label>
+              </div>
+              <div className="grid grid-cols-2 gap-1.5">{PADS.map((pad) => <button key={pad.id} type="button" onClick={() => void triggerPad(pad)} className={`rounded-sm border px-2 py-2 text-[9px] font-black uppercase tracking-wider transition-all ${padHot === pad.id ? 'bg-[#027de1]/20 border-[#027de1]/30 text-[#4da6f0] shadow-[0_0_10px_rgba(2,125,225,0.15)]' : 'bg-white/[0.02] border-white/[0.05] text-zinc-500 hover:text-zinc-300 hover:bg-white/[0.04]'}`}>{pad.l}</button>)}</div>
             </section>
           )}
 
           {profile.b && (
-            <section className="rounded border border-white/10 bg-zinc-900/70 p-3">
-              <h2 className="text-sm font-semibold mb-2">Broadcast Rail</h2>
-              <div className="space-y-2 text-xs text-zinc-300">
-                <div className="flex items-center gap-2"><Radio size={12} className={onAir ? 'text-red-400' : 'text-zinc-500'} /><span>Status: {onAir ? 'On Air Live' : 'Standby'}</span></div>
-                <div className="flex items-center gap-2"><Mic size={12} className={rec ? 'text-rose-400' : 'text-zinc-500'} /><span>Recording: {rec ? 'Enabled' : 'Disabled'}</span></div>
-                <div className="flex items-center gap-2"><Sparkles size={12} className={autoMix ? 'text-indigo-300' : 'text-zinc-500'} /><span>AutoMix: {autoMix ? 'Policy Active' : 'Manual'}</span></div>
+            <section className="p-3 border-b border-white/[0.03]">
+              <div className="text-[8px] font-black uppercase tracking-wider text-zinc-600 mb-1.5">Broadcast Rail</div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2.5"><div className={`glow-dot ${onAir ? 'glow-dot-red' : 'bg-zinc-700'}`} style={{ width: 6, height: 6 }} /><span className="text-[9px] text-zinc-400">{onAir ? 'On Air Live' : 'Standby'}</span></div>
+                <div className="flex items-center gap-2.5"><div className={`glow-dot ${rec ? 'glow-dot-orange' : 'bg-zinc-700'}`} style={{ width: 6, height: 6 }} /><span className="text-[9px] text-zinc-400">{rec ? 'Recording' : 'Rec Off'}</span></div>
+                <div className="flex items-center gap-2.5"><div className={`glow-dot ${autoMix ? 'glow-dot-cyan' : 'bg-zinc-700'}`} style={{ width: 6, height: 6 }} /><span className="text-[9px] text-zinc-400">{autoMix ? 'AutoMix Active' : 'Manual'}</span></div>
               </div>
             </section>
           )}
 
-          <section>
-            <h2 className="text-sm font-semibold mb-2">Keyboard Map</h2>
-            <div className="space-y-1 max-h-48 overflow-auto">{KEYMAP.map((k) => <div key={k} className="rounded bg-zinc-900/70 border border-white/10 px-2 py-1 text-[11px] text-zinc-300">{k}</div>)}</div>
-            <button type="button" onClick={() => { window.localStorage.removeItem(STORAGE); window.location.reload(); }} className="mt-3 rounded bg-zinc-800 hover:bg-zinc-700 px-3 py-2 text-xs"><RotateCcw size={12} className="inline mr-1" />Reset Saved Console State</button>
+          <section className="p-3">
+            <div className="text-[8px] font-black uppercase tracking-wider text-zinc-600 mb-1.5">Keyboard Map</div>
+            <div className="space-y-0.5 max-h-48 overflow-auto custom-scrollbar">{KEYMAP.map((k) => <div key={k} className="rounded-sm bg-white/[0.015] border border-white/[0.03] px-2 py-1 text-[9px] text-zinc-500">{k}</div>)}</div>
+            <button type="button" onClick={() => { window.localStorage.removeItem(STORAGE); window.location.reload(); }} className="mt-3 flex items-center gap-1.5 rounded-sm bg-white/[0.03] border border-white/[0.05] hover:bg-red-500/[0.05] hover:border-red-500/[0.1] hover:text-red-400 px-3 py-1.5 text-[8px] font-black uppercase tracking-wider text-zinc-500 transition-all"><RotateCcw size={10} />Reset State</button>
           </section>
         </aside>
       </main>

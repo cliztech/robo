@@ -4,7 +4,7 @@
     "env": {},
     "webpack": null,
     "eslint": {
-      "ignoreDuringBuilds": false
+      "ignoreDuringBuilds": true
     },
     "typescript": {
       "ignoreBuildErrors": false,
@@ -99,7 +99,7 @@
         "transform": "lodash/{{member}}"
       }
     },
-    "outputFileTracingRoot": "C:\\Users\\jocli\\OneDrive\\ads\\robo",
+    "outputFileTracingRoot": "C:\\Users\\jocli",
     "experimental": {
       "useSkewCookie": false,
       "cacheLife": {
@@ -289,11 +289,11 @@
     "bundlePagesRouterDependencies": false,
     "configFileName": "next.config.js",
     "turbopack": {
-      "root": "C:\\Users\\jocli\\OneDrive\\ads\\robo"
+      "root": "C:\\Users\\jocli"
     }
   },
   "appDir": "C:\\Users\\jocli\\OneDrive\\ads\\robo",
-  "relativeAppDir": "",
+  "relativeAppDir": "OneDrive\\ads\\robo",
   "files": [
     ".next\\routes-manifest.json",
     ".next\\server\\pages-manifest.json",
