@@ -326,7 +326,6 @@ def collect_workflow_actions(markdown_path: Path) -> list[QueueItem]:
                 source=markdown_path,
                 line_number=line_number,
                 section=current_section,
-                phase="Unphased",
                 phase=phase,
                 text=normalized,
                 kind="workflow",
