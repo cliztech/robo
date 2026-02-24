@@ -48,6 +48,13 @@ Use the roadmap helper to continuously surface the next open tasks while you wor
 - [ ] Document packaging tiers and feature-gate boundaries.
 - [ ] Define telemetry ethics + opt-in policy.
 
+
+## P1 — v1.2 Scheduler UI Execution
+
+- [ ] Start drag/drop weekly timeline implementation on normalized scheduler contracts ([TI-007](docs/exec-plans/active/tracked-issues/TI-007.md)) — **In Progress**.
+- [ ] Implement inline conflict rendering + backend fix actions ([TI-008](docs/exec-plans/active/tracked-issues/TI-008.md)).
+- [ ] Add keyboard parity for move/resize/resolve interactions ([TI-009](docs/exec-plans/active/tracked-issues/TI-009.md)).
+
 ## Tracking Cadence
 
 - [ ] Weekly: update readiness percentages by category.
