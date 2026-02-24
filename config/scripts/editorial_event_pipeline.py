@@ -1,5 +1,6 @@
 import argparse
 import json
+import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, List, Optional
@@ -60,10 +61,31 @@ class WeatherAdapter(BaseAdapter):
                     headline=item.get("headline") or item.get("alert") or "Weather update",
                     source=item.get("source") or self.source_name,
                     timestamp=to_iso8601(item.get("timestamp")),
-                    confidence=clamp(float(item.get("confidence", 0.8))),
+                    confidence=clamp(
+                        parse_float(
+                            item.get("confidence", 0.8),
+                            0.8,
+                            source=self.source_name,
+                            field="confidence",
+                        )
+                    ),
                     locality=item.get("locality") or item.get("region") or "local area",
-                    relevance_score=clamp(float(item.get("relevance", 0.7))),
-                    safety_score=clamp(float(item.get("safety_score", safety))),
+                    relevance_score=clamp(
+                        parse_float(
+                            item.get("relevance", 0.7),
+                            0.7,
+                            source=self.source_name,
+                            field="relevance",
+                        )
+                    ),
+                    safety_score=clamp(
+                        parse_float(
+                            item.get("safety_score", safety),
+                            safety,
+                            source=self.source_name,
+                            field="safety_score",
+                        )
+                    ),
                     emergency=bool(item.get("emergency", emergency)),
                 )
             )
@@ -81,10 +103,31 @@ class NewsAdapter(BaseAdapter):
                     headline=item.get("title") or item.get("headline") or "News update",
                     source=item.get("source") or self.source_name,
                     timestamp=to_iso8601(item.get("published_at") or item.get("timestamp")),
-                    confidence=clamp(float(item.get("confidence", 0.75))),
+                    confidence=clamp(
+                        parse_float(
+                            item.get("confidence", 0.75),
+                            0.75,
+                            source=self.source_name,
+                            field="confidence",
+                        )
+                    ),
                     locality=item.get("locality") or "national",
-                    relevance_score=clamp(float(item.get("relevance", 0.6))),
-                    safety_score=clamp(float(item.get("safety_score", 0.97))),
+                    relevance_score=clamp(
+                        parse_float(
+                            item.get("relevance", 0.6),
+                            0.6,
+                            source=self.source_name,
+                            field="relevance",
+                        )
+                    ),
+                    safety_score=clamp(
+                        parse_float(
+                            item.get("safety_score", 0.97),
+                            0.97,
+                            source=self.source_name,
+                            field="safety_score",
+                        )
+                    ),
                     emergency=bool(item.get("emergency", False)),
                 )
             )
@@ -102,10 +145,31 @@ class TrendAdapter(BaseAdapter):
                     headline=item.get("topic") or item.get("headline") or "Trending topic",
                     source=item.get("source") or self.source_name,
                     timestamp=to_iso8601(item.get("timestamp")),
-                    confidence=clamp(float(item.get("confidence", 0.65))),
+                    confidence=clamp(
+                        parse_float(
+                            item.get("confidence", 0.65),
+                            0.65,
+                            source=self.source_name,
+                            field="confidence",
+                        )
+                    ),
                     locality=item.get("locality") or "online",
-                    relevance_score=clamp(float(item.get("relevance", 0.5))),
-                    safety_score=clamp(float(item.get("safety_score", 0.9))),
+                    relevance_score=clamp(
+                        parse_float(
+                            item.get("relevance", 0.5),
+                            0.5,
+                            source=self.source_name,
+                            field="relevance",
+                        )
+                    ),
+                    safety_score=clamp(
+                        parse_float(
+                            item.get("safety_score", 0.9),
+                            0.9,
+                            source=self.source_name,
+                            field="safety_score",
+                        )
+                    ),
                     emergency=False,
                 )
             )
@@ -114,6 +178,24 @@ class TrendAdapter(BaseAdapter):
 
 def clamp(value: float) -> float:
     return max(0.0, min(1.0, value))
+
+
+def parse_float(
+    value: Any,
+    default: float,
+    *,
+    source: Optional[str] = None,
+    field: Optional[str] = None,
+) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        if source and field:
+            print(
+                f"[editorial_event_pipeline] invalid numeric value for {source}.{field}: {value!r}; using default={default}",
+                file=sys.stderr,
+            )
+        return default
 
 
 def to_iso8601(value: Optional[str]) -> str:
