@@ -41,6 +41,20 @@ See [docs/operations/execution_index.md](docs/operations/execution_index.md) for
 - `python config/inspect_db.py`
 - Launch with `./RoboDJ_Launcher.bat` and verify startup diagnostics status output.
 
+**Weekly updates (SoT for `feature_startup_diagnostics`)**
+
+- ⚠ stale
+  - Date (UTC): 2026-02-15
+  - Owner: Runtime engineer
+  - Changed metrics: diagnostics checklist complete 3/4 → 4/4
+  - Blockers: none recorded
+  - Next step: verify diagnostics output in launcher logs on current build
+- Date (UTC): 2026-02-24
+  - Owner: Runtime engineer
+  - Changed metrics: status remains complete; validation evidence reconfirmed for launch diagnostics output path
+  - Blockers: none
+  - Next step: keep this track closed and monitor for regressions during weekly backlog review
+
 ---
 
 ### 2) Launch config validator (`feature_launch_config_validation`)
@@ -59,6 +73,20 @@ See [docs/operations/execution_index.md](docs/operations/execution_index.md) for
 
 - `python config/validate_config.py`
 - Launch with `./RoboDJ_Launcher.bat` and confirm bad configs block startup.
+
+**Weekly updates (SoT for `feature_launch_config_validation`)**
+
+- ⚠ stale
+  - Date (UTC): 2026-02-15
+  - Owner: Config owner
+  - Changed metrics: launch config validator tasks complete 4/5 → 5/5
+  - Blockers: none recorded
+  - Next step: keep schema validation gate active in launcher path
+- Date (UTC): 2026-02-24
+  - Owner: Config owner
+  - Changed metrics: status remains complete; no scope drift in validation gate behavior
+  - Blockers: none
+  - Next step: retain as closed track and monitor for invalid-config escape regressions
 
 ---
 
@@ -87,6 +115,20 @@ See [docs/operations/execution_index.md](docs/operations/execution_index.md) for
   3. Execute restore flow (`python config/scripts/startup_safety.py --guided-restore`).
   4. Verify app reaches ready state and restore is logged.
 
+**Weekly updates (SoT for `feature_crash_recovery_restore_lkg`)**
+
+- ⚠ stale
+  - Date (UTC): 2026-02-15
+  - Owner: Runtime engineer
+  - Changed metrics: restore flow implementation complete 2/4 → 3/4
+  - Blockers: manual recovery SLA verification run not yet recorded
+  - Next step: schedule deterministic run with launch-gate and ready-state timestamps
+- Date (UTC): 2026-02-24
+  - Owner: Runtime engineer
+  - Changed metrics: readiness remains 3/4 complete; subtask 3.2 still open pending measured run `<=120s`
+  - Blockers: QA lead bandwidth for deterministic timed run (ETA 2026-02-27)
+  - Next step: execute one timed recovery drill and publish evidence in `config/BACKUP_RECOVERY.md`
+
 ---
 
 ### 4) One-click backup snapshot (`feature_one_click_backup_snapshot`)
@@ -105,6 +147,20 @@ See [docs/operations/execution_index.md](docs/operations/execution_index.md) for
 - Trigger backup action.
 - Confirm new timestamped files in `config/backups/`.
 - Confirm snapshot appears in restore flow selection.
+
+**Weekly updates (SoT for `feature_one_click_backup_snapshot`)**
+
+- ⚠ stale
+  - Date (UTC): 2026-02-15
+  - Owner: Config owner
+  - Changed metrics: snapshot flow tasks complete 3/4 → 4/4
+  - Blockers: none recorded
+  - Next step: verify restore selector sees newest snapshots
+- Date (UTC): 2026-02-24
+  - Owner: Config owner
+  - Changed metrics: status remains complete; snapshot retention behavior unchanged
+  - Blockers: none
+  - Next step: keep closed and monitor snapshot naming collisions in routine checks
 
 ## Release order (partial ships behind flags)
 
