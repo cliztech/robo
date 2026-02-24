@@ -1,11 +1,13 @@
-# generated: 2026-02-23
-# project: DGN-DJ Open Dependency-Ready Sprint Queue
+# generated: 2026-02-24
+# project: DGN-DJ GUI Console Phase-4 Baseline
+# project: DGN-DJ Phase-4 Hardening Sprint
 # project_key: NOKEY
 # tracking_system: file-system
 # story_location: _bmad-output/implementation-artifacts
 
-generated: 2026-02-23
-project: DGN-DJ Open Dependency-Ready Sprint Queue
+generated: 2026-02-24
+project: DGN-DJ GUI Console Phase-4 Baseline
+project: DGN-DJ Phase-4 Hardening Sprint
 project_key: NOKEY
 tracking_system: file-system
 story_location: _bmad-output/implementation-artifacts
@@ -17,7 +19,7 @@ development_status:
   todo-03-idle-timeout-reauth-sensitive-actions: backlog
   todo-04-key-rotation-workflow-cli-checklist: backlog
   todo-05-redaction-policy-contract-tests: backlog
-  todo-06-pre-release-security-gate-docs: backlog
+  todo-06-pre-release-security-gate-docs: done
   todo-07-human-in-the-loop-checkpoints: backlog
   todo-08-task-route-templates-qa-change-proposal: backlog
   todo-09-one-click-rollback-assistant-config: backlog
@@ -31,9 +33,81 @@ development_status:
   todo-17-bi-weekly-blocked-item-pruning: backlog
   todo-18-monthly-roadmap-variation-reassessment: backlog
   epic-todo-open-dependency-ready-retrospective: optional
+  epic-e1: backlog
+  e1-s1-theme-token-contract-for-console-surfaces: backlog
+  e1-s2-responsive-shell-grid-and-docking-regions: backlog
+  e1-s3-top-navigation-status-strip-with-clock-and-mode-badges: backlog
+  e1-s4-shell-command-palette-entry-points: backlog
+  e1-s5-persisted-shell-panel-visibility-preferences: backlog
+  e1-s6-shell-loading-and-empty-states: backlog
+  epic-e1-retrospective: optional
 
-  epic-v12-ui-open-dependency-ready: backlog
-  v12-01-drag-drop-weekly-timeline-normalized-api: backlog
-  v12-02-inline-conflict-objects-fix-actions: backlog
-  v12-03-keyboard-parity-move-resize-resolve: backlog
-  epic-v12-ui-open-dependency-ready-retrospective: optional
+  epic-e2: backlog
+  e2-s1-dual-deck-transport-controls-play-cue-sync: backlog
+  e2-s2-pitch-fader-and-tempo-range-controls: backlog
+  e2-s3-mixer-channel-strip-gain-eq-filter: backlog
+  e2-s4-crossfader-curves-and-assignment-switches: backlog
+  e2-s5-headphone-cue-and-master-preview-routing: backlog
+  e2-s6-gain-reduction-and-clip-warnings-in-mixer-ui: backlog
+  epic-e2-retrospective: optional
+
+  epic-e3: backlog
+  e3-s1-deck-waveform-render-lanes-with-beat-markers: backlog
+  e3-s2-needle-playhead-and-hot-cue-marker-overlays: backlog
+  e3-s3-phrase-and-key-bpm-telemetry-chips: backlog
+  e3-s4-beat-jump-and-loop-telemetry-counters: backlog
+  e3-s5-live-waveform-zoom-and-detail-scaling: backlog
+  e3-s6-telemetry-error-and-stale-data-fallback-ui: backlog
+  epic-e3-retrospective: optional
+
+  epic-e4: backlog
+  e4-s1-library-pane-with-crates-playlists-tree: backlog
+  e4-s2-search-filter-with-instant-result-ranking: backlog
+  e4-s3-queue-list-with-drag-reorder-and-lock-states: backlog
+  e4-s4-deck-load-interactions-from-browser-rows: backlog
+  e4-s5-cloud-library-source-status-badges: backlog
+  e4-s6-queue-handoff-to-automation-scheduler: backlog
+  epic-e4-retrospective: optional
+
+  epic-e5: backlog
+  e5-s1-sampler-bank-grid-with-trigger-modes: backlog
+  e5-s2-performance-pads-for-hot-cue-roll-slicer: backlog
+  e5-s3-fx-unit-routing-per-channel-master: backlog
+  e5-s4-macro-fx-presets-and-safe-reset: backlog
+  e5-s5-pad-page-paging-and-bank-color-identity: backlog
+  e5-s6-sampler-recording-and-slot-overwrite-safeguards: backlog
+  epic-e5-retrospective: optional
+
+  epic-e6: backlog
+  e6-s1-timeline-lane-scaffolding-with-now-marker: backlog
+  e6-s2-event-blocks-with-confidence-and-lock-badges: backlog
+  e6-s3-status-health-rail-audio-network-ai-queue-depth: backlog
+  e6-s4-automation-override-and-manual-takeover-controls: backlog
+  e6-s5-alert-center-with-actionable-remediation-copy: backlog
+  e6-s6-timeline-conflict-detection-and-resolution-hints: backlog
+  epic-e6-retrospective: optional
+
+  epic-e7: backlog
+  e7-s1-global-keyboard-map-for-all-primary-console-actions: backlog
+  e7-s2-reduced-motion-alternatives-for-animated-controls: backlog
+  e7-s3-contrast-audit-pass-for-status-waveform-pads-and-alerts: backlog
+  e7-s4-focus-management-and-visible-focus-ring-consistency: backlog
+  e7-s5-performance-budgets-for-waveform-mixer-browser-interactions: backlog
+  e7-s6-regression-snapshot-matrix-and-release-checklist: backlog
+  epic-e7-retrospective: optional
+  epic-e6-automation-observability-hardening: backlog
+  e6-s2-predictive-queue-risk-cards: backlog
+  e6-s3-prompt-variable-diff-approval: backlog
+  e6-s4-decision-trace-panel: backlog
+  e6-s5-alert-center-remediation-copy: backlog
+  e6-s6-timeline-conflict-hints: backlog
+  epic-e6-automation-observability-hardening-retrospective: optional
+
+  epic-e7-accessibility-keyboard-performance-hardening: backlog
+  e7-s1-global-keyboard-map: backlog
+  e7-s2-reduced-motion-alternatives: backlog
+  e7-s3-contrast-audit-pass: backlog
+  e7-s4-focus-management-consistency: backlog
+  e7-s5-performance-budget-enforcement: backlog
+  e7-s6-regression-snapshot-matrix: backlog
+  epic-e7-accessibility-keyboard-performance-hardening-retrospective: optional

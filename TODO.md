@@ -24,7 +24,7 @@ Use the roadmap helper to continuously surface the next open tasks while you wor
 - [ ] Implement idle timeout + re-auth requirements for sensitive actions ([TI-003](docs/exec-plans/active/tracked-issues/TI-003.md)).
 - [ ] Implement key-rotation workflow CLI + operator checklist integration ([TI-004](docs/exec-plans/active/tracked-issues/TI-004.md)).
 - [ ] Add redaction policy contract tests for logs/API responses ([TI-005](docs/exec-plans/active/tracked-issues/TI-005.md)).
-- [ ] Add a pre-release security gate in release documentation ([TI-006](docs/exec-plans/active/tracked-issues/TI-006.md)).
+- [x] Add a pre-release security gate in release documentation ([TI-006](docs/exec-plans/active/tracked-issues/TI-006.md)).
 
 ## P1 — Reliability & Observability
 
@@ -42,9 +42,9 @@ Use the roadmap helper to continuously surface the next open tasks while you wor
 
 ## P2 — Productization
 
-- [ ] Publish operator guides by persona (Admin, Producer, Reviewer) ([TI-030](docs/exec-plans/active/tracked-issues/TI-030.md)).
-- [ ] Build runbook index for common failures ([TI-031](docs/exec-plans/active/tracked-issues/TI-031.md)).
-- [ ] Define support triage workflow + SLA targets ([TI-032](docs/exec-plans/active/tracked-issues/TI-032.md)).
+- [x] Publish operator guides by persona (Admin, Producer, Reviewer) ([TI-030](docs/exec-plans/active/tracked-issues/TI-030.md)).
+- [x] Build runbook index for common failures ([TI-031](docs/exec-plans/active/tracked-issues/TI-031.md)).
+- [x] Define support triage workflow + SLA targets ([TI-032](docs/exec-plans/active/tracked-issues/TI-032.md)).
 - [ ] Document packaging tiers and feature-gate boundaries ([TI-033](docs/exec-plans/active/tracked-issues/TI-033.md)).
 - [ ] Define telemetry ethics + opt-in policy ([TI-034](docs/exec-plans/active/tracked-issues/TI-034.md)).
 

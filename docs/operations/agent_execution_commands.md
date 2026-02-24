@@ -207,6 +207,22 @@ $ git commit -m "docs: add parallel analysis packet and merged results for promp
 
 Use for long-running work that should be visible before final review.
 
+### Phase-4 review hygiene (ongoing enforcement)
+
+For implementation-phase work, run review hygiene continuously (not only at the
+end):
+
+1. Open/update a draft PR as soon as the first implementable increment exists.
+2. Attach validation command outputs in the PR and map each output to story
+   acceptance criteria.
+3. Re-run workflow gate checklist on each draft update:
+   - Plan completeness = 100%
+   - Subagent evidence completeness = 100%
+   - Draft PR maturity checklist = passed
+   - Worktree hygiene checks = passed
+4. Do not run `gh pr ready` until all checklist items are satisfied.
+5. Keep unresolved follow-ups in PR body with owner + target milestone.
+
 ### Commands
 
 ```bash
@@ -221,11 +237,17 @@ gh pr create \
 gh pr edit <pr-number> --body-file /tmp/pr-body-updated.md
 gh pr comment <pr-number> --body "Checkpoint: completed validation pass and updated risks section."
 
+# 2.1) Post AC-mapped validation outputs for current increment
+gh pr comment <pr-number> --body "AC mapping:\n- AC-1 -> `pytest ...` (pass)\n- AC-2 -> `python -m json.tool ...` (pass)"
+
+# 2.2) Post workflow gate checklist state
+gh pr comment <pr-number> --body "Workflow gate checklist:\n- [x] Plan completeness = 100%\n- [x] Subagent evidence completeness = 100%\n- [x] Draft PR maturity checklist passed\n- [x] Worktree hygiene passed"
+
 # 3) Review gate checks
 gh pr checks <pr-number>
 gh pr view <pr-number> --json reviewRequests,reviews,state
 
-# 4) Mark ready only after green gates
+# 4) Mark ready only after green gates and checklist completion
 gh pr ready <pr-number>
 ```
 
@@ -242,7 +264,8 @@ $ gh pr ready 123
 ### Failure recovery notes
 
 - If `gh` is unauthenticated, run `gh auth login` and retry.
-- If checks fail, keep PR in draft and post remediation steps with command output.
+- If checks fail, checklist items are incomplete, or follow-ups remain unowned,
+  keep PR in draft and post remediation steps with command output.
 
 ---
 

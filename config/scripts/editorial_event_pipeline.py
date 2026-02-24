@@ -1,9 +1,11 @@
 import argparse
 import json
 import logging
+import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, List, Optional
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 
@@ -24,27 +26,96 @@ class ExternalEvent:
 
 class BaseAdapter:
     source_name = "external"
+    default_timeout_seconds = 10.0
 
     def __init__(self, config: Dict[str, Any]):
         self.config = config
+        self.logger = logging.getLogger(__name__)
 
     def fetch(self) -> List[Dict[str, Any]]:
         endpoint = self.config.get("endpoint")
         if not endpoint:
             return []
 
+        timeout_raw = self.config.get("timeout_seconds", self.default_timeout_seconds)
+        try:
+            timeout = max(0.1, float(timeout_raw))
+        except (TypeError, ValueError):
+            timeout = self.default_timeout_seconds
         headers = self.config.get("headers", {})
-        request_obj = Request(endpoint, headers=headers)
-        request = urlopen(request_obj)
-        data = request.read().decode("utf-8")
-        if not data:
+        timeout_seconds = float(self.config.get("request_timeout_seconds", 5.0))
+
+        try:
+            request_obj = Request(endpoint, headers=headers)
+            request = urlopen(request_obj, timeout=timeout_seconds)
+            data = request.read().decode("utf-8")
+            if not data:
+                return []
+
+            payload = json.loads(data)
+            if isinstance(payload, list):
+                return [item for item in payload if isinstance(item, dict)]
+            if isinstance(payload, dict):
+                items = payload.get("items", [])
+                if isinstance(items, list):
+                    return [item for item in items if isinstance(item, dict)]
+            self._emit_fetch_failure(endpoint, TypeError(f"Unsupported payload type: {type(payload).__name__}"))
             return []
-        payload = json.loads(data)
+        except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
+            self._emit_fetch_failure(endpoint, exc)
+            return []
+
+    def _emit_fetch_failure(self, endpoint: str, exc: Exception) -> None:
+        diagnostic = {
+            "source": self.source_name,
+            "endpoint": endpoint,
+            "error_class": exc.__class__.__name__,
+            "error_message": str(exc),
+        }
+        self.logger.warning("base_adapter_fetch_failure %s", json.dumps(diagnostic, sort_keys=True))
+        request_obj = Request(endpoint, headers=headers)
+        try:
+            request = urlopen(request_obj, timeout=timeout)
+            data = request.read().decode("utf-8")
+            if not data:
+                return []
+            payload = json.loads(data)
+        except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
+            self._emit_fetch_diagnostic(endpoint=endpoint, error=exc)
+            return []
+
         if isinstance(payload, list):
-            return payload
+            return [item for item in payload if isinstance(item, dict)]
+
         if isinstance(payload, dict):
-            return payload.get("items", [])
+            items = payload.get("items", [])
+            if isinstance(items, list):
+                return [item for item in items if isinstance(item, dict)]
+            self._emit_fetch_diagnostic(
+                endpoint=endpoint,
+                error=TypeError(f"payload.items must be list, got {type(items).__name__}"),
+            )
+            return []
+
+        self._emit_fetch_diagnostic(
+            endpoint=endpoint,
+            error=TypeError(f"payload must be list or dict, got {type(payload).__name__}"),
+        )
         return []
+
+    def _emit_fetch_diagnostic(self, endpoint: str, error: Exception) -> None:
+        print(
+            json.dumps(
+                {
+                    "event": "adapter_fetch_failed",
+                    "source": self.source_name,
+                    "endpoint": endpoint,
+                    "error_class": type(error).__name__,
+                    "error_message": str(error),
+                },
+                ensure_ascii=False,
+            )
+        )
 
     def normalize(self, records: Iterable[Dict[str, Any]]) -> List[ExternalEvent]:
         raise NotImplementedError
@@ -68,7 +139,7 @@ class WeatherAdapter(BaseAdapter):
                         parse_float(
                             item.get("confidence", 0.8),
                             0.8,
-                            source=item.get("source") or self.source_name,
+                            source=self.source_name,
                             field="confidence",
                         )
                     ),
@@ -77,7 +148,7 @@ class WeatherAdapter(BaseAdapter):
                         parse_float(
                             item.get("relevance", 0.7),
                             0.7,
-                            source=item.get("source") or self.source_name,
+                            source=self.source_name,
                             field="relevance",
                         )
                     ),
@@ -86,6 +157,7 @@ class WeatherAdapter(BaseAdapter):
                             item.get("safety_score", safety),
                             safety,
                             source=item.get("source") or self.source_name,
+                            source=self.source_name,
                             field="safety_score",
                         )
                     ),
@@ -110,7 +182,7 @@ class NewsAdapter(BaseAdapter):
                         parse_float(
                             item.get("confidence", 0.75),
                             0.75,
-                            source=item.get("source") or self.source_name,
+                            source=self.source_name,
                             field="confidence",
                         )
                     ),
@@ -120,6 +192,7 @@ class NewsAdapter(BaseAdapter):
                             item.get("relevance", 0.6),
                             0.6,
                             source=item.get("source") or self.source_name,
+                            source=self.source_name,
                             field="relevance",
                         )
                     ),
@@ -128,6 +201,7 @@ class NewsAdapter(BaseAdapter):
                             item.get("safety_score", 0.97),
                             0.97,
                             source=item.get("source") or self.source_name,
+                            source=self.source_name,
                             field="safety_score",
                         )
                     ),
@@ -152,7 +226,7 @@ class TrendAdapter(BaseAdapter):
                         parse_float(
                             item.get("confidence", 0.65),
                             0.65,
-                            source=item.get("source") or self.source_name,
+                            source=self.source_name,
                             field="confidence",
                         )
                     ),
@@ -162,6 +236,7 @@ class TrendAdapter(BaseAdapter):
                             item.get("relevance", 0.5),
                             0.5,
                             source=item.get("source") or self.source_name,
+                            source=self.source_name,
                             field="relevance",
                         )
                     ),
@@ -170,6 +245,7 @@ class TrendAdapter(BaseAdapter):
                             item.get("safety_score", 0.9),
                             0.9,
                             source=item.get("source") or self.source_name,
+                            source=self.source_name,
                             field="safety_score",
                         )
                     ),
@@ -192,6 +268,24 @@ def parse_float(value: Any, default: float, *, source: str = "unknown", field: s
 
 def clamp(value: float) -> float:
     return max(0.0, min(1.0, value))
+
+
+def parse_float(
+    value: Any,
+    default: float,
+    *,
+    source: Optional[str] = None,
+    field: Optional[str] = None,
+) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        if source and field:
+            print(
+                f"[editorial_event_pipeline] invalid numeric value for {source}.{field}: {value!r}; using default={default}",
+                file=sys.stderr,
+            )
+        return default
 
 
 def to_iso8601(value: Optional[str]) -> str:

@@ -276,3 +276,35 @@ def test_update_policy_emits_backup_created_and_restored(tmp_path):
     names = [event["event_name"] for event in events]
     assert "scheduler.backup.created" in names
     assert "scheduler.backup.restored" in names
+
+
+def test_get_policy_logs_warning_when_stat_fails_and_continues(tmp_path, monkeypatch, caplog):
+    policy_path = tmp_path / "autonomy_policy.json"
+    policy_path.write_text(AutonomyPolicy().model_dump_json(indent=2), encoding="utf-8")
+    service = AutonomyPolicyService(policy_path=policy_path, audit_log_path=tmp_path / "audit.jsonl")
+    service.event_log_path = tmp_path / "scheduler_events.jsonl"
+
+    original_stat = Path.stat
+
+    def _raise_for_policy(path_obj: Path, *args, **kwargs):
+        if path_obj == policy_path:
+            raise OSError("permission denied")
+        return original_stat(path_obj, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "stat", _raise_for_policy)
+
+    with caplog.at_level("WARNING"):
+        policy = service.get_policy()
+
+    assert policy.station_default_mode == GlobalMode.semi_auto
+    assert any("Autonomy policy stat failed during cache check." in rec.message for rec in caplog.records)
+
+    events = [json.loads(line) for line in service.event_log_path.read_text(encoding="utf-8").splitlines()]
+    stat_events = [event for event in events if event["event_name"] == "scheduler.autonomy_policy.stat.failed"]
+    assert stat_events
+    assert stat_events[0]["metadata"] == {
+        "path": str(policy_path),
+        "operation": "stat",
+        "error_type": "OSError",
+        "error_message": "permission denied",
+    }
