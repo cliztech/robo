@@ -17,7 +17,7 @@ development_status:
   todo-03-idle-timeout-reauth-sensitive-actions: backlog
   todo-04-key-rotation-workflow-cli-checklist: backlog
   todo-05-redaction-policy-contract-tests: backlog
-  todo-06-pre-release-security-gate-docs: backlog
+  todo-06-pre-release-security-gate-docs: done
   todo-07-human-in-the-loop-checkpoints: backlog
   todo-08-task-route-templates-qa-change-proposal: backlog
   todo-09-one-click-rollback-assistant-config: backlog
