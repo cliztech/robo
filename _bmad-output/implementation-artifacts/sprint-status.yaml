@@ -1,11 +1,13 @@
 # generated: 2026-02-24
 # project: DGN-DJ GUI Console Phase-4 Baseline
+# project: DGN-DJ Phase-4 Hardening Sprint
 # project_key: NOKEY
 # tracking_system: file-system
 # story_location: _bmad-output/implementation-artifacts
 
 generated: 2026-02-24
 project: DGN-DJ GUI Console Phase-4 Baseline
+project: DGN-DJ Phase-4 Hardening Sprint
 project_key: NOKEY
 tracking_system: file-system
 story_location: _bmad-output/implementation-artifacts
@@ -73,3 +75,19 @@ development_status:
   e7-s5-performance-budgets-for-waveform-mixer-browser-interactions: backlog
   e7-s6-regression-snapshot-matrix-and-release-checklist: backlog
   epic-e7-retrospective: optional
+  epic-e6-automation-observability-hardening: backlog
+  e6-s2-predictive-queue-risk-cards: backlog
+  e6-s3-prompt-variable-diff-approval: backlog
+  e6-s4-decision-trace-panel: backlog
+  e6-s5-alert-center-remediation-copy: backlog
+  e6-s6-timeline-conflict-hints: backlog
+  epic-e6-automation-observability-hardening-retrospective: optional
+
+  epic-e7-accessibility-keyboard-performance-hardening: backlog
+  e7-s1-global-keyboard-map: backlog
+  e7-s2-reduced-motion-alternatives: backlog
+  e7-s3-contrast-audit-pass: backlog
+  e7-s4-focus-management-consistency: backlog
+  e7-s5-performance-budget-enforcement: backlog
+  e7-s6-regression-snapshot-matrix: backlog
+  epic-e7-accessibility-keyboard-performance-hardening-retrospective: optional
