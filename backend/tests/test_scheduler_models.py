@@ -156,3 +156,169 @@ def test_schedule_spec_rejects_invalid_cron_time_token():
         ScheduleSpec(mode="cron", cron="foo 9 * * 1")
 
     assert "cron minute/hour fields must be numeric, wildcard, range, or step expressions" in str(excinfo.value)
+
+def test_schedule_spec_one_off_validation():
+    # Valid one_off
+    spec = ScheduleSpec(mode="one_off", run_at="2024-01-01T00:00:00Z")
+    assert spec.mode == "one_off"
+    assert spec.run_at == "2024-01-01T00:00:00Z"
+
+    # Missing run_at
+    with pytest.raises(ValidationError) as excinfo:
+        ScheduleSpec(mode="one_off")
+    assert "mode=one_off requires run_at" in str(excinfo.value)
+
+    # With rrule (invalid)
+    with pytest.raises(ValidationError) as excinfo:
+        ScheduleSpec(mode="one_off", run_at="2024-01-01T00:00:00Z", rrule="FREQ=DAILY")
+    assert "mode=one_off only allows run_at" in str(excinfo.value)
+
+    # With cron (invalid)
+    with pytest.raises(ValidationError) as excinfo:
+        ScheduleSpec(mode="one_off", run_at="2024-01-01T00:00:00Z", cron="* * * * *")
+    assert "mode=one_off only allows run_at" in str(excinfo.value)
+
+
+def test_schedule_spec_rrule_validation():
+    # Valid rrule
+    spec = ScheduleSpec(mode="rrule", rrule="FREQ=DAILY;COUNT=5")
+    assert spec.mode == "rrule"
+    assert "FREQ=DAILY" in spec.rrule
+
+    # Missing rrule
+    with pytest.raises(ValidationError) as excinfo:
+        ScheduleSpec(mode="rrule")
+    assert "mode=rrule requires rrule containing FREQ=" in str(excinfo.value)
+
+    # Invalid rrule format (missing FREQ=)
+    with pytest.raises(ValidationError) as excinfo:
+        ScheduleSpec(mode="rrule", rrule="INVALID_RRULE")
+    assert "mode=rrule requires rrule containing FREQ=" in str(excinfo.value)
+
+    # With run_at (invalid)
+    with pytest.raises(ValidationError) as excinfo:
+        ScheduleSpec(mode="rrule", rrule="FREQ=DAILY", run_at="2024-01-01T00:00:00Z")
+    assert "mode=rrule only allows rrule" in str(excinfo.value)
+
+    # With cron (invalid)
+    with pytest.raises(ValidationError) as excinfo:
+        ScheduleSpec(mode="rrule", rrule="FREQ=DAILY", cron="* * * * *")
+    assert "mode=rrule only allows rrule" in str(excinfo.value)
+
+
+def test_schedule_spec_cron_validation():
+    # Valid cron
+    spec = ScheduleSpec(mode="cron", cron="0 9 * * 1")
+    assert spec.mode == "cron"
+    assert spec.cron == "0 9 * * 1"
+
+    # Missing cron
+    with pytest.raises(ValidationError) as excinfo:
+        ScheduleSpec(mode="cron")
+    assert "mode=cron requires cron" in str(excinfo.value)
+
+    # With run_at (invalid)
+    with pytest.raises(ValidationError) as excinfo:
+        ScheduleSpec(mode="cron", cron="0 9 * * 1", run_at="2024-01-01T00:00:00Z")
+    assert "mode=cron only allows cron" in str(excinfo.value)
+
+    # With rrule (invalid)
+    with pytest.raises(ValidationError) as excinfo:
+        ScheduleSpec(mode="cron", cron="0 9 * * 1", rrule="FREQ=DAILY")
+    assert "mode=cron only allows cron" in str(excinfo.value)
+
+    # Invalid cron length
+    with pytest.raises(ValidationError) as excinfo:
+        ScheduleSpec(mode="cron", cron="* * * *")  # 4 fields
+    assert "cron must use five fields" in str(excinfo.value)
+
+def test_schedule_record_effective_window_validation():
+    # Base: start_window, Overrides: end_window
+    # Case 1: start <= end (Valid)
+    record = ScheduleRecord(
+        id="mixed_windows_valid",
+        name="Mixed Windows Valid",
+        enabled=True,
+        template_ref=TemplateRef(id="tpl", version=1),
+        start_window=ScheduleWindow(value="2024-01-01T00:00:00Z"),
+        overrides=ScheduleOverrides(
+            end_window=ScheduleWindow(value="2024-01-02T00:00:00Z")
+        )
+    )
+    assert record.effective_start_window().value == "2024-01-01T00:00:00Z"
+    assert record.effective_end_window().value == "2024-01-02T00:00:00Z"
+
+    # Case 2: start > end (Invalid)
+    with pytest.raises(ValidationError) as excinfo:
+        ScheduleRecord(
+            id="mixed_windows_invalid",
+            name="Mixed Windows Invalid",
+            enabled=True,
+            template_ref=TemplateRef(id="tpl", version=1),
+            start_window=ScheduleWindow(value="2024-01-02T00:00:00Z"),
+            overrides=ScheduleOverrides(
+                end_window=ScheduleWindow(value="2024-01-01T00:00:00Z")
+            )
+        )
+    assert "start_window.value must be <= end_window.value" in str(excinfo.value)
+
+
+def test_schedule_record_effective_window_validation_reverse():
+    # Base: end_window, Overrides: start_window
+    # Case 1: start <= end (Valid)
+    record = ScheduleRecord(
+        id="mixed_windows_reverse_valid",
+        name="Mixed Windows Reverse Valid",
+        enabled=True,
+        template_ref=TemplateRef(id="tpl", version=1),
+        end_window=ScheduleWindow(value="2024-01-02T00:00:00Z"),
+        overrides=ScheduleOverrides(
+            start_window=ScheduleWindow(value="2024-01-01T00:00:00Z")
+        )
+    )
+    assert record.effective_start_window().value == "2024-01-01T00:00:00Z"
+    assert record.effective_end_window().value == "2024-01-02T00:00:00Z"
+
+    # Case 2: start > end (Invalid)
+    with pytest.raises(ValidationError) as excinfo:
+        ScheduleRecord(
+            id="mixed_windows_reverse_invalid",
+            name="Mixed Windows Reverse Invalid",
+            enabled=True,
+            template_ref=TemplateRef(id="tpl", version=1),
+            end_window=ScheduleWindow(value="2024-01-01T00:00:00Z"),
+            overrides=ScheduleOverrides(
+                start_window=ScheduleWindow(value="2024-01-02T00:00:00Z")
+            )
+        )
+    assert "start_window.value must be <= end_window.value" in str(excinfo.value)
+
+def test_schedule_record_multiple_duplicate_keys():
+    # Test with multiple duplicate keys to ensure all are reported
+    with pytest.raises(ValidationError) as excinfo:
+        ScheduleRecord(
+            id="multi_duplicate",
+            name="Multi Duplicate",
+            enabled=True,
+            template_ref=TemplateRef(id="tpl", version=1),
+            priority=50,
+            timezone="UTC",
+            overrides=ScheduleOverrides(
+                priority=60,
+                timezone="America/New_York"
+            )
+        )
+    # The error message should list the duplicate keys
+    assert "ambiguous configuration: priority, timezone appears in both top-level and overrides" in str(excinfo.value)
+
+
+def test_template_ref_without_overrides_is_valid():
+    # Verify that a ScheduleRecord with a template_ref but no overrides is valid
+    record = ScheduleRecord(
+        id="template_no_overrides",
+        name="Template No Overrides",
+        enabled=True,
+        template_ref=TemplateRef(id="tpl", version=1)
+    )
+    assert record.template_ref.id == "tpl"
+    assert record.overrides is None
