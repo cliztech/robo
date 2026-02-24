@@ -45,7 +45,10 @@ This scorecard provides a versioned, repeatable way to track progress from roadm
 - Date (UTC): 2026-02-24
   - Owner: Management Team (Project Coordinator)
   - Changed metrics: weighted total remains 62%; stale weekly logs refreshed with explicit blocker ETAs
-  - Blockers: A1.1 implementation evidence pending (ETA 2026-02-26); A2.3 denylist enforcement proof pending (ETA 2026-02-27); A3.2 pre-release security gate evidence pending (ETA 2026-02-28)
+  - Blockers:
+    - A1.1 implementation evidence pending (ETA 2026-02-26)
+    - A2.3 denylist enforcement proof pending (ETA 2026-02-27)
+    - A3.2 pre-release security gate evidence pending (ETA 2026-02-28)
   - Next step: publish updated Track A execution evidence and re-evaluate Security & compliance score in next weekly refresh
 
 ## Weekly update workflow
