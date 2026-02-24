@@ -80,7 +80,7 @@ Source sprint board: `docs/track_a_security_sprint_checklist.md`.
 | --- | ---: | --- | --- | --- | --- | --- |
 | 2026-02-15 | 50% | Not started | Not started | Not started | None recorded | Baseline imported from readiness plan. |
 | 2026-02-22 | 50% | Planned | Planned | Planned | ⚠ stale (older than 7 days) | Sprint checklist published; execution started next cycle. |
-| 2026-02-24 | 50% | Planned | Planned | Planned | A1.1 evidence pending (ETA 2026-02-26); A2.3 denylist verification pending (ETA 2026-02-27); A3.2 security gate evidence pending (ETA 2026-02-28) | Weekly refresh aligned to execution index template; next actions assigned to owners. |
+| 2026-02-24 | 50% | Planned | Planned | Planned | A1.1 evidence pending (ETA 2026-02-26)<br>A2.3 denylist verification pending (ETA 2026-02-27)<br>A3.2 security gate evidence pending (ETA 2026-02-28) | Weekly refresh aligned to execution index template; next actions assigned to owners. |
 
 ## Critical unresolved security items (readiness inflation guard)
 
