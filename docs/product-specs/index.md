@@ -9,3 +9,4 @@ This folder contains user-facing and operator-facing product specifications.
 - `runtime-matrix.md`
 - `dependency-compatibility-contract.md`
 - `environment-profiles.md`
+- `android-operator-app-mvp.md`

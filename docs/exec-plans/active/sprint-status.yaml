@@ -69,10 +69,10 @@ development_status:
   d1-3-golden-path-fresh-install-validation-test: backlog
   epic-d1-retrospective: optional
 
-  epic-d2-documentation-and-support-model: backlog
-  d2-1-operator-guide-by-persona: backlog
-  d2-2-runbook-index-for-common-failures: backlog
-  d2-3-support-triage-workflow-and-sla-targets: backlog
+  epic-d2-documentation-and-support-model: completed
+  d2-1-operator-guide-by-persona: completed
+  d2-2-runbook-index-for-common-failures: completed
+  d2-3-support-triage-workflow-and-sla-targets: completed
   epic-d2-retrospective: optional
 
   epic-d3-commercial-readiness: backlog
