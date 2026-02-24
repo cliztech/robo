@@ -5,7 +5,7 @@
   "description": "Envelope for frontend-safe configuration. Optional config keys may be omitted by producers; consumers should apply defaults documented in public_frontend_config.schema.json.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["config", "generated_at"],
+  "required": ["config", "generated_at", "settings_visibility"],
   "properties": {
     "config": {
       "$ref": "../public_frontend_config.schema.json",
@@ -14,11 +14,57 @@
     "generated_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "settings_visibility": {
+      "$ref": "../shared_settings_visibility.schema.json",
+      "description": "Role-aware visibility/editability contract for frontend settings surfaces."
     }
   },
   "examples": [
     {
       "generated_at": "2026-01-01T00:00:00Z",
+      "settings_visibility": {
+        "roles": {
+          "admin": {
+            "visible_sections": [
+              "station_profile",
+              "ui_preferences",
+              "autonomy_controls",
+              "publish_controls",
+              "integration_metadata"
+            ],
+            "editable_sections": [
+              "station_profile",
+              "ui_preferences",
+              "autonomy_controls",
+              "publish_controls",
+              "integration_metadata"
+            ]
+          },
+          "operator": {
+            "visible_sections": [
+              "station_profile",
+              "ui_preferences",
+              "autonomy_controls"
+            ],
+            "editable_sections": [
+              "ui_preferences",
+              "autonomy_controls"
+            ]
+          },
+          "viewer": {
+            "visible_sections": [
+              "station_profile",
+              "ui_preferences"
+            ],
+            "editable_sections": []
+          }
+        },
+        "deny_state": {
+          "status": "denied",
+          "reason_code": "role_not_permitted"
+        }
+      },
       "config": {
         "station": {
           "display_name": "RoboDJ",

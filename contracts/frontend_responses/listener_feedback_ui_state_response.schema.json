@@ -11,7 +11,8 @@
     "channels",
     "allowed_reactions",
     "submission_limits",
-    "offline_fallback"
+    "offline_fallback",
+    "settings_visibility"
   ],
   "properties": {
     "feedback_enabled": {
@@ -131,6 +132,10 @@
           "minimum": 0
         }
       }
+    },
+    "settings_visibility": {
+      "$ref": "../shared_settings_visibility.schema.json",
+      "description": "Role-aware visibility/editability contract for admin/operator/viewer settings access."
     }
   },
   "allOf": [

@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import threading
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException
 
-from backend.security.auth import verify_api_key
+from backend.security.auth import get_scheduler_api_key
 
 from .scheduler_models import (
     PreviewRequest,
@@ -16,12 +19,20 @@ from .scheduler_ui_service import SchedulerUiService
 router = APIRouter(
     prefix="/api/v1/scheduler-ui",
     tags=["scheduler-ui"],
-    dependencies=[Depends(verify_api_key)]
+    dependencies=[Depends(get_scheduler_api_key)]
 )
+
+_service_instance: Optional[SchedulerUiService] = None
+_service_lock = threading.Lock()
 
 
 def get_scheduler_service() -> SchedulerUiService:
-    return SchedulerUiService()
+    global _service_instance
+    if _service_instance is None:
+        with _service_lock:
+            if _service_instance is None:
+                _service_instance = SchedulerUiService()
+    return _service_instance
 
 
 @router.get("/state", response_model=SchedulerUiState)
