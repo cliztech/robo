@@ -56,6 +56,8 @@ function StatCard({
     const trendClass = trend === 'up' ? 'text-lime-500' : trend === 'down' ? 'text-red-400' : 'text-zinc-600';
     const c = colors[color];
 
+    const sparkId = React.useId();
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -81,7 +83,11 @@ function StatCard({
                 <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="h-full w-full">
                     <defs>
                         <linearGradient id={sparkId} x1="0" y1="0" x2="0" y2="1">
+<<<<<<< HEAD
                             <stop offset="0%" stopColor={c.spark} stopOpacity="0.2" />
+=======
+                            <stop offset="0%" stopColor={c.spark} stopOpacity="0.15" />
+>>>>>>> 2cc56c6ee848ad6741f5dbbbd83c3cdf0aaf1581
                             <stop offset="100%" stopColor={c.spark} stopOpacity="0" />
                         </linearGradient>
                     </defs>
@@ -118,7 +124,7 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
     );
 }
 
-export function DashboardView() {
+export function DashboardView({ telemetry }: { telemetry?: any }) {
     const [currentTime, setCurrentTime] = useState('');
 
     useEffect(() => {

@@ -1,10 +1,15 @@
 'use client';
 
+<<<<<<< HEAD
 import { useEffect, useMemo, useState } from 'react';
 import { Pause, Play, Radio, Repeat, Shuffle, SkipBack, SkipForward, Volume1, Volume2, VolumeX } from 'lucide-react';
+=======
+import React, { useEffect, useMemo, useState } from 'react';
+>>>>>>> 2cc56c6ee848ad6741f5dbbbd83c3cdf0aaf1581
 import { cn } from '../../lib/utils';
 import { DegenStereoMeter } from './DegenVUMeter';
 import type { DJTelemetry } from '../../lib/audio/telemetry';
+<<<<<<< HEAD
 
 interface TransportTrack {
     title?: string;
@@ -14,6 +19,20 @@ interface TransportTrack {
     key?: string;
     duration?: number;
 }
+=======
+import {
+    Pause,
+    Play,
+    Radio,
+    Repeat,
+    Shuffle,
+    SkipBack,
+    SkipForward,
+    Volume1,
+    Volume2,
+    VolumeX,
+} from 'lucide-react';
+>>>>>>> 2cc56c6ee848ad6741f5dbbbd83c3cdf0aaf1581
 
 interface DegenTransportProps {
     currentTrack?: TransportTrack;
@@ -38,18 +57,57 @@ export function DegenTransport({
     currentTrack,
     telemetry,
     telemetryTick,
+<<<<<<< HEAD
     isPlaying = false,
     isOnAir = false,
+=======
+    telemetry,
+    isPlaying = true,
+    isOnAir = true,
+>>>>>>> 2cc56c6ee848ad6741f5dbbbd83c3cdf0aaf1581
     onPlayPause,
     onNext,
     onPrev,
     className,
 }: DegenTransportProps) {
+<<<<<<< HEAD
+=======
+    const track = resolveTransportTrack(currentTrack);
+    const transportTelemetry = resolveTransportTelemetry(telemetry ? adaptDJTelemetryToTransportTelemetry(telemetry) : undefined);
+
+    const [telemetryStep, setTelemetryStep] = useState(0);
+    const [playbackProgress, setPlaybackProgress] = useState(0);
+
+    useEffect(() => {
+        setPlaybackProgress(transportTelemetry.progress);
+    }, [transportTelemetry.progress]);
+
+    useEffect(() => {
+        setVolume(transportTelemetry.volume);
+    }, [transportTelemetry.volume]);
+
+    useEffect(() => {
+        if (!isPlaying || typeof telemetryTick === 'number') return;
+
+        const id = setInterval(() => {
+            setTelemetryStep((prev) => prev + 1);
+        }, 80);
+
+        return () => clearInterval(id);
+    }, [isPlaying, telemetryTick]);
+
+    const phase = typeof telemetryTick === 'number' ? telemetryTick : telemetryStep;
+    const [progressOverride, setProgressOverride] = useState<number | null>(null);
+    const [volume, setVolume] = useState(85);
+    const [isMuted, setIsMuted] = useState(false);
+    const [repeat, setRepeat] = useState(false);
+>>>>>>> 2cc56c6ee848ad6741f5dbbbd83c3cdf0aaf1581
     const [shuffle, setShuffle] = useState(false);
     const [repeat, setRepeat] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
     const [volume, setVolume] = useState(85);
 
+<<<<<<< HEAD
     const progress = telemetry?.transport.progress ?? 0;
     const elapsed = telemetry?.transport.elapsedSeconds ?? ((currentTrack?.duration ?? 0) * progress);
     const remaining = telemetry?.transport.remainingSeconds ?? Math.max(0, (currentTrack?.duration ?? 0) - elapsed);
@@ -68,6 +126,27 @@ export function DegenTransport({
         }, 160);
         return () => clearInterval(timer);
     }, [telemetry]);
+=======
+    const progress = progressOverride ?? transportTelemetry.progress ?? 0;
+    const elapsed = telemetry?.transport.elapsedSeconds ?? progress * (track.duration || 0);
+    const vuLeft =
+        telemetry?.stereoLevels.leftLevel ??
+        Math.max(0.1, Math.min(1, transportTelemetry.vuLeft + Math.sin(phase / 5) * 0.08));
+    const vuRight =
+        telemetry?.stereoLevels.rightLevel ??
+        Math.max(0.1, Math.min(1, transportTelemetry.vuRight + Math.cos(phase / 6) * 0.08));
+    const peakLeft = telemetry?.stereoLevels.leftPeak ?? vuLeft;
+    const peakRight = telemetry?.stereoLevels.rightPeak ?? vuRight;
+
+    const elapsedTime = telemetry?.transport.elapsedSeconds ?? progress * (track.duration || 0);
+    const remaining = useMemo(() => {
+        if (telemetry) {
+            return telemetry.transport.remainingSeconds;
+        }
+
+        return (track.duration || 0) - elapsedTime;
+    }, [elapsedTime, telemetry, track.duration]);
+>>>>>>> 2cc56c6ee848ad6741f5dbbbd83c3cdf0aaf1581
 
     const VolumeIcon = useMemo(() => {
         if (isMuted) return VolumeX;
@@ -121,9 +200,42 @@ export function DegenTransport({
             </div>
 
             <div className="flex-1 flex items-center gap-3 px-4 min-w-0">
+<<<<<<< HEAD
                 <span className="text-[10px] font-mono text-zinc-500 tabular-nums w-9 text-right shrink-0">{formatTime(elapsed)}</span>
                 <div className="relative h-2 flex-1 rounded-full bg-white/[0.06] overflow-hidden">
                     <div className="h-full bg-gradient-to-r from-lime-400 to-cyan-400" style={{ width: `${Math.round(progress * 100)}%` }} />
+=======
+                <span className="text-[10px] font-mono text-zinc-500 tabular-nums w-9 text-right shrink-0">{formatTime(elapsedTime)}</span>
+                <div className="flex-1 group relative h-7 flex items-center">
+                    <div className="absolute inset-x-0 h-[3px] rounded-full bg-white/[0.06] overflow-hidden">
+                        <div
+                            className="h-full rounded-full transition-[width] duration-100"
+                            style={{
+                                width: `${progress * 100}%`,
+                                background: 'linear-gradient(90deg, hsl(var(--color-waveform-played-strong)), hsl(var(--color-waveform-played-mid)))',
+                                boxShadow: '0 0 8px hsla(var(--color-deck-a),0.3)',
+                            }}
+                        />
+                    </div>
+                    <input
+                        aria-label="Playback position"
+                        type="range"
+                        min={0}
+                        max={1}
+                        step={0.001}
+                        value={progress}
+
+                        onChange={(e) => setPlaybackProgress(parseFloat(e.target.value))}
+                        className="absolute inset-x-0 h-7 w-full opacity-0 cursor-pointer z-10"
+                    />
+                    <div
+                        className="absolute w-3 h-3 rounded-full bg-[hsl(var(--color-deck-a))] border-2 border-deck-a-soft opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+                        style={{
+                            left: `calc(${progress * 100}% - 6px)`,
+                            boxShadow: '0 0 8px hsla(var(--color-deck-a),0.4)',
+                        }}
+                    />
+>>>>>>> 2cc56c6ee848ad6741f5dbbbd83c3cdf0aaf1581
                 </div>
                 <span className="text-[10px] font-mono text-zinc-600 tabular-nums w-9 shrink-0">-{formatTime(remaining)}</span>
             </div>

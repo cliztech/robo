@@ -8,6 +8,7 @@ from pathlib import Path
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
+from .observability import emit_scheduler_event
 from .schedule_conflict_detection import detect_schedule_conflicts
 from .scheduler_models import (
     ConflictType,
@@ -51,6 +52,8 @@ class SchedulerUiService:
         self.schedules_path = schedules_path
         self.schema_path = schema_path
         self.schedules_path.parent.mkdir(parents=True, exist_ok=True)
+        self._cached_envelope: ScheduleEnvelope | None = None
+        self._last_mtime: float | None = None
 
     def get_ui_state(self) -> SchedulerUiState:
         envelope = self._load_and_migrate()
@@ -132,9 +135,42 @@ class SchedulerUiService:
         if not self.schedules_path.exists():
             envelope = ScheduleEnvelope(schema_version=2, schedules=[])
             self.schedules_path.write_text(envelope.model_dump_json(indent=2), encoding="utf-8")
+            self._cached_envelope = envelope
+            try:
+                self._last_mtime = self.schedules_path.stat().st_mtime
+            except OSError:
+                self._last_mtime = None
             return envelope
 
-        raw = json.loads(self.schedules_path.read_text(encoding="utf-8"))
+        try:
+            mtime = self.schedules_path.stat().st_mtime
+            if self._cached_envelope is not None and self._last_mtime == mtime:
+                return self._cached_envelope
+        except OSError as error:
+            logger.warning(
+                "Scheduler schedule file stat failed during cache check.",
+                extra={
+                    "path": str(self.schedules_path),
+                    "operation": "stat",
+                    "error_type": type(error).__name__,
+                    "error_message": str(error),
+                },
+            )
+            emit_scheduler_event(
+                logger,
+                event_name="scheduler.schedule_file.stat.failed",
+                level="warning",
+                message="Schedule file stat failed during cache invalidation; continuing with fallback read path.",
+                metadata={
+                    "path": str(self.schedules_path),
+                    "operation": "stat",
+                    "error_type": type(error).__name__,
+                    "error_message": str(error),
+                },
+            )
+
+        content = self.schedules_path.read_text(encoding="utf-8")
+        raw = json.loads(content)
         envelope = ScheduleEnvelope.model_validate(self._migrate_payload(raw))
         self._validate_schema(envelope)
 
@@ -142,7 +178,18 @@ class SchedulerUiService:
         if conflicts:
             raise ValueError(self._format_conflict_error(conflicts))
 
-        self.schedules_path.write_text(envelope.model_dump_json(indent=2), encoding="utf-8")
+        # Only write back if the content has changed or we want to enforce formatting/migration
+        serialized = envelope.model_dump_json(indent=2)
+        # Check if semantic content or formatting differs before writing
+        if serialized != content:
+            self.schedules_path.write_text(serialized, encoding="utf-8")
+
+        self._cached_envelope = envelope
+        try:
+            self._last_mtime = self.schedules_path.stat().st_mtime
+        except OSError:
+            self._last_mtime = None
+
         return envelope
 
     def _validate_schema(self, envelope: ScheduleEnvelope) -> None:

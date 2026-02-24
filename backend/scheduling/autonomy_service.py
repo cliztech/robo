@@ -75,9 +75,29 @@ class AutonomyPolicyService:
             mtime = self.policy_path.stat().st_mtime
             if self._cached_policy is not None and self._last_mtime == mtime:
                 return self._cached_policy
-        except OSError:
-            # Handle cases where file is inaccessible or deleted between calls
-            pass
+        except OSError as error:
+            logger.warning(
+                "Autonomy policy stat failed during cache check.",
+                extra={
+                    "path": str(self.policy_path),
+                    "operation": "stat",
+                    "error_type": type(error).__name__,
+                    "error_message": str(error),
+                },
+            )
+            emit_scheduler_event(
+                logger,
+                event_name="scheduler.autonomy_policy.stat.failed",
+                level="warning",
+                message="Autonomy policy stat failed during cache invalidation; continuing with fallback read path.",
+                metadata={
+                    "path": str(self.policy_path),
+                    "operation": "stat",
+                    "error_type": type(error).__name__,
+                    "error_message": str(error),
+                },
+                event_log_path=self.event_log_path,
+            )
 
         try:
             policy = AutonomyPolicy.model_validate_json(self.policy_path.read_text(encoding="utf-8"))
@@ -280,6 +300,8 @@ class AutonomyPolicyService:
             return []
 
         chunk_size = 8192
+        chunks = []
+        lines_found = 0
 
         with file_path.open("rb") as f:
             if file_size <= chunk_size:
@@ -288,27 +310,24 @@ class AutonomyPolicyService:
                 return content.splitlines()[-limit:]
 
             remaining_bytes = file_size
-            buffer = b""
 
             while remaining_bytes > 0:
                 read_size = min(chunk_size, remaining_bytes)
                 remaining_bytes -= read_size
                 f.seek(remaining_bytes)
                 chunk = f.read(read_size)
-                buffer = chunk + buffer
 
-                parts = buffer.split(b'\n')
-                # If the last part is empty (because file ends with newline), don't count it as a line yet
-                valid_count = len(parts)
-                if parts and parts[-1] == b'':
-                    valid_count -= 1
+                lines_found += chunk.count(b'\n')
+                chunks.append(chunk)
 
-                # We need > limit lines to ensure the last 'limit' lines are complete
-                # (since the first one in 'parts' might be partial)
-                if valid_count > limit:
+                if lines_found > limit + 1:
                     break
 
+            # Join chunks in correct order (reversed because we appended from end)
+            buffer = b"".join(reversed(chunks))
+
             parts = buffer.split(b'\n')
+
             if parts and parts[-1] == b'':
                 parts.pop()
 

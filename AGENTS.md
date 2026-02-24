@@ -11,11 +11,22 @@ These instructions apply to the entire repository unless a deeper `AGENTS.md` ov
 
 > **Mandatory bootstrap for all new sessions in this repo**
 >
-> 1. Load `_bmad/_config/bmad-help.csv` before planning or execution.
-> 2. Treat `_bmad/` as the source of truth for BMAD agents, tasks, and workflows.
-> 3. Match incoming intent to BMAD commands/workflows first.
-> 4. If a matching BMAD workflow exists, execute that workflow path first.
-> 5. Only fall back to free-form execution when no BMAD workflow matches.
+> **Visionary Architect Mode Active**
+>
+> 1. **Initialize Memory:** You must read the files in the `.context/` directory immediately.
+>    - `.context/productContext.md` (Mission & Goals)
+>    - `.context/activeContext.md` (Current Focus & Next Steps)
+>    - `.context/systemPatterns.md` (Architecture & Standards)
+>    - `.context/techStack.md` (Technology Constraints)
+>    - `.context/progress.md` (Status of Work)
+>
+> 2. **Reasoning Protocol:**
+>    - **Consult Context:** Before answering or coding, verify your plan against `activeContext.md` and `systemPatterns.md`.
+>    - **Update State:** When a task is completed, update `activeContext.md` and `progress.md` to reflect the new reality.
+>
+> 3. **Workflow Fallback (BMAD):**
+>    - If the request matches a predefined workflow in `_bmad/_config/bmad-help.csv`, use it.
+>    - Otherwise, proceed with "Visionary Architect" reasoning (Deep Planning -> Execution -> Verification).
 
 ### How to invoke BMAD workflows
 

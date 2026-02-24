@@ -7,6 +7,7 @@ from backend.scheduling.scheduler_ui_api import get_scheduler_service
 from backend.scheduling.scheduler_ui_service import SchedulerUiService
 
 TEST_API_KEY = "valid_api_key_for_testing"
+GLOBAL_API_KEY = "global_api_key_should_not_work"
 
 def _override_service(tmp_path):
     schedules_path = tmp_path / "schedules.json"
@@ -30,7 +31,11 @@ def _sample_schedule(schedule_id="sch_1", name="Test Show"):
 
 @pytest.fixture(autouse=True)
 def mock_env_api_key():
-    with mock.patch.dict(os.environ, {"ROBODJ_SCHEDULER_API_KEY": TEST_API_KEY}):
+    # Set distinct keys to ensure tests verify the Scheduler API Key specifically
+    with mock.patch.dict(os.environ, {
+        "ROBODJ_SCHEDULER_API_KEY": TEST_API_KEY,
+        "ROBODJ_SECRET_KEY": GLOBAL_API_KEY
+    }):
         yield
 
 def test_unauthenticated_request(tmp_path):
