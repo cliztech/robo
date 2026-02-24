@@ -1,8 +1,10 @@
 import argparse
 import json
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, List, Optional
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 
@@ -23,6 +25,7 @@ class BaseAdapter:
 
     def __init__(self, config: Dict[str, Any]):
         self.config = config
+        self.logger = logging.getLogger(__name__)
 
     def fetch(self) -> List[Dict[str, Any]]:
         endpoint = self.config.get("endpoint")
@@ -30,17 +33,36 @@ class BaseAdapter:
             return []
 
         headers = self.config.get("headers", {})
-        request_obj = Request(endpoint, headers=headers)
-        request = urlopen(request_obj)
-        data = request.read().decode("utf-8")
-        if not data:
+        timeout_seconds = float(self.config.get("request_timeout_seconds", 5.0))
+
+        try:
+            request_obj = Request(endpoint, headers=headers)
+            request = urlopen(request_obj, timeout=timeout_seconds)
+            data = request.read().decode("utf-8")
+            if not data:
+                return []
+
+            payload = json.loads(data)
+            if isinstance(payload, list):
+                return [item for item in payload if isinstance(item, dict)]
+            if isinstance(payload, dict):
+                items = payload.get("items", [])
+                if isinstance(items, list):
+                    return [item for item in items if isinstance(item, dict)]
+            self._emit_fetch_failure(endpoint, TypeError(f"Unsupported payload type: {type(payload).__name__}"))
             return []
-        payload = json.loads(data)
-        if isinstance(payload, list):
-            return payload
-        if isinstance(payload, dict):
-            return payload.get("items", [])
-        return []
+        except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
+            self._emit_fetch_failure(endpoint, exc)
+            return []
+
+    def _emit_fetch_failure(self, endpoint: str, exc: Exception) -> None:
+        diagnostic = {
+            "source": self.source_name,
+            "endpoint": endpoint,
+            "error_class": exc.__class__.__name__,
+            "error_message": str(exc),
+        }
+        self.logger.warning("base_adapter_fetch_failure %s", json.dumps(diagnostic, sort_keys=True))
 
     def normalize(self, records: Iterable[Dict[str, Any]]) -> List[ExternalEvent]:
         raise NotImplementedError
