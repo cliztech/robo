@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 
+from backend.playlist_api import router as playlist_router
 from backend.scheduling.api import router as autonomy_policy_router
 from backend.scheduling.scheduler_ui_api import router as scheduler_ui_router
 from backend.security.secret_integrity import run_secret_integrity_checks
@@ -28,6 +29,7 @@ app = FastAPI(title="RoboDJ Backend Scheduler Services", lifespan=lifespan)
 app.include_router(autonomy_policy_router)
 app.include_router(status_router)
 app.include_router(scheduler_ui_router)
+app.include_router(playlist_router)
 
 
 @app.get("/")
