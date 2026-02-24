@@ -50,7 +50,7 @@ Use the roadmap helper to continuously surface the next open tasks while you wor
 
 ## Tracking Cadence
 
-- [ ] Weekly: update readiness percentages by category.
-- [ ] Weekly backlog hygiene review owner/date: Project Coordinator — every Friday (next review: 2026-02-27).
-- [ ] Bi-weekly: remove blocked items or split oversized tasks.
-- [ ] Monthly: reassess roadmap variation (Security-first, UX-first, Scale-first, Balanced).
+- [ ] 2026-02-24 (Owner: Management Team — Project Coordinator): Weekly readiness metric refresh posted in `docs/readiness_scorecard.md` (next due: 2026-03-03).
+- [ ] 2026-02-27 (Owner: Management Team — Project Coordinator): Weekly backlog hygiene review completed and stale-track escalations logged per `docs/operations/execution_index.md`.
+- [ ] 2026-03-10 (Owner: Planner Agent): Bi-weekly blocked-item pruning complete (remove blocked items or split oversized tasks).
+- [ ] 2026-03-31 (Owner: Management Team — Sprint Planner): Monthly roadmap-variant reassessment recorded (Security-first / UX-first / Scale-first / Balanced).

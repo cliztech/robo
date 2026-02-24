@@ -3,6 +3,7 @@
 **Version:** 2026.02
 **Owner:** Management Team (Project Coordinator)
 **Update cadence:** Weekly (metric refresh), monthly (weight/review recalibration)
+**Last refreshed (UTC):** 2026-02-24
 
 ## Purpose
 
@@ -32,6 +33,21 @@ This scorecard provides a versioned, repeatable way to track progress from roadm
 | Config validation block rate (invalid configs) | 100% | 100% | `config/validate_config.py` + launch gate logs | Config owner |
 | **Recovery SLA pass rate (`<=120s` launch gate to ready)** | **100% of documented runs** | **0% (0/1)** | `config/BACKUP_RECOVERY.md` evidence table + `config/logs/startup_safety_events.jsonl` | QA lead |
 
+
+## Weekly updates (SoT for Product readiness scorecard)
+
+- ⚠ stale
+  - Date (UTC): 2026-02-16
+  - Owner: Management Team (Project Coordinator)
+  - Changed metrics: weighted total unchanged at 62%; Track A governance controls added
+  - Blockers: no active blocker log captured for critical P0 security items
+  - Next step: refresh blocker ownership and immediate next action in current weekly cycle
+- Date (UTC): 2026-02-24
+  - Owner: Management Team (Project Coordinator)
+  - Changed metrics: weighted total remains 62%; stale weekly logs refreshed with explicit blocker ETAs
+  - Blockers: A1.1 implementation evidence pending (ETA 2026-02-26); A2.3 denylist enforcement proof pending (ETA 2026-02-27); A3.2 pre-release security gate evidence pending (ETA 2026-02-28)
+  - Next step: publish updated Track A execution evidence and re-evaluate Security & compliance score in next weekly refresh
+
 ## Weekly update workflow
 
 1. Refresh category metrics from current artifacts (tests, runbooks, contracts, release checks).
@@ -60,7 +76,8 @@ Source sprint board: `docs/track_a_security_sprint_checklist.md`.
 | Week ending (UTC) | Security score | A1.1 | A2.3 | A3.2 | Blockers | Notes |
 | --- | ---: | --- | --- | --- | --- | --- |
 | 2026-02-15 | 50% | Not started | Not started | Not started | None recorded | Baseline imported from readiness plan. |
-| 2026-02-22 | 50% | Planned | Planned | Planned | None recorded | Sprint checklist published; execution started next cycle. |
+| 2026-02-22 | 50% | Planned | Planned | Planned | ⚠ stale (older than 7 days) | Sprint checklist published; execution started next cycle. |
+| 2026-02-24 | 50% | Planned | Planned | Planned | A1.1 evidence pending (ETA 2026-02-26); A2.3 denylist verification pending (ETA 2026-02-27); A3.2 security gate evidence pending (ETA 2026-02-28) | Weekly refresh aligned to execution index template; next actions assigned to owners. |
 
 ## Critical unresolved security items (readiness inflation guard)
 
