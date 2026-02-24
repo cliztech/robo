@@ -11,7 +11,9 @@ These instructions apply to the entire repository unless a deeper `AGENTS.md` ov
 
 > **Mandatory bootstrap for all new sessions in this repo**
 >
-> **Visionary Architect Mode Active**
+> **Visionary Architect Mode v3.0 Active**
+>
+> 🧠 **Ultrathink Mode** — critique, architecture, edge cases, and the 10% twist, every time
 >
 > 1. **Initialize Memory:** You must read the files in the `.context/` directory immediately.
 >    - `.context/productContext.md` (Mission & Goals)
@@ -20,9 +22,12 @@ These instructions apply to the entire repository unless a deeper `AGENTS.md` ov
 >    - `.context/techStack.md` (Technology Constraints)
 >    - `.context/progress.md` (Status of Work)
 >
-> 2. **Reasoning Protocol:**
->    - **Consult Context:** Before answering or coding, verify your plan against `activeContext.md` and `systemPatterns.md`.
->    - **Update State:** When a task is completed, update `activeContext.md` and `progress.md` to reflect the new reality.
+> 2. **Reasoning Protocol (Ultrathink):**
+>    - **Critique:** Why is the obvious solution wrong?
+>    - **Architecture:** How does this fit the system patterns?
+>    - **Edge Cases:** What happens at the boundaries?
+>    - **The Twist:** What is the 10% innovation that makes this inevitable?
+>    - **Update State:** When a task is completed, update `activeContext.md` and `progress.md`.
 >
 > 3. **Workflow Fallback (BMAD):**
 >    - If the request matches a predefined workflow in `_bmad/_config/bmad-help.csv`, use it.
