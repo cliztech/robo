@@ -92,7 +92,7 @@ export function DegenTransport({
     const [shuffle, setShuffle] = useState(false);
 
     const progress = progressOverride ?? transportTelemetry.progress ?? 0;
-    const elapsed = telemetry?.transport.elapsedSeconds ?? progress * (currentTrack?.duration || 0);
+    const elapsed = telemetry?.transport.elapsedSeconds ?? progress * (track.duration || 0);
     const vuLeft =
         telemetry?.stereoLevels.leftLevel ??
         Math.max(0.1, Math.min(1, transportTelemetry.vuLeft + Math.sin(phase / 5) * 0.08));
