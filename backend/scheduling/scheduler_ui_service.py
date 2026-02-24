@@ -8,6 +8,7 @@ from pathlib import Path
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
+from .observability import emit_scheduler_event
 from .schedule_conflict_detection import detect_schedule_conflicts
 from .scheduler_models import (
     ConflictType,
@@ -145,9 +146,28 @@ class SchedulerUiService:
             mtime = self.schedules_path.stat().st_mtime
             if self._cached_envelope is not None and self._last_mtime == mtime:
                 return self._cached_envelope
-        except OSError:
-            # File might be inaccessible or deleted, proceed to try reading/creating
-            pass
+        except OSError as error:
+            logger.warning(
+                "Scheduler schedule file stat failed during cache check.",
+                extra={
+                    "path": str(self.schedules_path),
+                    "operation": "stat",
+                    "error_type": type(error).__name__,
+                    "error_message": str(error),
+                },
+            )
+            emit_scheduler_event(
+                logger,
+                event_name="scheduler.schedule_file.stat.failed",
+                level="warning",
+                message="Schedule file stat failed during cache invalidation; continuing with fallback read path.",
+                metadata={
+                    "path": str(self.schedules_path),
+                    "operation": "stat",
+                    "error_type": type(error).__name__,
+                    "error_message": str(error),
+                },
+            )
 
         content = self.schedules_path.read_text(encoding="utf-8")
         raw = json.loads(content)
