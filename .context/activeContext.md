@@ -11,5 +11,5 @@ Executing "Phase 5: AI Integration" (Implement AI track analysis) now that the "
 
 ## Next Atomic Steps
 - [ ] Convert `docs/ui/gui_agent_team_review.md` into implementation stories mapped to GUI-001..GUI-030.
-- [ ] Resume "Phase 5: AI Integration" (Implement AI track analysis).
+- [x] Resume "Phase 5: AI Integration" (Implemented typed AI service contracts, guarded API routes, and UI wiring for host/persona flows).
 - [x] Split mixed tracked-issue files and reassigned security tasks to dedicated TI IDs (TI-039/TI-040/TI-041) with reference updates.
