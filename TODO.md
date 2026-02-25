@@ -21,9 +21,9 @@ Use the roadmap helper to continuously surface the next open tasks while you wor
 ## P1 — Security & Compliance
 
 - [ ] Add role-aware settings visibility model (`admin`, `operator`, `viewer`) ([TI-002](docs/exec-plans/active/tracked-issues/TI-002.md)).
-- [ ] Implement idle timeout + re-auth requirements for sensitive actions ([TI-003](docs/exec-plans/active/tracked-issues/TI-003.md)).
-- [ ] Implement key-rotation workflow CLI + operator checklist integration ([TI-004](docs/exec-plans/active/tracked-issues/TI-004.md)).
-- [ ] Add redaction policy contract tests for logs/API responses ([TI-005](docs/exec-plans/active/tracked-issues/TI-005.md)).
+- [x] Implement idle timeout + re-auth requirements for sensitive actions ([TI-003](docs/exec-plans/active/tracked-issues/TI-003.md)).
+- [x] Implement key-rotation workflow CLI + operator checklist integration ([TI-004](docs/exec-plans/active/tracked-issues/TI-004.md)).
+- [x] Add redaction policy contract tests for logs/API responses ([TI-005](docs/exec-plans/active/tracked-issues/TI-005.md)).
 - [x] Add a pre-release security gate in release documentation ([TI-006](docs/exec-plans/active/tracked-issues/TI-006.md)).
 
 ## P1 — Reliability & Observability

@@ -1,3 +1,14 @@
 {
-  "iterations": []
+  "iterations": [
+    {
+      "iteration": 2,
+      "timestamp": "2026-02-25T07:17:35Z",
+      "note": "Completed TI-003: Implemented idle timeout and re-auth requirements in env_contract.json and docs."
+    },
+    {
+      "iteration": 3,
+      "timestamp": "2026-02-25T07:18:12Z",
+      "note": "Completed TI-004: Created key-rotation workflow CLI document and updated TODO."
+    }
+  ]
 }
