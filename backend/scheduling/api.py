@@ -7,11 +7,9 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query
-from backend.security.auth import verify_api_key
-
-from fastapi import HTTPException
+from fastapi import APIRouter, Depends, Query, HTTPException
 from fastapi.responses import HTMLResponse
+from backend.security.auth import verify_api_key
 
 from .autonomy_policy import (
     AutonomyPolicy,
@@ -28,13 +26,6 @@ router = APIRouter(
     tags=["autonomy-policy"],
     dependencies=[Depends(verify_api_key)],
 )
-from backend.security.auth import verify_api_key
-
-from .autonomy_policy import AutonomyPolicy, DecisionOrigin, DecisionType, PolicyAuditEvent, MODE_DEFINITIONS
-from .autonomy_service import AutonomyPolicyService, PolicyValidationError
-from .observability import emit_scheduler_event
-
-router = APIRouter(prefix="/api/v1/autonomy-policy", tags=["autonomy-policy"], dependencies=[Depends(verify_api_key)])
 
 logger = logging.getLogger(__name__)
 
@@ -53,12 +44,6 @@ def get_policy_service() -> AutonomyPolicyService:
                     service.get_policy()
                 except Exception as error:
                     logger.exception("Autonomy policy preload failed; attempting crash recovery.")
-                    logger.exception(
-                        "Autonomy policy preload failed; attempting crash recovery."
-                    )
-                    logger.exception(
-                        "Autonomy policy preload failed; starting crash recovery."
-                    )
                     policy_path = service.policy_path
                     recovery_stamp = datetime.now(timezone.utc).strftime(
                         "%Y%m%d_%H%M%S"
@@ -122,8 +107,6 @@ def get_policy_service() -> AutonomyPolicyService:
 def read_policy(
     service: AutonomyPolicyService = Depends(get_policy_service),
 ) -> AutonomyPolicy:
-@router.get("", response_model=AutonomyPolicy, dependencies=[Depends(verify_api_key)])
-def read_policy(service: AutonomyPolicyService = Depends(get_policy_service)) -> AutonomyPolicy:
     try:
         return service.get_policy()
     except PolicyValidationError as error:

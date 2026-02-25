@@ -11,7 +11,6 @@ assert SPEC and SPEC.loader
 SPEC.loader.exec_module(editorial_event_pipeline)
 
 
-class _Response:
 import json
 from pathlib import Path
 from urllib.error import HTTPError, URLError
