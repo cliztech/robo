@@ -11,6 +11,11 @@
 - [x] **Visionary Architect Migration** (Adopting structured context files)
 - [ ] **Phase 5: AI Integration** (OpenAI GPT-4o, Track Analysis, Mood Detection)
 
+## Recent Completed Work
+- [x] Introduced typed global studio state with deck/mixer/FX domains using Zustand.
+- [x] Refactored `DegenWaveform`, `DegenMixer`, and `DegenTransport` to consume/write global store state.
+- [x] Bridged store actions with `useAudioEngine` and telemetry updates for synchronized playback and UI rendering.
+
 ## Planned (Phases 6-15)
 - [ ] Phase 6: Playlist Generation
 - [ ] Phase 7: Broadcasting System (Icecast)
