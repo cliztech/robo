@@ -1,7 +1,10 @@
 # Product Context
 
+Canonical Name: **DGN-DJ by DGNradio**
+Legacy Aliases: `RoboDJ`, `AetherRadio`
+
 ## Mission
-AetherRadio is a next-generation AI-powered radio automation platform that enables users to run professional 24/7 internet radio stations with intelligent playlist generation, seamless crossfading, and real-time audio processing.
+DGN-DJ by DGNradio is a next-generation AI-powered radio automation platform that enables users to run professional 24/7 internet radio stations with intelligent playlist generation, seamless crossfading, and real-time audio processing.
 
 ## Non-Negotiables
 - **Professional Audio Quality:** Web Audio API with 5-band EQ, compression, and limiting must be flawless.

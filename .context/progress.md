@@ -28,4 +28,5 @@
 - None
 
 ## Recent Ops Updates
+- [x] Canonical naming standardization: adopted `DGN-DJ by DGNradio`, documented legacy aliases, and added CI docs naming check with migration allowlist.
 - [x] Tracked issue hygiene hardening: split TI-007/TI-008/TI-009 collisions, reassigned security tasks to TI-039/TI-040/TI-041, and added a one-header validation check.

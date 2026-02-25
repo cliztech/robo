@@ -58,14 +58,16 @@ Use command-style prompts that map to entries in `_bmad/_config/bmad-help.csv`, 
 
 | Action | Command | Notes |
 | ------ | ------- | ----- |
-| **Run app** | `.\RoboDJ_Launcher.bat` | Resolves paths relative to launcher; elevated when needed |
-| **Run directly** | `.\RoboDJ Automation.exe` | Skips launcher wrapper |
+| **Run DGN-DJ app** | `.\RoboDJ_Launcher.bat` | Starts DGN-DJ via the legacy launcher filename; resolves paths relative to launcher. |
+| **Run binary directly** | `.\RoboDJ Automation.exe` | Starts DGN-DJ via the legacy binary filename (wrapper bypass). |
 | **Inspect DB** | `cd config && python inspect_db.py` | Read-only schema inspection |
 | **Check JSON** | `python -m json.tool config/schedules.json` | Validate JSON syntax |
 | **Git status** | `git status --short` | Quick changed-file overview |
 | **Diff check** | `git diff --name-only` | List modified files before commit |
 
 ## Project Structure & Module Organization
+
+Canonical product identity is defined in `docs/productization/product_identity.md` (`DGN-DJ by DGNradio`). Legacy `RoboDJ` filenames below are compatibility artifacts and not approved product naming for new docs.
 
 ```text
 robo/
