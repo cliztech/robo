@@ -25,6 +25,9 @@ Use the roadmap helper to continuously surface the next open tasks while you wor
 - [x] Implement key-rotation workflow CLI + operator checklist integration ([TI-004](docs/exec-plans/active/tracked-issues/TI-004.md)).
 - [x] Add redaction policy contract tests for logs/API responses ([TI-005](docs/exec-plans/active/tracked-issues/TI-005.md)).
 - [x] Add a pre-release security gate in release documentation ([TI-006](docs/exec-plans/active/tracked-issues/TI-006.md)).
+- [ ] Add per-action approval workflows and immutable audit trail export ([TI-039](docs/exec-plans/active/tracked-issues/TI-039.md)).
+- [ ] Add config-at-rest encryption for high-risk fields in JSON configs ([TI-040](docs/exec-plans/active/tracked-issues/TI-040.md)).
+- [ ] Add security smoke script (authN/authZ checks, lockout checks) ([TI-041](docs/exec-plans/active/tracked-issues/TI-041.md)).
 
 ## P1 — Reliability & Observability
 
