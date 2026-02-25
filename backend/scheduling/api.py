@@ -7,12 +7,10 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query
-from backend.security.auth import verify_api_key
-
-from fastapi import HTTPException
+from fastapi import APIRouter, Depends, Query, HTTPException
 from fastapi.responses import HTMLResponse
 
+from backend.security.auth import verify_api_key
 from .autonomy_policy import (
     AutonomyPolicy,
     DecisionOrigin,
@@ -28,13 +26,6 @@ router = APIRouter(
     tags=["autonomy-policy"],
     dependencies=[Depends(verify_api_key)],
 )
-from backend.security.auth import verify_api_key
-
-from .autonomy_policy import AutonomyPolicy, DecisionOrigin, DecisionType, PolicyAuditEvent, MODE_DEFINITIONS
-from .autonomy_service import AutonomyPolicyService, PolicyValidationError
-from .observability import emit_scheduler_event
-
-router = APIRouter(prefix="/api/v1/autonomy-policy", tags=["autonomy-policy"], dependencies=[Depends(verify_api_key)])
 
 logger = logging.getLogger(__name__)
 
@@ -53,12 +44,6 @@ def get_policy_service() -> AutonomyPolicyService:
                     service.get_policy()
                 except Exception as error:
                     logger.exception("Autonomy policy preload failed; attempting crash recovery.")
-                    logger.exception(
-                        "Autonomy policy preload failed; attempting crash recovery."
-                    )
-                    logger.exception(
-                        "Autonomy policy preload failed; starting crash recovery."
-                    )
                     policy_path = service.policy_path
                     recovery_stamp = datetime.now(timezone.utc).strftime(
                         "%Y%m%d_%H%M%S"
@@ -122,8 +107,6 @@ def get_policy_service() -> AutonomyPolicyService:
 def read_policy(
     service: AutonomyPolicyService = Depends(get_policy_service),
 ) -> AutonomyPolicy:
-@router.get("", response_model=AutonomyPolicy, dependencies=[Depends(verify_api_key)])
-def read_policy(service: AutonomyPolicyService = Depends(get_policy_service)) -> AutonomyPolicy:
     try:
         return service.get_policy()
     except PolicyValidationError as error:
@@ -138,7 +121,7 @@ def read_policy(service: AutonomyPolicyService = Depends(get_policy_service)) ->
         ) from error
 
 
-@router.put("", response_model=AutonomyPolicy, dependencies=[Depends(verify_api_key)])
+@router.put("", response_model=AutonomyPolicy)
 def write_policy(
     payload: AutonomyPolicy,
     service: AutonomyPolicyService = Depends(get_policy_service),
@@ -157,7 +140,7 @@ def write_policy(
         ) from error
 
 
-@router.get("/effective", dependencies=[Depends(verify_api_key)])
+@router.get("/effective")
 def read_effective_policy(
     show_id: Optional[str] = Query(default=None),
     timeslot_id: Optional[str] = Query(default=None),
@@ -166,12 +149,12 @@ def read_effective_policy(
     return service.resolve_effective_policy(show_id=show_id, timeslot_id=timeslot_id)
 
 
-@router.get("/mode-definitions", dependencies=[Depends(verify_api_key)])
+@router.get("/mode-definitions")
 def get_mode_definitions():
     return {"source": "docs/autonomy_modes.md", "modes": MODE_DEFINITIONS}
 
 
-@router.post("/audit-events", response_model=PolicyAuditEvent, dependencies=[Depends(verify_api_key)])
+@router.post("/audit-events", response_model=PolicyAuditEvent)
 def create_audit_event(
     decision_type: DecisionType,
     origin: DecisionOrigin,
@@ -189,7 +172,7 @@ def create_audit_event(
     )
 
 
-@router.get("/audit-events", response_model=list[PolicyAuditEvent], dependencies=[Depends(verify_api_key)])
+@router.get("/audit-events", response_model=list[PolicyAuditEvent])
 def get_audit_events(
     limit: int = Query(default=100, ge=1, le=1000),
     service: AutonomyPolicyService = Depends(get_policy_service),

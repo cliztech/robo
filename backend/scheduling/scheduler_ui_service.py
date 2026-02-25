@@ -413,12 +413,12 @@ class SchedulerUiService:
         return f"{int(minute)} {int(hour)} * * {cron_day}"
 
     def _cron_day_to_name(self, day_of_week: str) -> str:
-        supported_token_description = "single numeric day-of-week token in range 0-7"
+        supported_desc = "single numeric day-of-week token in range 0-7"
         unsupported_pattern_tokens = ("*", ",", "-", "/")
         if any(token in day_of_week for token in unsupported_pattern_tokens):
             raise ValueError(
                 "Unsupported cron day-of-week pattern "
-                f"'{day_of_week}'. Scheduler UI supports only a {supported_token_description}."
+                f"'{day_of_week}'. Scheduler UI supports only a {supported_desc}."
             )
 
         day_name = {
@@ -435,7 +435,7 @@ class SchedulerUiService:
         if day_name is None:
             raise ValueError(
                 "Unsupported cron day-of-week token "
-                f"'{day_of_week}'. Scheduler UI supports only a {supported_token_description}."
+                f"'{day_of_week}'. Scheduler UI supports only a {supported_desc}."
             )
 
         return day_name
