@@ -56,8 +56,6 @@ function StatCard({
     const trendClass = trend === 'up' ? 'text-lime-500' : trend === 'down' ? 'text-red-400' : 'text-zinc-600';
     const c = colors[color];
 
-    const sparkId = React.useId();
-
     return (
         <motion.div
             initial={{ opacity: 0, y: 10 }}
