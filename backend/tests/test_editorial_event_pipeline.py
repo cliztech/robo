@@ -1,9 +1,6 @@
 import importlib.util
-import json
 from pathlib import Path
 from urllib.error import HTTPError, URLError
-
-import pytest
 
 MODULE_PATH = Path(__file__).resolve().parents[2] / "config" / "scripts" / "editorial_event_pipeline.py"
 SPEC = importlib.util.spec_from_file_location("editorial_event_pipeline", MODULE_PATH)
