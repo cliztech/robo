@@ -28,4 +28,6 @@
 - None
 
 ## Recent Ops Updates
+
+- [x] Runtime declaration hardening: added canonical runtime map, aligned top-level docs/context, and CI validation against package/pyproject manifests.
 - [x] Tracked issue hygiene hardening: split TI-007/TI-008/TI-009 collisions, reassigned security tasks to TI-039/TI-040/TI-041, and added a one-header validation check.

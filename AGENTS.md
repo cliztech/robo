@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 > **DGN-DJ** by DGNradio — AI-powered radio automation platform
-> Python 3.x · PyInstaller · SQLite · JSON config · Windows desktop
+> Node.js 20.x + Next.js 15.5.10 · Python >=3.10 · SQLite · JSON config · Vercel + Docker + Windows desktop
 
 ## Scope
 
@@ -46,11 +46,13 @@ Use command-style prompts that map to entries in `_bmad/_config/bmad-help.csv`, 
 
 | Layer | Technology | Notes |
 | ----- | ---------- | ----- |
-| Runtime | Python 3.x (bundled via PyInstaller) | Compiled `.exe` distribution |
+| JS Runtime | Node.js 20.x | Canonical runtime for root app + JS subprojects |
+| Python Runtime | Python >=3.10 | `dgn-airwaves` requires `>=3.10`; desktop bundle may pin its own interpreter |
+| Frameworks | Next.js 15.5.10, React 18, Vite 5.4.8 | See `docs/architecture/canonical_runtime_map.md` for ownership by tree |
+| Service Stack | Express 4.21.2 + NATS 2.29.1 | `radio-agentic/services/*` manifests are canonical |
 | Data | SQLite (`settings.db`, `user_content.db`) | Read-only for agents |
 | Config | JSON (`schedules.json`, `prompt_variables.json`) | Editable with backup |
-| AI Engine | LLM-based content generation, multi-agent banter | See `backend/` modules |
-| Platform | Windows desktop | Launcher uses elevated privileges |
+| Platform Targets | Vercel, Docker Compose runtime, Windows desktop launcher | Deployment varies by owned subproject |
 
 ## Commands
 >
@@ -58,10 +60,13 @@ Use command-style prompts that map to entries in `_bmad/_config/bmad-help.csv`, 
 
 | Action | Command | Notes |
 | ------ | ------- | ----- |
-| **Run app** | `.\RoboDJ_Launcher.bat` | Resolves paths relative to launcher; elevated when needed |
-| **Run directly** | `.\RoboDJ Automation.exe` | Skips launcher wrapper |
+| **Run root web app** | `npm run dev` | Next.js studio on Node.js 20.x |
+| **Run Windows launcher** | `.\RoboDJ_Launcher.bat` | Desktop launcher flow |
+| **Run DJ console** | `npm --prefix apps/dj-console run dev` | Vite app in owned subtree |
+| **Run radio-agentic stack** | `pnpm --dir radio-agentic install && docker compose -f radio-agentic/docker-compose.yml up --build` | Starts owned workspace stack |
 | **Inspect DB** | `cd config && python inspect_db.py` | Read-only schema inspection |
 | **Check JSON** | `python -m json.tool config/schedules.json` | Validate JSON syntax |
+| **Validate runtime versions** | `python scripts/validate_runtime_versions.py` | Ensures docs/manifests are in sync |
 | **Git status** | `git status --short` | Quick changed-file overview |
 | **Diff check** | `git diff --name-only` | List modified files before commit |
 
