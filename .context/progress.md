@@ -25,3 +25,6 @@
 
 ## Blocked
 - None
+
+## Documentation Hardening
+- [x] Tracked-issue indexing hardening (resolved TI-007/TI-008/TI-009 collisions; added one-to-one Track A/B/C/D coverage checks).
