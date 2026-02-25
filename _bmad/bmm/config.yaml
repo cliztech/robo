@@ -1,9 +1,0 @@
-# BMM Module Configuration
-# Synced with _bmad/core/config.yaml
-# Version: 6.0.0-Beta.8
-# Date: 2026-02-17T09:15:55.663Z
-
-user_name: Jocli
-communication_language: English
-document_output_language: English
-output_folder: _bmad-output

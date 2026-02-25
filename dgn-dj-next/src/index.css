@@ -1,0 +1,624 @@
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════
+   DGN-DJ Studio™ — Production Design System (Tailwind v4)
+   Ultra-Precision Calibrated Tokens
+   ═══════════════════════════════════════════════════════════════ */
+@theme {
+  /* ── Colors ── */
+  --color-deck-a: #0091FF;
+  --color-deck-b: #FF5500;
+  --color-primary-accent: #00BFD8;
+  --color-secondary-accent: #2C7BE5;
+  --color-bg-base: #0F1216;
+  --color-bg-master: #0D1117;
+  --color-panel-1: #14181E;
+  --color-panel-2: #1A1F28;
+  --color-panel-3: #222830;
+  --color-surface-glass: rgba(255, 255, 255, 0.03);
+  --color-meter-green: #2ECC71;
+  --color-meter-yellow: #F1C40F;
+  --color-meter-red: #E54848;
+  --color-alert-on-air: #FF3B30;
+  --color-alert-recording: #E53E3E;
+
+  /* ── Fonts ── */
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* ── Animations ── */
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-pad-trigger: padTrigger 150ms ease-out;
+  --animate-pad-depress: padDepress 100ms ease-out forwards;
+  --animate-btn-press: btnPress 120ms ease-out forwards;
+  --animate-orb-pulse: orbPulse 2s ease-in-out infinite;
+  --animate-toast-in: toastIn 150ms ease-out forwards;
+  --animate-toast-out: toastOut 150ms ease-in forwards;
+
+  /* ── Keyframes ── */
+  @keyframes padTrigger {
+    0% {
+      transform: scale(0.95);
+      opacity: 1;
+    }
+
+    50% {
+      transform: scale(1.02);
+      opacity: 0.9;
+    }
+
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes padDepress {
+    0% {
+      transform: translateY(0);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    100% {
+      transform: translateY(2px);
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  @keyframes btnPress {
+    0% {
+      transform: translateY(0);
+    }
+
+    100% {
+      transform: translateY(2px);
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
+    }
+  }
+
+  @keyframes orbPulse {
+
+    0%,
+    100% {
+      opacity: 0.7;
+      transform: scale(1);
+    }
+
+    50% {
+      opacity: 1;
+      transform: scale(1.15);
+    }
+  }
+
+  @keyframes toastIn {
+    0% {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes toastOut {
+    0% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    100% {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Broadcast System
+   ═══════════════════════════════════════════════════════════════ */
+@keyframes recPulse {
+
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.7);
+  }
+
+  50% {
+    opacity: 0.85;
+    box-shadow: 0 0 0 6px rgba(229, 62, 62, 0);
+  }
+}
+
+@keyframes liveDot {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes sparkFade {
+  0% {
+    opacity: 0;
+    transform: translateX(4px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-rec-pulse {
+  animation: recPulse 1.5s ease-in-out infinite;
+}
+
+.animate-live-dot {
+  animation: liveDot 2s ease-in-out infinite;
+}
+
+.animate-spark-fade {
+  animation: sparkFade 300ms ease-out forwards;
+}
+
+.stream-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.segment-music {
+  border-left: 3px solid #0091FF;
+}
+
+.segment-talk {
+  border-left: 3px solid #2ECC71;
+}
+
+.segment-ad {
+  border-left: 3px solid #F1C40F;
+}
+
+.segment-id {
+  border-left: 3px solid #9B59B6;
+}
+
+.segment-news {
+  border-left: 3px solid #E67E22;
+}
+
+.segment-jingle {
+  border-left: 3px solid #00BFD8;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Layout Proportions (3840×2160 → percentage-based)
+   TopNav: 64/2160 ≈ 2.96%   Waveform: 812/2160 ≈ 37.59%
+   Decks: 520/2160 ≈ 24.07%  Pads: 344/2160 ≈ 15.93%
+   Browser: 420/2160 ≈ 19.44%
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  --layout-nav-h: 2.96%;
+  --layout-waveform-h: 37.59%;
+  --layout-decks-h: 24.07%;
+  --layout-pads-h: 15.93%;
+  --layout-browser-h: 19.44%;
+  --layout-sidebar-w: 20%;
+  --layout-mixer-w: 26%;
+  --layout-gutter: 24px;
+  --layout-padding: 16px;
+  --layout-grid-unit: 8px;
+
+  background-color: #0F1216;
+  color: #ffffff;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-feature-settings: 'tnum' 1, 'lnum' 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Material Simulation System - Ultra Detailed
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Carbon Fiber Base Background */
+.bg-carbon-fiber {
+  background:
+    linear-gradient(27deg, #151515 5px, transparent 5px) 0 5px,
+    linear-gradient(207deg, #151515 5px, transparent 5px) 10px 0px,
+    linear-gradient(27deg, #222 5px, transparent 5px) 0px 10px,
+    linear-gradient(207deg, #222 5px, transparent 5px) 10px 5px,
+    linear-gradient(90deg, #1b1b1b 10px, transparent 10px),
+    linear-gradient(#1d1d1d 25%, #1a1a1a 25%, #1a1a1a 50%, transparent 50%, transparent 75%, #242424 75%, #242424 100%);
+  background-color: #131313;
+  background-size: 20px 20px;
+  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.9);
+}
+
+/* Dark Brushed Metal */
+.bg-dark-metal {
+  background-color: #1a1c23;
+  background-image:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0) 100%),
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 255, 255, 0.015) 3px),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2) 1px, transparent 1px, transparent 4px),
+    linear-gradient(180deg, #2a2d35 0%, #15171d 100%);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.08),
+    inset 0 -1px 3px rgba(0, 0, 0, 0.8),
+    0 8px 16px rgba(0, 0, 0, 0.5);
+  border: 1px solid #000;
+}
+
+/* Premium DJ Panel */
+.premium-panel {
+  background: linear-gradient(145deg, #181d24, #101318);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.8);
+  border-left: 1px solid rgba(255, 255, 255, 0.02);
+  border-right: 1px solid rgba(0, 0, 0, 0.5);
+  box-shadow:
+    inset 0 2px 10px rgba(0, 0, 0, 0.5),
+    0 10px 20px rgba(0, 0, 0, 0.6),
+    0 0 40px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+/* Deck Edge Glows */
+.deck-glow-A {
+  box-shadow: inset 0 0 60px rgba(0, 145, 255, 0.05), 0 0 20px rgba(0, 145, 255, 0.15);
+  border-top: 2px solid rgba(0, 145, 255, 0.3);
+}
+
+.deck-glow-B {
+  box-shadow: inset 0 0 60px rgba(255, 85, 0, 0.05), 0 0 20px rgba(255, 85, 0, 0.15);
+  border-top: 2px solid rgba(255, 85, 0, 0.3);
+}
+
+/* Screws & Hardware */
+.hardware-screw {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #666, #222);
+  border: 1px solid #111;
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.3),
+    0 1px 1px rgba(255, 255, 255, 0.05),
+    0 -1px 1px rgba(0, 0, 0, 0.8);
+  position: absolute;
+}
+
+.hardware-screw::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 60%;
+  height: 2px;
+  background: #111;
+  transform: translate(-50%, -50%) rotate(45deg);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Optical typograpgy */
+.text-xxs {
+  font-size: 0.625rem;
+  line-height: 0.875rem;
+}
+
+.tracking-title {
+  letter-spacing: -0.2px;
+}
+
+.tracking-meta {
+  letter-spacing: 0;
+}
+
+.tracking-micro {
+  letter-spacing: 0.3px;
+}
+
+.lh-strict {
+  line-height: 1.4;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Custom Scrollbar
+   ═══════════════════════════════════════════════════════════════ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0F1216;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Material Simulation System
+   ═══════════════════════════════════════════════════════════════ */
+
+/* SVG noise filter — injected once, used via CSS filter */
+.noise-grain {
+  position: relative;
+}
+
+.noise-grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0.02;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 128px 128px;
+}
+
+/* Material: Brushed Metal Panel */
+.bg-brushed-metal {
+  background-color: #111;
+  background-image:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0) 100%),
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 255, 255, 0.02) 4px);
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+}
+
+/* Material: Anodized Aluminum (precision jog wheels)
+   8% contrast base + anisotropic highlight at 35° + 1px edge bevel */
+.bg-anodized-aluminum {
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.06) 0%, transparent 60%),
+    conic-gradient(from 0deg,
+      #1a1a1a 0%, #252525 8%, #1a1a1a 16%,
+      #222 24%, #1a1a1a 32%, #252525 40%,
+      #1a1a1a 48%, #222 56%, #1a1a1a 64%,
+      #252525 72%, #1a1a1a 80%, #222 88%,
+      #1a1a1a 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+/* Material: Silicone Pad (subsurface diffusion + depression ready) */
+.bg-silicone-pad {
+  background: linear-gradient(145deg, #1a1f28, #151a21);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.05),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.4),
+    0 2px 4px rgba(0, 0, 0, 0.5);
+  transition: transform 100ms ease-out, box-shadow 100ms ease-out;
+}
+
+.bg-silicone-pad:active {
+  transform: translateY(2px);
+  box-shadow:
+    inset 0 2px 3px rgba(0, 0, 0, 0.6),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.02),
+    0 0 0 rgba(0, 0, 0, 0);
+}
+
+/* Material: Matte Rubber (no specular, light absorption) */
+.bg-matte-rubber {
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.04) 0%, transparent 50%),
+    conic-gradient(from 0deg, #222 0%, #282828 10%, #222 20%, #2a2a2a 30%, #222 45%, #282828 55%, #222 70%, #2a2a2a 85%, #222 100%);
+}
+
+/* VU Meter segment colors */
+.vu-green {
+  background-color: #2ECC71;
+}
+
+.vu-yellow {
+  background-color: #F1C40F;
+}
+
+.vu-red {
+  background-color: #E54848;
+}
+
+/* Glass overlay */
+.glass-overlay {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 40%);
+}
+
+/* Panel depth shadow */
+.panel-depth {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.03),
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Transport Button System
+   ═══════════════════════════════════════════════════════════════ */
+.transport-btn {
+  height: 44px;
+  border-radius: 8px;
+  transition: transform 120ms ease-out, box-shadow 120ms ease-out, filter 120ms ease-out;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.transport-btn:hover {
+  filter: brightness(1.06);
+}
+
+.transport-btn:active {
+  transform: translateY(2px);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Scroll Inertia (hardware-accelerated)
+   ═══════════════════════════════════════════════════════════════ */
+.scroll-inertia {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  will-change: scroll-position;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Custom Range / Fader System
+   Replaces native browser range inputs with professional DJ styling
+   ═══════════════════════════════════════════════════════════════ */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(to right, #222830, #2a3040);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 24px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #4a4f5a 0%, #2a2f38 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  margin-top: -10px;
+  transition: box-shadow 150ms ease;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    0 0 8px rgba(0, 145, 255, 0.2);
+}
+
+input[type="range"]::-webkit-slider-thumb:active {
+  background: linear-gradient(180deg, #3a3f4a 0%, #1a1f28 100%);
+}
+
+/* Vertical fader overrides */
+input[type="range"][style*="vertical"] {
+  writing-mode: vertical-lr;
+  direction: rtl;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Glass Morphism Panel
+   ═══════════════════════════════════════════════════════════════ */
+.glass-panel {
+  background: rgba(20, 24, 30, 0.85);
+  backdrop-filter: blur(12px) saturate(1.5);
+  -webkit-backdrop-filter: blur(12px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Text Shimmer Animation
+   ═══════════════════════════════════════════════════════════════ */
+@keyframes textShimmer {
+  0% {
+    background-position: -200% center;
+  }
+
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.text-shimmer {
+  background: linear-gradient(90deg,
+      rgba(255, 255, 255, 0.6) 0%,
+      rgba(255, 255, 255, 1) 50%,
+      rgba(255, 255, 255, 0.6) 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textShimmer 3s linear infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Keyboard Focus Ring
+   ═══════════════════════════════════════════════════════════════ */
+.focus-ring:focus-visible {
+  outline: 2px solid var(--color-primary-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+*:focus-visible {
+  outline: 1px solid rgba(0, 191, 216, 0.5);
+  outline-offset: 1px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Hover Lift Effect
+   ═══════════════════════════════════════════════════════════════ */
+.hover-lift {
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   Section Label System (waveform overlays)
+   ═══════════════════════════════════════════════════════════════ */
+.section-label {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 1px 4px;
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   System Gauge Micro-bar
+   ═══════════════════════════════════════════════════════════════ */
+.gauge-bar {
+  height: 3px;
+  border-radius: 1.5px;
+  background: #222830;
+  overflow: hidden;
+  position: relative;
+}
+
+.gauge-bar-fill {
+  height: 100%;
+  border-radius: 1.5px;
+  transition: width 500ms ease, background-color 500ms ease;
+}

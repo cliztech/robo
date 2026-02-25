@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import json
+import logging
+import re
 from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
+from .observability import emit_scheduler_event
 from .schedule_conflict_detection import detect_schedule_conflicts
 from .scheduler_models import (
     ConflictType,
@@ -35,6 +38,10 @@ TEMPLATE_PRIMITIVES: dict[TemplateType, list[tuple[str, str, str, bool]]] = {
     TemplateType.overnight: [(day, "22:00", "06:00", True) for day in WEEK_DAYS],
 }
 
+CRON_NUMERIC_RE = re.compile(r"^\d+$")
+
+logger = logging.getLogger(__name__)
+
 
 class SchedulerUiService:
     def __init__(
@@ -45,12 +52,25 @@ class SchedulerUiService:
         self.schedules_path = schedules_path
         self.schema_path = schema_path
         self.schedules_path.parent.mkdir(parents=True, exist_ok=True)
+        self._cached_envelope: ScheduleEnvelope | None = None
+        self._cached_ui_state: SchedulerUiState | None = None
+        self._last_mtime: float | None = None
 
     def get_ui_state(self) -> SchedulerUiState:
         envelope = self._load_and_migrate()
+
+        # Optimization: If the loaded envelope is the exact same object as the one in our
+        # cached UI state, we can return the cached state immediately without re-running
+        # conflict detection and timeline building.
+        if self._cached_ui_state is not None and self._cached_ui_state.schedule_file is envelope:
+            return self._cached_ui_state
+
         timeline = self._build_timeline_blocks(envelope.schedules)
         conflicts = detect_schedule_conflicts(envelope.schedules, timeline)
-        return SchedulerUiState(schedule_file=envelope, timeline_blocks=timeline, conflicts=conflicts)
+
+        state = SchedulerUiState(schedule_file=envelope, timeline_blocks=timeline, conflicts=conflicts)
+        self._cached_ui_state = state
+        return state
 
     def update_schedules(self, schedules: list[ScheduleRecord]) -> SchedulerUiState:
         envelope = ScheduleEnvelope(schema_version=2, schedules=schedules)
@@ -62,6 +82,9 @@ class SchedulerUiService:
 
         self.schedules_path.write_text(envelope.model_dump_json(indent=2), encoding="utf-8")
         timeline = self._build_timeline_blocks(schedules)
+
+        # We don't update cache here immediately because we rely on mtime check in _load_and_migrate
+        # to refresh the data on next read. The file write above changes mtime.
         return SchedulerUiState(schedule_file=envelope, timeline_blocks=timeline, conflicts=[])
 
     def publish_schedules(self, schedules: list[ScheduleRecord]) -> dict[str, object]:
@@ -126,9 +149,42 @@ class SchedulerUiService:
         if not self.schedules_path.exists():
             envelope = ScheduleEnvelope(schema_version=2, schedules=[])
             self.schedules_path.write_text(envelope.model_dump_json(indent=2), encoding="utf-8")
+            self._cached_envelope = envelope
+            try:
+                self._last_mtime = self.schedules_path.stat().st_mtime
+            except OSError:
+                self._last_mtime = None
             return envelope
 
-        raw = json.loads(self.schedules_path.read_text(encoding="utf-8"))
+        try:
+            mtime = self.schedules_path.stat().st_mtime
+            if self._cached_envelope is not None and self._last_mtime == mtime:
+                return self._cached_envelope
+        except OSError as error:
+            logger.warning(
+                "Scheduler schedule file stat failed during cache check.",
+                extra={
+                    "path": str(self.schedules_path),
+                    "operation": "stat",
+                    "error_type": type(error).__name__,
+                    "error_message": str(error),
+                },
+            )
+            emit_scheduler_event(
+                logger,
+                event_name="scheduler.schedule_file.stat.failed",
+                level="warning",
+                message="Schedule file stat failed during cache invalidation; continuing with fallback read path.",
+                metadata={
+                    "path": str(self.schedules_path),
+                    "operation": "stat",
+                    "error_type": type(error).__name__,
+                    "error_message": str(error),
+                },
+            )
+
+        content = self.schedules_path.read_text(encoding="utf-8")
+        raw = json.loads(content)
         envelope = ScheduleEnvelope.model_validate(self._migrate_payload(raw))
         self._validate_schema(envelope)
 
@@ -136,7 +192,18 @@ class SchedulerUiService:
         if conflicts:
             raise ValueError(self._format_conflict_error(conflicts))
 
-        self.schedules_path.write_text(envelope.model_dump_json(indent=2), encoding="utf-8")
+        # Only write back if the content has changed or we want to enforce formatting/migration
+        serialized = envelope.model_dump_json(indent=2)
+        # Check if semantic content or formatting differs before writing
+        if serialized != content:
+            self.schedules_path.write_text(serialized, encoding="utf-8")
+
+        self._cached_envelope = envelope
+        try:
+            self._last_mtime = self.schedules_path.stat().st_mtime
+        except OSError:
+            self._last_mtime = None
+
         return envelope
 
     def _validate_schema(self, envelope: ScheduleEnvelope) -> None:
@@ -239,21 +306,64 @@ class SchedulerUiService:
                     )
                 )
             elif spec.mode == ScheduleSpecMode.cron and spec.cron:
-                minute, hour, _, _, day_of_week = spec.cron.split()
-                time_val = f"{int(hour):02d}:{int(minute):02d}"
-                blocks.append(
-                    TimelineBlock(
-                        schedule_id=schedule.id,
-                        day_of_week=self._cron_day_to_name(day_of_week),
-                        start_time=time_val,
-                        end_time=time_val,
-                        overnight=False,
-                        mode_hint=ScheduleSpecMode.cron,
+                try:
+                    minute, hour, _, _, day_of_week = spec.cron.split()
+                    parsed_time = self._parse_numeric_cron_time(hour=hour, minute=minute, schedule_id=schedule.id, cron=spec.cron)
+                    if parsed_time is None:
+                        continue
+                    time_val = f"{parsed_time[0]:02d}:{parsed_time[1]:02d}"
+                    blocks.append(
+                        TimelineBlock(
+                            schedule_id=schedule.id,
+                            day_of_week=self._cron_day_to_name(day_of_week),
+                            start_time=time_val,
+                            end_time=time_val,
+                            overnight=False,
+                            mode_hint=ScheduleSpecMode.cron,
+                        )
                     )
-                )
+                except ValueError as error:
+                    logger.warning(
+                        "Skipping timeline block for schedule_id=%s: %s",
+                        schedule.id,
+                        error,
+                    )
             elif spec.mode == ScheduleSpecMode.rrule and spec.rrule:
                 blocks.append(self._rrule_to_block(schedule.id, spec.rrule))
         return blocks
+
+    def _parse_numeric_cron_time(
+        self,
+        *,
+        hour: str,
+        minute: str,
+        schedule_id: str,
+        cron: str,
+    ) -> tuple[int, int] | None:
+        """Return exact hour/minute for timeline blocks, else skip unsupported cron forms.
+
+        Timeline blocks represent a single point-in-time anchor. Wildcard, step, or range
+        expressions in minute/hour fields are valid cron, but not representable as one
+        deterministic point. In those cases we emit a warning and skip timeline projection.
+        """
+        if not CRON_NUMERIC_RE.fullmatch(hour) or not CRON_NUMERIC_RE.fullmatch(minute):
+            logger.warning(
+                "Skipping timeline block for schedule_id=%s: unsupported cron time fields (%s)",
+                schedule_id,
+                cron,
+            )
+            return None
+
+        parsed_hour = int(hour)
+        parsed_minute = int(minute)
+        if not (0 <= parsed_hour <= 23 and 0 <= parsed_minute <= 59):
+            logger.warning(
+                "Skipping timeline block for schedule_id=%s: out-of-range cron time fields (%s)",
+                schedule_id,
+                cron,
+            )
+            return None
+        return parsed_hour, parsed_minute
 
     def _rrule_to_block(self, schedule_id: str, rrule: str) -> TimelineBlock:
         parts = dict(part.split("=", 1) for part in rrule.split(";") if "=" in part)
@@ -303,7 +413,15 @@ class SchedulerUiService:
         return f"{int(minute)} {int(hour)} * * {cron_day}"
 
     def _cron_day_to_name(self, day_of_week: str) -> str:
-        return {
+        supported_token_description = "single numeric day-of-week token in range 0-7"
+        unsupported_pattern_tokens = ("*", ",", "-", "/")
+        if any(token in day_of_week for token in unsupported_pattern_tokens):
+            raise ValueError(
+                "Unsupported cron day-of-week pattern "
+                f"'{day_of_week}'. Scheduler UI supports only a {supported_token_description}."
+            )
+
+        day_name = {
             "0": "sunday",
             "1": "monday",
             "2": "tuesday",
@@ -312,7 +430,15 @@ class SchedulerUiService:
             "5": "friday",
             "6": "saturday",
             "7": "sunday",
-        }.get(day_of_week, "monday")
+        }.get(day_of_week)
+
+        if day_name is None:
+            raise ValueError(
+                "Unsupported cron day-of-week token "
+                f"'{day_of_week}'. Scheduler UI supports only a {supported_token_description}."
+            )
+
+        return day_name
 
     def _format_conflict_error(self, conflicts: list[ScheduleConflict]) -> str:
         hard_types = {

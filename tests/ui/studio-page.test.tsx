@@ -9,13 +9,13 @@ describe('StudioPage', () => {
 
     const header = container.querySelector('header');
     expect(header).not.toBeNull();
-    expect(within(header as HTMLElement).getByText('dashboard')).toBeInTheDocument();
+    expect(within(header as HTMLElement).getByText('Dashboard')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Mixer' }));
-    expect(within(header as HTMLElement).getByText('mixer')).toBeInTheDocument();
+    expect(within(header as HTMLElement).getByText('Mixer')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'AI Host' }));
-    expect(within(header as HTMLElement).getByText('ai host')).toBeInTheDocument();
+    expect(within(header as HTMLElement).getByText('AI Host')).toBeInTheDocument();
   });
 
   it('toggles on-air state and keeps status token classes stable', async () => {

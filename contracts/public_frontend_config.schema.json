@@ -5,7 +5,6 @@
   "description": "Frontend-safe configuration contract. Must contain only non-sensitive settings suitable for web clients.",
   "type": "object",
   "additionalProperties": false,
-  "$comment": "All fields are optional unless listed in required. Consumers should apply documented defaults when optional fields are absent.",
   "required": [
     "station",
     "ui",
@@ -20,24 +19,29 @@
         "time_zone"
       ],
       "properties": {
-        "display_name": { "type": "string" },
-        "tagline": { "type": "string" },
-        "time_zone": { "type": "string" }
+        "display_name": {
+          "type": "string"
+        },
+        "tagline": {
+          "type": "string"
+        },
+        "time_zone": {
+          "type": "string"
+        }
       }
     },
     "ui": {
       "type": "object",
       "additionalProperties": false,
-      "description": "UI presentation settings. When optional fields are absent, clients should apply schema-provided defaults for stable rendering.",
       "description": "Optional appearance and behavior controls consumed by browser clients. All appearance fields are optional and include defaults for backwards compatibility.",
-      "required": [
-        "preferences",
-        "module_visibility"
-      ],
       "properties": {
         "theme": {
           "type": "string",
-          "enum": ["light", "dark", "auto"],
+          "enum": [
+            "light",
+            "dark",
+            "auto"
+          ],
           "default": "auto",
           "description": "Base color-scheme mode selector."
         },
@@ -49,7 +53,10 @@
         },
         "density": {
           "type": "string",
-          "enum": ["comfortable", "compact"],
+          "enum": [
+            "comfortable",
+            "compact"
+          ],
           "default": "comfortable",
           "description": "Controls spacing density for shell layout and controls."
         },
@@ -63,112 +70,69 @@
         },
         "surface_style": {
           "type": "string",
-          "enum": ["flat", "elevated"],
+          "enum": [
+            "flat",
+            "elevated"
+          ],
           "default": "elevated",
           "description": "Optional surface rendering mode for cards/panels."
+        },
+        "show_weather_widget": {
+          "type": "boolean"
         },
         "refresh_interval_seconds": {
           "type": "integer",
           "minimum": 5,
-          "maximum": 300,
-          "default": 30,
-          "description": "Polling interval for frontend refresh behavior. Fallback: 30 seconds."
+          "maximum": 300
         },
         "tokens": {
           "type": "object",
           "additionalProperties": false,
-          "description": "Safe visual primitives only; never include secrets or file paths. If omitted, clients should use the documented token defaults.",
+          "description": "Semantic UI token overrides for supported clients.",
           "properties": {
             "primary_color": {
               "type": "string",
-              "pattern": "^#[0-9a-fA-F]{6}$",
-              "default": "#2B6CB0",
-              "description": "Primary UI color in 6-digit hex format. Fallback: #2B6CB0."
+              "pattern": "^#[A-Fa-f0-9]{6}$",
+              "default": "#2B6CB0"
             },
             "accent_color": {
               "type": "string",
-              "pattern": "^#[0-9a-fA-F]{6}$",
-              "default": "#D69E2E",
-              "description": "Accent/highlight color in 6-digit hex format. Fallback: #D69E2E."
+              "pattern": "^#[A-Fa-f0-9]{6}$",
+              "default": "#D69E2E"
             },
             "surface_style": {
               "type": "string",
-              "enum": ["flat", "elevated", "glass"],
-              "default": "flat",
-              "description": "Surface treatment preset. Fallback: flat."
+              "enum": [
+                "flat",
+                "elevated",
+                "glass"
+              ],
+              "default": "flat"
             },
             "density": {
               "type": "string",
-              "enum": ["comfortable", "compact"],
-              "default": "comfortable",
-              "description": "Spacing/compactness preset. Fallback: comfortable."
+              "enum": [
+                "comfortable",
+                "compact"
+              ],
+              "default": "comfortable"
             },
             "corner_radius_scale": {
               "type": "number",
               "minimum": 0,
               "maximum": 2,
-              "default": 1,
-              "description": "Multiplier applied to component corner radii. Fallback: 1."
+              "default": 1
             },
             "font_stack": {
               "type": "string",
-              "enum": ["system_ui", "humanist", "neo_grotesk", "serif"],
-              "default": "system_ui",
-              "description": "Optional named frontend font stack key (not a raw font file/path). Fallback: system_ui."
+              "enum": [
+                "system_ui",
+                "humanist",
+                "neo_grotesk",
+                "serif"
+              ],
+              "default": "system_ui"
             }
-          }
-          "maximum": 300
-        },
-        "reduced_motion_mode": {
-          "type": "string",
-          "enum": ["system", "on", "off"],
-          "description": "UX motion preference. `on` always reduces motion, `off` always allows full motion, and `system` defers to the client OS/browser preference (`prefers-reduced-motion`)."
-        },
-        "enable_focus_highlights": {
-          "type": "boolean",
-          "description": "Enables high-contrast focus rings/highlights for keyboard navigation. Unsupported clients should ignore this flag and keep their default focus indicator behavior."
-        "preferences": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "density",
-            "font_scale",
-            "reduced_motion",
-            "preferred_layout"
-          ],
-          "properties": {
-            "density": {
-              "type": "string",
-              "enum": ["compact", "comfortable", "spacious"]
-            },
-            "font_scale": {
-              "type": "number",
-              "minimum": 0.8,
-              "maximum": 1.5
-            },
-            "reduced_motion": { "type": "boolean" },
-            "preferred_layout": {
-              "type": "string",
-              "enum": ["auto", "single_column", "two_column", "focus"]
-            }
-          }
-        },
-        "module_visibility": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "scheduler",
-            "queue",
-            "alerts",
-            "diagnostics",
-            "autonomy_panel"
-          ],
-          "properties": {
-            "scheduler": { "type": "boolean" },
-            "queue": { "type": "boolean" },
-            "alerts": { "type": "boolean" },
-            "diagnostics": { "type": "boolean" },
-            "autonomy_panel": { "type": "boolean" }
           }
         }
       }
@@ -177,18 +141,11 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "enable_request_queue": { "type": "boolean" },
-        "enable_now_playing": { "type": "boolean" },
-        "enable_command_palette": {
-          "type": "boolean",
-          "description": "Enables command palette entry points (for example Cmd/Ctrl+K). Unsupported clients should hide command palette UI and continue to expose primary navigation surfaces."
+        "enable_request_queue": {
+          "type": "boolean"
         },
-        "enable_keyboard_shortcuts": {
-          "type": "boolean",
-          "description": "Enables non-essential keyboard shortcuts (for example tab cycling and command actions). Unsupported clients should ignore this flag and keep mandatory accessibility keyboard behaviors intact."
-        "enable_persona_feedback": {
-          "type": "boolean",
-          "description": "Gates listener persona feedback controls in frontend clients."
+        "enable_now_playing": {
+          "type": "boolean"
         }
       }
     }

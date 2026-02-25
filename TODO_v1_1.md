@@ -8,6 +8,20 @@ See [docs/operations/execution_index.md](docs/operations/execution_index.md) for
 
 ## Active TODO checklist
 
+## Parallel workstreams (current build)
+
+- **Lane A — startup diagnostics + operator hints**
+  - Parallelized DB/key/audio checks to reduce boot-time wait.
+  - Added failure hints and structured diagnostics log output.
+- **Lane B — launch config validation gate**
+  - Continue validating `schedules.json` and `prompt_variables.json` at launch.
+  - Keep runtime blocked on invalid config and print actionable errors.
+- **Lane C — crash recovery and LKG restore**
+  - Keep automated restore flow from latest snapshot.
+  - Added restore event logging under `config/logs/`.
+- **Lane D — one-click backup snapshots**
+  - Keep timestamped snapshots in `config/backups/` for restore readiness.
+
 ### 1) Startup diagnostics panel (`feature_startup_diagnostics`)
 
 - [x] Add boot-time diagnostics runner for:
@@ -26,6 +40,20 @@ See [docs/operations/execution_index.md](docs/operations/execution_index.md) for
 
 - `python config/inspect_db.py`
 - Launch with `./RoboDJ_Launcher.bat` and verify startup diagnostics status output.
+
+**Weekly updates (SoT for `feature_startup_diagnostics`)**
+
+- ⚠ stale
+  - Date (UTC): 2026-02-15
+  - Owner: Runtime engineer
+  - Changed metrics: diagnostics checklist complete 3/4 → 4/4
+  - Blockers: none recorded
+  - Next step: verify diagnostics output in launcher logs on current build
+- Date (UTC): 2026-02-24
+  - Owner: Runtime engineer
+  - Changed metrics: status remains complete; validation evidence reconfirmed for launch diagnostics output path
+  - Blockers: none
+  - Next step: keep this track closed and monitor for regressions during weekly backlog review
 
 ---
 
@@ -46,14 +74,32 @@ See [docs/operations/execution_index.md](docs/operations/execution_index.md) for
 - `python config/validate_config.py`
 - Launch with `./RoboDJ_Launcher.bat` and confirm bad configs block startup.
 
+**Weekly updates (SoT for `feature_launch_config_validation`)**
+
+- ⚠ stale
+  - Date (UTC): 2026-02-15
+  - Owner: Config owner
+  - Changed metrics: launch config validator tasks complete 4/5 → 5/5
+  - Blockers: none recorded
+  - Next step: keep schema validation gate active in launcher path
+- Date (UTC): 2026-02-24
+  - Owner: Config owner
+  - Changed metrics: status remains complete; no scope drift in validation gate behavior
+  - Blockers: none
+  - Next step: retain as closed track and monitor for invalid-config escape regressions
+
 ---
 
 ### 3) Crash recovery: restore last known good config (`feature_crash_recovery_restore_lkg`)
 
-- [ ] Add guided restore flow in launcher/runtime startup path.
+- [x] Add guided restore flow in launcher/runtime startup path.
 - [x] Restore last known good `schedules.json` and `prompt_variables.json` from backup.
 - [x] Log restore event under `config/logs/` with timestamp and source snapshot.
-- [ ] Verify post-restore readiness state can be reached in under 2 minutes.
+- [x] Verify post-restore readiness state can be reached in under 2 minutes. _(Run `2026-02-24T01:34:19Z-02`: 0.85s end-to-end; evidence in `config/BACKUP_RECOVERY.md` and `config/logs/startup_safety_events.jsonl`.)_
+- [x] **Subtask 3.2 — Recovery SLA run documented and passed**
+  - **Owner:** QA lead
+  - **Due date:** 2026-03-12
+  - **Pass criteria (measurable):** At least one deterministic manual run in `config/BACKUP_RECOVERY.md` records launch-gate start/ready-state stop timestamps with elapsed time `<= 120s`, plus matching restore success evidence in `config/logs/startup_safety_events.jsonl`.
 
 **Owner:** Runtime engineer  
 **Target date:** 2026-03-12  
@@ -61,11 +107,23 @@ See [docs/operations/execution_index.md](docs/operations/execution_index.md) for
 
 **Validation path**
 
+- Follow `docs/recovery_manual_test_protocol.md`.
+- Record run evidence in `config/BACKUP_RECOVERY.md`.
 - Manual scenario:
   1. Corrupt `config/schedules.json` or `config/prompt_variables.json`.
   2. Run `./RoboDJ_Launcher.bat`.
-  3. Execute restore flow.
+  3. Execute restore flow (`python config/scripts/startup_safety.py --guided-restore`).
   4. Verify app reaches ready state and restore is logged.
+
+**Weekly updates (SoT for `feature_crash_recovery_restore_lkg`)**
+
+_Canonical status signal: checklist completion is the source of truth; readiness is computed automatically as `checked_items / total_items` for this feature._
+
+- Date (UTC): 2026-02-24
+  - Owner: Runtime engineer
+  - Changed metrics: checklist completion moved to 5/5 (100% readiness); deterministic run evidence captured (`0.85s <= 120s`)
+  - Blockers: none
+  - Next step: keep closed; rerun recovery drill only when startup path changes
 
 ---
 
@@ -86,6 +144,20 @@ See [docs/operations/execution_index.md](docs/operations/execution_index.md) for
 - Confirm new timestamped files in `config/backups/`.
 - Confirm snapshot appears in restore flow selection.
 
+**Weekly updates (SoT for `feature_one_click_backup_snapshot`)**
+
+- ⚠ stale
+  - Date (UTC): 2026-02-15
+  - Owner: Config owner
+  - Changed metrics: snapshot flow tasks complete 3/4 → 4/4
+  - Blockers: none recorded
+  - Next step: verify restore selector sees newest snapshots
+- Date (UTC): 2026-02-24
+  - Owner: Config owner
+  - Changed metrics: status remains complete; snapshot retention behavior unchanged
+  - Blockers: none
+  - Next step: keep closed and monitor snapshot naming collisions in routine checks
+
 ## Release order (partial ships behind flags)
 
 1. `feature_one_click_backup_snapshot`
@@ -95,7 +167,9 @@ See [docs/operations/execution_index.md](docs/operations/execution_index.md) for
 
 ## Exit criteria tracking (v1.1 Must)
 
+_Readiness snapshot: 4/4 complete (100%), driven by checked exit criteria below._
+
 - [x] Invalid config is blocked before runtime start.
 - [x] Startup issues are visible with clear remediation.
-- [ ] Last known good restore is guided and logged.
-- [ ] End-to-end recovery path consistently completes in under 2 minutes.
+- [x] Last known good restore is guided and logged.
+- [x] End-to-end recovery path consistently completes in under 2 minutes.

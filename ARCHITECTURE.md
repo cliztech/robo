@@ -62,11 +62,20 @@ Use this quick map when placing artifacts:
 ## Related docs
 
 - Product specs: `docs/product-specs/`
+- Runtime matrix: `docs/product-specs/runtime-matrix.md`
+- Dependency compatibility contract: `docs/product-specs/dependency-compatibility-contract.md`
+- Environment profiles: `docs/product-specs/environment-profiles.md`
 - Design docs: `docs/design-docs/`
 - Execution plans: `docs/exec-plans/`
 - Reliability and security: `docs/RELIABILITY.md`, `docs/SECURITY.md`
 - Generated schema references: `docs/generated/db-schema.md`
 
+## Agent deliverables
+
+All agents operating in this repository are expected to produce and maintain artifacts across the full delivery lifecycle:
+## Agent deliverable baseline
+
+All agent execution in this repository must produce artifacts that can be reviewed, operated, and audited. The baseline deliverables are:
 n## Agent deliverables coverage
 
 To ensure repository agents produce and maintain the full expected output set, use this mapping when routing work:
@@ -98,6 +107,7 @@ delivery, operations, and traceability. Outputs should include:
 - Scripts that manage the repository itself
 - Production dashboard definition files
 
+For operating constraints and ownership rules, refer to `AGENTS.md`.
 For operational rules and ownership expectations, see `AGENTS.md`.
 5See `AGENTS.md` for the full stage-gated workflow, boundaries, and quality gates.
 Reference: `AGENTS.md` → **Agent Output Requirements**.

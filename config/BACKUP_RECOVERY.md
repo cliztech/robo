@@ -40,10 +40,68 @@ At launch it performs:
    - Re-validate after restore
    - Block startup if still invalid
 
+## Deterministic manual recovery protocol
+
+Follow `docs/recovery_manual_test_protocol.md` for the canonical corruption seed, restore trigger, timing boundaries, and evidence requirements.
+
+## Operator runbook: last-known-good restore (LKG)
+
+### Expected completion times
+
+- Detect + trigger restore from launch gate: **15-30 seconds**
+- Restore + post-restore validation: **30-60 seconds**
+- Reach ready state after gate pass: **30 seconds**
+- **Total expected completion:** **<= 120 seconds** (SLA)
+
+### Steps
+
+1. **Prepare known-good backup**
+
+```bash
+python config/scripts/startup_safety.py --create-backup
+```
+
+2. **Seed deterministic corruption** (for test runs only)
+   - In `config/schedules.json`, replace the first `{` with `[`.
+
+3. **Trigger launch recovery gate**
+
+```bash
+python config/scripts/startup_safety.py --on-launch
+```
+
+4. **Confirm restore outcome**
+   - Terminal must print:
+     - `Attempting crash recovery using last-known-good snapshot...`
+     - `Recovery succeeded: restored config validates.`
+     - `Startup safety gate passed.`
+
+5. **Collect log evidence**
+
+# On Linux/macOS, use 'tail'. On Windows, use PowerShell's 'Get-Content -Tail'.
+tail -n 5 config/logs/startup_safety_events.jsonl
+
+   - Confirm a `restore_last_known_good` event with `status` = `success`.
+
 ## Acceptance criteria (v1.1 exit alignment)
 - Invalid config is blocked before runtime when launch validation fails.
-- Operators can execute restore from latest snapshot in under 2 minutes using:
+- Operators can execute restore from latest snapshot in under 2 minutes using either:
 
 ```bash
 python config/scripts/startup_safety.py --restore-last-known-good
+python config/scripts/startup_safety.py --guided-restore
 ```
+
+## Recovery SLA evidence log
+
+| Run ID (UTC) | Corruption seed | Launch gate start (UTC) | Ready state (UTC) | Elapsed (s) | SLA <=120s | Restore log evidence |
+| --- | --- | --- | --- | ---: | --- | --- |
+| 2026-02-16T14:15:54Z-01 | `schedules.json` first `{` -> `[` | 2026-02-16T14:15:54.731850Z | N/A (gate blocked: baseline config schema failures) | 0.43 | Fail (no ready state) | `restore_last_known_good` success at `2026-02-16T14:15:55.115230Z`, snapshot `config_snapshot_20260216_141542` |
+| 2026-02-24T01:34:19Z-02 | `schedules.json` first `{` -> `[` (deterministic, protocol seed) | 2026-02-24T01:34:19.075561Z | 2026-02-24T01:34:19.921554Z (`--restore-last-known-good` + `python config/validate_config.py` pass) | 0.85 | **Pass** | `restore_last_known_good` success at `2026-02-24T01:34:19.474201Z`, snapshot `config_snapshot_20260224_013417`, pre-restore `config_snapshot_20260224_013419`, `recovery_duration_seconds=0.28` |
+
+> Recovery command sequence for run `2026-02-24T01:34:19Z-02`:
+>
+> 1. `python config/scripts/startup_safety.py --create-backup`
+> 2. Corrupt `config/schedules.json` first `{` -> `[`
+> 3. `python config/scripts/startup_safety.py --restore-last-known-good`
+> 4. `python config/validate_config.py`

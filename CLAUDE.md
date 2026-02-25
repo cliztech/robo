@@ -41,6 +41,18 @@ See `AGENTS.md` → **Project Structure & Module Organization** for the full tre
 - **Configuration** (`config/`): Runtime state, JSON autonomy profiles, prompt templates, and SQLite databases.
 - **Contracts** (`contracts/`): API definitions and redaction rules.
 
+
+## Claude Code Style Plugins
+
+Claude Code may use optional style plugins when explicitly requested by the user.
+
+### Available Plugin: Ralph Wiggum
+
+- Path: `.claude/style-plugins/ralph-wiggum.md`
+- Plugin ID: `style.ralph_wiggum`
+- Trigger examples: `/ralph wiggum style`, `use Ralph Wiggum tone`
+- Scope: narration tone only; engineering output remains conventional and production-grade.
+
 ## Key Rules
 
 1.  **Read `AGENTS.md` first** — it defines the multi-agent pipeline, boundaries, and coding style.
