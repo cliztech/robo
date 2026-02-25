@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Project Workflow
 
 ## Guiding Principles
@@ -18,7 +17,7 @@ All tasks follow a strict lifecycle:
 
 1. **Select Task:** Choose the next available task from `plan.md` in sequential order
 
-2. **Mark In Progress:** Before beginning work, edit `plan.md` and change the task from `[ ]` to `[~]`
+2. **Mark In Progress:** Before beginning work, edit `plan.md` and change the task from `[ ]` to `[~]`    
 
 3. **Write Failing Tests (Red Phase):**
    - Create a new test file for the feature or bug fix.
@@ -47,20 +46,20 @@ All tasks follow a strict lifecycle:
 
 8. **Commit Code Changes:**
    - Stage all code changes related to the task.
-   - Propose a clear, concise commit message e.g, `feat(ui): Create basic HTML structure for calculator`.
+   - Propose a clear, concise commit message e.g, `feat(ui): Create basic HTML structure for calculator`. 
    - Perform the commit.
 
 9. **Attach Task Summary with Git Notes:**
-   - **Step 9.1: Get Commit Hash:** Obtain the hash of the *just-completed commit* (`git log -1 --format="%H"`).
-   - **Step 9.2: Draft Note Content:** Create a detailed summary for the completed task. This should include the task name, a summary of changes, a list of all created/modified files, and the core "why" for the change.
+   - **Step 9.1: Get Commit Hash:** Obtain the hash of the *just-completed commit* (`git log -1 --format=\"%H\"`).
+   - **Step 9.2: Draft Note Content:** Create a detailed summary for the completed task. This should include the task name, a summary of changes, a list of all created/modified files, and the core \"why\" for the change.
    - **Step 9.3: Attach Note:** Use the `git notes` command to attach the summary to the commit.
      ```bash
      # The note content from the previous step is passed via the -m flag.
-     git notes add -m "<note content>" <commit_hash>
+     git notes add -m \"<note content>\" <commit_hash>
      ```
 
 10. **Get and Record Task Commit SHA:**
-    - **Step 10.1: Update Plan:** Read `plan.md`, find the line for the completed task, update its status from `[~]` to `[x]`, and append the first 7 characters of the *just-completed commit's* commit hash.
+    - **Step 10.1: Update Plan:** Read `plan.md`, find the line for the completed task, update its status from `[~]` to `[x]`, and append the first 7 characters of the *just-completed commit's* commit hash.      
     - **Step 10.2: Write Plan:** Write the updated content back to `plan.md`.
 
 11. **Commit Plan Update:**
@@ -82,8 +81,8 @@ All tasks follow a strict lifecycle:
         -   If a test file is missing, you **must** create one. Before writing the test, **first, analyze other test files in the repository to determine the correct naming convention and testing style.** The new tests **must** validate the functionality described in this phase's tasks (`plan.md`).
 
 3.  **Execute Automated Tests with Proactive Debugging:**
-    -   Before execution, you **must** announce the exact shell command you will use to run the tests.
-    -   **Example Announcement:** "I will now run the automated test suite to verify the phase. **Command:** `CI=true npm test`"
+    -   Before execution, you **must** announce the exact shell command you will use to run the tests.    
+    -   **Example Announcement:** \"I will now run the automated test suite to verify the phase. **Command:** `CI=true npm test`\"
     -   Execute the announced command.
     -   If tests fail, you **must** inform the user and begin debugging. You may attempt to propose a fix a **maximum of two times**. If the tests still fail after your second proposed fix, you **must stop**, report the persistent failure, and ask the user for guidance.
 
@@ -108,13 +107,13 @@ All tasks follow a strict lifecycle:
 
         **Manual Verification Steps:**
         1.  **Ensure the server is running.**
-        2.  **Execute the following command in your terminal:** `curl -X POST http://localhost:8080/api/v1/users -d '{"name": "test"}'`
+        2.  **Execute the following command in your terminal:** `curl -X POST http://localhost:8080/api/v1/users -d '{\"name\": \"test\"}'`
         3.  **Confirm that you receive:** A JSON response with a status of `201 Created`.
         ```
 
 5.  **Await Explicit User Feedback:**
-    -   After presenting the detailed plan, ask the user for confirmation: "**Does this meet your expectations? Please confirm with yes or provide feedback on what needs to be changed.**"
-    -   **PAUSE** and await the user's response. Do not proceed without an explicit yes or confirmation.
+    -   After presenting the detailed plan, ask the user for confirmation: \"**Does this meet your expectations? Please confirm with yes or provide feedback on what needs to be changed.**\"
+    -   **PAUSE** and await the user's response. Do not proceed without an explicit yes or confirmation.  
 
 6.  **Create Checkpoint Commit:**
     -   Stage all changes. If no changes occurred in this step, proceed with an empty commit.
@@ -125,7 +124,7 @@ All tasks follow a strict lifecycle:
     -   **Step 7.2: Attach Note:** Use the `git notes` command and the full commit hash from the previous step to attach the full report to the checkpoint commit.
 
 8.  **Get and Record Phase Checkpoint SHA:**
-    -   **Step 8.1: Get Commit Hash:** Obtain the hash of the *just-created checkpoint commit* (`git log -1 --format="%H"`).
+    -   **Step 8.1: Get Commit Hash:** Obtain the hash of the *just-created checkpoint commit* (`git log -1 --format=\"%H\"`).
     -   **Step 8.2: Update Plan:** Read `plan.md`, find the heading for the completed phase, and append the first 7 characters of the commit hash in the format `[checkpoint: <sha>]`.
     -   **Step 8.3: Write Plan:** Write the updated content back to `plan.md`.
 
@@ -255,10 +254,10 @@ Before requesting review:
 
 ### Examples
 ```bash
-git commit -m "feat(auth): Add remember me functionality"
-git commit -m "fix(posts): Correct excerpt generation for short posts"
-git commit -m "test(comments): Add tests for emoji reaction limits"
-git commit -m "style(mobile): Improve button touch targets"
+git commit -m \"feat(auth): Add remember me functionality\"
+git commit -m \"fix(posts): Correct excerpt generation for short posts\"
+git commit -m \"test(comments): Add tests for emoji reaction limits\"
+git commit -m \"style(mobile): Improve button touch targets\"
 ```
 
 ## Definition of Done
@@ -332,10 +331,3 @@ A task is complete when:
 - Document lessons learned
 - Optimize for user happiness
 - Keep things simple and maintainable
-=======
-# Workflow
-
-The project follows a multi-agent orchestration workflow.
-
-Refer to [MASSIVE_WORKFLOW_BLUEPRINT.md](../MASSIVE_WORKFLOW_BLUEPRINT.md) and [AGENTS.md](../AGENTS.md) for detailed operational protocols.
->>>>>>> c287a1eb05d08b6cbcc6791eaa232a28b977e8b5

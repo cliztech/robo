@@ -83,11 +83,7 @@ function StatCard({
                 <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="h-full w-full">
                     <defs>
                         <linearGradient id={sparkId} x1="0" y1="0" x2="0" y2="1">
-<<<<<<< HEAD
                             <stop offset="0%" stopColor={c.spark} stopOpacity="0.2" />
-=======
-                            <stop offset="0%" stopColor={c.spark} stopOpacity="0.15" />
->>>>>>> 2cc56c6ee848ad6741f5dbbbd83c3cdf0aaf1581
                             <stop offset="100%" stopColor={c.spark} stopOpacity="0" />
                         </linearGradient>
                     </defs>
@@ -151,7 +147,7 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
                     <h1 className="text-2xl font-black tracking-tight text-white">
                         Station <span className="text-lime-400">Overview</span>
                     </h1>
-                    <p className="text-[11px] text-zinc-500 mt-0.5">Live monitoring · All systems nominal</p>
+                    <p className="text-[11px] text-zinc-500 mt-0.5">Live monitoring  All systems nominal</p>
                 </div>
                 <div className="text-right">
                     <div className="text-lg font-mono font-bold text-zinc-300 tabular-nums tracking-wider">{currentTime}</div>

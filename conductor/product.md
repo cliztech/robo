@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-# AetherRadio â€” Product Definition (product.md)
+# AetherRadio — Product Definition (product.md)
 
 ## 0. Document Purpose
 This file is the **product single-source definition** for AetherRadio: vision, target users, UX, feature set, system architecture, performance targets, and phased roadmap.
@@ -11,9 +10,9 @@ It is written to be directly actionable for engineering, design, and agent-drive
 AetherRadio is a next-generation AI-powered radio automation platform that democratizes professional broadcasting.
 It aims to surpass industry leaders like VirtualDJ and Rekordbox by combining:
 - professional-grade manual mixing controls, and
-- an industry-leading AI agent capable of **0â€“100% autonomous operation**.
+- an industry-leading AI agent capable of **0–100% autonomous operation**.
 
-It enables usersâ€”from hobbyists to commercial networksâ€”to run **24/7 internet radio stations** with:
+It enables users—from hobbyists to commercial networks—to run **24/7 internet radio stations** with:  
 - intelligent playlist generation,
 - seamless crossfading,
 - real-time audio processing,
@@ -43,7 +42,7 @@ It enables usersâ€”from hobbyists to commercial networksâ€”to run **24/7 interne
 ## 3. Core Value Propositions
 ### 3.1 Intelligent Automation
 - AI-driven track selection + playlist generation reduces manual workload
-- Autonomy from â€œassistiveâ€ to â€œfully automated DJâ€
+- Autonomy from “assistive” to “fully automated DJ”
 
 ### 3.2 Professional Audio Quality
 - Web Audio API-powered engine (initial) with:
@@ -66,12 +65,12 @@ It enables usersâ€”from hobbyists to commercial networksâ€”to run **24/7 interne
 
 ---
 
-## 4. Key Features (MVP â†’ Pro)
+## 4. Key Features (MVP ? Pro)
 ### 4.1 AI Playlist Generation
 - Inputs:
   - genre, mood, tempo/BPM, energy, era, rules (no repeats), station identity
 - Outputs:
-  - playable queue + â€œwhy this trackâ€ rationale
+  - playable queue + “why this track” rationale
   - dynamic rotation and category balancing
 
 ### 4.2 Advanced Audio Engine
@@ -88,7 +87,7 @@ It enables usersâ€”from hobbyists to commercial networksâ€”to run **24/7 interne
 ### 4.3 Live Broadcasting
 - Icecast integration:
   - mountpoints, reconnect strategy
-  - metadata (artist/title), fallback â€œnow playingâ€
+  - metadata (artist/title), fallback “now playing”
 - Roadmap:
   - multi-format encoding (MP3/AAC/AAC+)
   - Shoutcast
@@ -105,11 +104,11 @@ It enables usersâ€”from hobbyists to commercial networksâ€”to run **24/7 interne
 - Cloud-based storage (optional) + local library
 - Uploads, organization, tagging, smart crates
 - Roadmap:
-  - large library optimization (10kâ€“100k+ tracks)
+  - large library optimization (10k–100k+ tracks)
   - fast search + filtering
   - import/export, metadata tagging
 
-### 4.6 Autonomous AI Agent (0â€“100%)
+### 4.6 Autonomous AI Agent (0–100%)
 - Modes:
   - 0%: manual DJ (classic deck control)
   - 25%: AI recommends next tracks + transition suggestions
@@ -129,20 +128,20 @@ It enables usersâ€”from hobbyists to commercial networksâ€”to run **24/7 interne
 - Dark theme, high contrast, low-light usability
 - Hardware metaphors: knobs, faders, jog wheels (visual + interactive)
 
-### 5.2 Layout: Core â€œDJ + Automationâ€ Screen
+### 5.2 Layout: Core “DJ + Automation” Screen
 **Top Bar (Global)**
 - Station selector (single/multi station)
 - Stream status indicator (Connected / Reconnecting / Offline)
 - CPU/DSP load indicator
-- â€œAutonomyâ€ slider (0â€“100) + mode label
-- Panic controls: â€œFade to Backupâ€, â€œMute Streamâ€, â€œStop Autoâ€
+- “Autonomy” slider (0–100) + mode label
+- Panic controls: “Fade to Backup”, “Mute Stream”, “Stop Auto”
 
 **Left Column: Library / Browser**
 - Search (instant)
 - Filters:
   - genre, mood, BPM range, energy, key, era, tags
 - Smart crates:
-  - â€œHigh Energyâ€, â€œChillâ€, â€œNew Addsâ€, â€œGold Rotationâ€, â€œNo-Repeat Windowâ€
+  - “High Energy”, “Chill”, “New Adds”, “Gold Rotation”, “No-Repeat Window”
 - Drag track to Deck A / Deck B / Queue
 
 **Center: Dual Decks**
@@ -152,7 +151,7 @@ It enables usersâ€”from hobbyists to commercial networksâ€”to run **24/7 interne
   - play/pause/cue
   - BPM + detected key
   - beatgrid indicator (locked/unlocked)
-  - hot cues (1â€“8)
+  - hot cues (1–8)
   - loop controls
   - gain + 3-band EQ (or 5-band in advanced mode)
 - Crossfader in the middle:
@@ -167,9 +166,9 @@ It enables usersâ€”from hobbyists to commercial networksâ€”to run **24/7 interne
 - Stream output meter (post-encoder)
 
 **Right Column: Automation + AI**
-- â€œNow playingâ€ metadata + artwork (optional)
+- “Now playing” metadata + artwork (optional)
 - Next-up queue (editable)
-- AI â€œReasoning panelâ€ (compact):
+- AI “Reasoning panel” (compact):
   - why this track
   - target energy curve
   - rule checks (no repeats, genre balance)
@@ -207,7 +206,7 @@ It enables usersâ€”from hobbyists to commercial networksâ€”to run **24/7 interne
 **Recommended:** Desktop app (Windows/macOS/Linux) using Electron + React + TypeScript
 - Reason: DJ-grade UX, hardware I/O, stable audio access, file system library scale
 
-Optional: Web version (later) for â€œcontrol-onlyâ€ dashboards
+Optional: Web version (later) for “control-only” dashboards
 
 ### 6.2 UI Layer
 - React + TypeScript
@@ -242,10 +241,10 @@ Optional: Web version (later) for â€œcontrol-onlyâ€ dashboards
 **Phase 1:** Icecast + MP3 (libmp3lame) or Opus/OGG (optional)
 **Phase 2:** AAC/AAC+ encoder support + robust metadata injection
 - Persistent reconnect logic with backoff
-- Encoder watchdog for â€œzero dropoutsâ€ goal
+- Encoder watchdog for “zero dropouts” goal
 
 ### 6.6 AI / Autonomy Services
-- Core â€œDecision Engineâ€:
+- Core “Decision Engine”:
   - rule system (hard constraints)
   - scoring system (preferences)
   - model-assisted selection (LLM + embeddings)
@@ -270,14 +269,14 @@ Optional: Web version (later) for â€œcontrol-onlyâ€ dashboards
 
 ---
 
-## 8. Competitive Analysis (VirtualDJ / Rekordbox) â€” Gaps
+## 8. Competitive Analysis (VirtualDJ / Rekordbox) — Gaps
 ### 8.1 Feature Parity Gaps
-- FX chain depth + granular beatgrid editing â€” gap critical
+- FX chain depth + granular beatgrid editing — gap critical
 - Broadcasting suite:
   - multi-format encoding (AAC+)
-  - robust metadata injection / RDS â€” gap major
-- Library performance and smart crates â€” gap moderate
-- Hardware mappings ecosystem â€” gap major
+  - robust metadata injection / RDS — gap major
+- Library performance and smart crates — gap moderate
+- Hardware mappings ecosystem — gap major
 
 ### 8.2 Performance Benchmarks
 - Startup: <3s
@@ -288,23 +287,23 @@ Optional: Web version (later) for â€œcontrol-onlyâ€ dashboards
 ---
 
 ## 9. Strategic Roadmap (Phases)
-### Phase 1 â€” Foundation
+### Phase 1 — Foundation
 - Close gap on core mixing + library performance
 - Implement robust beatgrid analysis
 - Improve startup time
 - Stabilize streaming reliability
 
-### Phase 2 â€” Broadcasting Pro
+### Phase 2 — Broadcasting Pro
 - Multi-format encoding options
 - Metadata stability improvements
 - Professional station features (RDS where applicable)
 
-### Phase 3 â€” AI & Autonomy
-- â€œHuman-likeâ€ transitions
+### Phase 3 — AI & Autonomy
+- “Human-like” transitions
 - Real-time adaptive playlist curation
 - Operator feedback loop
 
-### Phase 4 â€” Hardware Expansion
+### Phase 4 — Hardware Expansion
 - Expand MIDI mapping support
 - Templates for popular controllers (Pioneer/Numark)
 
@@ -313,7 +312,7 @@ Optional: Web version (later) for â€œcontrol-onlyâ€ dashboards
 ## 10. Agent & Workflow Integration (BMAD Methodology)
 
 ### 10.1 Multi-Agent Architecture
-AetherRadio leverages the DGN-DJ multi-agent organization defined in `AGENTS.md`. 
+AetherRadio leverages the DGN-DJ multi-agent organization defined in `AGENTS.md`.
 Key integrations include:
 
 *   **Intake & Planning:**
@@ -332,10 +331,3 @@ Key integrations include:
 *   **Stage-Gated Pipeline:** All AI-driven changes (playlist updates, new features) follow the 5-stage pipeline: Intake -> Planner -> Executor -> Verifier -> Handoff.
 *   **Autonomy Modes:** Strict adherence to the 5-level autonomy modes defined in `docs/autonomy_modes.md`.
 *   **Quality Gates:** "Brutal Review" and "QA" gates ensure high standards for code, documentation, and UX before release.
-=======
-# Product Definition
-
-This project is an AI-powered radio automation platform (DGN-DJ).
-
-Refer to the root [README.md](../README.md) and [DGN-DJ_BRANDING.md](../DGN-DJ_BRANDING.md) for full product details.
->>>>>>> c287a1eb05d08b6cbcc6791eaa232a28b977e8b5

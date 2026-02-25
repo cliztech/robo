@@ -4,7 +4,7 @@ This registry tracks the status of all work streams (tracks) in the project.
 
 ## Active Tracks
 
-- [Studio UI Design](./tracks/studio-ui-design/index.md) - *In Progress: Building the world-class DJ studio interface.*
+- [~] **Track: Studio UI Design**(./tracks/studio-ui-design/index.md) - *In Progress: Building the world-class DJ studio interface.*
 
 ## Completed Tracks
 
