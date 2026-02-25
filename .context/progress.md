@@ -28,4 +28,5 @@
 - None
 
 ## Recent Ops Updates
+- [x] Added BMAD alias normalization for `bmad build dev` → `bmad-bmm-quick-dev` in command routing docs.
 - [x] Tracked issue hygiene hardening: split TI-007/TI-008/TI-009 collisions, reassigned security tasks to TI-039/TI-040/TI-041, and added a one-header validation check.
