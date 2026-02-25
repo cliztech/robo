@@ -8,6 +8,7 @@
 - [x] **Phase 4: File Upload** (Drag & Drop, Validation, Metadata Extraction)
 
 ## In Progress
+- [x] BMAD command-routing docs updated with deterministic GUI/music console agent-team mapping and follow-up UX flow.
 - [x] **Visionary Architect Migration** (Adopting structured context files)
 - [ ] **Phase 5: AI Integration** (OpenAI GPT-4o, Track Analysis, Mood Detection)
 

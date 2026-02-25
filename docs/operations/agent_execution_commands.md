@@ -74,6 +74,32 @@ Use this table to map the intake route (`QA`, `Proposal`, `Change`) to the corre
 3. **Never skip mandatory verification:** whenever edits happen, include Sections `6` and `7` before PR readiness in Section `3`.
 4. **Escalate only after prerequisites are satisfied:** if uncertain between two commands, execute the earlier prerequisite command and re-evaluate with its output.
 
+### Deterministic phrase routing for agent-team GUI/music-console requests
+
+Use this override table when intake text explicitly asks to create/compose an agent team for GUI/music console work. This removes ambiguity between planning vs implementation phrasing.
+
+| Trigger phrase family (match case-insensitive, typo-tolerant) | Primary command | Follow-up command | Route rationale |
+| --- | --- | --- | --- |
+| `create agent team for gui`, `create agent team for dj console`, `create agent team for music console`, `build agent team for gui/music console`, `create agwnt team for gui`, `agwnt team for music console`, `dj/music console gui team` | `bmad-party-mode` | `bmad-bmm-create-ux-design` | Multi-agent collaboration is required first; UX workflow then turns discussion output into actionable design artifacts. |
+
+**Normalization notes for intake agents**
+
+- Treat `agwnt` as `agent`.
+- Treat `gui`, `ui`, and `console gui` as equivalent frontend intent tokens.
+- Treat `dj console`, `music console`, and `dj/music console` as equivalent product-area tokens.
+
+### Concrete example command sequence (DJ/music console GUI)
+
+Run the following sequence verbatim when the user intent is: _"create agent team for DJ/music console GUI"_.
+
+```bash
+# 1) Primary deterministic route: spin up multi-agent orchestration
+bmad-party-mode "Create agent team for DJ/music console GUI with clear role split and handoff plan"
+
+# 2) Required follow-up: convert outcomes into UX design artifacts
+bmad-bmm-create-ux-design "Using party-mode outcomes, produce wireflow + interaction model for DJ/music console GUI"
+```
+
 ---
 
 ## 1) Non-trivial task planning kickoff

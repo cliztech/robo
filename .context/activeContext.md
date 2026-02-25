@@ -9,5 +9,6 @@ Executing "Phase 5: AI Integration" (Implement AI track analysis) now that the "
 - Consolidated disparate documentation (`README.md`, `TECH_STACK.md`, `AGENTS.md`) into structured context files.
 
 ## Next Atomic Steps
+- [x] Add deterministic BMAD routing for GUI/music console agent-team phrases (including "agwnt" typo handling).
 - [ ] Verify `.context/` structure is complete.
 - [ ] Resume "Phase 5: AI Integration" (Implement AI track analysis).
