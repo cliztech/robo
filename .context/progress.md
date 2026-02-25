@@ -28,4 +28,5 @@
 - None
 
 ## Recent Ops Updates
+- [x] Brand unification baseline: migrated top-level product/docs/workflows from legacy names to DGN-DJ Studio and aligned release artifact naming.
 - [x] Tracked issue hygiene hardening: split TI-007/TI-008/TI-009 collisions, reassigned security tasks to TI-039/TI-040/TI-041, and added a one-header validation check.
