@@ -455,6 +455,10 @@ graph TB
 
 > 🎨 UI/UX design, brand consistency, and accessibility enforcement.
 
+**Mission-specific execution template (DJ Console GUI):** [`docs/ui/dj_console_design_pod.md`](docs/ui/dj_console_design_pod.md)
+
+Use this charter when work targets DJ console design deliverables; it defines role roster, decision rights, ownership cadence (daily standup owner, weekly design review gate, pre-PR quality gate), required artifacts, and Definition of Done.
+
 #### 3a. UI/UX Agent
 
 - **Role:** Design and validate user interface components and interactions.

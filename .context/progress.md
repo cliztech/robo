@@ -7,6 +7,10 @@
 - [x] **Phase 3: Audio Engine** (Web Audio API, EQ, Compressor, Crossfade)
 - [x] **Phase 4: File Upload** (Drag & Drop, Validation, Metadata Extraction)
 
+## Design Operations
+- [x] Published DJ console design pod charter (`docs/ui/dj_console_design_pod.md`) with mission, scope, roster, cadence ownership, decision rights, required artifacts, and DoD.
+- [x] Cross-linked design pod charter in backlog, delivery plan, and AGENTS Design Team section for execution consistency.
+
 ## In Progress
 - [x] **Visionary Architect Migration** (Adopting structured context files)
 - [ ] **Phase 5: AI Integration** (OpenAI GPT-4o, Track Analysis, Mood Detection)
