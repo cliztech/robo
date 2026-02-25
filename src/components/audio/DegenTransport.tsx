@@ -1,25 +1,6 @@
 'use client';
 
-<<<<<<< HEAD
 import { useEffect, useMemo, useState } from 'react';
-import { Pause, Play, Radio, Repeat, Shuffle, SkipBack, SkipForward, Volume1, Volume2, VolumeX } from 'lucide-react';
-=======
-import React, { useEffect, useMemo, useState } from 'react';
->>>>>>> 2cc56c6ee848ad6741f5dbbbd83c3cdf0aaf1581
-import { cn } from '../../lib/utils';
-import { DegenStereoMeter } from './DegenVUMeter';
-import type { DJTelemetry } from '../../lib/audio/telemetry';
-<<<<<<< HEAD
-
-interface TransportTrack {
-    title?: string;
-    artist?: string;
-    album?: string;
-    bpm?: string | number;
-    key?: string;
-    duration?: number;
-}
-=======
 import {
     Pause,
     Play,
@@ -32,7 +13,18 @@ import {
     Volume2,
     VolumeX,
 } from 'lucide-react';
->>>>>>> 2cc56c6ee848ad6741f5dbbbd83c3cdf0aaf1581
+import { cn } from '../../lib/utils';
+import { DegenStereoMeter } from './DegenVUMeter';
+import type { DJTelemetry } from '../../lib/audio/telemetry';
+
+interface TransportTrack {
+    title?: string;
+    artist?: string;
+    album?: string;
+    bpm?: string | number;
+    key?: string;
+    duration?: number;
+}
 
 interface DegenTransportProps {
     currentTrack?: TransportTrack;
@@ -53,82 +45,65 @@ function formatTime(seconds: number): string {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
+const DEFAULT_TRACK: TransportTrack = {
+    title: 'Neural Drift v2.1',
+    artist: 'SynthKong',
+    album: 'Ape Frequencies',
+    bpm: 128,
+    key: 'Am',
+    duration: 234,
+};
+
 export function DegenTransport({
     currentTrack,
     telemetry,
     telemetryTick,
-<<<<<<< HEAD
-    isPlaying = false,
-    isOnAir = false,
-=======
-    telemetry,
-    isPlaying = true,
+    isPlaying: isPlayingProp = true,
     isOnAir = true,
->>>>>>> 2cc56c6ee848ad6741f5dbbbd83c3cdf0aaf1581
     onPlayPause,
     onNext,
     onPrev,
     className,
 }: DegenTransportProps) {
-<<<<<<< HEAD
-=======
-    const track = resolveTransportTrack(currentTrack);
-    const transportTelemetry = resolveTransportTelemetry(telemetry ? adaptDJTelemetryToTransportTelemetry(telemetry) : undefined);
-
-    const [telemetryStep, setTelemetryStep] = useState(0);
-    const [playbackProgress, setPlaybackProgress] = useState(0);
-
-    useEffect(() => {
-        setPlaybackProgress(transportTelemetry.progress);
-    }, [transportTelemetry.progress]);
-
-    useEffect(() => {
-        setVolume(transportTelemetry.volume);
-    }, [transportTelemetry.volume]);
-
-    useEffect(() => {
-        if (!isPlaying || typeof telemetryTick === 'number') return;
-
-        const id = setInterval(() => {
-            setTelemetryStep((prev) => prev + 1);
-        }, 80);
-
-        return () => clearInterval(id);
-    }, [isPlaying, telemetryTick]);
-
-    const phase = typeof telemetryTick === 'number' ? telemetryTick : telemetryStep;
-    const [progressOverride, setProgressOverride] = useState<number | null>(null);
-    const [volume, setVolume] = useState(85);
+    const track = currentTrack ?? DEFAULT_TRACK;
+    const [volume, setVolume] = useState(75);
     const [isMuted, setIsMuted] = useState(false);
-    const [repeat, setRepeat] = useState(false);
->>>>>>> 2cc56c6ee848ad6741f5dbbbd83c3cdf0aaf1581
     const [shuffle, setShuffle] = useState(false);
     const [repeat, setRepeat] = useState(false);
-    const [isMuted, setIsMuted] = useState(false);
-    const [volume, setVolume] = useState(85);
+    const [isPlaying, setIsPlaying] = useState(isPlayingProp);
+    const [playbackProgress, setPlaybackProgress] = useState(0);
+    const [phase, setPhase] = useState(0);
 
-<<<<<<< HEAD
-    const progress = telemetry?.transport.progress ?? 0;
-    const elapsed = telemetry?.transport.elapsedSeconds ?? ((currentTrack?.duration ?? 0) * progress);
-    const remaining = telemetry?.transport.remainingSeconds ?? Math.max(0, (currentTrack?.duration ?? 0) - elapsed);
-
-    const phase = telemetryTick ?? 0;
-    const left = telemetry?.stereoLevels.leftLevel ?? Math.max(0.05, 0.35 + Math.sin(phase / 7) * 0.2);
-    const right = telemetry?.stereoLevels.rightLevel ?? Math.max(0.05, 0.35 + Math.cos(phase / 8) * 0.2);
-    const leftPeak = telemetry?.stereoLevels.leftPeak ?? left;
-    const rightPeak = telemetry?.stereoLevels.rightPeak ?? right;
+    useEffect(() => setIsPlaying(isPlayingProp), [isPlayingProp]);
 
     useEffect(() => {
-        if (telemetry) return;
+        if (!isPlaying) return;
         const timer = setInterval(() => {
-            // keep meter animated even without telemetry
-            setVolume((prev) => prev);
+            setPhase((p) => p + 1);
+            setPlaybackProgress((prev) => {
+                const next = prev + 0.002;
+                return next >= 1 ? 0 : next;
+            });
         }, 160);
         return () => clearInterval(timer);
-    }, [telemetry]);
-=======
-    const progress = progressOverride ?? transportTelemetry.progress ?? 0;
-    const elapsed = telemetry?.transport.elapsedSeconds ?? progress * (track.duration || 0);
+    }, [isPlaying]);
+
+    const handlePlayPause = () => {
+        if (onPlayPause) {
+            onPlayPause();
+        } else {
+            setIsPlaying((p) => !p);
+        }
+    };
+
+    const transportTelemetry = useMemo(() => ({
+        progress: telemetry?.transport.progress ?? playbackProgress,
+        vuLeft: 0.4 + Math.random() * 0.15,
+        vuRight: 0.35 + Math.random() * 0.15,
+    }), [telemetry, playbackProgress, phase]);
+
+    const progress = transportTelemetry.progress ?? 0;
+    const elapsedTime = telemetry?.transport.elapsedSeconds ?? progress * (track.duration || 0);
     const vuLeft =
         telemetry?.stereoLevels.leftLevel ??
         Math.max(0.1, Math.min(1, transportTelemetry.vuLeft + Math.sin(phase / 5) * 0.08));
@@ -138,15 +113,12 @@ export function DegenTransport({
     const peakLeft = telemetry?.stereoLevels.leftPeak ?? vuLeft;
     const peakRight = telemetry?.stereoLevels.rightPeak ?? vuRight;
 
-    const elapsedTime = telemetry?.transport.elapsedSeconds ?? progress * (track.duration || 0);
     const remaining = useMemo(() => {
         if (telemetry) {
             return telemetry.transport.remainingSeconds;
         }
-
         return (track.duration || 0) - elapsedTime;
     }, [elapsedTime, telemetry, track.duration]);
->>>>>>> 2cc56c6ee848ad6741f5dbbbd83c3cdf0aaf1581
 
     const VolumeIcon = useMemo(() => {
         if (isMuted) return VolumeX;
@@ -176,7 +148,7 @@ export function DegenTransport({
                 <div className="text-[11px] font-bold text-white truncate tracking-wide">{currentTrack?.title ?? 'No track loaded'}</div>
                 <div className="text-[10px] text-zinc-500 truncate">
                     {currentTrack?.artist ?? 'Unknown Artist'}
-                    {currentTrack?.album ? <span className="text-zinc-700"> · {currentTrack.album}</span> : null}
+                    {currentTrack?.album ? <span className="text-zinc-700"> &middot; {currentTrack.album}</span> : null}
                 </div>
             </div>
 
@@ -187,7 +159,7 @@ export function DegenTransport({
                 <button type="button" onClick={onPrev} className="p-1.5 rounded text-zinc-400 hover:text-white"><SkipBack size={14} /></button>
                 <button
                     type="button"
-                    onClick={onPlayPause}
+                    onClick={handlePlayPause}
                     className={cn('p-2 rounded-full', isPlaying ? 'bg-lime-400 text-black' : 'bg-zinc-700 text-white')}
                     aria-pressed={isPlaying}
                 >
@@ -200,11 +172,6 @@ export function DegenTransport({
             </div>
 
             <div className="flex-1 flex items-center gap-3 px-4 min-w-0">
-<<<<<<< HEAD
-                <span className="text-[10px] font-mono text-zinc-500 tabular-nums w-9 text-right shrink-0">{formatTime(elapsed)}</span>
-                <div className="relative h-2 flex-1 rounded-full bg-white/[0.06] overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-lime-400 to-cyan-400" style={{ width: `${Math.round(progress * 100)}%` }} />
-=======
                 <span className="text-[10px] font-mono text-zinc-500 tabular-nums w-9 text-right shrink-0">{formatTime(elapsedTime)}</span>
                 <div className="flex-1 group relative h-7 flex items-center">
                     <div className="absolute inset-x-0 h-[3px] rounded-full bg-white/[0.06] overflow-hidden">
@@ -224,7 +191,6 @@ export function DegenTransport({
                         max={1}
                         step={0.001}
                         value={progress}
-
                         onChange={(e) => setPlaybackProgress(parseFloat(e.target.value))}
                         className="absolute inset-x-0 h-7 w-full opacity-0 cursor-pointer z-10"
                     />
@@ -235,13 +201,12 @@ export function DegenTransport({
                             boxShadow: '0 0 8px hsla(var(--color-deck-a),0.4)',
                         }}
                     />
->>>>>>> 2cc56c6ee848ad6741f5dbbbd83c3cdf0aaf1581
                 </div>
                 <span className="text-[10px] font-mono text-zinc-600 tabular-nums w-9 shrink-0">-{formatTime(remaining)}</span>
             </div>
 
             <div className="px-3 border-l border-white/[0.05]">
-                <DegenStereoMeter leftLevel={left} rightLevel={right} leftPeak={leftPeak} rightPeak={rightPeak} size="sm" />
+                <DegenStereoMeter leftLevel={vuLeft} rightLevel={vuRight} leftPeak={peakLeft} rightPeak={peakRight} size="sm" />
             </div>
 
             <div className="flex items-center gap-2 px-3 w-36 border-l border-white/[0.05]">

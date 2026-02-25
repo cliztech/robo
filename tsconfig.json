@@ -32,11 +32,8 @@
         "next-env.d.ts",
         "src/**/*.ts",
         "src/**/*.tsx",
-<<<<<<< HEAD
         "tests/**/*.ts",
         "tests/**/*.tsx",
-=======
->>>>>>> 2cc56c6ee848ad6741f5dbbbd83c3cdf0aaf1581
         ".next/types/**/*.ts"
     ],
     "exclude": [
