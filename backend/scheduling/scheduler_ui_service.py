@@ -52,13 +52,24 @@ class SchedulerUiService:
         self.schema_path = schema_path
         self.schedules_path.parent.mkdir(parents=True, exist_ok=True)
         self._cached_envelope: ScheduleEnvelope | None = None
+        self._cached_ui_state: SchedulerUiState | None = None
         self._last_mtime: float | None = None
 
     def get_ui_state(self) -> SchedulerUiState:
         envelope = self._load_and_migrate()
+
+        # Optimization: If the loaded envelope is the exact same object as the one in our
+        # cached UI state, we can return the cached state immediately without re-running
+        # conflict detection and timeline building.
+        if self._cached_ui_state is not None and self._cached_ui_state.schedule_file is envelope:
+            return self._cached_ui_state
+
         timeline = self._build_timeline_blocks(envelope.schedules)
         conflicts = detect_schedule_conflicts(envelope.schedules, timeline)
-        return SchedulerUiState(schedule_file=envelope, timeline_blocks=timeline, conflicts=conflicts)
+
+        state = SchedulerUiState(schedule_file=envelope, timeline_blocks=timeline, conflicts=conflicts)
+        self._cached_ui_state = state
+        return state
 
     def update_schedules(self, schedules: list[ScheduleRecord]) -> SchedulerUiState:
         envelope = ScheduleEnvelope(schema_version=2, schedules=schedules)
@@ -70,6 +81,9 @@ class SchedulerUiService:
 
         self.schedules_path.write_text(envelope.model_dump_json(indent=2), encoding="utf-8")
         timeline = self._build_timeline_blocks(schedules)
+
+        # We don't update cache here immediately because we rely on mtime check in _load_and_migrate
+        # to refresh the data on next read. The file write above changes mtime.
         return SchedulerUiState(schedule_file=envelope, timeline_blocks=timeline, conflicts=[])
 
     def publish_schedules(self, schedules: list[ScheduleRecord]) -> dict[str, object]:
