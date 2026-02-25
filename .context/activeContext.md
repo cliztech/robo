@@ -4,6 +4,8 @@
 Executing "Phase 5: AI Integration" (Implement AI track analysis) now that the "Visionary Architect" context system is established.
 
 ## Recent Decisions
+- Added machine-readable release gate map (`config/schemas/release_gates.json`) and CI evaluator to produce consolidated readiness artifacts.
+- Added branch-protection ruleset-as-code and sync workflow to require `release-readiness-gate` for `main`.
 - Completed GUI prompt review and published agent-team execution plan at `docs/ui/gui_agent_team_review.md`.
 - Updated `AGENTS.md` to mandate the "Visionary Architect" context system (`.context/`) as the primary bootstrap for all agents.
 - Adopted `.context/` directory as the single source of truth for high-level project context.
