@@ -32,6 +32,7 @@ interface DegenTransportProps {
     onPlayPause?: () => void;
     onNext?: () => void;
     onPrev?: () => void;
+    onSeek?: (position: number) => void;
     className?: string;
 }
 
@@ -55,17 +56,15 @@ export function DegenTransport({
     onPlayPause,
     onNext,
     onPrev,
+    onSeek,
     className,
 }: DegenTransportProps) {
     const track = resolveTransportTrack(currentTrack);
     const transportTelemetry = resolveTransportTelemetry(telemetry ? adaptDJTelemetryToTransportTelemetry(telemetry) : undefined);
 
     const [telemetryStep, setTelemetryStep] = useState(0);
-    const [playbackProgress, setPlaybackProgress] = useState(0);
-
-    useEffect(() => {
-        setPlaybackProgress(transportTelemetry.progress);
-    }, [transportTelemetry.progress]);
+    const [progressOverride, setProgressOverride] = useState<number | null>(null);
+    const [pendingSeekPosition, setPendingSeekPosition] = useState<number | null>(null);
 
     useEffect(() => {
         setVolume(transportTelemetry.volume);
@@ -82,13 +81,21 @@ export function DegenTransport({
     }, [isPlaying, telemetryTick]);
 
     const phase = typeof telemetryTick === 'number' ? telemetryTick : telemetryStep;
-    const [progressOverride, setProgressOverride] = useState<number | null>(null);
     const [volume, setVolume] = useState(85);
     const [isMuted, setIsMuted] = useState(false);
     const [repeat, setRepeat] = useState(false);
     const [shuffle, setShuffle] = useState(false);
 
     const progress = progressOverride ?? transportTelemetry.progress ?? 0;
+
+    useEffect(() => {
+        if (pendingSeekPosition === null) return;
+
+        if (Math.abs(transportTelemetry.progress - pendingSeekPosition) <= 0.005) {
+            setPendingSeekPosition(null);
+            setProgressOverride(null);
+        }
+    }, [pendingSeekPosition, transportTelemetry.progress]);
     const elapsed = telemetry?.transport.elapsedSeconds ?? progress * (track.duration || 0);
     const vuLeft =
         telemetry?.stereoLevels.leftLevel ??
@@ -113,6 +120,19 @@ export function DegenTransport({
         const m = Math.floor(safeSeconds / 60);
         const s = Math.floor(safeSeconds % 60);
         return `${m}:${s.toString().padStart(2, '0')}`;
+    };
+
+    const commitSeek = (nextPosition: number) => {
+        const clampedPosition = Math.max(0, Math.min(1, nextPosition));
+
+        if (!onSeek) {
+            setProgressOverride(null);
+            setPendingSeekPosition(null);
+            return;
+        }
+
+        onSeek(clampedPosition);
+        setPendingSeekPosition(clampedPosition);
     };
 
 
@@ -208,6 +228,7 @@ export function DegenTransport({
                 <div className="flex-1 group relative h-7 flex items-center">
                     <div className="absolute inset-x-0 h-[3px] rounded-full bg-white/[0.06] overflow-hidden">
                         <div
+                            data-testid="transport-progress-fill"
                             className="h-full rounded-full transition-[width] duration-100"
                             style={{
                                 width: `${progress * 100}%`,
@@ -223,8 +244,14 @@ export function DegenTransport({
                         max={1}
                         step={0.001}
                         value={progress}
-
-                        onChange={(e) => setPlaybackProgress(parseFloat(e.target.value))}
+                        onChange={(e) => setProgressOverride(parseFloat(e.target.value))}
+                        onMouseUp={(e) => commitSeek(parseFloat(e.currentTarget.value))}
+                        onTouchEnd={(e) => commitSeek(parseFloat(e.currentTarget.value))}
+                        onKeyUp={(e) => {
+                            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'Home' || e.key === 'End') {
+                                commitSeek(parseFloat(e.currentTarget.value));
+                            }
+                        }}
                         className="absolute inset-x-0 h-7 w-full opacity-0 cursor-pointer z-10"
                     />
                     <div
@@ -245,9 +272,6 @@ export function DegenTransport({
                 </div>
                 <div className="flex flex-col items-center px-2 py-1 rounded bg-deck-b-soft border border-deck-b-soft">
                     <span className="text-[8px] text-zinc-600 uppercase font-bold tracking-widest">Key</span>
-                    <span className="text-[12px] font-mono font-black text-[hsl(var(--color-deck-b))] tabular-nums">
-                        {currentTrack?.key || '—'}
-                    </span>
                     <span className="text-[12px] font-mono font-black text-[hsl(var(--color-deck-b))] tabular-nums">{track.key || '—'}</span>
                 </div>
                 <div className="flex flex-col gap-0.5 ml-1">

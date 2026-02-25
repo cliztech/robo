@@ -25,3 +25,6 @@
 
 ## Blocked
 - None
+## Recently Completed
+- [x] DegenTransport seek-source refactor with unit tests for drag preview, seek commit callback, and single key metadata rendering.
+
