@@ -37,6 +37,10 @@ def emit_scheduler_event(
 
     active_logger = logger or LOGGER
 
+    # Also emit to application logger so it is captured by standard logging/caplog
+    log_method = getattr(active_logger, level.lower(), active_logger.info)
+    log_method(json.dumps(payload))
+
     try:
         event_log_path.parent.mkdir(parents=True, exist_ok=True)
         with event_log_path.open("a", encoding="utf-8") as handle:

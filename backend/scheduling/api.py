@@ -8,9 +8,26 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
+from backend.security.auth import verify_api_key
+
 from fastapi import HTTPException
 from fastapi.responses import HTMLResponse
 
+from .autonomy_policy import (
+    AutonomyPolicy,
+    DecisionOrigin,
+    DecisionType,
+    PolicyAuditEvent,
+    MODE_DEFINITIONS,
+)
+from .autonomy_service import AutonomyPolicyService, PolicyValidationError
+from .observability import emit_scheduler_event
+
+router = APIRouter(
+    prefix="/api/v1/autonomy-policy",
+    tags=["autonomy-policy"],
+    dependencies=[Depends(verify_api_key)],
+)
 from backend.security.auth import verify_api_key
 
 from .autonomy_policy import AutonomyPolicy, DecisionOrigin, DecisionType, PolicyAuditEvent, MODE_DEFINITIONS
@@ -36,9 +53,16 @@ def get_policy_service() -> AutonomyPolicyService:
                     service.get_policy()
                 except Exception as error:
                     logger.exception("Autonomy policy preload failed; attempting crash recovery.")
-                    logger.exception("Autonomy policy preload failed; starting crash recovery.")
+                    logger.exception(
+                        "Autonomy policy preload failed; attempting crash recovery."
+                    )
+                    logger.exception(
+                        "Autonomy policy preload failed; starting crash recovery."
+                    )
                     policy_path = service.policy_path
-                    recovery_stamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+                    recovery_stamp = datetime.now(timezone.utc).strftime(
+                        "%Y%m%d_%H%M%S"
+                    )
                     recovery_path = policy_path.with_name(
                         f"{policy_path.stem}.crash_recovery_{recovery_stamp}{policy_path.suffix}"
                     )
@@ -58,7 +82,9 @@ def get_policy_service() -> AutonomyPolicyService:
                             },
                         )
                     except Exception as recovery_error:
-                        logger.exception("Autonomy crash recovery failed; entering degraded mode.")
+                        logger.exception(
+                            "Autonomy crash recovery failed; entering degraded mode."
+                        )
                         emit_scheduler_event(
                             event_name="scheduler.degraded_mode.activated",
                             level="critical",
@@ -69,25 +95,13 @@ def get_policy_service() -> AutonomyPolicyService:
                                 "error_type": type(recovery_error).__name__,
                             },
                         )
-                    if policy_path.exists():
-                        policy_path.replace(recovery_path)
-
-                    emit_scheduler_event(
-                        event_name="scheduler.crash_recovery.activated",
-                        level="critical",
-                        message="Autonomy API crash recovery activated due to invalid policy state.",
-                        metadata={
-                            "trigger": type(error).__name__,
-                            "recovery_plan": "rename_invalid_policy_and_bootstrap_defaults",
-                            "last_known_checkpoint": str(recovery_path),
-                        },
-                    )
-                    service.update_policy(AutonomyPolicy())
 
                     try:
                         service.get_policy()
                     except Exception as preload_error:
-                        logger.exception("Autonomy policy preload failed; entering degraded-mode handlers.")
+                        logger.exception(
+                            "Autonomy policy preload failed; entering degraded-mode handlers."
+                        )
                         emit_scheduler_event(
                             event_name="scheduler.crash_recovery.activated",
                             level="critical",
@@ -104,6 +118,10 @@ def get_policy_service() -> AutonomyPolicyService:
     return _service_instance
 
 
+@router.get("", response_model=AutonomyPolicy)
+def read_policy(
+    service: AutonomyPolicyService = Depends(get_policy_service),
+) -> AutonomyPolicy:
 @router.get("", response_model=AutonomyPolicy, dependencies=[Depends(verify_api_key)])
 def read_policy(service: AutonomyPolicyService = Depends(get_policy_service)) -> AutonomyPolicy:
     try:
@@ -113,7 +131,9 @@ def read_policy(service: AutonomyPolicyService = Depends(get_policy_service)) ->
             status_code=500,
             detail={
                 "message": "Stored autonomy policy has invalid/conflicting overrides.",
-                "conflicts": [conflict.to_error_detail() for conflict in error.conflicts],
+                "conflicts": [
+                    conflict.to_error_detail() for conflict in error.conflicts
+                ],
             },
         ) from error
 
@@ -130,7 +150,9 @@ def write_policy(
             status_code=422,
             detail={
                 "message": "Submitted autonomy policy has conflicting overrides.",
-                "conflicts": [conflict.to_error_detail() for conflict in error.conflicts],
+                "conflicts": [
+                    conflict.to_error_detail() for conflict in error.conflicts
+                ],
             },
         ) from error
 

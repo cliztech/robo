@@ -76,9 +76,29 @@ class AutonomyPolicyService:
             mtime = self.policy_path.stat().st_mtime
             if self._cached_policy is not None and self._last_mtime == mtime:
                 return self._cached_policy
-        except OSError:
-            # Handle cases where file is inaccessible or deleted between calls
-            pass
+        except OSError as error:
+            logger.warning(
+                "Autonomy policy stat failed during cache check.",
+                extra={
+                    "path": str(self.policy_path),
+                    "operation": "stat",
+                    "error_type": type(error).__name__,
+                    "error_message": str(error),
+                },
+            )
+            emit_scheduler_event(
+                logger,
+                event_name="scheduler.autonomy_policy.stat.failed",
+                level="warning",
+                message="Autonomy policy stat failed during cache invalidation; continuing with fallback read path.",
+                metadata={
+                    "path": str(self.policy_path),
+                    "operation": "stat",
+                    "error_type": type(error).__name__,
+                    "error_message": str(error),
+                },
+                event_log_path=self.event_log_path,
+            )
 
         try:
             policy = AutonomyPolicy.model_validate_json(self.policy_path.read_text(encoding="utf-8"))

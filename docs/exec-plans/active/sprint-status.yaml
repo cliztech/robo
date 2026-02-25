@@ -45,10 +45,10 @@ development_status:
   b3-2-intervention-and-rollback-rate-metrics: backlog
   epic-b3-retrospective: optional
 
-  epic-c1-runtime-and-deployment-baseline: backlog
-  c1-1-supported-runtime-matrix-publication: backlog
-  c1-2-minimum-dependency-versions-and-compatibility-contract: backlog
-  c1-3-environment-profile-docs: backlog
+  epic-c1-runtime-and-deployment-baseline: completed
+  c1-1-supported-runtime-matrix-publication: completed
+  c1-2-minimum-dependency-versions-and-compatibility-contract: completed
+  c1-3-environment-profile-docs: completed
   epic-c1-retrospective: optional
 
   epic-c2-contracts-and-api-governance: backlog
@@ -69,10 +69,10 @@ development_status:
   d1-3-golden-path-fresh-install-validation-test: backlog
   epic-d1-retrospective: optional
 
-  epic-d2-documentation-and-support-model: backlog
-  d2-1-operator-guide-by-persona: backlog
-  d2-2-runbook-index-for-common-failures: backlog
-  d2-3-support-triage-workflow-and-sla-targets: backlog
+  epic-d2-documentation-and-support-model: completed
+  d2-1-operator-guide-by-persona: completed
+  d2-2-runbook-index-for-common-failures: completed
+  d2-3-support-triage-workflow-and-sla-targets: completed
   epic-d2-retrospective: optional
 
   epic-d3-commercial-readiness: backlog
