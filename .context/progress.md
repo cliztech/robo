@@ -9,6 +9,7 @@
 
 ## In Progress
 - [x] **Visionary Architect Migration** (Adopting structured context files)
+- [x] Unified DJ Studio surface composition integrated for `decks` + `studio` workspace modes.
 - [ ] **Phase 5: AI Integration** (OpenAI GPT-4o, Track Analysis, Mood Detection)
 
 ## Planned (Phases 6-15)

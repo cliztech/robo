@@ -6,7 +6,7 @@ import { DegenMixer } from '@/components/audio/DegenMixer';
 import { DegenTrackList } from '@/components/audio/DegenTrackList';
 import { DegenScheduleTimeline } from '@/components/schedule/DegenScheduleTimeline';
 import { DashboardView } from './DashboardView';
-import { DecksView } from './DecksView';
+import { DJStudioSurface } from './DJStudioSurface';
 import type { ConsoleViewMode } from './types';
 
 interface ConsoleWorkspaceViewProps {
@@ -24,7 +24,7 @@ export function ConsoleWorkspaceView({ currentView }: ConsoleWorkspaceViewProps)
                 transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
             >
                 {currentView === 'dashboard' && <DashboardView />}
-                {currentView === 'decks' && <DecksView />}
+                {(currentView === 'decks' || currentView === 'studio') && <DJStudioSurface />}
                 {currentView === 'mixer' && (
                     <div className="max-w-4xl mx-auto">
                         <DegenMixer />

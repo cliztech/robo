@@ -95,6 +95,16 @@
   --space-6: 24px;
   --space-8: 32px;
 
+
+  /* Studio composition layout */
+  --studio-grid-gap: var(--space-4);
+  --studio-side-width: 1fr;
+  --studio-center-width: minmax(380px, 1.1fr);
+  --studio-jog-size: 112px;
+  --studio-transport-button: 34px;
+  --studio-pad-size: 42px;
+  --studio-panel-min-height: 220px;
+
   /* Shadows — layered for depth */
   --shadow-sm: 0 1px 2px hsl(0 0% 0% / 0.5);
   --shadow-md: 0 4px 12px hsl(0 0% 0% / 0.4),

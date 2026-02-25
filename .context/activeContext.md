@@ -9,5 +9,6 @@ Executing "Phase 5: AI Integration" (Implement AI track analysis) now that the "
 - Consolidated disparate documentation (`README.md`, `TECH_STACK.md`, `AGENTS.md`) into structured context files.
 
 ## Next Atomic Steps
+- [x] Implement unified DJ studio surface layout for decks/studio route.
 - [ ] Verify `.context/` structure is complete.
 - [ ] Resume "Phase 5: AI Integration" (Implement AI track analysis).
