@@ -12,7 +12,7 @@ Open tasks by phase: P0=1, P1=8, P2=9, Unphased=79
 
 ## P1
 
-- [ ] `TODO.md:23` (todo) P1 — Security & Compliance -> Add role-aware settings visibility model (`admin`, `operator`, `viewer`) ([TI-002](docs/exec-plans/active/tracked-issues/TI-002.md)).
+- [x] `TODO.md:23` (todo) P1 — Security & Compliance -> Add role-aware settings visibility model (`admin`, `operator`, `viewer`) ([TI-002](docs/exec-plans/active/tracked-issues/TI-002.md)) — completed via policy artifact `ti-002-role-aware-settings-visibility-model.md`.
 - [ ] `TODO.md:24` (todo) P1 — Security & Compliance -> Implement idle timeout + re-auth requirements for sensitive actions ([TI-003](docs/exec-plans/active/tracked-issues/TI-003.md)).
 - [ ] `TODO.md:25` (todo) P1 — Security & Compliance -> Implement key-rotation workflow CLI + operator checklist integration ([TI-004](docs/exec-plans/active/tracked-issues/TI-004.md)).
 - [ ] `TODO.md:26` (todo) P1 — Security & Compliance -> Add redaction policy contract tests for logs/API responses ([TI-005](docs/exec-plans/active/tracked-issues/TI-005.md)).
