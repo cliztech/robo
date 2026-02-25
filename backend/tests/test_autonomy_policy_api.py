@@ -5,11 +5,9 @@ from fastapi.testclient import TestClient
 from backend.app import app
 from backend.scheduling.api import get_policy_service
 from backend.scheduling.autonomy_service import AutonomyPolicyService
-from backend.scheduling import api as autonomy_api
 from backend.security.auth import verify_api_key
 
 import unittest.mock
-import os
 
 TEST_API_KEY = "test-secret-key"
 

@@ -160,7 +160,10 @@ export function DegenTransport({
                 <button
                     type="button"
                     onClick={handlePlayPause}
-                    className={cn('p-2 rounded-full', isPlaying ? 'bg-lime-400 text-black' : 'bg-zinc-700 text-white')}
+                    className={cn(
+                        'p-2 rounded-full focus-visible:ring-2 focus-visible:ring-lime-400 focus-visible:outline-none',
+                        isPlaying ? 'bg-lime-400 text-black' : 'bg-zinc-700 text-white'
+                    )}
                     aria-pressed={isPlaying}
                     aria-label={isPlaying ? 'Pause playback' : 'Start playback'}
                 >
