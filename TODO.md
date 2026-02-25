@@ -55,6 +55,10 @@ Use the roadmap helper to continuously surface the next open tasks while you wor
 - [ ] Implement inline conflict rendering + backend fix actions ([TI-008](docs/exec-plans/active/tracked-issues/TI-008.md)).
 - [ ] Add keyboard parity for move/resize/resolve interactions ([TI-009](docs/exec-plans/active/tracked-issues/TI-009.md)).
 
+## Dev Build Task Queue
+
+- [ ] Execute build-focused checklist in `docs/exec-plans/active/dev-build-todo-tasks.md`.
+
 ## Tracking Cadence
 
 - [ ] Weekly: update readiness percentages by category ([TI-035](docs/exec-plans/active/tracked-issues/TI-035.md)).
