@@ -11,3 +11,4 @@ Executing "Phase 5: AI Integration" (Implement AI track analysis) now that the "
 ## Next Atomic Steps
 - [ ] Verify `.context/` structure is complete.
 - [ ] Resume "Phase 5: AI Integration" (Implement AI track analysis).
+- [x] Split mixed tracked-issue files and reassigned security tasks to dedicated TI IDs (TI-039/TI-040/TI-041) with reference updates.

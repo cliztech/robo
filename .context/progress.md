@@ -25,3 +25,6 @@
 
 ## Blocked
 - None
+
+## Recent Ops Updates
+- [x] Tracked issue hygiene hardening: split TI-007/TI-008/TI-009 collisions, reassigned security tasks to TI-039/TI-040/TI-041, and added a one-header validation check.
