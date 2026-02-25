@@ -54,3 +54,36 @@ check: build
 	$(PYTHON) -m json.tool docs/architecture/event-schema.json > /dev/null
 
 distcheck: check
+
+# ── Sprint 1 additions ─────────────────────────────────────
+
+dev:
+	docker compose -f docker-compose.dev.yml up
+
+dev-down:
+	docker compose -f docker-compose.dev.yml down
+
+test-backend:
+	$(PYTHON) -m pytest backend/tests -x -q --tb=short
+
+test-frontend:
+	npm run test
+
+lint-backend:
+	$(PYTHON) -m ruff check backend/ --output-format=full
+
+lint-frontend:
+	npm run lint
+
+secret-scan:
+	$(PYTHON) scripts/check_no_secrets.py
+
+migrate:
+	$(PYTHON) -m alembic upgrade head
+
+migrate-down:
+	$(PYTHON) -m alembic downgrade -1
+
+test: test-backend test-frontend
+
+lint: lint-backend lint-frontend
