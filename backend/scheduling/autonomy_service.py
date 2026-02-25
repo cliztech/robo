@@ -59,6 +59,7 @@ class AutonomyPolicyService:
             self.update_policy(default_policy)
             duration_ms = int((time.perf_counter() - started) * 1000)
             emit_scheduler_event(
+                logger,
                 event_name="scheduler.startup_validation.succeeded",
                 level="info",
                 message="Autonomy policy bootstrap validation succeeded with default policy.",
@@ -105,6 +106,7 @@ class AutonomyPolicyService:
         except Exception as error:
             duration_ms = int((time.perf_counter() - started) * 1000)
             emit_scheduler_event(
+                logger,
                 event_name="scheduler.schedule_parse.failed",
                 level="error",
                 message="Failed to parse or validate autonomy policy during scheduler startup.",
@@ -165,6 +167,7 @@ class AutonomyPolicyService:
             backup_path = snapshot_dir / f"autonomy_policy_{backup_stamp}.json"
             shutil.copy2(self.policy_path, backup_path)
             emit_scheduler_event(
+                logger,
                 event_name="scheduler.backup.created",
                 level="info",
                 message="Autonomy policy backup created before policy update.",
