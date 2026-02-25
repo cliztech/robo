@@ -28,6 +28,16 @@ Run this protocol once per week (or immediately after major scope/status shifts)
 4. **Blockers:** Record current blockers with expected unblock date.
 5. **Next step:** Add one concrete next action with owner.
 
+### Roadmap hygiene reconciliation (weekly)
+
+During the same weekly pass, reconcile `TODO.md` checkboxes against tracked-issue status fields:
+
+1. Compare each `TODO.md` checklist item linked to `docs/exec-plans/active/tracked-issues/TI-*.md`.
+2. If TI `Status: Closed`, set corresponding `TODO.md` item to `[x]`.
+3. If TI status is not closed (`Open`, `In Progress`, `Blocked`, etc.), set corresponding `TODO.md` item to `[ ]`.
+4. Record any mismatch corrections in the weekly update entry under `Changed metrics`.
+5. Escalate unresolved ambiguity (missing TI link or unclear TI status) to Project Coordinator before closing weekly hygiene review.
+
 Use this compact template when posting weekly updates in the SoT file for that track:
 
 ```md

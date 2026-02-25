@@ -8,6 +8,7 @@
 - [x] **Phase 4: File Upload** (Drag & Drop, Validation, Metadata Extraction)
 
 ## In Progress
+- [x] Roadmap hygiene synchronization protocol documented (weekly TI status ↔ TODO checkbox reconciliation).
 - [x] **Visionary Architect Migration** (Adopting structured context files)
 - [ ] **Phase 5: AI Integration** (OpenAI GPT-4o, Track Analysis, Mood Detection)
 
