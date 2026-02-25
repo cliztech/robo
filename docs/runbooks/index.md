@@ -17,6 +17,7 @@
 - `RB-020` Secret exposure suspicion: rotate affected keys and execute incident checklist.
 - `RB-021` Redaction regression: run denylist contract tests and block release until green.
 - `RB-022` Unauthorized settings action: audit role mapping and review session logs.
+- `RB-023` CodeQL high/critical alert gate failure: follow security triage and dismissal policy.
 
 ## Data and Recovery
 
