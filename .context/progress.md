@@ -8,6 +8,7 @@
 - [x] **Phase 4: File Upload** (Drag & Drop, Validation, Metadata Extraction)
 
 ## In Progress
+- [x] **GUI Prompt Review + Agent Team Plan** (Requirements + execution plan documented in `docs/ui/gui_agent_team_review.md`)
 - [x] **Visionary Architect Migration** (Adopting structured context files)
 - [ ] **Phase 5: AI Integration** (OpenAI GPT-4o, Track Analysis, Mood Detection)
 
