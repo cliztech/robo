@@ -8,6 +8,7 @@
 - [x] **Phase 4: File Upload** (Drag & Drop, Validation, Metadata Extraction)
 
 ## In Progress
+- [x] Added GUI BMAD startup packet runbook (`docs/exec-plans/active/gui-bmad-startup-packet.md`) defining input template, minimal command sequence, artifact paths, and acceptance gates.
 - [x] **Visionary Architect Migration** (Adopting structured context files)
 - [ ] **Phase 5: AI Integration** (OpenAI GPT-4o, Track Analysis, Mood Detection)
 
