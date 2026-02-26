@@ -26,6 +26,7 @@
 - [~] **Phase 5: AI Integration** (Track analysis service, retries/idempotency/fallback queue foundation complete; model API wiring pending)
 
 ## Recent Completed Work
+- [x] Dashboard status UI data layer now consumes `/api/v1/status/dashboard*` endpoints with typed client contracts and optimistic alert acknowledgements.
 - [x] Introduced typed global studio state with deck/mixer/FX domains using Zustand.
 - [x] Refactored `DegenWaveform`, `DegenMixer`, and `DegenTransport` to consume/write global store state.
 - [x] Bridged store actions with `useAudioEngine` and telemetry updates for synchronized playback and UI rendering.
