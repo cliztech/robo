@@ -10,10 +10,10 @@
 ## In Progress
 - [x] **GUI Prompt Review + Agent Team Plan** (Requirements + execution plan documented in `docs/ui/gui_agent_team_review.md`)
 - [x] **Visionary Architect Migration** (Adopting structured context files)
-- [ ] **Phase 5: AI Integration** (OpenAI GPT-4o, Track Analysis, Mood Detection)
+- [x] **Phase 5: AI Integration** (Track analysis API/service with deterministic scoring, mood/energy detection heuristics, and tests)
 
 ## Planned (Phases 6-15)
-- [ ] Phase 6: Playlist Generation
+- [ ] Phase 6: Playlist Generation (hardening/integration checks pending)
 - [ ] Phase 7: Broadcasting System (Icecast)
 - [ ] Phase 8: Dashboard UI
 - [ ] Phase 9: Real-time Features
