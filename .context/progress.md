@@ -49,6 +49,7 @@
 
 
 ## Recent Ops Updates
+- [x] Hardened `radio-agentic/services/streaming-gateway` process resilience with FFmpeg supervision, restart controls, structured lifecycle logging, and orchestration-facing health signaling.
 - [x] Security automation hardening: re-enabled CodeQL, removed unsupported defaults, and added high/critical gate + RB-023 triage flow.
 - [x] Implemented release readiness gate automation (tests/config/security/docs) with consolidated artifact reporting and protected-branch ruleset sync.
 
