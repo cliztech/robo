@@ -472,7 +472,7 @@ graph TB
 - **Responsibilities:**
   - Validate all references use "DGN-DJ by DGNradio" branding per `DGN-DJ_BRANDING.md`
   - Audit documentation, UI copy, and generated content for brand compliance
-  - Flag legacy "DGN-DJ Studio" references that haven't been rebranded
+  - Flag legacy "RoboDJ" or "AetherRadio" references that haven't been rebranded
   - Enforce visual identity standards (colors, typography, iconography)
   - Review persona display names and on-air copy for brand alignment
 - **Completion gate:** Zero brand inconsistencies; all legacy references updated
