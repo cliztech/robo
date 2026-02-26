@@ -6,6 +6,8 @@ Executing "Phase 6: Playlist Generation" hardening and preparing Phase 7 broadca
 Building the next unfinished execution plans from the roadmap queue, starting with P1 Security items (TI-039/TI-040/TI-041).
 
 ## Recent Decisions
+
+- Hardened TI-039/TI-040/TI-041 tracked issue packets with explicit implementation scope, dependency checkpoints, runnable validation commands, evidence artifacts, and rollback procedures for sprint execution.
 - Roadmap hygiene alignment completed: `TODO.md` TI-001 checkbox now mirrors TI-001 `Status: Closed`, and weekly reconciliation rules were added to operations docs.
 - Resolved tracked-issue ID collisions between Track A security tasks and v1.2 scheduler UI tasks by separating scheduler work into TI-039/TI-040/TI-041.
 - Added explicit one-to-one Track A/B/C/D coverage indexing in `docs/exec-plans/active/todo-p0-p1-tracked-issues.md`.
