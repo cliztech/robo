@@ -161,6 +161,11 @@ export function DegenTransport({
                     type="button"
                     onClick={handlePlayPause}
                     className={cn(
+                        'p-2 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400',
+                        isPlaying ? 'bg-lime-400 text-black' : 'bg-zinc-700 text-white'
+                    )}
+                    aria-pressed={isPlaying}
+                    aria-label={isPlaying ? "Pause playback" : "Start playback"}
                         'p-2 rounded-full focus-visible:ring-2 focus-visible:ring-lime-400 focus-visible:outline-none',
                         isPlaying ? 'bg-lime-400 text-black' : 'bg-zinc-700 text-white'
                     )}
@@ -214,7 +219,7 @@ export function DegenTransport({
             </div>
 
             <div className="flex items-center gap-2 px-3 w-36 border-l border-white/[0.05]">
-                <button type="button" onClick={() => setIsMuted((p) => !p)} className={cn('p-1 rounded', isMuted ? 'text-red-400' : 'text-zinc-500')}>
+                <button type="button" onClick={() => setIsMuted((p) => !p)} className={cn('p-1 rounded', isMuted ? 'text-red-400' : 'text-zinc-500')} aria-label={isMuted ? "Unmute" : "Mute"}>
                     <VolumeIcon size={14} />
                 </button>
                 <div className="flex-1 h-[3px] rounded-full bg-white/[0.06] overflow-hidden">

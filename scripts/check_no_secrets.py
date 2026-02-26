@@ -25,6 +25,7 @@ SKIP_DIRS = {
     ".git", "node_modules", ".next", ".venv", "venv", "env",
     "__pycache__", ".artifacts", "make-4.3", "openclaw",
     "_bmad-custom-backup-temp", "_bmad-modified-backup-temp",
+    "images",
 }
 SKIP_EXTENSIONS = {
     ".exe", ".dll", ".db", ".sqlite", ".key", ".pdf", ".png",
