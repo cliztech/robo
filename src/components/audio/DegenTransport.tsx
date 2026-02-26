@@ -248,7 +248,8 @@ export function DegenTransport({
                         onMouseUp={(e) => commitSeek(parseFloat(e.currentTarget.value))}
                         onTouchEnd={(e) => commitSeek(parseFloat(e.currentTarget.value))}
                         onKeyUp={(e) => {
-                            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'Home' || e.key === 'End') {
+                            const seekKeys = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
+                            if (seekKeys.includes(e.key)) {
                                 commitSeek(parseFloat(e.currentTarget.value));
                             }
                         }}
