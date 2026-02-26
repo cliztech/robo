@@ -63,7 +63,7 @@ Use the roadmap helper to continuously surface the next open tasks while you wor
 
 - [ ] Weekly: update readiness percentages by category ([TI-035](docs/exec-plans/active/tracked-issues/TI-035.md)).
 - [ ] Weekly backlog hygiene review owner/date: Project Coordinator — every Friday (next review: 2026-02-27) ([TI-036](docs/exec-plans/active/tracked-issues/TI-036.md)).
-- [ ] Status sync note: For closed tracked issues, `TODO.md` checkbox state must mirror each TI `Status` field during weekly hygiene reconciliation.
+- Status sync note: For closed tracked issues, `TODO.md` checkbox state must mirror each TI `Status` field during weekly hygiene reconciliation.
 - [ ] Bi-weekly: remove blocked items or split oversized tasks ([TI-037](docs/exec-plans/active/tracked-issues/TI-037.md)).
 - [ ] Monthly: reassess roadmap variation (Security-first, UX-first, Scale-first, Balanced) ([TI-038](docs/exec-plans/active/tracked-issues/TI-038.md)).
 - [ ] 2026-02-24 (Owner: Management Team — Project Coordinator): Weekly readiness metric refresh posted in `docs/readiness_scorecard.md` (next due: 2026-03-03).
