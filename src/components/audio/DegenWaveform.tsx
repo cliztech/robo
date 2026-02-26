@@ -24,6 +24,29 @@ interface DegenWaveformProps {
   className?: string;
 }
 
+interface PlayingIndicatorProps {
+    deckAccent: string;
+    deckAccentSoft: string;
+}
+
+function PlayingIndicator({ deckAccent, deckAccentSoft }: PlayingIndicatorProps) {
+    return (
+        <div className="relative" data-testid="deck-playing-indicator">
+            <div
+                className="w-1.5 h-1.5 rounded-full"
+                style={{
+                    backgroundColor: deckAccent,
+                    boxShadow: `0 0 6px ${deckAccentSoft}`,
+                }}
+            />
+            <div
+                className="absolute inset-0 w-1.5 h-1.5 rounded-full motion-safe:animate-ping motion-reduce:animate-none opacity-50"
+                style={{ backgroundColor: deckAccent }}
+            />
+        </div>
+    );
+}
+
 export function DegenWaveform({
   deck = 'A',
   progress,
@@ -263,6 +286,9 @@ export function DegenWaveform({
 
     const isDeckB = deck === 'B';
     const deckAccent = isDeckB ? 'hsl(var(--color-deck-b))' : 'hsl(var(--color-deck-a))';
+    const deckAccentSoft = isDeckB
+        ? 'hsla(var(--color-deck-b), 0.6)'
+        : 'hsla(var(--color-deck-a), 0.6)';
     const waveColorSoft = isDeckB ? 'hsla(var(--color-deck-b), 0.4)' : 'hsla(var(--color-deck-a), 0.4)';
 
     return (
@@ -280,6 +306,7 @@ export function DegenWaveform({
                 <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-3 py-1.5 bg-gradient-to-b from-black/80 via-black/40 to-transparent">
                     <div className="flex items-center gap-2">
                         {isPlaying && (
+                            <PlayingIndicator deckAccent={deckAccent} deckAccentSoft={deckAccentSoft} />
                             <div className="relative">
                                 <div className="w-1.5 h-1.5 rounded-full bg-accent shadow-[0_0_6px_hsla(var(--accent),0.6)]" />
                                 <div className="absolute inset-0 w-1.5 h-1.5 rounded-full bg-accent animate-ping opacity-50" />
@@ -382,6 +409,14 @@ export function DegenWaveform({
 
                 {/* Playhead */}
                 <div
+                    className="absolute top-0 bottom-0 z-10 transition-[left] duration-75 motion-reduce:transition-none"
+                    data-testid="waveform-playhead"
+                    style={{ left: `${playheadX}%` }}
+                >
+                    {/* Line */}
+                    <div className="absolute top-0 bottom-0 w-[2px] -translate-x-1/2" style={{ backgroundColor: deckAccent, boxShadow: `0 0 8px ${waveColorSoft}` }} />
+                    {/* Arrow */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[6px]" style={{ borderTopColor: deckAccent, filter: `drop-shadow(0 0 3px ${waveColorSoft})` }} />
                     className="absolute top-0 bottom-0 z-10 transition-[left] duration-75"
                     style={{ left: `${playheadX}%` }}
                 >
