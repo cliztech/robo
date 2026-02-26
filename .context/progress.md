@@ -12,6 +12,7 @@
 - [x] Cross-linked design pod charter in backlog, delivery plan, and AGENTS Design Team section for execution consistency.
 
 ## In Progress
+- [x] BMAD command-routing docs updated with deterministic GUI/music console agent-team mapping and follow-up UX flow.
 - [x] Added GUI BMAD startup packet runbook (`docs/exec-plans/active/gui-bmad-startup-packet.md`) defining input template, minimal command sequence, artifact paths, and acceptance gates.
 - [x] **GUI Prompt Review + Agent Team Plan** (Requirements + execution plan documented in `docs/ui/gui_agent_team_review.md`)
 - [x] **Visionary Architect Migration** (Adopting structured context files)
