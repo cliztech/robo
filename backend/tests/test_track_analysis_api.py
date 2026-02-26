@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from backend.app import app
 from backend.track_analysis_api import get_track_analysis_service
+from backend.ai.contracts.track_analysis import AnalysisStatus
 from backend.track_analysis_service import TrackAnalysisService
 
 TEST_API_KEY = "valid_api_key_for_testing"
@@ -70,3 +71,4 @@ def test_analyze_track_returns_envelope() -> None:
     assert body["error"] is None
     assert body["data"]["track_id"] == "trk_010"
     assert body["data"]["analysis"]["genre"] == "dance"
+    assert body["data"]["analysis"]["status"] == AnalysisStatus.SUCCESS.value
