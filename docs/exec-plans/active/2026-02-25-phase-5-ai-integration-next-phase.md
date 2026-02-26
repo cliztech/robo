@@ -52,8 +52,8 @@ Introduce an **analysis fingerprint cache key** (`track_hash + model_version + p
 - **Done when:** tests pass and latency report is generated.
 
 ## Validation Commands (Execution Gate)
-1. `python -m pytest tests -k "analysis or ai"`
-2. `python -m pytest tests -k "cache or fingerprint"`
+1. `python -m pytest backend/tests -k "analysis or ai"`
+2. `python -m pytest backend/tests -k "cache or fingerprint"`
 3. `python -m json.tool config/prompt_variables.json`
 4. `git diff --name-only`
 
