@@ -67,26 +67,28 @@ export function DegenVUMeter({
                     const isPeak = i === peakSegment - 1;
                     const ratio = i / segments;
 
-                    // Color gradient: green -> yellow -> orange -> red
+                    // Color gradient: Sapphire -> Cyan -> Amber -> Red
                     let color: string;
-                    if (ratio < 0.6) color = isActive ? 'hsl(var(--color-deck-a))' : 'hsl(var(--surface-rgb) / 0.04)';
-                    else if (ratio < 0.8) color = isActive ? 'hsl(var(--color-warning))' : 'hsl(var(--surface-rgb) / 0.04)';
-                    else if (ratio < 0.9) color = isActive ? 'hsl(var(--color-warning-hot))' : 'hsl(var(--surface-rgb) / 0.04)';
-                    else color = isActive ? 'hsl(var(--color-danger-bright))' : 'hsl(var(--surface-rgb) / 0.04)';
+                    if (ratio < 0.6) color = isActive ? 'var(--color-accent)' : 'rgba(255,255,255,0.02)';
+                    else if (ratio < 0.8) color = isActive ? 'var(--color-accent-2)' : 'rgba(255,255,255,0.02)';
+                    else if (ratio < 0.9) color = isActive ? 'var(--color-warning)' : 'rgba(255,255,255,0.02)';
+                    else color = isActive ? 'var(--color-danger)' : 'rgba(255,255,255,0.02)';
 
                     return (
                         <div
                             key={i}
-                            className="rounded-[1px] transition-colors duration-75"
+                            className="rounded-[0.5px] transition-colors duration-75"
                             style={{
                                 flex: 1,
-                                backgroundColor: isPeak ? (ratio > 0.8 ? 'hsl(var(--color-danger-bright))' : 'hsl(var(--color-deck-a))') : color,
-                                opacity: isPeak ? 0.9 : isActive ? (0.5 + ratio * 0.5) : 1,
+                                backgroundColor: isPeak ? (ratio > 0.8 ? 'var(--color-danger)' : 'var(--color-accent)') : color,
+                                opacity: isPeak ? 1 : isActive ? (0.7 + ratio * 0.3) : 1,
                                 boxShadow: isActive && ratio > 0.85
-                                    ? '0 0 4px hsla(var(--color-danger-bright),0.3)'
+                                    ? `0 0 6px hsla(0, 85%, 60%, 0.4)`
                                     : isPeak
-                                        ? `0 0 4px ${ratio > 0.8 ? 'hsla(var(--color-danger-bright),0.3)' : 'hsla(var(--color-deck-a),0.3)'}`
+                                        ? `0 0 8px ${ratio > 0.8 ? 'hsla(0, 85%, 60%, 0.5)' : 'hsla(207, 98%, 45%, 0.5)'}`
                                         : 'none',
+                                borderTop: isVert ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                                borderLeft: !isVert ? '1px solid rgba(255,255,255,0.05)' : 'none'
                             }}
                         />
                     );

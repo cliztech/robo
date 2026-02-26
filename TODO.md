@@ -12,7 +12,7 @@ Use the roadmap helper to continuously surface the next open tasks while you wor
 
 ## P0 — Foundations (Start Here)
 
-- [ ] Create tracked issues for all Track A/B/C/D tasks from `PRODUCT_READINESS_PLAN.md` ([TI-001](docs/exec-plans/active/tracked-issues/TI-001.md)).
+- [x] Create tracked issues for all Track A/B/C/D tasks from `PRODUCT_READINESS_PLAN.md` ([TI-001](docs/exec-plans/active/tracked-issues/TI-001.md)).
 - [x] Add a versioned readiness scorecard in `docs/` and define update cadence.
 - [x] Publish runtime/deployment matrix (`dev`, `staging`, `prod`) with compatibility constraints.
 - [x] Define API/config contract versioning policy and breaking-change checklist.
@@ -20,11 +20,14 @@ Use the roadmap helper to continuously surface the next open tasks while you wor
 
 ## P1 — Security & Compliance
 
-- [ ] Add role-aware settings visibility model (`admin`, `operator`, `viewer`) ([TI-002](docs/exec-plans/active/tracked-issues/TI-002.md)).
-- [ ] Implement idle timeout + re-auth requirements for sensitive actions ([TI-003](docs/exec-plans/active/tracked-issues/TI-003.md)).
-- [ ] Implement key-rotation workflow CLI + operator checklist integration ([TI-004](docs/exec-plans/active/tracked-issues/TI-004.md)).
-- [ ] Add redaction policy contract tests for logs/API responses ([TI-005](docs/exec-plans/active/tracked-issues/TI-005.md)).
+- [x] Add role-aware settings visibility model (`admin`, `operator`, `viewer`) ([TI-002](docs/exec-plans/active/tracked-issues/TI-002.md)).
+- [x] Implement idle timeout + re-auth requirements for sensitive actions ([TI-003](docs/exec-plans/active/tracked-issues/TI-003.md)).
+- [x] Implement key-rotation workflow CLI + operator checklist integration ([TI-004](docs/exec-plans/active/tracked-issues/TI-004.md)).
+- [x] Add redaction policy contract tests for logs/API responses ([TI-005](docs/exec-plans/active/tracked-issues/TI-005.md)).
 - [x] Add a pre-release security gate in release documentation ([TI-006](docs/exec-plans/active/tracked-issues/TI-006.md)).
+- [ ] Add per-action approval workflows and immutable audit trail export ([TI-039](docs/exec-plans/active/tracked-issues/TI-039.md)).
+- [ ] Add config-at-rest encryption for high-risk fields in JSON configs ([TI-040](docs/exec-plans/active/tracked-issues/TI-040.md)).
+- [ ] Add security smoke script (authN/authZ checks, lockout checks) ([TI-041](docs/exec-plans/active/tracked-issues/TI-041.md)).
 
 ## P1 — Reliability & Observability
 
@@ -35,25 +38,25 @@ Use the roadmap helper to continuously surface the next open tasks while you wor
 ## P2 — UX & Operator Experience
 
 - [x] Build stage timeline UI (Intake → Plan → Execute → Verify → Handoff).
-- [ ] Add human-in-the-loop checkpoints for high-impact decisions ([TI-011](docs/exec-plans/active/tracked-issues/TI-011.md)).
-- [ ] Add task route templates (QA / Change / Proposal) ([TI-013](docs/exec-plans/active/tracked-issues/TI-013.md)).
-- [ ] Add one-click rollback assistant for config-level changes ([TI-014](docs/exec-plans/active/tracked-issues/TI-014.md)).
-- [ ] Add guided troubleshooting for schedules/personas/autonomy policies ([TI-015](docs/exec-plans/active/tracked-issues/TI-015.md)).
+- [x] Add human-in-the-loop checkpoints for high-impact decisions ([TI-011](docs/exec-plans/active/tracked-issues/TI-011.md)).
+- [x] Add task route templates (QA / Change / Proposal) ([TI-013](docs/exec-plans/active/tracked-issues/TI-013.md)).
+- [x] Add one-click rollback assistant for config-level changes ([TI-014](docs/exec-plans/active/tracked-issues/TI-014.md)).
+- [x] Add guided troubleshooting for schedules/personas/autonomy policies ([TI-015](docs/exec-plans/active/tracked-issues/TI-015.md)).
 
 ## P2 — Productization
 
 - [x] Publish operator guides by persona (Admin, Producer, Reviewer) ([TI-030](docs/exec-plans/active/tracked-issues/TI-030.md)).
 - [x] Build runbook index for common failures ([TI-031](docs/exec-plans/active/tracked-issues/TI-031.md)).
 - [x] Define support triage workflow + SLA targets ([TI-032](docs/exec-plans/active/tracked-issues/TI-032.md)).
-- [ ] Document packaging tiers and feature-gate boundaries ([TI-033](docs/exec-plans/active/tracked-issues/TI-033.md)).
-- [ ] Define telemetry ethics + opt-in policy ([TI-034](docs/exec-plans/active/tracked-issues/TI-034.md)).
+- [x] Document packaging tiers and feature-gate boundaries ([TI-033](docs/exec-plans/active/tracked-issues/TI-033.md)).
+- [x] Define telemetry ethics + opt-in policy ([TI-034](docs/exec-plans/active/tracked-issues/TI-034.md)).
 
 
 ## P1 — v1.2 Scheduler UI Execution
 
-- [ ] Start drag/drop weekly timeline implementation on normalized scheduler contracts ([TI-007](docs/exec-plans/active/tracked-issues/TI-007.md)) — **In Progress**.
-- [ ] Implement inline conflict rendering + backend fix actions ([TI-008](docs/exec-plans/active/tracked-issues/TI-008.md)).
-- [ ] Add keyboard parity for move/resize/resolve interactions ([TI-009](docs/exec-plans/active/tracked-issues/TI-009.md)).
+- [x] Start drag/drop weekly timeline implementation on normalized scheduler contracts ([TI-007](docs/exec-plans/active/tracked-issues/TI-007.md)) — **In Progress**.
+- [x] Implement inline conflict rendering + backend fix actions ([TI-008](docs/exec-plans/active/tracked-issues/TI-008.md)).
+- [x] Add keyboard parity for move/resize/resolve interactions ([TI-009](docs/exec-plans/active/tracked-issues/TI-009.md)).
 
 ## Dev Build Task Queue
 
