@@ -10,6 +10,7 @@
 ## In Progress
 - [x] **GUI Prompt Review + Agent Team Plan** (Requirements + execution plan documented in `docs/ui/gui_agent_team_review.md`)
 - [x] **Visionary Architect Migration** (Adopting structured context files)
+- [ ] **Phase 5: AI Integration** (OpenAI GPT-4o, Track Analysis, Mood Detection; execution slices P5-01..P5-05 defined)
 - [~] **Phase 5: AI Integration** (Track analysis service, retries/idempotency/fallback queue foundation complete; model API wiring pending)
 
 ## Planned (Phases 6-15)
@@ -28,6 +29,7 @@
 - None
 
 ## Recent Ops Updates
+- [x] Phase 5 next-phase quick-dev plan published with sprintable stories and validation gates (`docs/exec-plans/active/2026-02-25-phase-5-ai-integration-next-phase.md`).
 - [x] Added BMAD alias normalization for `bmad build dev` → `bmad-bmm-quick-dev` in command routing docs.
 - [x] Tracked issue hygiene hardening: split TI-007/TI-008/TI-009 collisions, reassigned security tasks to TI-039/TI-040/TI-041, and added a one-header validation check.
 
