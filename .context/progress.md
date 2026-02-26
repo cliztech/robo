@@ -31,6 +31,7 @@
 - None
 
 ## Recent Ops Updates
+- [x] Security automation hardening: re-enabled CodeQL, removed unsupported defaults, and added high/critical gate + RB-023 triage flow.
 - [x] Implemented release readiness gate automation (tests/config/security/docs) with consolidated artifact reporting and protected-branch ruleset sync.
 
 - [x] Runtime declaration hardening: added canonical runtime map, aligned top-level docs/context, and CI validation against package/pyproject manifests.
