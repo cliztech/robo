@@ -26,6 +26,8 @@
 - [~] **Phase 5: AI Integration** (Track analysis service, retries/idempotency/fallback queue foundation complete; model API wiring pending)
 
 ## Recent Completed Work
+
+- Added Phase 8 dashboard automated coverage for loading/error/success states, alert acknowledge interaction, threshold boundary rendering, and fallback-metric regression in `tests/ui/dashboard-view.test.tsx`.
 - [x] Introduced typed global studio state with deck/mixer/FX domains using Zustand.
 - [x] Refactored `DegenWaveform`, `DegenMixer`, and `DegenTransport` to consume/write global store state.
 - [x] Bridged store actions with `useAudioEngine` and telemetry updates for synchronized playback and UI rendering.

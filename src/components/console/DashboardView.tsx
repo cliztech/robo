@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useState, type ElementType } from 'react';
+import { useEffect, useId, useMemo, useState, type ElementType } from 'react';
 import { motion } from 'framer-motion';
 import {
     Activity,
@@ -19,6 +19,69 @@ import { DegenWaveform } from '@/components/audio/DegenWaveform';
 import { DegenScheduleTimeline } from '@/components/schedule/DegenScheduleTimeline';
 import { DegenAIHost } from '@/components/ai/DegenAIHost';
 import { cn } from '@/lib/utils';
+
+export type AlertSeverity = 'info' | 'warning' | 'critical';
+
+export interface DashboardAlertItem {
+    alert_id: string;
+    severity: AlertSeverity;
+    title: string;
+    description: string;
+    created_at: string;
+    acknowledged: boolean;
+    acknowledged_at: string | null;
+}
+
+export interface DashboardStatusResponse {
+    service_health: {
+        status: 'healthy' | 'degraded' | 'offline';
+        reason: string;
+        observed_at: string;
+    };
+    queue_depth: {
+        current_depth: number;
+        trend: Array<{ timestamp: string; depth: number }>;
+        thresholds: { warning: number; critical: number };
+        state: AlertSeverity;
+    };
+    rotation: {
+        last_successful_rotation_at: string;
+        stale_after_minutes: number;
+        is_stale: boolean;
+        stale_reason: string | null;
+    };
+    alert_center: {
+        filters: AlertSeverity[];
+        items: DashboardAlertItem[];
+    };
+}
+
+export interface DashboardStatusApi {
+    fetchDashboardStatus: () => Promise<DashboardStatusResponse>;
+    acknowledgeAlert: (alertId: string) => Promise<DashboardAlertItem>;
+}
+
+async function parseError(response: Response): Promise<string> {
+    const payload = await response.json().catch(() => ({ detail: 'Unable to load dashboard status' }));
+    return payload.detail ?? 'Unable to load dashboard status';
+}
+
+const dashboardStatusApi: DashboardStatusApi = {
+    async fetchDashboardStatus() {
+        const response = await fetch('/api/v1/status/dashboard');
+        if (!response.ok) {
+            throw new Error(await parseError(response));
+        }
+        return (await response.json()) as DashboardStatusResponse;
+    },
+    async acknowledgeAlert(alertId: string) {
+        const response = await fetch(`/api/v1/status/dashboard/alerts/${alertId}/ack`, { method: 'POST' });
+        if (!response.ok) {
+            throw new Error(await parseError(response));
+        }
+        return (await response.json()) as DashboardAlertItem;
+    },
+};
 
 interface StatCardProps {
     label: string;
@@ -118,8 +181,30 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
     );
 }
 
-export function DashboardView({ telemetry }: { telemetry?: any }) {
+function deriveQueueSeverity(currentDepth: number, thresholds: DashboardStatusResponse['queue_depth']['thresholds']): AlertSeverity {
+    if (currentDepth >= thresholds.critical) {
+        return 'critical';
+    }
+    if (currentDepth >= thresholds.warning) {
+        return 'warning';
+    }
+    return 'info';
+}
+
+function formatTimestamp(value: string | null): string {
+    if (!value) {
+        return '—';
+    }
+    return new Date(value).toLocaleString();
+}
+
+export function DashboardView({ telemetry, api = dashboardStatusApi }: { telemetry?: unknown; api?: DashboardStatusApi }) {
     const [currentTime, setCurrentTime] = useState('');
+    const [status, setStatus] = useState<DashboardStatusResponse | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    void telemetry;
 
     useEffect(() => {
         const tick = () => {
@@ -138,6 +223,105 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
         return () => clearInterval(timer);
     }, []);
 
+    useEffect(() => {
+        let mounted = true;
+        const load = async () => {
+            setIsLoading(true);
+            setError(null);
+            try {
+                const response = await api.fetchDashboardStatus();
+                if (mounted) {
+                    setStatus(response);
+                }
+            } catch (loadError) {
+                if (mounted) {
+                    setError(loadError instanceof Error ? loadError.message : 'Unable to load dashboard status');
+                }
+            } finally {
+                if (mounted) {
+                    setIsLoading(false);
+                }
+            }
+        };
+
+        void load();
+
+        return () => {
+            mounted = false;
+        };
+    }, [api]);
+
+    const queueSeverity = useMemo(() => {
+        if (!status) {
+            return 'info';
+        }
+        return deriveQueueSeverity(status.queue_depth.current_depth, status.queue_depth.thresholds);
+    }, [status]);
+
+    const alertCounts = useMemo(() => {
+        const base = { info: 0, warning: 0, critical: 0 };
+        if (!status) {
+            return base;
+        }
+        for (const alert of status.alert_center.items) {
+            if (!alert.acknowledged) {
+                base[alert.severity] += 1;
+            }
+        }
+        return base;
+    }, [status]);
+
+    const handleAcknowledge = async (alertId: string) => {
+        if (!status) {
+            return;
+        }
+
+        const now = new Date().toISOString();
+        setStatus({
+            ...status,
+            alert_center: {
+                ...status.alert_center,
+                items: status.alert_center.items.map((item) =>
+                    item.alert_id === alertId ? { ...item, acknowledged: true, acknowledged_at: item.acknowledged_at ?? now } : item
+                ),
+            },
+        });
+
+        try {
+            const updated = await api.acknowledgeAlert(alertId);
+            setStatus((previous) => {
+                if (!previous) {
+                    return previous;
+                }
+                return {
+                    ...previous,
+                    alert_center: {
+                        ...previous.alert_center,
+                        items: previous.alert_center.items.map((item) => (item.alert_id === alertId ? updated : item)),
+                    },
+                };
+            });
+        } catch {
+            setError('Failed to acknowledge alert');
+        }
+    };
+
+    if (isLoading) {
+        return <div className="rounded-xl border border-zinc-800 p-4 text-sm text-zinc-400">Loading dashboard status…</div>;
+    }
+
+    if (error) {
+        return (
+            <div role="alert" className="rounded-xl border border-red-900/60 bg-red-950/30 p-4 text-sm text-red-300">
+                {error}
+            </div>
+        );
+    }
+
+    if (!status) {
+        return null;
+    }
+
     return (
         <div className="space-y-5">
             <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-end justify-between">
@@ -145,7 +329,7 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
                     <h1 className="text-2xl font-black tracking-tight text-white">
                         Station <span className="text-lime-400">Overview</span>
                     </h1>
-                    <p className="text-[11px] text-zinc-500 mt-0.5">Live monitoring  All systems nominal</p>
+                    <p className="text-[11px] text-zinc-500 mt-0.5">{status.service_health.reason}</p>
                 </div>
                 <div className="text-right">
                     <div className="text-lg font-mono font-bold text-zinc-300 tabular-nums tracking-wider">{currentTime}</div>
@@ -154,11 +338,48 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
             </motion.div>
 
             <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
-                <StatCard label="Uptime" value="99.8" unit="%" icon={Activity} trend="stable" sparkline={[95, 96, 98, 97, 99, 99, 100, 99, 100, 100, 99, 100]} />
-                <StatCard label="Listeners" value="1,247" icon={Users} color="purple" trend="up" sparkline={[40, 45, 55, 60, 58, 70, 75, 80, 85, 82, 90, 95]} delay={0.05} />
-                <StatCard label="Latency" value="12" unit="ms" icon={Gauge} color="cyan" trend="down" sparkline={[40, 35, 30, 28, 25, 22, 20, 18, 15, 14, 13, 12]} delay={0.1} />
-                <StatCard label="Stream" value="320" unit="kbps" icon={Wifi} trend="stable" sparkline={[80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80]} delay={0.15} />
-                <StatCard label="AI Load" value="34" unit="%" icon={Zap} color="orange" trend="up" sparkline={[15, 20, 25, 22, 30, 28, 35, 32, 38, 36, 35, 34]} delay={0.2} />
+                <StatCard label="Service" value={status.service_health.status.toUpperCase()} icon={Activity} trend="stable" />
+                <StatCard label="Queue Depth" value={status.queue_depth.current_depth} icon={Users} color={queueSeverity === 'critical' ? 'red' : queueSeverity === 'warning' ? 'orange' : 'purple'} trend="up" delay={0.05} />
+                <StatCard label="Warning Threshold" value={status.queue_depth.thresholds.warning} unit="jobs" icon={Gauge} color="cyan" trend="stable" delay={0.1} />
+                <StatCard label="Critical Threshold" value={status.queue_depth.thresholds.critical} unit="jobs" icon={Wifi} trend="stable" delay={0.15} />
+                <StatCard label="Stale After" value={status.rotation.stale_after_minutes} unit="min" icon={Zap} color="orange" trend={status.rotation.is_stale ? 'up' : 'stable'} delay={0.2} />
+            </div>
+
+            <div className="rounded-xl border border-zinc-800 p-4">
+                <div className="flex items-center justify-between text-xs text-zinc-400">
+                    <span data-testid="queue-depth-state">Queue severity: {queueSeverity}</span>
+                    <span>Last rotation: {formatTimestamp(status.rotation.last_successful_rotation_at)}</span>
+                </div>
+                <div className="mt-2 flex gap-4 text-xs">
+                    <span data-testid="severity-count-info">Info: {alertCounts.info}</span>
+                    <span data-testid="severity-count-warning">Warning: {alertCounts.warning}</span>
+                    <span data-testid="severity-count-critical">Critical: {alertCounts.critical}</span>
+                </div>
+            </div>
+
+            <SectionHeader>Alert Center</SectionHeader>
+            <div className="space-y-2">
+                {status.alert_center.items.map((item) => (
+                    <div key={item.alert_id} className={cn('rounded-lg border p-3', item.acknowledged ? 'opacity-60 border-zinc-800' : 'border-zinc-700')}>
+                        <div className="flex items-start justify-between gap-3">
+                            <div>
+                                <p className="text-sm font-semibold text-zinc-100">{item.title}</p>
+                                <p className="text-xs text-zinc-400">{item.description}</p>
+                                <p className="text-xs text-zinc-500" data-testid={`alert-ack-${item.alert_id}`}>
+                                    Ack at: {formatTimestamp(item.acknowledged_at)}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                className="rounded border border-zinc-700 px-2 py-1 text-xs text-zinc-200 disabled:opacity-40"
+                                onClick={() => handleAcknowledge(item.alert_id)}
+                                disabled={item.acknowledged}
+                            >
+                                Acknowledge
+                            </button>
+                        </div>
+                    </div>
+                ))}
             </div>
 
             <SectionHeader>Now Playing</SectionHeader>
@@ -224,3 +445,5 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
         </div>
     );
 }
+
+export { deriveQueueSeverity };
