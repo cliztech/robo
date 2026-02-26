@@ -1,1 +1,9 @@
-# Specification - Refine and Stabilize Core DJ Studio UI`n`n## Overview`nThis track aims to fix critical compilation and usability issues in the core DJ Studio UI components to ensure a stable foundation for further development.`n`n## Requirements`n1. **Fix DashboardView.tsx**: Resolve duplicate ``sparkId`` declarations and merge conflicts in the SVG rendering logic.`n2. **Fix DegenTransport.tsx**: Add missing ``aria-label`` attributes to transport buttons to ensure accessibility compliance and fix failing tests.`n3. **Stabilize Build**: Ensure the project passes ``npm run lint`` and ``npm run build``.
+# Specification - Refine and Stabilize Core DJ Studio UI
+
+## Overview
+This track aims to fix critical compilation and usability issues in the core DJ Studio UI components to ensure a stable foundation for further development.
+
+## Requirements
+1. **Fix DashboardView.tsx**: Resolve duplicate ``sparkId`` declarations and merge conflicts in the SVG rendering logic.
+2. **Fix DegenTransport.tsx**: Add missing ``aria-label`` attributes to transport buttons to ensure accessibility compliance and fix failing tests.
+3. **Stabilize Build**: Ensure the project passes ``npm run lint`` and ``npm run build``.
