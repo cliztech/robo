@@ -73,35 +73,6 @@ class BaseAdapter:
             "error_message": str(exc),
         }
         self.logger.warning("base_adapter_fetch_failure %s", json.dumps(diagnostic, sort_keys=True))
-        request_obj = Request(endpoint, headers=headers)
-        try:
-            request = urlopen(request_obj, timeout=timeout)
-            data = request.read().decode("utf-8")
-            if not data:
-                return []
-            payload = json.loads(data)
-        except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
-            self._emit_fetch_diagnostic(endpoint=endpoint, error=exc)
-            return []
-
-        if isinstance(payload, list):
-            return [item for item in payload if isinstance(item, dict)]
-
-        if isinstance(payload, dict):
-            items = payload.get("items", [])
-            if isinstance(items, list):
-                return [item for item in items if isinstance(item, dict)]
-            self._emit_fetch_diagnostic(
-                endpoint=endpoint,
-                error=TypeError(f"payload.items must be list, got {type(items).__name__}"),
-            )
-            return []
-
-        self._emit_fetch_diagnostic(
-            endpoint=endpoint,
-            error=TypeError(f"payload must be list or dict, got {type(payload).__name__}"),
-        )
-        return []
 
     def _emit_fetch_diagnostic(self, endpoint: str, error: Exception) -> None:
         print(
@@ -156,7 +127,6 @@ class WeatherAdapter(BaseAdapter):
                         parse_float(
                             item.get("safety_score", safety),
                             safety,
-                            source=item.get("source") or self.source_name,
                             source=self.source_name,
                             field="safety_score",
                         )
@@ -191,7 +161,6 @@ class NewsAdapter(BaseAdapter):
                         parse_float(
                             item.get("relevance", 0.6),
                             0.6,
-                            source=item.get("source") or self.source_name,
                             source=self.source_name,
                             field="relevance",
                         )
@@ -200,7 +169,6 @@ class NewsAdapter(BaseAdapter):
                         parse_float(
                             item.get("safety_score", 0.97),
                             0.97,
-                            source=item.get("source") or self.source_name,
                             source=self.source_name,
                             field="safety_score",
                         )
@@ -235,7 +203,6 @@ class TrendAdapter(BaseAdapter):
                         parse_float(
                             item.get("relevance", 0.5),
                             0.5,
-                            source=item.get("source") or self.source_name,
                             source=self.source_name,
                             field="relevance",
                         )
@@ -244,7 +211,6 @@ class TrendAdapter(BaseAdapter):
                         parse_float(
                             item.get("safety_score", 0.9),
                             0.9,
-                            source=item.get("source") or self.source_name,
                             source=self.source_name,
                             field="safety_score",
                         )
