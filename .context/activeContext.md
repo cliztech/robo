@@ -4,6 +4,8 @@
 Executing "Phase 5: AI Integration" through a quick-dev next-phase plan that decomposes AI track analysis into sprintable stories (P5-01..P5-05).
 
 ## Recent Decisions
+
+- Normalized `bmad build dev` to the canonical BMAD quick-delivery route and captured build/dev validation evidence in `docs/operations/plans/2026-02-25-bmad-build-dev.md`.
 - Published `docs/exec-plans/active/2026-02-25-phase-5-ai-integration-next-phase.md` to operationalize Phase 5 into execution-ready slices with validation gates.
 - Implemented Phase 5 AI analysis foundation in `src/lib/ai/analysisService.ts` with normalization, retries, idempotency, and fallback behavior.
 - Added verification coverage in `tests/unit/ai-analysis-service.test.ts` and `tests/integration/analysis-queue.test.ts`.

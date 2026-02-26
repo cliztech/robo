@@ -29,6 +29,8 @@
 - None
 
 ## Recent Ops Updates
+
+- [x] BMAD build/dev execution pass documented with reproducible command evidence in `docs/operations/plans/2026-02-25-bmad-build-dev.md` (including dev-environment limitation notes).
 - [x] Phase 5 next-phase quick-dev plan published with sprintable stories and validation gates (`docs/exec-plans/active/2026-02-25-phase-5-ai-integration-next-phase.md`).
 - [x] Added BMAD alias normalization for `bmad build dev` → `bmad-bmm-quick-dev` in command routing docs.
 - [x] Tracked issue hygiene hardening: split TI-007/TI-008/TI-009 collisions, reassigned security tasks to TI-039/TI-040/TI-041, and added a one-header validation check.
