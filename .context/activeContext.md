@@ -5,6 +5,8 @@ Executing "Phase 6: Playlist Generation" hardening and preparing Phase 7 broadca
 Building the next unfinished execution plans from the roadmap queue, starting with P1 Security items (TI-039/TI-040/TI-041).
 
 ## Recent Decisions
+
+- Established `docs/architecture/canonical_runtime_map.md` as runtime ownership and framework-version source of truth; aligned `README.md`, `AGENTS.md`, and `.context/techStack.md`; added CI drift guard.
 - Completed repository-wide branding migration for top-level docs, release/build workflows, and launcher expectations to DGN-DJ Studio.
 - Regenerated `docs/exec-plans/active/unfinished-task-build-plan.md` from the latest TODO/workflow state to refresh unfinished-task ordering.
 - Published `docs/exec-plans/active/2026-02-25-next-unfinished-phase-build.md` to sequence the next phased work (TI-039 -> TI-040 -> TI-041).

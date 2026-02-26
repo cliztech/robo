@@ -19,7 +19,7 @@ DGN-DJ Studio is a next-generation AI-powered radio automation platform that ena
 
 ```text
 ┌─────────────────────────────────────────────────────┐
-│ Frontend (Next.js 14 + React 18)                   │
+│ Frontend (Next.js 15.5.10 + React 18)                   │
 │ - App Router                                        │
 │ - Server Components + Client Components             │
 │ - Shadcn/UI + Tailwind CSS                          │
@@ -50,8 +50,9 @@ DGN-DJ Studio is a next-generation AI-powered radio automation platform that ena
 
 ## 📁 Documentation Files
 
-1. [docs/operations/execution_index.md](docs/operations/execution_index.md) - Active track index, ownership, and status source mapping
-1. [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) - Complete folder structure
+1. [docs/architecture/canonical_runtime_map.md](docs/architecture/canonical_runtime_map.md) - Canonical runtime entrypoints, ownership boundaries, deployment targets, and reference-only trees
+2. [docs/operations/execution_index.md](docs/operations/execution_index.md) - Active track index, ownership, and status source mapping
+3. [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) - Complete folder structure
 2. [TECH_STACK.md](TECH_STACK.md) - Technologies and dependencies
 3. [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) - Complete database schema
 4. [PHASE_0_SETUP.md](PHASE_0_SETUP.md) - Environment setup (Day 1)
@@ -83,10 +84,14 @@ pnpm supabase db reset
 pnpm dev
 ```
 
-### Windows launcher (EXE-style startup)
+### Runtime commands (canonical)
 
-- Run `DGNDJ_Fullstack_Launcher.bat` from the repo root to boot the full-stack runtime with dependency checks.
-- The launcher validates `node`/`npm`, installs dependencies when `node_modules` is missing, and starts `npm run dev`.
+- Main web studio: `npm run dev` (Node.js 20.x, Next.js 15.5.10).
+- Windows launcher flow: `./RoboDJ_Launcher.bat` for packaged desktop startup.
+- DJ Console subproject: `npm --prefix apps/dj-console run dev`.
+- Radio-agentic workspace: `pnpm --dir radio-agentic install && docker compose -f radio-agentic/docker-compose.yml up --build`.
+
+See `docs/architecture/canonical_runtime_map.md` for ownership boundaries and deployment targets.
 
 ### Environment Variables
 
@@ -120,9 +125,13 @@ npm run lint
 
 ## 📦 Deployment
 
+- Primary web deployment target: **Vercel** (root Next.js app).
+- Containerized services deployment target: **Docker Compose / container runtime** (`radio-agentic`).
+- Desktop operator target: **Windows launcher + packaged executable workflow**.
+
 ```bash
-pnpm build
-pnpm start
+npm run build
+npm run start
 vercel --prod
 ```
 

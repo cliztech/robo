@@ -31,6 +31,8 @@
 - None
 
 ## Recent Ops Updates
+
+- [x] Runtime declaration hardening: added canonical runtime map, aligned top-level docs/context, and CI validation against package/pyproject manifests.
 - [x] Brand unification baseline: migrated top-level product/docs/workflows from legacy names to DGN-DJ Studio and aligned release artifact naming.
 - [x] Regenerated `docs/exec-plans/active/unfinished-task-build-plan.md`; phased backlog is now P1=3, Unphased=101.
 - [x] Published next-phase build packet: `docs/exec-plans/active/2026-02-25-next-unfinished-phase-build.md` (TI-039 -> TI-040 -> TI-041).
