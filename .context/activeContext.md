@@ -6,6 +6,8 @@ Executing "Phase 6: Playlist Generation" hardening and preparing Phase 7 broadca
 Building the next unfinished execution plans from the roadmap queue, starting with P1 Security items (TI-039/TI-040/TI-041).
 
 ## Recent Decisions
+- Resolved tracked-issue ID collisions between Track A security tasks and v1.2 scheduler UI tasks by separating scheduler work into TI-039/TI-040/TI-041.
+- Added explicit one-to-one Track A/B/C/D coverage indexing in `docs/exec-plans/active/todo-p0-p1-tracked-issues.md`.
 
 - Standardized `DegenTransport` seek behavior to use a telemetry-backed `progressOverride` flow with commit callbacks and deduplicated key rendering.
 - Published `docs/ui/dj_console_design_pod.md` as the mission-specific charter for GUI console design with explicit ownership cadence and quality gates.
@@ -35,6 +37,7 @@ Executing "Phase 5: AI Integration" through a quick-dev next-phase plan that dec
 - Extended BMAD command normalization guidance to explicitly map `bmad build dev` to `bmad-bmm-quick-dev`.
 
 ## Next Atomic Steps
+- [ ] Keep tracked-issue coverage table in sync with status/ownership updates.
 - [x] Implement unified DJ studio surface layout for decks/studio route.
 - [x] Add deterministic BMAD routing for GUI/music console agent-team phrases (including "agwnt" typo handling).
 - [ ] Verify `.context/` structure is complete.
