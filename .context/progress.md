@@ -28,4 +28,6 @@
 - None
 
 ## Recent Ops Updates
+
+- [x] BMAD build/dev execution pass documented with reproducible command evidence in `docs/operations/plans/2026-02-25-bmad-build-dev.md` (including dev-environment limitation notes).
 - [x] Tracked issue hygiene hardening: split TI-007/TI-008/TI-009 collisions, reassigned security tasks to TI-039/TI-040/TI-041, and added a one-header validation check.

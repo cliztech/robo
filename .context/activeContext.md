@@ -4,6 +4,8 @@
 Executing "Phase 5: AI Integration" (Implement AI track analysis) now that the "Visionary Architect" context system is established.
 
 ## Recent Decisions
+
+- Normalized `bmad build dev` to the canonical BMAD quick-delivery route and captured build/dev validation evidence in `docs/operations/plans/2026-02-25-bmad-build-dev.md`.
 - Completed GUI prompt review and published agent-team execution plan at `docs/ui/gui_agent_team_review.md`.
 - Updated `AGENTS.md` to mandate the "Visionary Architect" context system (`.context/`) as the primary bootstrap for all agents.
 - Adopted `.context/` directory as the single source of truth for high-level project context.
