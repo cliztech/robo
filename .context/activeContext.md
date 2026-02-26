@@ -1,6 +1,7 @@
 # Active Context
 
 ## Current Focus
+Executing "Phase 6: Playlist Generation" hardening and preparing Phase 7 broadcasting handoff after completing Phase 5 track analysis API/service delivery.
 Building the next unfinished execution plans from the roadmap queue, starting with P1 Security items (TI-039/TI-040/TI-041).
 
 ## Recent Decisions
@@ -33,3 +34,5 @@ Executing "Phase 5: AI Integration" through a quick-dev next-phase plan that dec
 - [ ] Convert `docs/ui/gui_agent_team_review.md` into implementation stories mapped to GUI-001..GUI-030.
 - [x] Resume "Phase 5: AI Integration" foundation (Implemented AI track analysis service + queue processor + tests).
 - [x] Split mixed tracked-issue files and reassigned security tasks to dedicated TI IDs (TI-039/TI-040/TI-041) with reference updates.
+
+- [ ] Start Phase 7 implementation stories for Icecast streaming and metadata updates.
