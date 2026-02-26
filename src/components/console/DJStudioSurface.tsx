@@ -110,7 +110,7 @@ export function DJStudioSurface() {
                 </div>
             </section>
 
-            <div className="dj-area-deck-a"><DeckTransportCluster deck="A" isPlaying /></div>
+<section className="dj-area-deck-a"><DeckTransportCluster deck="A" isPlaying /></section>
 
             <section className="glass-panel overflow-hidden dj-area-mixer">
                 <div className="panel-header">
