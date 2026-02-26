@@ -43,7 +43,7 @@ The generated unfinished-task queue now shows only **3 phased items**, all in **
 ## Verification gates
 
 - `python scripts/roadmap_autopilot.py --limit 10`
-- `python scripts/roadmap_autopilot.py --build-plan docs/exec-plans/active/unfinished-task-build-plan.md --limit 10`
+- `python scripts/roadmap_autopilot.py --build-plan docs/exec-plans/active/unfinished-task-build-plan.md --limit 10 && git diff --quiet docs/exec-plans/active/unfinished-task-build-plan.md`
 - `rg -n "TI-039|TI-040|TI-041" docs/exec-plans/active/unfinished-task-build-plan.md docs/exec-plans/active/2026-02-25-next-unfinished-phase-build.md`
 - `git diff --name-only`
 
