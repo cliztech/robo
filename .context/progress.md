@@ -16,6 +16,8 @@
 - [x] Added GUI BMAD startup packet runbook (`docs/exec-plans/active/gui-bmad-startup-packet.md`) defining input template, minimal command sequence, artifact paths, and acceptance gates.
 - [x] **GUI Prompt Review + Agent Team Plan** (Requirements + execution plan documented in `docs/ui/gui_agent_team_review.md`)
 - [x] **Visionary Architect Migration** (Adopting structured context files)
+- [x] Unified DJ Studio surface composition integrated for `decks` + `studio` workspace modes.
+- [ ] **Phase 5: AI Integration** (OpenAI GPT-4o, Track Analysis, Mood Detection)
 - [x] **Phase 5: AI Integration** (OpenAI GPT-4o scaffolding with typed Track Analysis + Host Script APIs, guardrails, and UI integration paths)
 - [x] **Phase 5: AI Integration** (Track analysis API/service with deterministic scoring, mood/energy detection heuristics, and tests)
 - [ ] **Phase 5: AI Integration** (OpenAI GPT-4o, Track Analysis, Mood Detection; execution slices P5-01..P5-05 defined)

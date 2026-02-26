@@ -33,6 +33,7 @@ Executing "Phase 5: AI Integration" through a quick-dev next-phase plan that dec
 - Extended BMAD command normalization guidance to explicitly map `bmad build dev` to `bmad-bmm-quick-dev`.
 
 ## Next Atomic Steps
+- [x] Implement unified DJ studio surface layout for decks/studio route.
 - [x] Add deterministic BMAD routing for GUI/music console agent-team phrases (including "agwnt" typo handling).
 - [ ] Verify `.context/` structure is complete.
 - [ ] Run first weekly DJ console design review gate using the new pod charter checklist.
