@@ -1,8 +1,8 @@
-# AetherRadio - Complete Implementation Guide for Development Team
+# DGN-DJ Studio - Complete Implementation Guide for Development Team
 
 ## 🎯 Project Overview
 
-AetherRadio is a next-generation AI-powered radio automation platform that enables users to run professional 24/7 internet radio stations with intelligent playlist generation, seamless crossfading, and real-time audio processing.
+DGN-DJ Studio is a next-generation AI-powered radio automation platform that enables users to run professional 24/7 internet radio stations with intelligent playlist generation, seamless crossfading, and real-time audio processing.
 
 ### Core Features
 
@@ -228,4 +228,4 @@ Proprietary - All rights reserved.
 
 Last Updated: February 14, 2026  
 Version: 1.0.0  
-Team: AetherRadio Development Team
+Team: DGN-DJ Studio Development Team
