@@ -1,7 +1,11 @@
+import json
 import importlib.util
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 
+
+MODULE_PATH = Path(__file__).resolve().parents[2] / "config" / "scripts" / "editorial_event_pipeline.py"
+SPEC = importlib.util.spec_from_file_location("editorial_event_pipeline", MODULE_PATH)
 MODULE_PATH = Path(__file__).resolve().parents[2] / "config" / "scripts" / "editorial_event_pipeline.py"
 SPEC = importlib.util.spec_from_file_location("editorial_event_pipeline", MODULE_PATH)
 assert SPEC and SPEC.loader
@@ -16,6 +20,8 @@ class DummyResponse:
 
     def read(self) -> bytes:
         return self._payload.encode("utf-8")
+
+
 def test_base_adapter_fetch_success_list_payload(monkeypatch):
     # Note: request_timeout_seconds is used over timeout_seconds in implementation priority if present,
     # but here we test the fallback or specific config logic.

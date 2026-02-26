@@ -11,6 +11,7 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from fastapi.responses import HTMLResponse
 from backend.security.auth import verify_api_key
 
+from backend.security.auth import verify_api_key
 from .autonomy_policy import (
     AutonomyPolicy,
     DecisionOrigin,
@@ -121,7 +122,7 @@ def read_policy(
         ) from error
 
 
-@router.put("", response_model=AutonomyPolicy, dependencies=[Depends(verify_api_key)])
+@router.put("", response_model=AutonomyPolicy)
 def write_policy(
     payload: AutonomyPolicy,
     service: AutonomyPolicyService = Depends(get_policy_service),
@@ -140,7 +141,7 @@ def write_policy(
         ) from error
 
 
-@router.get("/effective", dependencies=[Depends(verify_api_key)])
+@router.get("/effective")
 def read_effective_policy(
     show_id: Optional[str] = Query(default=None),
     timeslot_id: Optional[str] = Query(default=None),
@@ -149,12 +150,12 @@ def read_effective_policy(
     return service.resolve_effective_policy(show_id=show_id, timeslot_id=timeslot_id)
 
 
-@router.get("/mode-definitions", dependencies=[Depends(verify_api_key)])
+@router.get("/mode-definitions")
 def get_mode_definitions():
     return {"source": "docs/autonomy_modes.md", "modes": MODE_DEFINITIONS}
 
 
-@router.post("/audit-events", response_model=PolicyAuditEvent, dependencies=[Depends(verify_api_key)])
+@router.post("/audit-events", response_model=PolicyAuditEvent)
 def create_audit_event(
     decision_type: DecisionType,
     origin: DecisionOrigin,
@@ -172,7 +173,7 @@ def create_audit_event(
     )
 
 
-@router.get("/audit-events", response_model=list[PolicyAuditEvent], dependencies=[Depends(verify_api_key)])
+@router.get("/audit-events", response_model=list[PolicyAuditEvent])
 def get_audit_events(
     limit: int = Query(default=100, ge=1, le=1000),
     service: AutonomyPolicyService = Depends(get_policy_service),

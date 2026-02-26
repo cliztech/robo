@@ -1,12 +1,14 @@
 import os
 import pytest
 from fastapi.testclient import TestClient
+import unittest.mock
 
 from backend.app import app
 from backend.scheduling.api import get_policy_service
 from backend.scheduling.autonomy_service import AutonomyPolicyService
 from backend.security.auth import verify_api_key
 
+TEST_API_KEY = "test-secret-key" # example
 import unittest.mock
 
 TEST_API_KEY = "test-secret-key"
@@ -152,6 +154,26 @@ def test_invalid_payload_rejections_api(tmp_path):
         # Assuming "mode_permissions" structure mismatch or similar triggers validation error.
         # Actually, let's construct a payload that is definitely invalid for Pydantic.
         invalid_policy = {
+            "station_default_mode": "manual_assist",
+            "mode_permissions": {
+                "manual_assist": {
+                    "track_selection": "human_only"
+                },
+                "semi_auto": {
+                    "track_selection": "human_with_ai_assist",
+                    "script_generation": "ai_with_human_approval",
+                    "voice_persona_selection": "human_with_ai_assist",
+                    "caller_simulation_usage": "ai_with_human_approval",
+                    "breaking_news_weather_interruption": "ai_with_human_approval",
+                },
+                "auto_with_human_override": {
+                    "track_selection": "ai_autonomous",
+                    "script_generation": "ai_autonomous",
+                    "voice_persona_selection": "ai_autonomous",
+                    "caller_simulation_usage": "ai_autonomous",
+                    "breaking_news_weather_interruption": "ai_with_human_approval",
+                },
+            },
             "station_default_mode": "invalid_mode_enum",
             "show_overrides": [],
             "timeslot_overrides": [],
@@ -187,6 +209,7 @@ def test_get_policy_auto_recovers_invalid_policy_file(tmp_path, monkeypatch):
     monkeypatch.setattr(policy_api, "_service_instance", None)
     monkeypatch.setattr(policy_api, "AutonomyPolicyService", _factory)
 
+    # Use dependency override for auth instead of mocking env which is brittle here
     # We need to mock verify_api_key or provide the key
     app.dependency_overrides[verify_api_key] = lambda: "test-key"
     client = TestClient(app)
