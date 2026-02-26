@@ -19,11 +19,11 @@
 - [x] **GUI Prompt Review + Agent Team Plan** (Requirements + execution plan documented in `docs/ui/gui_agent_team_review.md`)
 - [x] **Visionary Architect Migration** (Adopting structured context files)
 - [x] Unified DJ Studio surface composition integrated for `decks` + `studio` workspace modes.
-- [ ] **Phase 5: AI Integration** (OpenAI GPT-4o, Track Analysis, Mood Detection)
+- [x] **Phase 5: AI Integration** (OpenAI GPT-4o, Track Analysis, Mood Detection)
 - [x] **Phase 5: AI Integration** (OpenAI GPT-4o scaffolding with typed Track Analysis + Host Script APIs, guardrails, and UI integration paths)
 - [x] **Phase 5: AI Integration** (Track analysis API/service with deterministic scoring, mood/energy detection heuristics, and tests)
-- [ ] **Phase 5: AI Integration** (OpenAI GPT-4o, Track Analysis, Mood Detection; execution slices P5-01..P5-05 defined)
-- [~] **Phase 5: AI Integration** (Track analysis service, retries/idempotency/fallback queue foundation complete; model API wiring pending)
+- [x] **Phase 5: AI Integration** (OpenAI GPT-4o, Track Analysis, Mood Detection; execution slices P5-01..P5-05 delivered)
+- [x] **Phase 5: AI Integration** (Track analysis service now includes deterministic prompt profile resolution, invocation status mapping, fingerprint cache, and latency verification harness)
 
 ## Recent Completed Work
 - [x] Introduced typed global studio state with deck/mixer/FX domains using Zustand.
@@ -63,3 +63,5 @@
 - [x] Tracked issue hygiene hardening: split TI-007/TI-008/TI-009 collisions, reassigned security tasks to TI-039/TI-040/TI-041, and added a one-header validation check.
 
 - [x] Phase 5 foundation: implemented `AnalysisService` (normalization, retry with fallback, idempotency) and queue processor with unit/integration tests.
+
+- [x] Phase 5 closure: backend `AIInferenceService` now resolves prompt profile versions from config, emits cache hit/miss telemetry, returns structured status (`success`/`degraded`), and includes fallback behavior under timeout with verification coverage.
