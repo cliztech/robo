@@ -8,7 +8,7 @@ This file provides guidance to Gemini (Google AI) and Gemini Code when working w
 This repository acts as the Runtime Distribution & Core Engine for DGN-DJ by DGNradio (also referred to as DGN-DJ Studio in newer docs). It is a hybrid repository containing:
 1. Legacy Core**: A compiled Windows executable (`DGN-DJ Automation.exe`) and launcher.
 2. Modern Backend**: Python/FastAPI services (`backend/`) that drive AI autonomy and scheduling.
-3. React Frontend**: Source code (`src/`) for the next-generation UI (DGN-DJ Studio / DGN-DJ Studio).
+3. React Frontend**: Source code (`src/`) for the next-generation UI (DGN-DJ Studio).
 
  Commands
 
