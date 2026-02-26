@@ -5,10 +5,10 @@ This file provides guidance to Gemini (Google AI) and Gemini Code when working w
 > For the full agent instruction set, see [`AGENTS.md`](AGENTS.md). This file provides Gemini-specific guidance only.
  Project Overview
 
-This repository acts as the Runtime Distribution & Core Engine for DGN-DJ by DGNradio (also referred to as AetherRadio in newer docs). It is a hybrid repository containing:
-1. Legacy Core**: A compiled Windows executable (`RoboDJ Automation.exe`) and launcher.
+This repository acts as the Runtime Distribution & Core Engine for DGN-DJ by DGNradio (also referred to as DGN-DJ Studio in newer docs). It is a hybrid repository containing:
+1. Legacy Core**: A compiled Windows executable (`DGN-DJ Automation.exe`) and launcher.
 2. Modern Backend**: Python/FastAPI services (`backend/`) that drive AI autonomy and scheduling.
-3. React Frontend**: Source code (`src/`) for the next-generation UI (AetherRadio / DGN-DJ Studio).
+3. React Frontend**: Source code (`src/`) for the next-generation UI (DGN-DJ Studio).
 
  Commands
 
@@ -25,8 +25,8 @@ This repository acts as the Runtime Distribution & Core Engine for DGN-DJ by DGN
  Runtime (Windows Production)
 | Action | Command | Notes |
 | ------ | ------- | ----- |
-| Run App** | `.\RoboDJ_Launcher.bat` | Portable path resolution; elevated when needed |
-| Run Binary** | `.\RoboDJ Automation.exe` | Direct execution (skips launcher wrapper) |
+| Run App** | `.\DGN-DJ_Launcher.bat` | Portable path resolution; elevated when needed |
+| Run Binary** | `.\DGN-DJ Automation.exe` | Direct execution (skips launcher wrapper) |
 | Inspect DB** | `python config/inspect_db.py` | Read-only schema inspection of runtime SQLite DBs |
 | Check Config** | `python config/validate_config.py` | Validates JSON configuration schemas |
 | Check JSON** | `python -m json.tool config/schedules.json` | Quick syntax check |
@@ -52,7 +52,7 @@ Key directories:
 
 - Backend** (`backend/`): Python FastAPI services handling autonomy policies, scheduling logic, and secret integrity.
 - Modules** (`dgn-*/`): Domain Graph Nodes. Python packages containing specialized logic (e.g., `dgn-airwaves`, `dgn-robo-rippa`).
-- Frontend** (`src/`): React/Next.js source code for the AetherRadio UI. Components, hooks, styles, and app routes.
+- Frontend** (`src/`): React/Next.js source code for the DGN-DJ Studio UI. Components, hooks, styles, and app routes.
 - Configuration** (`config/`): Runtime state, JSON autonomy profiles, prompt templates, and SQLite databases.
 - Contracts** (`contracts/`): API definitions and redaction rules.
 - OpenClaw** (`openclaw/`): A2UI protocol specification, gateway server methods, and documentation.

@@ -16,6 +16,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 .env
+.env.local
+.env.*.local
+.env.production
+.env.staging
 .venv
 env/
 venv/
