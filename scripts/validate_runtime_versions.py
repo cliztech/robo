@@ -71,12 +71,12 @@ def main() -> None:
     expect_equal(raw_pkg.get("dependencies", {}).get("react"), canonical["react_workspace"], "radio-agentic/apps/console-web dependencies.react", errors)
     expect_equal(remote_pkg.get("dependencies", {}).get("react"), canonical["react_workspace"], "radio-agentic/apps/remote-web dependencies.react", errors)
 
-    expect_equal(library_pkg.get("dependencies", {}).get("express"), f"^{canonical['express']}", "radio-agentic/services/library dependencies.express", errors)
-    expect_equal(requests_pkg.get("dependencies", {}).get("express"), f"^{canonical['express']}", "radio-agentic/services/requests dependencies.express", errors)
+    expect_equal(library_pkg.get("dependencies", {}).get("express"), canonical["express"], "radio-agentic/services/library dependencies.express", errors)
+    expect_equal(requests_pkg.get("dependencies", {}).get("express"), canonical["express"], "radio-agentic/services/requests dependencies.express", errors)
 
-    expect_equal(audio_pkg.get("dependencies", {}).get("nats"), f"^{canonical['nats']}", "radio-agentic/services/audio-engine dependencies.nats", errors)
-    expect_equal(library_pkg.get("dependencies", {}).get("nats"), f"^{canonical['nats']}", "radio-agentic/services/library dependencies.nats", errors)
-    expect_equal(requests_pkg.get("dependencies", {}).get("nats"), f"^{canonical['nats']}", "radio-agentic/services/requests dependencies.nats", errors)
+    expect_equal(audio_pkg.get("dependencies", {}).get("nats"), canonical["nats"], "radio-agentic/services/audio-engine dependencies.nats", errors)
+    expect_equal(library_pkg.get("dependencies", {}).get("nats"), canonical["nats"], "radio-agentic/services/library dependencies.nats", errors)
+    expect_equal(requests_pkg.get("dependencies", {}).get("nats"), canonical["nats"], "radio-agentic/services/requests dependencies.nats", errors)
 
     expect_equal(py_requires, canonical["python"], "dgn-airwaves/pyproject.toml requires-python", errors)
 
