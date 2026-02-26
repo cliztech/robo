@@ -31,6 +31,7 @@
 - None
 
 ## Recent Ops Updates
+- [x] Implemented release readiness gate automation (tests/config/security/docs) with consolidated artifact reporting and protected-branch ruleset sync.
 
 - [x] Runtime declaration hardening: added canonical runtime map, aligned top-level docs/context, and CI validation against package/pyproject manifests.
 - [x] Brand unification baseline: migrated top-level product/docs/workflows from legacy names to DGN-DJ Studio and aligned release artifact naming.

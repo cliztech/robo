@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "report": {
+    "markdown": "artifacts/release-readiness/readiness-report.md",
+    "json": "artifacts/release-readiness/readiness-report.json"
+  },
+  "required_checks": [
+    {
+      "id": "tests",
+      "name": "Unit and integration tests",
+      "command": "npm test",
+      "artifact": "artifacts/release-readiness/tests.log"
+    },
+    {
+      "id": "config_validation",
+      "name": "Configuration schema validation",
+      "command": "python config/validate_config.py",
+      "artifact": "artifacts/release-readiness/config-validation.log"
+    },
+    {
+      "id": "security_scan",
+      "name": "Backend security scan",
+      "command": "bandit -q -r backend -f txt",
+      "artifact": "artifacts/release-readiness/security-scan.log"
+    },
+    {
+      "id": "docs_consistency",
+      "name": "Documentation consistency check",
+      "command": "python scripts/ci/check_docs_consistency.py",
+      "artifact": "artifacts/release-readiness/docs-consistency.log"
+    }
+  ]
+}
