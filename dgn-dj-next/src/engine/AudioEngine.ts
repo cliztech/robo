@@ -459,12 +459,12 @@ class AudioEngine {
     /** Position tracking animation loop */
     private startPositionTracking(): void {
         const tick = () => {
-            for (const [deckId, callback] of this.positionCallbacks) {
+            this.positionCallbacks.forEach((callback, deckId) => {
                 const ch = this.channels.get(deckId);
                 if (ch?.playing) {
                     callback(this.getPosition(deckId));
                 }
-            }
+            });
             this.animationFrameId = requestAnimationFrame(tick);
         };
         this.animationFrameId = requestAnimationFrame(tick);
@@ -473,7 +473,7 @@ class AudioEngine {
     /** Check if a deck has a buffer loaded */
     hasBuffer(deckId: DeckId): boolean {
         const ch = this.channels.get(deckId);
-        return ch?.buffer !== null ?? false;
+        return Boolean(ch?.buffer);
     }
 
     /** Get buffer duration */
@@ -497,11 +497,11 @@ class AudioEngine {
         if (this.animationFrameId) {
             cancelAnimationFrame(this.animationFrameId);
         }
-        for (const ch of this.channels.values()) {
+        this.channels.forEach((ch) => {
             if (ch.source) {
                 try { ch.source.stop(); } catch { /* noop */ }
             }
-        }
+        });
         if (this.ctx) {
             this.ctx.close();
             this.ctx = null;

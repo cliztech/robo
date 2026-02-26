@@ -134,50 +134,71 @@ def _detect_template_ambiguity(schedules: list[ScheduleRecord]) -> list[Schedule
 
 
 def _detect_ambiguous_dispatch_conflicts(schedules: list[ScheduleRecord]) -> list[ScheduleConflict]:
-    conflicts: list[ScheduleConflict] = []
-    sorted_schedules = sorted(schedules, key=lambda item: item.id)
-    for index, left in enumerate(sorted_schedules):
-        if not left.enabled or left.effective_ui_state() != UiState.active:
+    # Optimization: Group schedules by (timezone, priority) to reduce O(N^2) complexity.
+    # We also pre-calculate expensive properties like bounds and specs.
+
+    @dataclass
+    class _CachedSchedule:
+        schedule: ScheduleRecord
+        spec_dump: dict | None
+        start: datetime | None
+        end: datetime | None
+
+    groups: dict[tuple[str | None, int | None], list[_CachedSchedule]] = {}
+
+    # Sort for deterministic output
+    for schedule in sorted(schedules, key=lambda item: item.id):
+        if not schedule.enabled or schedule.effective_ui_state() != UiState.active:
             continue
 
-        for right in sorted_schedules[index + 1 :]:
-            if not right.enabled or right.effective_ui_state() != UiState.active:
-                continue
-            if left.effective_timezone() != right.effective_timezone():
-                continue
-            if left.effective_priority() != right.effective_priority():
-                continue
+        key = (schedule.effective_timezone(), schedule.effective_priority())
 
-            left_spec = left.effective_schedule_spec()
-            right_spec = right.effective_schedule_spec()
-            if left_spec is None or right_spec is None or left_spec.model_dump() != right_spec.model_dump():
-                continue
+        spec = schedule.effective_schedule_spec()
+        spec_dump = spec.model_dump() if spec else None
+        start, end = _effective_bounds(schedule)
 
-            left_start, left_end = _effective_bounds(left)
-            right_start, right_end = _effective_bounds(right)
-            if not all((left_start, left_end, right_start, right_end)):
-                continue
-            if left_start <= right_end and right_start <= left_end:
-                conflicts.append(
-                    ScheduleConflict(
-                        conflict_type=ConflictType.ambiguous_dispatch,
-                        schedule_ids=sorted([left.id, right.id]),
-                        message=(
-                            "Active schedules have identical timezone, priority, schedule_spec, "
-                            "and overlapping windows; dispatch precedence is ambiguous."
-                        ),
-                        suggestions=[
-                            ConflictSuggestion(
-                                action="change_priority",
-                                message="Change one schedule priority to establish deterministic precedence.",
+        groups.setdefault(key, []).append(_CachedSchedule(schedule, spec_dump, start, end))
+
+    conflicts: list[ScheduleConflict] = []
+
+    for group in groups.values():
+        if len(group) < 2:
+            continue
+
+        for index, left_cached in enumerate(group):
+            for right_cached in group[index + 1 :]:
+                # We already know timezone and priority match because they are in the same group.
+
+                if left_cached.spec_dump is None or right_cached.spec_dump is None:
+                    continue
+                if left_cached.spec_dump != right_cached.spec_dump:
+                    continue
+
+                if not all((left_cached.start, left_cached.end, right_cached.start, right_cached.end)):
+                    continue
+
+                # Check overlap: start1 <= end2 AND start2 <= end1
+                if left_cached.start <= right_cached.end and right_cached.start <= left_cached.end:
+                    conflicts.append(
+                        ScheduleConflict(
+                            conflict_type=ConflictType.ambiguous_dispatch,
+                            schedule_ids=sorted([left_cached.schedule.id, right_cached.schedule.id]),
+                            message=(
+                                "Active schedules have identical timezone, priority, schedule_spec, "
+                                "and overlapping windows; dispatch precedence is ambiguous."
                             ),
-                            ConflictSuggestion(
-                                action="adjust_window",
-                                message="Narrow one window to remove temporal overlap.",
-                            ),
-                        ],
+                            suggestions=[
+                                ConflictSuggestion(
+                                    action="change_priority",
+                                    message="Change one schedule priority to establish deterministic precedence.",
+                                ),
+                                ConflictSuggestion(
+                                    action="adjust_window",
+                                    message="Narrow one window to remove temporal overlap.",
+                                ),
+                            ],
+                        )
                     )
-                )
     return conflicts
 
 

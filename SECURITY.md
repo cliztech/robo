@@ -45,3 +45,21 @@ That command fails if:
 
 - required environment secrets are missing, or
 - real key material is detected in `config/secret.key` / `config/secret_v2.key`.
+
+## CodeQL Policy and Severity Gate
+
+CodeQL is enabled via `.github/workflows/codeql.yml` and scans only repository languages currently in use:
+
+- `actions`
+- `javascript-typescript`
+- `python`
+
+Merge-blocking policy:
+
+- CI blocks on any **open high/critical** CodeQL alert for the current ref.
+- Scheduled scans run without merge gating to keep weekly signal without interrupting maintenance jobs.
+
+Triage workflow:
+
+- Follow `docs/runbooks/codeql-triage.md` (RB-023) when the severity gate fails.
+- Only dismiss alerts with explicit rationale and traceable ownership.

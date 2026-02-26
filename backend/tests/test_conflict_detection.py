@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import pytest
-
 from backend.scheduling.autonomy_policy import (
     AutonomyPolicy,
     DecisionAuthority,
@@ -10,7 +8,7 @@ from backend.scheduling.autonomy_policy import (
     ShowOverride,
     TimeslotOverride,
 )
-from backend.scheduling.conflict_detection import PolicyConflict, detect_policy_conflicts
+from backend.scheduling.conflict_detection import detect_policy_conflicts
 
 
 def test_detect_duplicate_timeslot_ids():
