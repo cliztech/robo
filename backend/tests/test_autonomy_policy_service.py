@@ -227,7 +227,7 @@ def test_get_policy_emits_startup_validation_failed_event(tmp_path):
     )
     service.event_log_path = event_log_path
 
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         service.get_policy()
 
     if event_log_path.exists():
