@@ -6,6 +6,7 @@ Executing "Phase 6: Playlist Generation" hardening and preparing Phase 7 broadca
 Building the next unfinished execution plans from the roadmap queue, starting with P1 Security items (TI-039/TI-040/TI-041).
 
 ## Recent Decisions
+- Roadmap hygiene alignment completed: `TODO.md` TI-001 checkbox now mirrors TI-001 `Status: Closed`, and weekly reconciliation rules were added to operations docs.
 - Resolved tracked-issue ID collisions between Track A security tasks and v1.2 scheduler UI tasks by separating scheduler work into TI-039/TI-040/TI-041.
 - Added explicit one-to-one Track A/B/C/D coverage indexing in `docs/exec-plans/active/todo-p0-p1-tracked-issues.md`.
 
@@ -41,6 +42,7 @@ Executing "Phase 5: AI Integration" through a quick-dev next-phase plan that dec
 - [x] Implement unified DJ studio surface layout for decks/studio route.
 - [x] Add deterministic BMAD routing for GUI/music console agent-team phrases (including "agwnt" typo handling).
 - [ ] Verify `.context/` structure is complete.
+- [x] Reconcile TODO tracked-issue checkbox state with TI status fields (weekly protocol documented).
 - [ ] Run first weekly DJ console design review gate using the new pod charter checklist.
 - [ ] Resume "Phase 5: AI Integration" (Implement AI track analysis).
 - [x] Canonical product identity decision + naming consistency pass across root docs and context files.
