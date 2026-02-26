@@ -153,20 +153,24 @@ export function DegenTransport({
             </div>
 
             <div className="flex items-center gap-1 px-3 border-r border-white/[0.05]">
-                <button type="button" onClick={() => setShuffle((p) => !p)} className={cn('p-1.5 rounded', shuffle ? 'text-lime-400' : 'text-zinc-500')}>
+                <button type="button" onClick={() => setShuffle((p) => !p)} className={cn('p-1.5 rounded', shuffle ? 'text-lime-400' : 'text-zinc-500')} aria-label="Shuffle">
                     <Shuffle size={12} />
                 </button>
-                <button type="button" onClick={onPrev} className="p-1.5 rounded text-zinc-400 hover:text-white"><SkipBack size={14} /></button>
+                <button type="button" onClick={onPrev} className="p-1.5 rounded text-zinc-400 hover:text-white" aria-label="Previous track"><SkipBack size={14} /></button>
                 <button
                     type="button"
                     onClick={handlePlayPause}
-                    className={cn('p-2 rounded-full', isPlaying ? 'bg-lime-400 text-black' : 'bg-zinc-700 text-white')}
+                    className={cn(
+                        'p-2 rounded-full focus-visible:ring-2 focus-visible:ring-lime-400 focus-visible:outline-none',
+                        isPlaying ? 'bg-lime-400 text-black' : 'bg-zinc-700 text-white'
+                    )}
                     aria-pressed={isPlaying}
+                    aria-label={isPlaying ? 'Pause playback' : 'Start playback'}
                 >
                     {isPlaying ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
                 </button>
-                <button type="button" onClick={onNext} className="p-1.5 rounded text-zinc-400 hover:text-white"><SkipForward size={14} /></button>
-                <button type="button" onClick={() => setRepeat((p) => !p)} className={cn('p-1.5 rounded', repeat ? 'text-indigo-400' : 'text-zinc-500')}>
+                <button type="button" onClick={onNext} className="p-1.5 rounded text-zinc-400 hover:text-white" aria-label="Next track"><SkipForward size={14} /></button>
+                <button type="button" onClick={() => setRepeat((p) => !p)} className={cn('p-1.5 rounded', repeat ? 'text-indigo-400' : 'text-zinc-500')} aria-label="Repeat">
                     <Repeat size={12} />
                 </button>
             </div>
