@@ -8,14 +8,14 @@
 ## Execution Queue
 
 ### 1) Build baseline + guardrails
-- [ ] Run `npm run lint` and capture baseline warnings/errors.
-- [ ] Run `npm run build` and capture build-time warnings/errors.
-- [ ] Confirm no unapproved scope items are in-flight (`git diff --name-only`, backlog cross-check).
+- [x] Run `npm run lint` and capture baseline warnings/errors.
+- [x] Run `npm run build` and capture build-time warnings/errors.
+- [x] Confirm no unapproved scope items are in-flight (`git diff --name-only`, backlog cross-check).
 
 ### 2) Story implementation order (dependency-aware)
-- [ ] E6-S2: Predictive queue risk cards.
-- [ ] E6-S3: Prompt variable diff + approval workflow.
-- [ ] E6-S4: Decision trace panel.
+- [x] E6-S2: Predictive queue risk cards.
+- [x] E6-S3: Prompt variable diff + approval workflow.
+- [x] E6-S4: Decision trace panel.
 - [ ] E6-S5: Alert center remediation copy.
 - [ ] E6-S6: Timeline conflict detection hints.
 - [ ] E7-S1: Global keyboard map.

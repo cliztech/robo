@@ -2,26 +2,30 @@
   color-scheme: dark;
 
   /* ── Degen Design Tokens ── Hard Dark & Acid Green ── */
-  --bg: 0 0% 2%;
-  --bg-elevated: 0 0% 4%;
-  --surface: 0 0% 7%;
-  --surface-2: 0 0% 12%;
-  --surface-3: 0 0% 16%;
-  --text: 0 0% 95%;
-  --text-muted: 0 0% 55%;
-  --text-dim: 0 0% 30%;
-  --accent: 82 100% 50%;
-  /* Acid Green #aaff00 */
-  --accent-secondary: 270 100% 60%;
-  /* Electric Purple #9933ff */
-  --accent-tertiary: 195 100% 50%;
-  /* Cyber Cyan #00bfff */
-  --danger: 0 72% 51%;
-  /* Alert Red */
-  --warning: 38 92% 50%;
-  /* Amber */
-  --warning-hot: 32 100% 50%;
-  --danger-bright: 0 100% 60%;
+  --bg: 240 10% 2%;
+  /* Deep Obsidian */
+  --bg-elevated: 240 8% 4%;
+  --surface: 240 6% 7%;
+  --surface-2: 240 5% 10%;
+  --surface-3: 240 5% 15%;
+  --text: 210 20% 98%;
+  --text-muted: 210 10% 65%;
+  --text-dim: 210 10% 35%;
+  
+  /* Aether Sapphire — Rekordbox 7 Standard */
+  --accent: 207 98% 45%; 
+  /* #027de1 */
+  --accent-secondary: 207 81% 79%; 
+  /* #A1CFF5 - Sapphire Glow */
+  --accent-tertiary: 182 70% 38%; 
+  /* Deep Teal focus */
+  
+  --danger: 0 85% 60%;
+  --warning: 35 100% 50%;
+  
+  /* Hardware Surfaces */
+  --metal-bg: radial-gradient(circle at 50% 0%, hsla(0, 0%, 100%, 0.05) 0%, transparent 100%), #0A0A0B;
+  --noise-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 
   /* Deck + waveform semantic color roles */
   --deck-a: var(--accent);
@@ -31,35 +35,30 @@
   --deck-master: 0 0% 100%;
 
   --waveform-played-strong: var(--deck-a);
-  --waveform-played-mid: 82 100% 43%;
-  --waveform-played-low: 82 100% 30%;
+  --waveform-played-mid: 207 98% 40%;
+  --waveform-played-low: 207 98% 25%;
   --waveform-unplayed-strong: 0 0% 100%;
   --waveform-cue-default: 25 100% 50%;
   --waveform-cue-highlight: 288 100% 50%;
   --waveform-cue-info: 217 91% 60%;
 
-  --deck-a-rgb: 170 255 0;
-  --deck-b-rgb: 153 51 255;
-  --deck-mic-rgb: 0 191 255;
-  --alert-danger-rgb: 239 68 68;
-  --surface-rgb: 255 255 255;
-  --black-rgb: 0 0 0;
+  /* DJ control-state roles — Aether Theme adaptation */
+  --control-border: 240 5% 15%;
+  --control-border-strong: 240 5% 25%;
+  --control-press: 240 10% 5%;
+  --control-active: var(--accent);
+  --control-focus: var(--accent);
+  --control-disabled: 240 5% 12%;
 
-  /* DJ semantic color roles */
-  --deck-a: 195 100% 52%;
-  --deck-b: 332 95% 62%;
-  --grid-major: 210 20% 34%;
-  --grid-minor: 210 16% 22%;
-  --wave-a: 192 100% 58%;
-  --wave-b: 334 92% 64%;
+  /* Grid colors */
+  --grid-major: 0 0% 22%;
+  --grid-minor: 0 0% 12%;
 
-  /* DJ control-state roles */
-  --control-border: 210 12% 24%;
-  --control-border-strong: 210 14% 36%;
-  --control-press: 210 24% 14%;
-  --control-active: 82 100% 50%;
-  --control-focus: 195 100% 52%;
-  --control-disabled: 210 10% 40%;
+  /* Transitions */
+  --transition-fast: 100ms ease;
+  --transition-base: 180ms ease;
+  --transition-slow: 350ms cubic-bezier(0.23, 1, 0.32, 1);
+
 
   /* Glow tokens */
   --glow-accent: 0 0 20px hsla(82, 100%, 50%, 0.25),
@@ -94,6 +93,16 @@
   --space-5: 20px;
   --space-6: 24px;
   --space-8: 32px;
+
+
+  /* Studio composition layout */
+  --studio-grid-gap: var(--space-4);
+  --studio-side-width: 1fr;
+  --studio-center-width: minmax(380px, 1.1fr);
+  --studio-jog-size: 112px;
+  --studio-transport-button: 34px;
+  --studio-pad-size: 42px;
+  --studio-panel-min-height: 220px;
 
   /* Shadows — layered for depth */
   --shadow-sm: 0 1px 2px hsl(0 0% 0% / 0.5);
