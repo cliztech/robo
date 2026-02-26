@@ -329,7 +329,9 @@ class SchedulerUiService:
                         error,
                     )
             elif spec.mode == ScheduleSpecMode.rrule and spec.rrule:
-                blocks.append(self._rrule_to_block(schedule.id, spec.rrule))
+                block = self._rrule_to_block(schedule.id, spec.rrule)
+                if block:
+                    blocks.append(block)
         return blocks
 
     def _parse_numeric_cron_time(
@@ -365,26 +367,43 @@ class SchedulerUiService:
             return None
         return parsed_hour, parsed_minute
 
-    def _rrule_to_block(self, schedule_id: str, rrule: str) -> TimelineBlock:
-        parts = dict(part.split("=", 1) for part in rrule.split(";") if "=" in part)
-        by_day = parts.get("BYDAY", "MO").split(",")[0]
-        day = {"MO": "monday", "TU": "tuesday", "WE": "wednesday", "TH": "thursday", "FR": "friday", "SA": "saturday", "SU": "sunday"}.get(by_day, "monday")
-        hour = int(parts.get("BYHOUR", "0"))
-        minute = int(parts.get("BYMINUTE", "0"))
-        duration = int(parts.get("DURATION_MINUTES", "60"))
+    def _rrule_to_block(self, schedule_id: str, rrule: str) -> TimelineBlock | None:
+        try:
+            parts = dict(part.split("=", 1) for part in rrule.split(";") if "=" in part)
+            by_day = parts.get("BYDAY", "MO").split(",")[0]
+            day = {
+                "MO": "monday",
+                "TU": "tuesday",
+                "WE": "wednesday",
+                "TH": "thursday",
+                "FR": "friday",
+                "SA": "saturday",
+                "SU": "sunday",
+            }.get(by_day, "monday")
+            hour = int(parts.get("BYHOUR", "0"))
+            minute = int(parts.get("BYMINUTE", "0"))
+            duration = int(parts.get("DURATION_MINUTES", "60"))
 
-        end_total_minutes = (hour * 60) + minute + duration
-        end_hour, end_minute = divmod(end_total_minutes % (24 * 60), 60)
-        overnight = end_total_minutes >= 24 * 60
+            end_total_minutes = (hour * 60) + minute + duration
+            end_hour, end_minute = divmod(end_total_minutes % (24 * 60), 60)
+            overnight = end_total_minutes >= 24 * 60
 
-        return TimelineBlock(
-            schedule_id=schedule_id,
-            day_of_week=day,
-            start_time=f"{hour:02d}:{minute:02d}",
-            end_time=f"{end_hour:02d}:{end_minute:02d}",
-            overnight=overnight,
-            mode_hint=ScheduleSpecMode.rrule,
-        )
+            return TimelineBlock(
+                schedule_id=schedule_id,
+                day_of_week=day,
+                start_time=f"{hour:02d}:{minute:02d}",
+                end_time=f"{end_hour:02d}:{end_minute:02d}",
+                overnight=overnight,
+                mode_hint=ScheduleSpecMode.rrule,
+            )
+        except ValueError as error:
+            logger.warning(
+                "Skipping timeline block for schedule_id=%s: invalid rrule format (%s). %s",
+                schedule_id,
+                rrule,
+                error,
+            )
+            return None
 
     def _timeline_to_rrule(self, day_of_week: str, start_time: str) -> str:
         day_code = {
@@ -413,12 +432,12 @@ class SchedulerUiService:
         return f"{int(minute)} {int(hour)} * * {cron_day}"
 
     def _cron_day_to_name(self, day_of_week: str) -> str:
-        supported_token_description = "single numeric day-of-week token in range 0-7"
+        supported_desc = "single numeric day-of-week token in range 0-7"
         unsupported_pattern_tokens = ("*", ",", "-", "/")
         if any(token in day_of_week for token in unsupported_pattern_tokens):
             raise ValueError(
                 "Unsupported cron day-of-week pattern "
-                f"'{day_of_week}'. Scheduler UI supports only a {supported_token_description}."
+                f"'{day_of_week}'. Scheduler UI supports only a {supported_desc}."
             )
 
         day_name = {
@@ -435,7 +454,7 @@ class SchedulerUiService:
         if day_name is None:
             raise ValueError(
                 "Unsupported cron day-of-week token "
-                f"'{day_of_week}'. Scheduler UI supports only a {supported_token_description}."
+                f"'{day_of_week}'. Scheduler UI supports only a {supported_desc}."
             )
 
         return day_name

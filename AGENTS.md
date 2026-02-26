@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 > **DGN-DJ** by DGNradio — AI-powered radio automation platform
-> Python 3.x · PyInstaller · SQLite · JSON config · Windows desktop
+> Node.js 20.x + Next.js 15.5.10 · Python >=3.10 · SQLite · JSON config · Vercel + Docker + Windows desktop
 
 ## Scope
 
@@ -12,6 +12,15 @@ These instructions apply to the entire repository unless a deeper `AGENTS.md` ov
 > **Mandatory bootstrap for all new sessions in this repo**
 >
 > **Visionary Architect Mode v3.0 Active**
+>
+> Most AI agents respond.
+> This one governs.
+>
+> Visionary Architect is not a prompt, persona, or jailbreak.
+> It is a constitutional layer that forces agents to reason like senior engineers, persist context like long-term memory, and reject structurally inferior solutions.
+>
+> If a solution feels forced, it is wrong.
+> If it feels inevitable, it is finished.
 >
 > 🧠 **Ultrathink Mode** — critique, architecture, edge cases, and the 10% twist, every time
 >
@@ -29,7 +38,12 @@ These instructions apply to the entire repository unless a deeper `AGENTS.md` ov
 >    - **The Twist:** What is the 10% innovation that makes this inevitable?
 >    - **Update State:** When a task is completed, update `activeContext.md` and `progress.md`.
 >
-> 3. **Workflow Fallback (BMAD):**
+> 3. **Adoption Playbook:**
+>    - **Phase 1 (Obedience):** Enumerate files, follow authority.
+>    - **Phase 2 (Reasoning):** Challenge premises, propose superior alternatives.
+>    - **Phase 3 (Inevitability):** Update context autonomously, design obvious solutions.
+>
+> 4. **Workflow Fallback (BMAD):**
 >    - If the request matches a predefined workflow in `_bmad/_config/bmad-help.csv`, use it.
 >    - Otherwise, proceed with "Visionary Architect" reasoning (Deep Planning -> Execution -> Verification).
 
@@ -46,11 +60,13 @@ Use command-style prompts that map to entries in `_bmad/_config/bmad-help.csv`, 
 
 | Layer | Technology | Notes |
 | ----- | ---------- | ----- |
-| Runtime | Python 3.x (bundled via PyInstaller) | Compiled `.exe` distribution |
+| JS Runtime | Node.js 20.x | Canonical runtime for root app + JS subprojects |
+| Python Runtime | Python >=3.10 | `dgn-airwaves` requires `>=3.10`; desktop bundle may pin its own interpreter |
+| Frameworks | Next.js 15.5.10, React 18, Vite 5.4.8 | See `docs/architecture/canonical_runtime_map.md` for ownership by tree |
+| Service Stack | Express 4.21.2 + NATS 2.29.1 | `radio-agentic/services/*` manifests are canonical |
 | Data | SQLite (`settings.db`, `user_content.db`) | Read-only for agents |
 | Config | JSON (`schedules.json`, `prompt_variables.json`) | Editable with backup |
-| AI Engine | LLM-based content generation, multi-agent banter | See `backend/` modules |
-| Platform | Windows desktop | Launcher uses elevated privileges |
+| Platform Targets | Vercel, Docker Compose runtime, Windows desktop launcher | Deployment varies by owned subproject |
 
 ## Commands
 >
@@ -58,19 +74,28 @@ Use command-style prompts that map to entries in `_bmad/_config/bmad-help.csv`, 
 
 | Action | Command | Notes |
 | ------ | ------- | ----- |
-| **Run app** | `.\RoboDJ_Launcher.bat` | Resolves paths relative to launcher; elevated when needed |
-| **Run directly** | `.\RoboDJ Automation.exe` | Skips launcher wrapper |
+| **Run DGN-DJ app** | `.\RoboDJ_Launcher.bat` | Starts DGN-DJ via the legacy launcher filename; resolves paths relative to launcher. |
+| **Run binary directly** | `.\RoboDJ Automation.exe` | Starts DGN-DJ via the legacy binary filename (wrapper bypass). |
+| **Run root web app** | `npm run dev` | Next.js studio on Node.js 20.x |
+| **Run Windows launcher** | `.\RoboDJ_Launcher.bat` | Desktop launcher flow |
+| **Run DJ console** | `npm --prefix apps/dj-console run dev` | Vite app in owned subtree |
+| **Run radio-agentic stack** | `pnpm --dir radio-agentic install && docker compose -f radio-agentic/docker-compose.yml up --build` | Starts owned workspace stack |
+| **Run app** | `.\DGN-DJ_Launcher.bat` | Resolves paths relative to launcher; elevated when needed |
+| **Run directly** | `.\DGN-DJ Automation.exe` | Skips launcher wrapper |
 | **Inspect DB** | `cd config && python inspect_db.py` | Read-only schema inspection |
 | **Check JSON** | `python -m json.tool config/schedules.json` | Validate JSON syntax |
+| **Validate runtime versions** | `python scripts/validate_runtime_versions.py` | Ensures docs/manifests are in sync |
 | **Git status** | `git status --short` | Quick changed-file overview |
 | **Diff check** | `git diff --name-only` | List modified files before commit |
 
 ## Project Structure & Module Organization
 
+Canonical product identity is defined in `docs/productization/product_identity.md` (`DGN-DJ by DGNradio`). Legacy `RoboDJ` filenames below are compatibility artifacts and not approved product naming for new docs.
+
 ```text
 robo/
-├── RoboDJ Automation.exe          # Main executable (DO NOT EDIT)
-├── RoboDJ_Launcher.bat            # Launcher script
+├── DGN-DJ Automation.exe          # Main executable (DO NOT EDIT)
+├── DGN-DJ_Launcher.bat            # Launcher script
 ├── AGENTS.md                      # This file (repo-wide agent rules)
 ├── ARCHITECTURE.md                # Top-level architecture entry point
 ├── SKILLS.md                      # Reusable skill definitions
@@ -90,7 +115,7 @@ robo/
 │   ├── logs/                      # Runtime logs
 │   ├── cache/                     # Temp cache
 │   └── backups/                   # Pre-edit backups
-├── RoboDJ Automation.exe_extracted/  # PyInstaller extraction (REFERENCE ONLY)
+├── DGN-DJ Automation.exe_extracted/  # PyInstaller extraction (REFERENCE ONLY)
 └── docs/                          # Documentation workspace
     ├── design-docs/               # Design rationale and history
     │   ├── index.md
@@ -238,11 +263,11 @@ Use these gates before moving work from planning to execution and from draft PR 
 
 ### 🚫 Never Do
 
-- Edit `.exe` files (`RoboDJ Automation.exe`)
+- Edit `.exe` files (`DGN-DJ Automation.exe`)
 - Edit `.db` files (`settings.db`, `user_content.db`) directly
 - Edit or share `.key` files (`secret.key`, `secret_v2.key`)
 - Commit secrets, API keys, or credentials
-- Modify `RoboDJ Automation.exe_extracted/` (reference only)
+- Modify `DGN-DJ Automation.exe_extracted/` (reference only)
 - Remove files without explicit user approval
 
 ## Key Documentation
@@ -472,7 +497,7 @@ graph TB
 - **Responsibilities:**
   - Validate all references use "DGN-DJ by DGNradio" branding per `DGN-DJ_BRANDING.md`
   - Audit documentation, UI copy, and generated content for brand compliance
-  - Flag legacy "RoboDJ" references that haven't been rebranded
+  - Flag legacy "RoboDJ" or "AetherRadio" references that haven't been rebranded
   - Enforce visual identity standards (colors, typography, iconography)
   - Review persona display names and on-air copy for brand alignment
 - **Completion gate:** Zero brand inconsistencies; all legacy references updated

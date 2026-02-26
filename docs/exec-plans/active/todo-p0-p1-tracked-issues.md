@@ -14,6 +14,9 @@ This index tracks all currently unchecked items from `TODO.md` under:
 | TI-004 | Implement key-rotation workflow CLI + operator checklist integration | Security Engineer | L | [`TI-004.md`](tracked-issues/TI-004.md) |
 | TI-005 | Add redaction policy contract tests for logs/API responses | QA Engineer | M | [`TI-005.md`](tracked-issues/TI-005.md) |
 | TI-006 | Add a pre-release security gate in release documentation | Release Manager | S | [`TI-006.md`](tracked-issues/TI-006.md) |
+| TI-039 | Task A1.3 — Add per-action approval workflows and immutable audit trail export | Security Architect | L | [`TI-039.md`](tracked-issues/TI-039.md) |
+| TI-040 | Task A2.2 — Add config-at-rest encryption for high-risk fields in JSON configs | Security Engineer | L | [`TI-040.md`](tracked-issues/TI-040.md) |
+| TI-041 | Task A3.1 — Add security smoke script (authN/authZ checks, lockout checks) | QA Engineer | M | [`TI-041.md`](tracked-issues/TI-041.md) |
 
 
 ## v1.2 Scheduler UI Issue Index
