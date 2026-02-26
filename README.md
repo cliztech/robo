@@ -1,9 +1,11 @@
+# DGN-DJ by DGNradio - AI-Powered Radio Automation Platform
 # DGN-DJ Studio - AI-Powered Radio Automation Platform
 
 **Complete Implementation Guide for Development Team**
 
 ## 🎯 Project Overview
 
+DGN-DJ by DGNradio is a next-generation AI-powered radio automation platform that enables users to run professional 24/7 internet radio stations with intelligent playlist generation, seamless crossfading, and real-time audio processing.
 DGN-DJ Studio is a next-generation AI-powered radio automation platform that enables users to run professional 24/7 internet radio stations with intelligent playlist generation, seamless crossfading, and real-time audio processing.
 
 ### Core Features
@@ -16,6 +18,8 @@ DGN-DJ Studio is a next-generation AI-powered radio automation platform that ena
 - **Modern UI**: Dark theme, drag-and-drop uploads, real-time visualizations
 
 ## 🏗️ Architecture
+
+The following architecture describes the DGN-DJ runtime and service stack.
 
 ```text
 ┌─────────────────────────────────────────────────────┐
@@ -77,7 +81,7 @@ DGN-DJ Studio is a next-generation AI-powered radio automation platform that ena
 
 ```bash
 git clone <repository-url>
-cd aetherradio
+cd dgn-dj
 pnpm install
 cp .env.example .env.local
 pnpm supabase db reset
@@ -158,4 +162,5 @@ Proprietary - All rights reserved.
 
 Last Updated: February 14, 2026
 Version: 1.0.0
+Team: DGN-DJ Development Team
 Team: DGN-DJ Studio Development Team

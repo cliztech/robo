@@ -5,6 +5,7 @@ Executing "Phase 6: Playlist Generation" hardening and preparing Phase 7 broadca
 Building the next unfinished execution plans from the roadmap queue, starting with P1 Security items (TI-039/TI-040/TI-041).
 
 ## Recent Decisions
+- Established canonical product naming decision (`DGN-DJ by DGNradio`) and added CI naming guardrails.
 
 - Established `docs/architecture/canonical_runtime_map.md` as runtime ownership and framework-version source of truth; aligned `README.md`, `AGENTS.md`, and `.context/techStack.md`; added CI drift guard.
 - Completed repository-wide branding migration for top-level docs, release/build workflows, and launcher expectations to DGN-DJ Studio.
@@ -25,6 +26,7 @@ Executing "Phase 5: AI Integration" through a quick-dev next-phase plan that dec
 - Extended BMAD command normalization guidance to explicitly map `bmad build dev` to `bmad-bmm-quick-dev`.
 
 ## Next Atomic Steps
+- [x] Canonical product identity decision + naming consistency pass across root docs and context files.
 - [ ] Sweep remaining deep docs/config script branding references (phase 2 rebrand pass).
 - [ ] Execute TI-039 packet (approval workflows + immutable audit export contract).
 - [ ] Execute TI-040 packet (config-at-rest encryption policy + operator workflow updates).

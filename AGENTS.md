@@ -74,6 +74,8 @@ Use command-style prompts that map to entries in `_bmad/_config/bmad-help.csv`, 
 
 | Action | Command | Notes |
 | ------ | ------- | ----- |
+| **Run DGN-DJ app** | `.\RoboDJ_Launcher.bat` | Starts DGN-DJ via the legacy launcher filename; resolves paths relative to launcher. |
+| **Run binary directly** | `.\RoboDJ Automation.exe` | Starts DGN-DJ via the legacy binary filename (wrapper bypass). |
 | **Run root web app** | `npm run dev` | Next.js studio on Node.js 20.x |
 | **Run Windows launcher** | `.\RoboDJ_Launcher.bat` | Desktop launcher flow |
 | **Run DJ console** | `npm --prefix apps/dj-console run dev` | Vite app in owned subtree |
@@ -87,6 +89,8 @@ Use command-style prompts that map to entries in `_bmad/_config/bmad-help.csv`, 
 | **Diff check** | `git diff --name-only` | List modified files before commit |
 
 ## Project Structure & Module Organization
+
+Canonical product identity is defined in `docs/productization/product_identity.md` (`DGN-DJ by DGNradio`). Legacy `RoboDJ` filenames below are compatibility artifacts and not approved product naming for new docs.
 
 ```text
 robo/

@@ -11,6 +11,9 @@ on:
       - 'config/**/*.py'
       - '*.md'
       - '*.bat'
+      - '.context/*.md'
+      - 'docs/productization/**/*.md'
+      - 'scripts/check_product_naming.py'
       - 'package.json'
       - 'apps/**/package.json'
       - 'radio-agentic/**/package.json'
@@ -26,6 +29,9 @@ on:
       - 'config/**/*.py'
       - '*.md'
       - '*.bat'
+      - '.context/*.md'
+      - 'docs/productization/**/*.md'
+      - 'scripts/check_product_naming.py'
       - 'package.json'
       - 'apps/**/package.json'
       - 'radio-agentic/**/package.json'
@@ -76,6 +82,10 @@ jobs:
 
           print('JSON shape checks passed.')
           PY
+
+      - name: Enforce canonical product naming
+        run: |
+          python scripts/check_product_naming.py
 
       - name: Check Python formatting (inspect_db.py)
         run: |
