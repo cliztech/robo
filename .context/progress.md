@@ -23,6 +23,11 @@
 - [ ] **Phase 5: AI Integration** (OpenAI GPT-4o, Track Analysis, Mood Detection; execution slices P5-01..P5-05 defined)
 - [~] **Phase 5: AI Integration** (Track analysis service, retries/idempotency/fallback queue foundation complete; model API wiring pending)
 
+## Recent Completed Work
+- [x] Introduced typed global studio state with deck/mixer/FX domains using Zustand.
+- [x] Refactored `DegenWaveform`, `DegenMixer`, and `DegenTransport` to consume/write global store state.
+- [x] Bridged store actions with `useAudioEngine` and telemetry updates for synchronized playback and UI rendering.
+
 ## Planned (Phases 6-15)
 - [ ] Phase 6: Playlist Generation (hardening/integration checks pending)
 - [ ] Phase 7: Broadcasting System (Icecast)

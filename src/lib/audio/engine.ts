@@ -52,6 +52,8 @@ export interface Track {
   title: string;
   artist: string;
   duration: number;
+  bpm?: number;
+  key?: string;
   fadeIn?: number;
   fadeOut?: number;
   startAt?: number;
