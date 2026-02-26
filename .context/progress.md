@@ -10,7 +10,7 @@
 ## In Progress
 - [x] **GUI Prompt Review + Agent Team Plan** (Requirements + execution plan documented in `docs/ui/gui_agent_team_review.md`)
 - [x] **Visionary Architect Migration** (Adopting structured context files)
-- [ ] **Phase 5: AI Integration** (OpenAI GPT-4o, Track Analysis, Mood Detection)
+- [~] **Phase 5: AI Integration** (Track analysis service, retries/idempotency/fallback queue foundation complete; model API wiring pending)
 
 ## Planned (Phases 6-15)
 - [ ] Phase 6: Playlist Generation
@@ -29,3 +29,5 @@
 
 ## Recent Ops Updates
 - [x] Tracked issue hygiene hardening: split TI-007/TI-008/TI-009 collisions, reassigned security tasks to TI-039/TI-040/TI-041, and added a one-header validation check.
+
+- [x] Phase 5 foundation: implemented `AnalysisService` (normalization, retry with fallback, idempotency) and queue processor with unit/integration tests.
