@@ -34,6 +34,7 @@ Executing "Phase 5: AI Integration" through a quick-dev next-phase plan that dec
 - [ ] Implement Story P5-04 (Analysis Fingerprint Cache).
 - [ ] Implement Story P5-05 (Verification Harness + latency baseline).
 - [ ] Convert `docs/ui/gui_agent_team_review.md` into implementation stories mapped to GUI-001..GUI-030.
+- [x] Resume "Phase 5: AI Integration" (Implemented typed AI service contracts, guarded API routes, and UI wiring for host/persona flows).
 - [x] Resume "Phase 5: AI Integration" foundation (Implemented AI track analysis service + queue processor + tests).
 - [x] Split mixed tracked-issue files and reassigned security tasks to dedicated TI IDs (TI-039/TI-040/TI-041) with reference updates.
 
