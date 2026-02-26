@@ -82,7 +82,7 @@ Use this override table when intake text explicitly asks to create/compose an ag
 | --- | --- | --- | --- |
 | `create agent team for gui`, `create agent team for dj console`, `create agent team for music console`, `build agent team for gui/music console`, `create agwnt team for gui`, `agwnt team for music console`, `dj/music console gui team` | `bmad-party-mode` | `bmad-bmm-create-ux-design` | Multi-agent collaboration is required first; UX workflow then turns discussion output into actionable design artifacts. |
 
-**Normalization notes for intake agents**
+#### Normalization notes for intake agents
 
 - Treat `agwnt` as `agent`.
 - Treat `gui`, `ui`, and `console gui` as equivalent frontend intent tokens.
