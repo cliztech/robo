@@ -40,5 +40,9 @@ describe('processAnalysisQueue', () => {
             { itemId: 'job-3', status: 'analyzed', source: 'ai' },
         ]);
         expect(adapter.analyzeTrack).toHaveBeenCalledTimes(2);
+        expect(service.getCacheTelemetry()).toEqual({
+            hit: 1,
+            miss: 2,
+        });
     });
 });

@@ -26,6 +26,7 @@
 - [~] **Phase 5: AI Integration** (Track analysis service, retries/idempotency/fallback queue foundation complete; model API wiring pending)
 
 ## Recent Completed Work
+- [x] Phase 5 verification hardening: cache hit/miss telemetry exposed in `AnalysisService`, integration assertions added, and latency artifact harness added.
 - [x] Introduced typed global studio state with deck/mixer/FX domains using Zustand.
 - [x] Refactored `DegenWaveform`, `DegenMixer`, and `DegenTransport` to consume/write global store state.
 - [x] Bridged store actions with `useAudioEngine` and telemetry updates for synchronized playback and UI rendering.

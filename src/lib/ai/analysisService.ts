@@ -47,6 +47,11 @@ export interface AnalysisServiceOptions {
     onRetry?: (attempt: number, error: unknown) => void;
 }
 
+export interface AnalysisCacheTelemetry {
+    hit: number;
+    miss: number;
+}
+
 const SUPPORTED_MOODS: TrackMood[] = ['calm', 'chill', 'energetic', 'intense', 'uplifting'];
 
 function clamp01(value: number): number {
@@ -106,6 +111,8 @@ export class AnalysisService {
     private readonly now: () => Date;
     private readonly onRetry?: (attempt: number, error: unknown) => void;
     private readonly byIdempotencyKey = new Map<string, TrackIntelligenceRecord>();
+    private cacheHitCount = 0;
+    private cacheMissCount = 0;
 
     constructor(options: AnalysisServiceOptions) {
         this.adapter = options.adapter;
@@ -119,12 +126,21 @@ export class AnalysisService {
         return this.byIdempotencyKey.size;
     }
 
+    getCacheTelemetry(): AnalysisCacheTelemetry {
+        return {
+            hit: this.cacheHitCount,
+            miss: this.cacheMissCount,
+        };
+    }
+
     async analyze(input: TrackAnalysisInput): Promise<AnalysisResult> {
         const idempotencyKey = this.buildIdempotencyKey(input.trackId, this.promptVersion);
         const cached = this.byIdempotencyKey.get(idempotencyKey);
         if (cached) {
+            this.cacheHitCount += 1;
             return { status: 'skipped', record: cached };
         }
+        this.cacheMissCount += 1;
 
         let attempt = 0;
         let normalized: TrackIntelligenceRecord | null = null;

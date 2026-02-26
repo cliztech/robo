@@ -93,5 +93,9 @@ describe('AnalysisService', () => {
         expect(first.status).toBe('analyzed');
         expect(second.status).toBe('skipped');
         expect(adapter.analyzeTrack).toHaveBeenCalledTimes(1);
+        expect(service.getCacheTelemetry()).toEqual({
+            hit: 1,
+            miss: 1,
+        });
     });
 });
