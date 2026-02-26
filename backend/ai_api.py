@@ -11,7 +11,7 @@ from backend.ai_service import (
     AIServiceError,
     AITimeoutError,
     HostScriptRequest,
-    TrackAnalysisRequest,
+    LegacyAITrackAnalysisRequest,
 )
 
 router = APIRouter(prefix="/api/v1/ai", tags=["ai"])
@@ -20,12 +20,12 @@ _service = AIInferenceService()
 
 @router.post("/track-analysis", response_model=AIResponseEnvelope)
 def analyze_track(
-    request: TrackAnalysisRequest,
+    request: LegacyAITrackAnalysisRequest,
     x_correlation_id: str | None = Header(default=None, alias="X-Correlation-ID"),
 ) -> AIResponseEnvelope:
     correlation_id = x_correlation_id or str(uuid.uuid4())
     try:
-        result, latency_ms, cost_usd = _service.analyze_track(request, correlation_id)
+        result, latency_ms, cost_usd = _service.analyze_track(request.to_canonical(correlation_id), correlation_id)
     except AICircuitOpenError as exc:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
     except AITimeoutError as exc:

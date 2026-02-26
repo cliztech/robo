@@ -1,13 +1,17 @@
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 
+from backend.ai.contracts.track_analysis import TrackAnalysisRequest, TrackAnalysisResult
 from backend.security.auth import verify_api_key
-from backend.track_analysis_service import (
-    TrackAnalysisEnvelope,
-    TrackAnalysisRequest,
-    TrackAnalysisService,
-)
+from backend.track_analysis_service import TrackAnalysisService
 
 router = APIRouter(prefix="/api/v1/ai", tags=["track-analysis"])
+
+
+class TrackAnalysisEnvelope(BaseModel):
+    success: bool
+    data: TrackAnalysisResult | None
+    error: str | None
 
 
 def get_track_analysis_service() -> TrackAnalysisService:
