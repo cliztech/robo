@@ -13,6 +13,7 @@ describe('processAnalysisQueue', () => {
 
         const service = new AnalysisService({
             adapter,
+            modelVersion: 'gpt-4o-mini-2026-02-15',
             promptVersion: 'v5.4',
         });
 

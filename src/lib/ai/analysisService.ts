@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 export type TrackMood = 'calm' | 'chill' | 'energetic' | 'intense' | 'uplifting';
 
 export interface TrackAnalysisInput {
@@ -26,7 +28,13 @@ export interface TrackIntelligenceRecord {
     confidence: number;
     source: 'ai' | 'fallback';
     attempts: number;
+    modelVersion: string;
     promptVersion: string;
+    fingerprint: {
+        trackContentHash: string;
+        modelVersion: string;
+        promptProfileVersion: string;
+    };
     analyzedAt: string;
 }
 
@@ -41,6 +49,7 @@ export interface AnalysisAdapter {
 
 export interface AnalysisServiceOptions {
     adapter: AnalysisAdapter;
+    modelVersion: string;
     promptVersion: string;
     maxRetries?: number;
     now?: () => Date;
@@ -101,6 +110,7 @@ function createFallbackAnalysis(input: TrackAnalysisInput): RawTrackAnalysis {
 
 export class AnalysisService {
     private readonly adapter: AnalysisAdapter;
+    private readonly modelVersion: string;
     private readonly promptVersion: string;
     private readonly maxRetries: number;
     private readonly now: () => Date;
@@ -109,6 +119,7 @@ export class AnalysisService {
 
     constructor(options: AnalysisServiceOptions) {
         this.adapter = options.adapter;
+        this.modelVersion = options.modelVersion;
         this.promptVersion = options.promptVersion;
         this.maxRetries = options.maxRetries ?? 2;
         this.now = options.now ?? (() => new Date());
@@ -120,7 +131,8 @@ export class AnalysisService {
     }
 
     async analyze(input: TrackAnalysisInput): Promise<AnalysisResult> {
-        const idempotencyKey = this.buildIdempotencyKey(input.trackId, this.promptVersion);
+        const fingerprint = this.buildFingerprint(input);
+        const idempotencyKey = this.buildIdempotencyKey(fingerprint);
         const cached = this.byIdempotencyKey.get(idempotencyKey);
         if (cached) {
             return { status: 'skipped', record: cached };
@@ -133,11 +145,11 @@ export class AnalysisService {
             attempt += 1;
             try {
                 const raw = await this.adapter.analyzeTrack(input, this.promptVersion);
-                normalized = this.normalize(raw, input, idempotencyKey, 'ai', attempt);
+                normalized = this.normalize(raw, input, idempotencyKey, fingerprint, 'ai', attempt);
             } catch (error) {
                 if (attempt > this.maxRetries) {
                     const fallback = createFallbackAnalysis(input);
-                    normalized = this.normalize(fallback, input, idempotencyKey, 'fallback', attempt);
+                    normalized = this.normalize(fallback, input, idempotencyKey, fingerprint, 'fallback', attempt);
                     break;
                 }
                 this.onRetry?.(attempt, error);
@@ -152,14 +164,31 @@ export class AnalysisService {
         return { status: 'analyzed', record: normalized };
     }
 
-    private buildIdempotencyKey(trackId: string, promptVersion: string): string {
-        return `${trackId}:${promptVersion}`;
+    private buildFingerprint(input: TrackAnalysisInput): TrackIntelligenceRecord['fingerprint'] {
+        const metadata = {
+            artist: normalizeFingerprintString(input.artist),
+            bpm: typeof input.bpm === 'number' ? input.bpm : null,
+            durationSeconds: typeof input.durationSeconds === 'number' ? input.durationSeconds : null,
+            genre: normalizeFingerprintString(input.genre),
+            title: normalizeFingerprintString(input.title),
+        };
+
+        return {
+            trackContentHash: deterministicHash(canonicalizePreimage(metadata)),
+            modelVersion: this.modelVersion,
+            promptProfileVersion: this.promptVersion,
+        };
+    }
+
+    private buildIdempotencyKey(fingerprint: TrackIntelligenceRecord['fingerprint']): string {
+        return deterministicHash(canonicalizePreimage(fingerprint));
     }
 
     private normalize(
         raw: RawTrackAnalysis,
         input: TrackAnalysisInput,
         idempotencyKey: string,
+        fingerprint: TrackIntelligenceRecord['fingerprint'],
         source: 'ai' | 'fallback',
         attempts: number
     ): TrackIntelligenceRecord {
@@ -177,10 +206,38 @@ export class AnalysisService {
             confidence: clamp01((energy + genreConfidence) / 2),
             source,
             attempts,
+            modelVersion: this.modelVersion,
             promptVersion: this.promptVersion,
+            fingerprint,
             analyzedAt: this.now().toISOString(),
         };
     }
+}
+
+function normalizeFingerprintString(value?: string): string | null {
+    if (typeof value !== 'string') {
+        return null;
+    }
+
+    const normalized = value.trim().replace(/\s+/g, ' ').toLowerCase();
+    return normalized.length > 0 ? normalized : null;
+}
+
+function canonicalizePreimage(value: unknown): string {
+    if (Array.isArray(value)) {
+        return `[${value.map((entry) => canonicalizePreimage(entry)).join(',')}]`;
+    }
+
+    if (value && typeof value === 'object') {
+        const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b));
+        return `{${entries.map(([key, entry]) => `${JSON.stringify(key)}:${canonicalizePreimage(entry)}`).join(',')}}`;
+    }
+
+    return JSON.stringify(value);
+}
+
+function deterministicHash(input: string): string {
+    return createHash('sha256').update(input).digest('hex');
 }
 
 export interface AnalysisQueueItem {
