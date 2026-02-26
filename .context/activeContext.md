@@ -1,6 +1,11 @@
 # Active Context
 
 ## Current Focus
+Building the next unfinished execution plans from the roadmap queue, starting with P1 Security items (TI-039/TI-040/TI-041).
+
+## Recent Decisions
+- Regenerated `docs/exec-plans/active/unfinished-task-build-plan.md` from the latest TODO/workflow state to refresh unfinished-task ordering.
+- Published `docs/exec-plans/active/2026-02-25-next-unfinished-phase-build.md` to sequence the next phased work (TI-039 -> TI-040 -> TI-041).
 Executing "Phase 5: AI Integration" through a quick-dev next-phase plan that decomposes AI track analysis into sprintable stories (P5-01..P5-05).
 
 ## Recent Decisions
@@ -16,6 +21,10 @@ Executing "Phase 5: AI Integration" through a quick-dev next-phase plan that dec
 - Extended BMAD command normalization guidance to explicitly map `bmad build dev` to `bmad-bmm-quick-dev`.
 
 ## Next Atomic Steps
+- [ ] Execute TI-039 packet (approval workflows + immutable audit export contract).
+- [ ] Execute TI-040 packet (config-at-rest encryption policy + operator workflow updates).
+- [ ] Execute TI-041 packet (security smoke script + expected signatures).
+- [x] Regenerate unfinished-task build plan and publish the next phased build artifact for P1 Security.
 - [ ] Implement Story P5-01 (Typed Track Analysis Contract).
 - [ ] Implement Story P5-02 (Deterministic Prompt Profile Resolver).
 - [ ] Implement Story P5-03 (Resilient AI Invocation Layer).
