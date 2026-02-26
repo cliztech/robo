@@ -23,6 +23,7 @@ When users issue short slash commands (for example, `/bmad build`) that are not 
 | Incoming slash command | Canonical BMAD command | Rationale |
 | --- | --- | --- |
 | `/bmad build` | `bmad-bmm-quick-dev` | Implies immediate implementation/delivery intent in a one-off flow. |
+| `bmad build dev` | `bmad-bmm-quick-dev` | Natural-language alias for quick implementation mode; normalize to the same one-off delivery flow. |
 
 If no safe mapping is obvious, run `bmad-help` behavior and present nearest valid commands from `_bmad/_config/bmad-help.csv`.
 
