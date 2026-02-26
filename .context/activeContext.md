@@ -37,6 +37,8 @@ Executing "Phase 5: AI Integration" through a quick-dev next-phase plan that dec
 
 - Extended BMAD command normalization guidance to explicitly map `bmad build dev` to `bmad-bmm-quick-dev`.
 
+- Hardened `backend/playlist_service.py` artist handling with centralized normalization and normalized repeat/transition scoring.
+
 ## Next Atomic Steps
 - [ ] Keep tracked-issue coverage table in sync with status/ownership updates.
 - [x] Implement unified DJ studio surface layout for decks/studio route.
