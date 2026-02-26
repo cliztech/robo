@@ -1,4 +1,4 @@
-# AetherRadio - Technology Stack
+# DGN-DJ Studio - Technology Stack
 
 ## Core Framework
 
