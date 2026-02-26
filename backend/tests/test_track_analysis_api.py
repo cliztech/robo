@@ -35,6 +35,16 @@ class _StubService(TrackAnalysisService):
         return super().analyze(request)
 
 
+class _DegradedStubService(TrackAnalysisService):
+    def analyze(self, request):  # noqa: ANN001
+        raise ValueError("contract fallback: missing optional enrichment")
+
+
+class _FailedStubService(TrackAnalysisService):
+    def analyze(self, request):  # noqa: ANN001
+        raise TimeoutError("analysis timed out")
+
+
 def test_analyze_track_requires_api_key() -> None:
     client = TestClient(app)
     response = client.post("/api/v1/ai/analyze-track", json={})
@@ -66,7 +76,66 @@ def test_analyze_track_returns_envelope() -> None:
 
     assert response.status_code == 200
     body = response.json()
+    assert body["status"] == "success"
     assert body["success"] is True
     assert body["error"] is None
     assert body["data"]["track_id"] == "trk_010"
     assert body["data"]["analysis"]["genre"] == "dance"
+
+
+def test_analyze_track_returns_degraded_on_contract_fallback() -> None:
+    app.dependency_overrides[get_track_analysis_service] = lambda: _DegradedStubService()
+    client = TestClient(app)
+    payload = {
+        "track_id": "trk_011",
+        "metadata": {
+            "title": "Fallback Lane",
+            "artist": "DJ Arc",
+            "duration_seconds": 198,
+        },
+    }
+
+    try:
+        response = client.post(
+            "/api/v1/ai/analyze-track",
+            json=payload,
+            headers={"X-API-Key": TEST_API_KEY},
+        )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "degraded"
+    assert body["success"] is True
+    assert body["data"] is None
+    assert "contract fallback" in body["error"]
+
+
+def test_analyze_track_returns_failed_on_timeout() -> None:
+    app.dependency_overrides[get_track_analysis_service] = lambda: _FailedStubService()
+    client = TestClient(app)
+    payload = {
+        "track_id": "trk_012",
+        "metadata": {
+            "title": "Timeout Road",
+            "artist": "DJ Arc",
+            "duration_seconds": 198,
+        },
+    }
+
+    try:
+        response = client.post(
+            "/api/v1/ai/analyze-track",
+            json=payload,
+            headers={"X-API-Key": TEST_API_KEY},
+        )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 504
+    body = response.json()
+    assert body["status"] == "failed"
+    assert body["success"] is False
+    assert body["data"] is None
+    assert "timed out" in body["error"]
