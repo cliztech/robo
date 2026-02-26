@@ -7,6 +7,10 @@
 - [x] **Phase 3: Audio Engine** (Web Audio API, EQ, Compressor, Crossfade)
 - [x] **Phase 4: File Upload** (Drag & Drop, Validation, Metadata Extraction)
 
+## Design Operations
+- [x] Published DJ console design pod charter (`docs/ui/dj_console_design_pod.md`) with mission, scope, roster, cadence ownership, decision rights, required artifacts, and DoD.
+- [x] Cross-linked design pod charter in backlog, delivery plan, and AGENTS Design Team section for execution consistency.
+
 ## In Progress
 - [x] Added GUI BMAD startup packet runbook (`docs/exec-plans/active/gui-bmad-startup-packet.md`) defining input template, minimal command sequence, artifact paths, and acceptance gates.
 - [x] **GUI Prompt Review + Agent Team Plan** (Requirements + execution plan documented in `docs/ui/gui_agent_team_review.md`)

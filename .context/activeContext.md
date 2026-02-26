@@ -5,6 +5,8 @@ Executing "Phase 6: Playlist Generation" hardening and preparing Phase 7 broadca
 Building the next unfinished execution plans from the roadmap queue, starting with P1 Security items (TI-039/TI-040/TI-041).
 
 ## Recent Decisions
+- Published `docs/ui/dj_console_design_pod.md` as the mission-specific charter for GUI console design with explicit ownership cadence and quality gates.
+- Linked design pod charter into `docs/ui/dj_console_gui_todo_backlog.md`, `docs/ui/radio_operator_ui_delivery_plan.md`, and `AGENTS.md` Design Team guidance.
 - Added GUI BMAD startup packet runbook at `docs/exec-plans/active/gui-bmad-startup-packet.md` to standardize minimal command flow and acceptance gates for GUI request startup.
 - Established canonical product naming decision (`DGN-DJ by DGNradio`) and added CI naming guardrails.
 
@@ -29,6 +31,8 @@ Executing "Phase 5: AI Integration" through a quick-dev next-phase plan that dec
 - Extended BMAD command normalization guidance to explicitly map `bmad build dev` to `bmad-bmm-quick-dev`.
 
 ## Next Atomic Steps
+- [ ] Run first weekly DJ console design review gate using the new pod charter checklist.
+- [ ] Resume "Phase 5: AI Integration" (Implement AI track analysis).
 - [x] Canonical product identity decision + naming consistency pass across root docs and context files.
 - [ ] Sweep remaining deep docs/config script branding references (phase 2 rebrand pass).
 - [ ] Execute TI-039 packet (approval workflows + immutable audit export contract).
