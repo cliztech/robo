@@ -4,7 +4,7 @@ import { DegenTransport } from '@/components/audio/DegenTransport';
 import type { DJTelemetry } from '@/lib/audio/telemetry';
 
 const buildTelemetry = (progress: number): DJTelemetry => ({
-  timestamp: Date.now(),
+  timestamp: 1672531200000, // A fixed timestamp, e.g., 2023-01-01
   transport: {
     elapsedSeconds: progress * 200,
     durationSeconds: 200,
