@@ -49,6 +49,7 @@
 
 
 ## Recent Ops Updates
+- [x] Playlist generation constraint hardening: removed silent hard-filter fallback, added structured infeasibility diagnostics (bpm_delta/genre_run_length/duration_target), and returned API-level 422 envelopes when constraints cannot be satisfied.
 - [x] Security automation hardening: re-enabled CodeQL, removed unsupported defaults, and added high/critical gate + RB-023 triage flow.
 - [x] Implemented release readiness gate automation (tests/config/security/docs) with consolidated artifact reporting and protected-branch ruleset sync.
 
