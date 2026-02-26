@@ -1,31 +1,66 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { cn } from '../../lib/utils';
 import { DegenVUMeter } from './DegenVUMeter';
 import { DegenKnob } from './DegenKnob';
-import {
-    DEFAULT_MIXER_CHANNELS,
-    MixerChannel,
-    MixerChannelState,
-    buildDefaultMixerState,
-} from '../../lib/degenDataAdapters';
+import { DEFAULT_MIXER_CHANNELS, type MixerChannel } from '../../lib/degenDataAdapters';
+import { useStudioStore } from '../../stores/studioState';
 import type { DJTelemetry } from '../../lib/audio/telemetry';
 
 interface DegenMixerProps {
+  channels?: MixerChannel[];
+  telemetry?: DJTelemetry;
+  className?: string;
     channels?: MixerChannel[];
-    telemetry?: DJTelemetry;
+    telemetry?: {
+        mixer?: {
+            channels?: Array<{ id: string; level: number; peak: number }>;
+        };
+    };
     className?: string;
 }
 
 interface ChannelStripProps {
-    channel: MixerChannel;
-    state: MixerChannelState;
-    telemetryLevel: number;
-    telemetryPeak: number;
-    onStateChange: (partial: Partial<MixerChannelState>) => void;
+  channel: MixerChannel;
+  gain: number;
+  eq: { hi: number; mid: number; low: number };
+  telemetryLevel: number;
+  telemetryPeak: number;
+  onGainChange: (gain: number) => void;
+  onEQChange: (band: 'hi' | 'mid' | 'low', value: number) => void;
 }
 
+function ChannelStrip({ channel, gain, eq, telemetryLevel, telemetryPeak, onGainChange, onEQChange }: ChannelStripProps) {
+  return (
+    <div className="flex flex-col items-center gap-2 w-16 group relative">
+      <div className="flex flex-col items-center gap-1.5 pt-2 pb-1 w-full border-b border-white/[0.04]">
+        <div className="text-[9px] font-black uppercase tracking-wider mb-1 px-1.5 py-0.5 rounded-sm" style={{ color: channel.color, backgroundColor: `${channel.color}15` }}>
+          {channel.label}
+        </div>
+        <DegenKnob value={eq.hi} onChange={(v) => onEQChange('hi', v)} label="HI" size={28} color={channel.color} />
+        <DegenKnob value={eq.mid} onChange={(v) => onEQChange('mid', v)} label="MID" size={28} color={channel.color} />
+        <DegenKnob value={eq.low} onChange={(v) => onEQChange('low', v)} label="LOW" size={28} color={channel.color} />
+      </div>
+
+      <div className="flex gap-2 h-32 items-stretch">
+        <div className="h-full pt-1 pb-1">
+          <DegenVUMeter level={telemetryLevel} peak={telemetryPeak} size="md" />
+        </div>
+        <div className="relative w-8 h-full bg-black/40 rounded-sm border border-white/[0.06] shadow-inner">
+          <input
+            type="range"
+            min={0}
+            max={100}
+            step={1}
+            value={gain}
+            onChange={(e) => onGainChange(parseInt(e.target.value, 10))}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
+            aria-label={`${channel.label} volume`}
+          />
+          <div className="absolute left-0 right-0 h-8 -ml-[1px] -mr-[1px] z-10" style={{ bottom: `${gain}%`, transform: 'translateY(50%)' }}>
+            <div className="w-full h-full rounded-[1px] bg-zinc-700 border border-white/20" />
+          </div>
 function ChannelStrip({ channel, state, telemetryLevel, telemetryPeak, onStateChange }: ChannelStripProps) {
     return (
         <div className="flex flex-col items-center gap-2 w-16 group relative">
@@ -74,7 +109,7 @@ function ChannelStrip({ channel, state, telemetryLevel, telemetryPeak, onStateCh
                         <DegenVUMeter
                             level={telemetryLevel || (state.mute ? 0 : state.vuLevel * (state.volume / 100))}
                             peak={telemetryPeak}
-                            size="md"
+                            size="sm"
                         />
                     </div>
 
@@ -109,7 +144,7 @@ function ChannelStrip({ channel, state, telemetryLevel, telemetryPeak, onStateCh
                             value={state.volume}
                             onChange={(e) => onStateChange({ volume: parseInt(e.target.value, 10) })}
                             className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
-                            aria-label="${channel.label} volume"
+                            aria-label={`${channel.label} volume`}
                         />
                     </div>
                 </div>
@@ -117,7 +152,7 @@ function ChannelStrip({ channel, state, telemetryLevel, telemetryPeak, onStateCh
                 <div className="flex gap-1 w-full justify-center">
                     <button
                         onClick={() => onStateChange({ mute: !state.mute })}
-                        aria-label="${channel.label} mute"
+                        aria-label={`${channel.label} mute`}
                         aria-pressed={state.mute}
                         className={cn(
                             'text-[9px] font-black w-6 h-5 flex items-center justify-center rounded-[2px] border transition-all',
@@ -131,7 +166,7 @@ function ChannelStrip({ channel, state, telemetryLevel, telemetryPeak, onStateCh
                     {channel.type !== 'master' && (
                         <button
                             onClick={() => onStateChange({ solo: !state.solo })}
-                            aria-label="${channel.label} solo"
+                            aria-label={`${channel.label} solo`}
                             aria-pressed={state.solo}
                             className={cn(
                                 'text-[9px] font-black w-6 h-5 flex items-center justify-center rounded-[2px] border transition-all',
@@ -146,10 +181,64 @@ function ChannelStrip({ channel, state, telemetryLevel, telemetryPeak, onStateCh
                 </div>
             </div>
         </div>
-    );
+      </div>
+    </div>
+  );
 }
 
 export function DegenMixer({ channels = DEFAULT_MIXER_CHANNELS, telemetry, className }: DegenMixerProps) {
+  const mixer = useStudioStore((state) => state.mixer);
+  const storeTelemetry = useStudioStore((state) => state.telemetry);
+  const setChannelGain = useStudioStore((state) => state.setChannelGain);
+  const setChannelEq = useStudioStore((state) => state.setChannelEq);
+  const setCrossfader = useStudioStore((state) => state.setCrossfader);
+
+  const activeTelemetry = telemetry ?? storeTelemetry;
+  const telemetryMap = useMemo(() => {
+    const entries = activeTelemetry?.mixer.channels ?? [];
+    return new Map(entries.map((channel) => [channel.id, channel]));
+  }, [activeTelemetry]);
+
+  return (
+    <div className={cn('glass-panel overflow-hidden', className)}>
+      <div className="panel-header">
+        <span className="panel-header-title">Mixer Console</span>
+        <span className="text-[8px] font-mono text-zinc-600">{channels.length} CH</span>
+      </div>
+
+      <div className="flex gap-1.5 p-3 overflow-x-auto custom-scrollbar items-start">
+        {channels.map((channel) => {
+          const state = mixer.channels[channel.id] ?? { gain: 70, eq: { hi: 50, mid: 50, low: 50 } };
+          const channelTelemetry = telemetryMap.get(channel.id);
+          return (
+            <ChannelStrip
+              key={channel.id}
+              channel={channel}
+              gain={state.gain}
+              eq={state.eq}
+              telemetryLevel={channelTelemetry?.level ?? state.gain / 100}
+              telemetryPeak={channelTelemetry?.peak ?? state.gain / 100}
+              onGainChange={(gain) => setChannelGain(channel.id, gain)}
+              onEQChange={(band, value) => setChannelEq(channel.id, band, value)}
+            />
+          );
+        })}
+      </div>
+
+      <div className="px-4 pb-3 pt-1 border-t border-white/[0.03]">
+        <span className="text-[7px] font-black uppercase tracking-widest text-zinc-600">Crossfader</span>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={mixer.crossfader}
+          onChange={(e) => setCrossfader(parseInt(e.target.value, 10))}
+          className="w-full"
+          aria-label="Crossfader"
+        />
+      </div>
+    </div>
+  );
     const [states, setStates] = useState<Record<string, MixerChannelState>>(() => buildDefaultMixerState(channels));
     const [crossfader, setCrossfader] = useState(50);
     const [localTelemetryTick, setLocalTelemetryTick] = useState(0);
@@ -177,7 +266,9 @@ export function DegenMixer({ channels = DEFAULT_MIXER_CHANNELS, telemetry, class
     // Map telemetry to channels
     const telemetryMap = useMemo(() => {
         const entries = telemetry?.mixer?.channels ?? [];
-        return new Map(entries.map((channel) => [channel.id, channel]));
+        return new Map<string, { id: string; level: number; peak: number }>(
+            entries.map((channel) => [channel.id, channel])
+        );
     }, [telemetry]);
 
     const handleChannelChange = (channelId: string, partial: Partial<MixerChannelState>) => {
@@ -195,8 +286,11 @@ export function DegenMixer({ channels = DEFAULT_MIXER_CHANNELS, telemetry, class
                     <div className="w-2 h-2 rounded-full bg-[hsl(var(--color-deck-a))] shadow-glow-deck-a" />
                     <span className="panel-header-title">Mixer Console</span>
                 </div>
-                <div className="flex items-center gap-2">
-                    <span className="text-[8px] font-mono text-zinc-600">{channels.length} CH</span>
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-black/40 border border-white/[0.05]">
+                        <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="text-[8px] font-mono font-bold text-emerald-500/80">32-BIT FLOAT</span>
+                    </div>
                 </div>
             </div>
 
@@ -227,7 +321,8 @@ export function DegenMixer({ channels = DEFAULT_MIXER_CHANNELS, telemetry, class
                 })}
             </div>
 
-            <div className="px-4 pb-3 pt-1 border-t border-white/[0.03]">
+            {/* Crossfader Section */}
+            <div className="px-4 pb-3 pt-1 border-t border-white/[0.03] relative z-10">
                 <div className="flex items-center gap-1 mb-1">
                     <span className="text-[7px] font-black uppercase tracking-widest text-zinc-600">Crossfader</span>
                 </div>
@@ -274,7 +369,7 @@ export function DegenMixer({ channels = DEFAULT_MIXER_CHANNELS, telemetry, class
                             <div className="absolute inset-x-1.5 top-[7px] h-[1px] bg-white/20" />
                         </div>
                     </div>
-                    <span className="text-[9px] font-black text-deck-b w-3 text-right">B</span>
+                    <span className="text-[9px] font-black text-emerald-400/80 w-3 text-right">B</span>
                 </div>
             </div>
         </div>

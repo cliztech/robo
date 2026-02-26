@@ -61,15 +61,21 @@ function SidebarIcon({
 
 function DgnDjConsoleBadge() {
     return (
-        <div className="w-full px-3 pb-2">
+        <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+            className="w-full px-3 pb-2"
+        >
             <div className="rounded-md border border-white/[0.09] bg-gradient-to-b from-[#111726] to-[#0a0e17] px-2 py-2">
                 <div className="text-[14px] font-semibold text-zinc-100 tracking-tight leading-none">DGN-DJ</div>
                 <div className="text-[8px] uppercase tracking-[0.12em] text-zinc-400 mt-1">Console V2 Studio Mode</div>
-                <div className="mt-2 h-[3px] rounded-full bg-black/40 overflow-hidden">
+                <div className="mt-2 h-[3px] rounded-full bg-black/40 overflow-hidden relative">
                     <div className="h-full w-[6%] bg-cyan-300" />
+                    <div className="absolute inset-0 shimmer opacity-40" />
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 }
 

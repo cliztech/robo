@@ -1,6 +1,12 @@
 import { AudioAnalyzer } from './analyzer';
 import type { AudioMetrics, Track } from './engine';
 
+export interface StudioTelemetrySnapshot {
+  waveformPosition: number;
+  durationSeconds: number;
+  waveformData: number[];
+}
+
 export interface TransportTelemetry {
   progress: number;
   elapsedSeconds: number;
@@ -142,5 +148,15 @@ export function createDJTelemetry(metrics: AudioMetrics | null, currentTrack: Tr
       clipDetected,
       limiterEngaged,
     },
+  };
+}
+
+export function createStudioTelemetrySnapshot(metrics: AudioMetrics | null, currentTrack: Track | null): StudioTelemetrySnapshot {
+  const telemetry = createDJTelemetry(metrics, currentTrack);
+
+  return {
+    waveformPosition: telemetry.transport.progress,
+    durationSeconds: telemetry.transport.durationSeconds,
+    waveformData: telemetry.waveformPeaks,
   };
 }

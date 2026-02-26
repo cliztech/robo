@@ -8,7 +8,7 @@ from backend.app import app
 from backend.playlist_api import get_playlist_service
 from backend.playlist_service import PlaylistGenerationService
 
-TEST_API_KEY = "valid_api_key_for_testing"
+TEST_API_KEY = "valid_api_key_for_testing" # example
 
 
 @pytest.fixture(autouse=True)
