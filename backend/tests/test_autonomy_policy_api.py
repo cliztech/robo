@@ -5,11 +5,9 @@ from fastapi.testclient import TestClient
 from backend.app import app
 from backend.scheduling.api import get_policy_service
 from backend.scheduling.autonomy_service import AutonomyPolicyService
-from backend.scheduling import api as autonomy_api
 from backend.security.auth import verify_api_key
 
 import unittest.mock
-import os
 
 TEST_API_KEY = "test-secret-key"
 
@@ -149,50 +147,25 @@ def test_invalid_payload_rejections_api(tmp_path):
     auth_headers = {"X-API-Key": TEST_API_KEY}
 
     try:
+        # Invalid policy (missing required fields or invalid enum values if checked deeply,
+        # but here we rely on what causes 422).
+        # Assuming "mode_permissions" structure mismatch or similar triggers validation error.
+        # Actually, let's construct a payload that is definitely invalid for Pydantic.
         invalid_policy = {
-            "station_default_mode": "manual_assist",
-            "mode_permissions": {
-                "manual_assist": {
-                    "track_selection": "human_only"
-                },
-                "semi_auto": {
-                    "track_selection": "human_with_ai_assist",
-                    "script_generation": "ai_with_human_approval",
-                    "voice_persona_selection": "human_with_ai_assist",
-                    "caller_simulation_usage": "ai_with_human_approval",
-                    "breaking_news_weather_interruption": "ai_with_human_approval",
-                },
-                "auto_with_human_override": {
-                    "track_selection": "ai_autonomous",
-                    "script_generation": "ai_autonomous",
-                    "voice_persona_selection": "ai_autonomous",
-                    "caller_simulation_usage": "ai_autonomous",
-                    "breaking_news_weather_interruption": "ai_with_human_approval",
-                },
-                "show_overrides": [],
-                "timeslot_overrides": [],
-            }
+            "station_default_mode": "invalid_mode_enum",
+            "show_overrides": [],
+            "timeslot_overrides": [],
+        }
 
-            put_response = client.put(
-                "/api/v1/autonomy-policy", json=invalid_policy, headers=headers
-            )
-            assert put_response.status_code == 422
-
-            post_response = client.post(
-                "/api/v1/autonomy-policy/audit-events",
-                params={"decision_type": "track_selection", "origin": "robot"},
-                headers=headers,
-            )
-            assert post_response.status_code == 422
-        finally:
-            app.dependency_overrides.clear()
-        put_response = client.put("/api/v1/autonomy-policy", json=invalid_policy, headers=auth_headers)
+        put_response = client.put(
+            "/api/v1/autonomy-policy", json=invalid_policy, headers=auth_headers
+        )
         assert put_response.status_code == 422
 
         post_response = client.post(
             "/api/v1/autonomy-policy/audit-events",
-            params={"decision_type": "track_selection", "origin": "robot"},
-            headers=auth_headers
+            params={"decision_type": "track_selection", "origin": "robot"}, # 'robot' is invalid origin
+            headers=auth_headers,
         )
         assert post_response.status_code == 422
     finally:
@@ -214,20 +187,13 @@ def test_get_policy_auto_recovers_invalid_policy_file(tmp_path, monkeypatch):
     monkeypatch.setattr(policy_api, "_service_instance", None)
     monkeypatch.setattr(policy_api, "AutonomyPolicyService", _factory)
 
-    with unittest.mock.patch.dict(os.environ, {"ROBODJ_SECRET_KEY": "test-secret-key"}):
-        client = TestClient(app)
-        headers = {"X-API-Key": "test-secret-key"}
-
-        get_response = client.get("/api/v1/autonomy-policy", headers=headers)
+    # We need to mock verify_api_key or provide the key
     app.dependency_overrides[verify_api_key] = lambda: "test-key"
     client = TestClient(app)
     auth_headers = {"X-API-Key": TEST_API_KEY}
 
-    get_response = client.get("/api/v1/autonomy-policy", headers=auth_headers)
-    assert get_response.status_code == 200
-    assert get_response.json()["station_default_mode"] == "semi_auto"
     try:
-        get_response = client.get("/api/v1/autonomy-policy")
+        get_response = client.get("/api/v1/autonomy-policy", headers=auth_headers)
         assert get_response.status_code == 200
         assert get_response.json()["station_default_mode"] == "semi_auto"
 
