@@ -49,6 +49,7 @@
 
 
 ## Recent Ops Updates
+- [x] Phase 5 analysis status hardening: added invocation health status + typed error classification with queue-level propagation and test coverage.
 - [x] Security automation hardening: re-enabled CodeQL, removed unsupported defaults, and added high/critical gate + RB-023 triage flow.
 - [x] Implemented release readiness gate automation (tests/config/security/docs) with consolidated artifact reporting and protected-branch ruleset sync.
 

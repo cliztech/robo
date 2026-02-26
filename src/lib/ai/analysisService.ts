@@ -30,9 +30,20 @@ export interface TrackIntelligenceRecord {
     analyzedAt: string;
 }
 
+export type InvocationStatus = 'success' | 'degraded' | 'failed';
+export type ErrorClassification = 'timeout' | 'rate_limit' | 'invalid_payload' | 'unknown';
+export type CacheBehavior = 'processed' | 'skipped';
+
+export interface AnalysisResultMetadata {
+    cacheBehavior: CacheBehavior;
+    errorClassification?: ErrorClassification;
+    attempts: number;
+}
+
 export interface AnalysisResult {
-    status: 'analyzed' | 'skipped';
-    record: TrackIntelligenceRecord;
+    invocationStatus: InvocationStatus;
+    record?: TrackIntelligenceRecord;
+    metadata: AnalysisResultMetadata;
 }
 
 export interface AnalysisAdapter {
@@ -99,6 +110,19 @@ function createFallbackAnalysis(input: TrackAnalysisInput): RawTrackAnalysis {
     };
 }
 
+function classifyError(error: unknown): ErrorClassification {
+    const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+
+    if (/(timeout|timed out|abort)/i.test(message)) return 'timeout';
+    if (/(rate\s*limit|429|too many requests)/i.test(message)) return 'rate_limit';
+    if (/(invalid payload|malformed|schema|validation)/i.test(message)) return 'invalid_payload';
+    return 'unknown';
+}
+
+function invocationStatusFromSource(source: 'ai' | 'fallback'): Exclude<InvocationStatus, 'failed'> {
+    return source === 'ai' ? 'success' : 'degraded';
+}
+
 export class AnalysisService {
     private readonly adapter: AnalysisAdapter;
     private readonly promptVersion: string;
@@ -123,33 +147,75 @@ export class AnalysisService {
         const idempotencyKey = this.buildIdempotencyKey(input.trackId, this.promptVersion);
         const cached = this.byIdempotencyKey.get(idempotencyKey);
         if (cached) {
-            return { status: 'skipped', record: cached };
+            return {
+                invocationStatus: invocationStatusFromSource(cached.source),
+                record: cached,
+                metadata: {
+                    cacheBehavior: 'skipped',
+                    attempts: 0,
+                },
+            };
         }
 
         let attempt = 0;
-        let normalized: TrackIntelligenceRecord | null = null;
-
-        while (attempt <= this.maxRetries && !normalized) {
+        while (attempt <= this.maxRetries) {
             attempt += 1;
             try {
                 const raw = await this.adapter.analyzeTrack(input, this.promptVersion);
-                normalized = this.normalize(raw, input, idempotencyKey, 'ai', attempt);
+                const normalized = this.normalize(raw, input, idempotencyKey, 'ai', attempt);
+                this.byIdempotencyKey.set(idempotencyKey, normalized);
+
+                return {
+                    invocationStatus: 'success',
+                    record: normalized,
+                    metadata: {
+                        cacheBehavior: 'processed',
+                        attempts: attempt,
+                    },
+                };
             } catch (error) {
+                const errorClassification = classifyError(error);
+                const isRetryable = errorClassification === 'timeout' || errorClassification === 'rate_limit';
+
+                if (!isRetryable) {
+                    return {
+                        invocationStatus: 'failed',
+                        metadata: {
+                            cacheBehavior: 'processed',
+                            errorClassification,
+                            attempts: attempt,
+                        },
+                    };
+                }
+
                 if (attempt > this.maxRetries) {
                     const fallback = createFallbackAnalysis(input);
-                    normalized = this.normalize(fallback, input, idempotencyKey, 'fallback', attempt);
-                    break;
+                    const normalized = this.normalize(fallback, input, idempotencyKey, 'fallback', attempt);
+                    this.byIdempotencyKey.set(idempotencyKey, normalized);
+
+                    return {
+                        invocationStatus: 'degraded',
+                        record: normalized,
+                        metadata: {
+                            cacheBehavior: 'processed',
+                            errorClassification,
+                            attempts: attempt,
+                        },
+                    };
                 }
+
                 this.onRetry?.(attempt, error);
             }
         }
 
-        if (!normalized) {
-            throw new Error('Analysis did not complete.');
-        }
-
-        this.byIdempotencyKey.set(idempotencyKey, normalized);
-        return { status: 'analyzed', record: normalized };
+        return {
+            invocationStatus: 'failed',
+            metadata: {
+                cacheBehavior: 'processed',
+                errorClassification: 'unknown',
+                attempts: attempt,
+            },
+        };
     }
 
     private buildIdempotencyKey(trackId: string, promptVersion: string): string {
@@ -190,8 +256,10 @@ export interface AnalysisQueueItem {
 
 export interface AnalysisQueueResult {
     itemId: string;
-    status: 'analyzed' | 'skipped';
-    source: 'ai' | 'fallback';
+    invocationStatus: InvocationStatus;
+    cacheBehavior: CacheBehavior;
+    source?: 'ai' | 'fallback';
+    errorClassification?: ErrorClassification;
 }
 
 export async function processAnalysisQueue(
@@ -204,8 +272,10 @@ export async function processAnalysisQueue(
         const outcome = await service.analyze(item.input);
         results.push({
             itemId: item.id,
-            status: outcome.status,
-            source: outcome.record.source,
+            invocationStatus: outcome.invocationStatus,
+            cacheBehavior: outcome.metadata.cacheBehavior,
+            source: outcome.record?.source,
+            errorClassification: outcome.metadata.errorClassification,
         });
     }
 

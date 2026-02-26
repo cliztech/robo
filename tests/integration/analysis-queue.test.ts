@@ -35,10 +35,58 @@ describe('processAnalysisQueue', () => {
         );
 
         expect(results).toEqual([
-            { itemId: 'job-1', status: 'analyzed', source: 'ai' },
-            { itemId: 'job-2', status: 'skipped', source: 'ai' },
-            { itemId: 'job-3', status: 'analyzed', source: 'ai' },
+            { itemId: 'job-1', invocationStatus: 'success', cacheBehavior: 'processed', source: 'ai', errorClassification: undefined },
+            { itemId: 'job-2', invocationStatus: 'success', cacheBehavior: 'skipped', source: 'ai', errorClassification: undefined },
+            { itemId: 'job-3', invocationStatus: 'success', cacheBehavior: 'processed', source: 'ai', errorClassification: undefined },
         ]);
         expect(adapter.analyzeTrack).toHaveBeenCalledTimes(2);
     });
+
+    it('propagates degraded and failed statuses with error classifications', async () => {
+        const adapter = {
+            analyzeTrack: vi
+                .fn()
+                .mockRejectedValueOnce(new Error('request timeout from provider'))
+                .mockRejectedValueOnce(new Error('request timeout from provider'))
+                .mockRejectedValueOnce(new Error('invalid payload schema mismatch')),
+        };
+
+        const service = new AnalysisService({
+            adapter,
+            promptVersion: 'v5.4',
+            maxRetries: 1,
+        });
+
+        const results = await processAnalysisQueue(
+            [
+                {
+                    id: 'job-timeout',
+                    input: { trackId: 'track-timeout', title: 'Timeout Song', artist: 'A', bpm: 150 },
+                },
+                {
+                    id: 'job-invalid',
+                    input: { trackId: 'track-invalid', title: 'Invalid Song', artist: 'B' },
+                },
+            ],
+            service
+        );
+
+        expect(results).toEqual([
+            {
+                itemId: 'job-timeout',
+                invocationStatus: 'degraded',
+                cacheBehavior: 'processed',
+                source: 'fallback',
+                errorClassification: 'timeout',
+            },
+            {
+                itemId: 'job-invalid',
+                invocationStatus: 'failed',
+                cacheBehavior: 'processed',
+                source: undefined,
+                errorClassification: 'invalid_payload',
+            },
+        ]);
+    });
+
 });
