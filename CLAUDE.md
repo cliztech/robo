@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This repository acts as the **Runtime Distribution & Core Engine** for **DGN-DJ by DGNradio** (also referred to as AetherRadio in newer docs). It is a hybrid repository containing:
-1.  **Legacy Core**: A compiled Windows executable (`RoboDJ Automation.exe`) and launcher.
+This repository acts as the **Runtime Distribution & Core Engine** for **DGN-DJ by DGNradio** (also referred to as DGN-DJ Studio in newer docs). It is a hybrid repository containing:
+1.  **Legacy Core**: A compiled Windows executable (`DGN-DJ Automation.exe`) and launcher.
 2.  **Modern Backend**: Python/FastAPI services (`backend/`) that drive AI autonomy and scheduling.
 3.  **React Frontend**: Source code (`src/`) for the next-generation UI (build system currently separate).
 
@@ -26,8 +26,8 @@ This repository acts as the **Runtime Distribution & Core Engine** for **DGN-DJ 
 ### Runtime (Windows Production)
 | Action | Command | Notes |
 | ------ | ------- | ----- |
-| **Run App** | `.\RoboDJ_Launcher.bat` | Portable path resolution; elevated when needed |
-| **Run Binary** | `.\RoboDJ Automation.exe` | Direct execution (skips launcher wrapper) |
+| **Run App** | `.\DGN-DJ_Launcher.bat` | Portable path resolution; elevated when needed |
+| **Run Binary** | `.\DGN-DJ Automation.exe` | Direct execution (skips launcher wrapper) |
 | **Inspect DB** | `python config/inspect_db.py` | Read-only schema inspection of runtime SQLite DBs |
 | **Check Config** | `python config/validate_config.py` | Validates JSON configuration schemas |
 
@@ -37,7 +37,7 @@ See `AGENTS.md` → **Project Structure & Module Organization** for the full tre
 
 - **Backend** (`backend/`): Python FastAPI services handling autonomy policies, scheduling logic, and secret integrity.
 - **Modules** (`dgn-*/`): Domain Graph Nodes. Python packages containing specialized logic (e.g., `dgn-airwaves`, `dgn-robo-rippa`).
-- **Frontend** (`src/`): React/Next.js source code for the AetherRadio UI. *Note: `package.json` is currently missing from root; this is source-only.*
+- **Frontend** (`src/`): React/Next.js source code for the DGN-DJ Studio UI. *Note: `package.json` is currently missing from root; this is source-only.*
 - **Configuration** (`config/`): Runtime state, JSON autonomy profiles, prompt templates, and SQLite databases.
 - **Contracts** (`contracts/`): API definitions and redaction rules.
 
