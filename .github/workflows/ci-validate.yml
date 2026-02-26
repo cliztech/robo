@@ -11,6 +11,12 @@ on:
       - 'config/**/*.py'
       - '*.md'
       - '*.bat'
+      - 'package.json'
+      - 'apps/**/package.json'
+      - 'radio-agentic/**/package.json'
+      - 'dgn-airwaves/pyproject.toml'
+      - 'scripts/validate_runtime_versions.py'
+      - 'docs/architecture/canonical_runtime_map.md'
   pull_request:
     branches:
       - main
@@ -20,6 +26,12 @@ on:
       - 'config/**/*.py'
       - '*.md'
       - '*.bat'
+      - 'package.json'
+      - 'apps/**/package.json'
+      - 'radio-agentic/**/package.json'
+      - 'dgn-airwaves/pyproject.toml'
+      - 'scripts/validate_runtime_versions.py'
+      - 'docs/architecture/canonical_runtime_map.md'
 
 permissions:
   contents: read
@@ -38,6 +50,9 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
+      - name: Validate canonical runtime versions against manifests
+        run: python scripts/validate_runtime_versions.py
 
       - name: Validate JSON syntax
         run: |

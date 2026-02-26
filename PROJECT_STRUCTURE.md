@@ -1,4 +1,4 @@
-# AetherRadio - Project Structure
+# DGN-DJ Studio - Project Structure
 
 ## Complete Folder Organization
 
