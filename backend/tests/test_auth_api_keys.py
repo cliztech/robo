@@ -26,6 +26,7 @@ def test_verify_api_key_invalid_key_response():
         with mock.patch.dict(os.environ, {"ROBODJ_SECRET_KEY": "expected-key"}, clear=False): # example
             with pytest.raises(HTTPException) as exc:
                 await verify_api_key(api_key="wrong-key") # example
+                await verify_api_key(api_key="invalid-test-key")
             return exc
 
     exc = asyncio.run(_run())
@@ -39,6 +40,7 @@ def test_verify_api_key_missing_server_configured_key_response():
         with mock.patch.dict(os.environ, {}, clear=True):
             with pytest.raises(HTTPException) as exc:
                 await verify_api_key(api_key="anything") # example
+                await verify_api_key(api_key="arbitrary-test-key")
             return exc
 
     exc = asyncio.run(_run())
@@ -59,6 +61,7 @@ def test_get_scheduler_api_key_invalid_key_response():
     with mock.patch.dict(os.environ, {"ROBODJ_SCHEDULER_API_KEY": "expected-key"}, clear=False): # example
         with pytest.raises(HTTPException) as exc:
             get_scheduler_api_key(api_key="wrong-key") # example
+            get_scheduler_api_key(api_key="invalid-test-key")
 
     assert exc.value.status_code == 401
     assert exc.value.detail == "Invalid API Key"
@@ -68,6 +71,7 @@ def test_get_scheduler_api_key_missing_server_configured_key_response():
     with mock.patch.dict(os.environ, {}, clear=True):
         with pytest.raises(HTTPException) as exc:
             get_scheduler_api_key(api_key="anything") # example
+            get_scheduler_api_key(api_key="arbitrary-test-key")
 
     assert exc.value.status_code == 500
     assert exc.value.detail == "Server configuration error: Scheduler API key not configured"

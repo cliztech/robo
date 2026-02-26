@@ -9,6 +9,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, Query, HTTPException
 from fastapi.responses import HTMLResponse
+from backend.security.auth import verify_api_key
 
 from backend.security.auth import verify_api_key
 from .autonomy_policy import (

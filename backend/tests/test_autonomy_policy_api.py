@@ -9,6 +9,9 @@ from backend.scheduling.autonomy_service import AutonomyPolicyService
 from backend.security.auth import verify_api_key
 
 TEST_API_KEY = "test-secret-key" # example
+import unittest.mock
+
+TEST_API_KEY = "test-secret-key"
 
 @pytest.fixture(autouse=True)
 def mock_env_api_key():
@@ -146,6 +149,10 @@ def test_invalid_payload_rejections_api(tmp_path):
     auth_headers = {"X-API-Key": TEST_API_KEY}
 
     try:
+        # Invalid policy (missing required fields or invalid enum values if checked deeply,
+        # but here we rely on what causes 422).
+        # Assuming "mode_permissions" structure mismatch or similar triggers validation error.
+        # Actually, let's construct a payload that is definitely invalid for Pydantic.
         invalid_policy = {
             "station_default_mode": "manual_assist",
             "mode_permissions": {
@@ -167,6 +174,7 @@ def test_invalid_payload_rejections_api(tmp_path):
                     "breaking_news_weather_interruption": "ai_with_human_approval",
                 },
             },
+            "station_default_mode": "invalid_mode_enum",
             "show_overrides": [],
             "timeslot_overrides": [],
         }
@@ -178,7 +186,7 @@ def test_invalid_payload_rejections_api(tmp_path):
 
         post_response = client.post(
             "/api/v1/autonomy-policy/audit-events",
-            params={"decision_type": "track_selection", "origin": "robot"},
+            params={"decision_type": "track_selection", "origin": "robot"}, # 'robot' is invalid origin
             headers=auth_headers,
         )
         assert post_response.status_code == 422
@@ -202,6 +210,7 @@ def test_get_policy_auto_recovers_invalid_policy_file(tmp_path, monkeypatch):
     monkeypatch.setattr(policy_api, "AutonomyPolicyService", _factory)
 
     # Use dependency override for auth instead of mocking env which is brittle here
+    # We need to mock verify_api_key or provide the key
     app.dependency_overrides[verify_api_key] = lambda: "test-key"
     client = TestClient(app)
     auth_headers = {"X-API-Key": TEST_API_KEY}
