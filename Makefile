@@ -3,7 +3,7 @@
 
 PYTHON ?= python3
 ARTIFACT_DIR ?= .artifacts
-CONFIG_ARCHIVE ?= $(ARTIFACT_DIR)/robodj-config.tgz
+CONFIG_ARCHIVE ?= $(ARTIFACT_DIR)/dgn-dj-studio-config.tgz
 
 help:
 	@echo "Targets:"
@@ -29,7 +29,7 @@ build-robo-rippa:
 	$(PYTHON) -m compileall -q dgn-robo-rippa/src
 
 package-config:
-	@test -f "RoboDJ_Launcher.bat"
+	@test -f "DGN-DJ_Launcher.bat"
 	@mkdir -p "$(ARTIFACT_DIR)"
 	@find config -maxdepth 1 -type f \( -name "*.json" -o -name "*.signal" -o -name "*.lock" \) -print0 | xargs -0 tar -czf "$(CONFIG_ARCHIVE)"
 	@echo "Build complete: $(CONFIG_ARCHIVE)"
@@ -41,7 +41,7 @@ qa:
 
 smoke:
 	@echo "Smoke target: validating runtime artifacts"
-	@test -f "RoboDJ_Launcher.bat"
+	@test -f "DGN-DJ_Launcher.bat"
 	@echo "Smoke check complete"
 
 run-airwaves:
@@ -54,3 +54,36 @@ check: build
 	$(PYTHON) -m json.tool docs/architecture/event-schema.json > /dev/null
 
 distcheck: check
+
+# ── Sprint 1 additions ─────────────────────────────────────
+
+dev:
+	docker compose -f docker-compose.dev.yml up
+
+dev-down:
+	docker compose -f docker-compose.dev.yml down
+
+test-backend:
+	$(PYTHON) -m pytest backend/tests -x -q --tb=short
+
+test-frontend:
+	npm run test
+
+lint-backend:
+	$(PYTHON) -m ruff check backend/ --output-format=full
+
+lint-frontend:
+	npm run lint
+
+secret-scan:
+	$(PYTHON) scripts/check_no_secrets.py
+
+migrate:
+	$(PYTHON) -m alembic upgrade head
+
+migrate-down:
+	$(PYTHON) -m alembic downgrade -1
+
+test: test-backend test-frontend
+
+lint: lint-backend lint-frontend

@@ -6,8 +6,8 @@ from backend.app import app
 from backend.scheduling.scheduler_ui_api import get_scheduler_service
 from backend.scheduling.scheduler_ui_service import SchedulerUiService
 
-TEST_API_KEY = "valid_api_key_for_testing"
-GLOBAL_API_KEY = "global_api_key_should_not_work"
+TEST_API_KEY = "valid_api_key_for_testing" # example
+GLOBAL_API_KEY = "global_api_key_should_not_work" # example
 
 def _override_service(tmp_path):
     schedules_path = tmp_path / "schedules.json"

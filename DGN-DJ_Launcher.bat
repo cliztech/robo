@@ -9,20 +9,15 @@ set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
 
 set "PRIMARY_EXE_PATH=%SCRIPT_DIR%\DGN-DJ Automation.exe"
-set "LEGACY_EXE_PATH=%SCRIPT_DIR%\RoboDJ Automation.exe"
 set "EXE_PATH=%PRIMARY_EXE_PATH%"
 set "CONFIG_DIR=%SCRIPT_DIR%\config"
 set "SCRIPTS_DIR=%CONFIG_DIR%\scripts"
 set "SAFETY_SCRIPT=%SCRIPTS_DIR%\startup_safety.py"
 
 if not exist "%EXE_PATH%" (
-    if exist "%LEGACY_EXE_PATH%" (
-        set "EXE_PATH=%LEGACY_EXE_PATH%"
-    ) else (
-        echo [DGN-DJ] ERROR: Unable to find DGN-DJ Automation executable.
-        echo [DGN-DJ] Expected path: "%PRIMARY_EXE_PATH%"
-        exit /b 1
-    )
+    echo [DGN-DJ] ERROR: Unable to find DGN-DJ Automation executable.
+    echo [DGN-DJ] Expected path: "%PRIMARY_EXE_PATH%"
+    exit /b 1
 )
 
 if not exist "%SAFETY_SCRIPT%" (

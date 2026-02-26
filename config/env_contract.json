@@ -10,7 +10,11 @@
           "required": true,
           "secret": false,
           "type": "enum",
-          "allowed_values": ["development", "staging", "production"],
+          "allowed_values": [
+            "development",
+            "staging",
+            "production"
+          ],
           "allow_placeholder_values": false,
           "description": "Runtime environment label used by startup and operational scripts."
         },
@@ -28,7 +32,12 @@
           "required": true,
           "secret": false,
           "type": "enum",
-          "allowed_values": ["DEBUG", "INFO", "WARNING", "ERROR"],
+          "allowed_values": [
+            "DEBUG",
+            "INFO",
+            "WARNING",
+            "ERROR"
+          ],
           "allow_placeholder_values": false,
           "description": "Process log verbosity."
         },
@@ -53,6 +62,26 @@
           "secret": true,
           "type": "secret",
           "description": "Secondary runtime secret key."
+        },
+        {
+          "name": "ROBODJ_IDLE_TIMEOUT_MINUTES",
+          "required": false,
+          "secret": false,
+          "type": "integer",
+          "min": 1,
+          "max": 1440,
+          "allow_placeholder_values": false,
+          "description": "Idle timeout threshold in minutes for operator sessions."
+        },
+        {
+          "name": "ROBODJ_REAUTH_GRACE_MINUTES",
+          "required": false,
+          "secret": false,
+          "type": "integer",
+          "min": 0,
+          "max": 60,
+          "allow_placeholder_values": false,
+          "description": "Grace period before requiring re-authentication for sensitive actions."
         }
       ]
     },
@@ -73,7 +102,11 @@
           "required": true,
           "secret": false,
           "type": "enum",
-          "allowed_values": ["development", "staging", "production"],
+          "allowed_values": [
+            "development",
+            "staging",
+            "production"
+          ],
           "allow_placeholder_values": false,
           "description": "Runtime environment label inside containers."
         },
@@ -82,7 +115,12 @@
           "required": true,
           "secret": false,
           "type": "enum",
-          "allowed_values": ["DEBUG", "INFO", "WARNING", "ERROR"],
+          "allowed_values": [
+            "DEBUG",
+            "INFO",
+            "WARNING",
+            "ERROR"
+          ],
           "allow_placeholder_values": false,
           "description": "Container log verbosity."
         },
@@ -109,6 +147,26 @@
           "secret": true,
           "type": "secret",
           "description": "Secondary runtime secret key."
+        },
+        {
+          "name": "ROBODJ_IDLE_TIMEOUT_MINUTES",
+          "required": false,
+          "secret": false,
+          "type": "integer",
+          "min": 1,
+          "max": 1440,
+          "allow_placeholder_values": false,
+          "description": "Idle timeout threshold in minutes for operator sessions."
+        },
+        {
+          "name": "ROBODJ_REAUTH_GRACE_MINUTES",
+          "required": false,
+          "secret": false,
+          "type": "integer",
+          "min": 0,
+          "max": 60,
+          "allow_placeholder_values": false,
+          "description": "Grace period before requiring re-authentication for sensitive actions."
         }
       ]
     },
@@ -120,7 +178,10 @@
           "required": true,
           "secret": false,
           "type": "enum",
-          "allowed_values": ["true", "1"],
+          "allowed_values": [
+            "true",
+            "1"
+          ],
           "allow_placeholder_values": false,
           "description": "Canonical CI marker."
         },
@@ -129,7 +190,9 @@
           "required": true,
           "secret": false,
           "type": "enum",
-          "allowed_values": ["true"],
+          "allowed_values": [
+            "true"
+          ],
           "allow_placeholder_values": false,
           "description": "GitHub Actions marker in CI context."
         },
@@ -156,7 +219,11 @@
           "required": true,
           "secret": false,
           "type": "enum",
-          "allowed_values": ["development", "staging", "production"],
+          "allowed_values": [
+            "development",
+            "staging",
+            "production"
+          ],
           "allow_placeholder_values": false,
           "description": "Target environment for CI validation/deploy stage."
         },
