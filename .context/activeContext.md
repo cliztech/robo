@@ -62,3 +62,5 @@ Executing "Phase 5: AI Integration" through a quick-dev next-phase plan that dec
 - [x] Split mixed tracked-issue files and reassigned security tasks to dedicated TI IDs (TI-039/TI-040/TI-041) with reference updates.
 
 - [ ] Start Phase 7 implementation stories for Icecast streaming and metadata updates.
+
+- Added streaming-gateway Icecast listener polling with `stream.listeners` NATS telemetry events, env-driven interval/failure thresholds, and degraded `system.health` alerts on consecutive failures.

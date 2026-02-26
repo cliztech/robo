@@ -2,6 +2,11 @@ import { spawn } from "node:child_process";
 import { createBus } from "../../../shared/src/nats";
 import type { NowPlaying } from "../../../shared/src/types";
 import { icecastUrl } from "./icecast";
+import {
+  buildIcecastStatsUrl,
+  resolveListenerPollingConfigFromEnv,
+  startListenerPolling,
+} from "./listeners";
 
 const NATS_URL = process.env.NATS_URL ?? "nats://nats:4222";
 const FIFO_PATH = process.env.AUDIO_FIFO ?? "/tmp/radio.pcm";
@@ -11,6 +16,8 @@ const ICE_PORT = Number(process.env.ICECAST_PORT ?? 8000);
 const ICE_MOUNT = process.env.ICECAST_MOUNT ?? "/stream";
 const ICE_USER = process.env.ICECAST_USER ?? "source";
 const ICE_PASS = process.env.ICECAST_PASS ?? "__SET_IN_ENV__";
+
+const statsConfig = resolveListenerPollingConfigFromEnv();
 
 const INVALID_CREDENTIAL_PLACEHOLDERS = new Set([
   "",
@@ -63,6 +70,24 @@ async function main() {
 
   const ff = spawn("ffmpeg", cmd, { stdio: "inherit" });
   ff.on("exit", (code) => console.log(`ffmpeg exited ${code}`));
+
+  const listenerPoller = startListenerPolling(bus, {
+    ...statsConfig,
+    statsUrl: buildIcecastStatsUrl(ICE_HOST, ICE_PORT, statsConfig.statsUrl),
+  });
+
+  const shutdown = async () => {
+    listenerPoller.stop();
+    await bus.close();
+  };
+
+  process.once("SIGINT", () => {
+    void shutdown().finally(() => process.exit(0));
+  });
+
+  process.once("SIGTERM", () => {
+    void shutdown().finally(() => process.exit(0));
+  });
 
   await bus.subscribe<NowPlaying>("now_playing", async (evt) => {
     const np = evt.data;
