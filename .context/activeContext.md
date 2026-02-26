@@ -5,6 +5,8 @@ Executing "Phase 6: Playlist Generation" hardening and preparing Phase 7 broadca
 Building the next unfinished execution plans from the roadmap queue, starting with P1 Security items (TI-039/TI-040/TI-041).
 
 ## Recent Decisions
+
+- Standardized `DegenTransport` seek behavior to use a telemetry-backed `progressOverride` flow with commit callbacks and deduplicated key rendering.
 - Published `docs/ui/dj_console_design_pod.md` as the mission-specific charter for GUI console design with explicit ownership cadence and quality gates.
 - Linked design pod charter into `docs/ui/dj_console_gui_todo_backlog.md`, `docs/ui/radio_operator_ui_delivery_plan.md`, and `AGENTS.md` Design Team guidance.
 - Added GUI BMAD startup packet runbook at `docs/exec-plans/active/gui-bmad-startup-packet.md` to standardize minimal command flow and acceptance gates for GUI request startup.

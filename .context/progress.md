@@ -35,6 +35,9 @@
 
 ## Blocked
 - None
+## Recently Completed
+- [x] DegenTransport seek-source refactor with unit tests for drag preview, seek commit callback, and single key metadata rendering.
+
 
 ## Recent Ops Updates
 - [x] Security automation hardening: re-enabled CodeQL, removed unsupported defaults, and added high/critical gate + RB-023 triage flow.

@@ -35,6 +35,7 @@ interface DegenTransportProps {
     onPlayPause?: () => void;
     onNext?: () => void;
     onPrev?: () => void;
+    onSeek?: (position: number) => void;
     className?: string;
 }
 
@@ -63,8 +64,19 @@ export function DegenTransport({
     onPlayPause,
     onNext,
     onPrev,
+    onSeek,
     className,
 }: DegenTransportProps) {
+    const track = resolveTransportTrack(currentTrack);
+    const transportTelemetry = resolveTransportTelemetry(telemetry ? adaptDJTelemetryToTransportTelemetry(telemetry) : undefined);
+
+    const [telemetryStep, setTelemetryStep] = useState(0);
+    const [progressOverride, setProgressOverride] = useState<number | null>(null);
+    const [pendingSeekPosition, setPendingSeekPosition] = useState<number | null>(null);
+
+    useEffect(() => {
+        setVolume(transportTelemetry.volume);
+    }, [transportTelemetry.volume]);
     const track = currentTrack ?? DEFAULT_TRACK;
     const [volume, setVolume] = useState(75);
     const [isMuted, setIsMuted] = useState(false);
@@ -102,6 +114,23 @@ export function DegenTransport({
         vuRight: 0.35 + Math.random() * 0.15,
     }), [telemetry, playbackProgress, phase]);
 
+    const phase = typeof telemetryTick === 'number' ? telemetryTick : telemetryStep;
+    const [volume, setVolume] = useState(85);
+    const [isMuted, setIsMuted] = useState(false);
+    const [repeat, setRepeat] = useState(false);
+    const [shuffle, setShuffle] = useState(false);
+
+    const progress = progressOverride ?? transportTelemetry.progress ?? 0;
+
+    useEffect(() => {
+        if (pendingSeekPosition === null) return;
+
+        if (Math.abs(transportTelemetry.progress - pendingSeekPosition) <= 0.005) {
+            setPendingSeekPosition(null);
+            setProgressOverride(null);
+        }
+    }, [pendingSeekPosition, transportTelemetry.progress]);
+    const elapsed = telemetry?.transport.elapsedSeconds ?? progress * (track.duration || 0);
     const progress = transportTelemetry.progress ?? 0;
     const elapsedTime = telemetry?.transport.elapsedSeconds ?? progress * (track.duration || 0);
     const vuLeft =
@@ -120,6 +149,28 @@ export function DegenTransport({
         return (track.duration || 0) - elapsedTime;
     }, [elapsedTime, telemetry, track.duration]);
 
+    const formatTime = (seconds: number) => {
+        const safeSeconds = Math.max(0, seconds);
+        const m = Math.floor(safeSeconds / 60);
+        const s = Math.floor(safeSeconds % 60);
+        return `${m}:${s.toString().padStart(2, '0')}`;
+    };
+
+    const commitSeek = (nextPosition: number) => {
+        const clampedPosition = Math.max(0, Math.min(1, nextPosition));
+
+        if (!onSeek) {
+            setProgressOverride(null);
+            setPendingSeekPosition(null);
+            return;
+        }
+
+        onSeek(clampedPosition);
+        setPendingSeekPosition(clampedPosition);
+    };
+
+
+    const VolumeIcon = isMuted ? VolumeX : volume < 40 ? Volume1 : Volume2;
     const VolumeIcon = useMemo(() => {
         if (isMuted) return VolumeX;
         if (volume < 40) return Volume1;
@@ -185,6 +236,7 @@ export function DegenTransport({
                 <div className="flex-1 group relative h-7 flex items-center">
                     <div className="absolute inset-x-0 h-[3px] rounded-full bg-white/[0.06] overflow-hidden">
                         <div
+                            data-testid="transport-progress-fill"
                             className="h-full rounded-full transition-[width] duration-100"
                             style={{
                                 width: `${progress * 100}%`,
@@ -200,6 +252,15 @@ export function DegenTransport({
                         max={1}
                         step={0.001}
                         value={progress}
+                        onChange={(e) => setProgressOverride(parseFloat(e.target.value))}
+                        onMouseUp={(e) => commitSeek(parseFloat(e.currentTarget.value))}
+                        onTouchEnd={(e) => commitSeek(parseFloat(e.currentTarget.value))}
+                        onKeyUp={(e) => {
+                            const seekKeys = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
+                            if (seekKeys.includes(e.key)) {
+                                commitSeek(parseFloat(e.currentTarget.value));
+                            }
+                        }}
                         onChange={(e) => setPlaybackProgress(parseFloat(e.target.value))}
                         className="absolute inset-x-0 h-7 w-full opacity-0 cursor-pointer z-10"
                     />
@@ -214,6 +275,55 @@ export function DegenTransport({
                 <span className="text-[10px] font-mono text-zinc-600 tabular-nums w-9 shrink-0">-{formatTime(remaining)}</span>
             </div>
 
+            <div className="flex items-center gap-2 px-3 shrink-0 border-l border-white/[0.04]">
+                <div className="flex flex-col items-center px-2 py-1 rounded bg-white/[0.02]">
+                    <span className="text-[8px] text-zinc-600 uppercase font-bold tracking-widest">BPM</span>
+                    <span className="text-[12px] font-mono font-black text-zinc-300 tabular-nums">{track.bpm || '—'}</span>
+                </div>
+                <div className="flex flex-col items-center px-2 py-1 rounded bg-deck-b-soft border border-deck-b-soft">
+                    <span className="text-[8px] text-zinc-600 uppercase font-bold tracking-widest">Key</span>
+                    <span className="text-[12px] font-mono font-black text-[hsl(var(--color-deck-b))] tabular-nums">{track.key || '—'}</span>
+                </div>
+                <div className="flex flex-col gap-0.5 ml-1">
+                    <div className="flex items-center gap-1">
+                        <Radio size={10} className={cn(telemetry?.signalFlags.clipDetected ? 'text-red-400' : 'text-zinc-700')} />
+                        <span
+                            className={cn(
+                                'text-[8px] font-black uppercase tracking-wider',
+                                telemetry?.signalFlags.clipDetected ? 'text-red-400' : 'text-zinc-600'
+                            )}
+                        >
+                            Clip
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <div
+                            className={cn(
+                                'w-1.5 h-1.5 rounded-full',
+                                telemetry?.signalFlags.limiterEngaged ? 'bg-orange-400' : 'bg-zinc-700'
+                            )}
+                        />
+                        <span
+                            className={cn(
+                                'text-[8px] font-black uppercase tracking-wider',
+                                telemetry?.signalFlags.limiterEngaged ? 'text-orange-400' : 'text-zinc-600'
+                            )}
+                        >
+                            Lim
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="px-3 shrink-0 border-l border-white/[0.04]">
+                <DegenStereoMeter
+                    leftLevel={vuLeft}
+                    rightLevel={vuRight}
+                    leftPeak={peakLeft}
+                    rightPeak={peakRight}
+                    size="sm"
+                    showDb
+                />
             <div className="px-3 border-l border-white/[0.05]">
                 <DegenStereoMeter leftLevel={vuLeft} rightLevel={vuRight} leftPeak={peakLeft} rightPeak={peakRight} size="sm" />
             </div>
