@@ -163,6 +163,8 @@ class AutonomyPolicyService:
         if self.policy_path.exists():
             snapshot_dir = self.policy_path.parent / "backups" / "autonomy_policy"
             snapshot_dir.mkdir(parents=True, exist_ok=True)
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+            backup_path = snapshot_dir / f"autonomy_policy_{timestamp}.json"
             backup_stamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
             backup_path = snapshot_dir / f"autonomy_policy_{backup_stamp}.json"
             shutil.copy2(self.policy_path, backup_path)

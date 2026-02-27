@@ -1,5 +1,141 @@
 'use client';
 
+import React, { useMemo } from 'react';
+import { cn } from '../../lib/utils';
+import { DegenStereoMeter } from './DegenVUMeter';
+import type { DJTelemetry } from '../../lib/audio/telemetry';
+import { Pause, Play, Radio, SkipBack, SkipForward, Volume1, Volume2, VolumeX } from 'lucide-react';
+import { useStudioStore } from '../../stores/studioState';
+
+interface DegenTransportProps {
+  telemetry?: DJTelemetry;
+  isPlaying?: boolean;
+  isOnAir?: boolean;
+  onPlayPause?: () => void;
+  onNext?: () => void;
+  onPrev?: () => void;
+  className?: string;
+}
+
+export function DegenTransport({ telemetry, isPlaying, isOnAir = true, onPlayPause, onNext, onPrev, className }: DegenTransportProps) {
+  const deckA = useStudioStore((state) => state.decks.A);
+  const mixer = useStudioStore((state) => state.mixer);
+  const storeTelemetry = useStudioStore((state) => state.telemetry);
+  const toggleDeckPlayback = useStudioStore((state) => state.toggleDeckPlayback);
+  const seekDeck = useStudioStore((state) => state.seekDeck);
+  const setMasterVolume = useStudioStore((state) => state.setMasterVolume);
+  const toggleMuted = useStudioStore((state) => state.toggleMuted);
+
+  const activeTelemetry = telemetry ?? storeTelemetry;
+  const effectiveIsPlaying = isPlaying ?? deckA.isPlaying;
+  const progress = deckA.waveformPosition;
+  const duration = deckA.durationSeconds || deckA.track?.duration || 0;
+  const elapsed = progress * duration;
+  const remaining = Math.max(0, duration - elapsed);
+  const vuLeft = activeTelemetry?.stereoLevels.leftLevel ?? 0;
+  const vuRight = activeTelemetry?.stereoLevels.rightLevel ?? 0;
+  const peakLeft = activeTelemetry?.stereoLevels.leftPeak ?? vuLeft;
+  const peakRight = activeTelemetry?.stereoLevels.rightPeak ?? vuRight;
+
+  const formatTime = (seconds: number) => {
+    const safeSeconds = Math.max(0, seconds);
+    const m = Math.floor(safeSeconds / 60);
+    const s = Math.floor(safeSeconds % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const volumeIcon = useMemo(() => {
+    if (mixer.muted || mixer.masterVolume <= 0) return VolumeX;
+    return mixer.masterVolume < 40 ? Volume1 : Volume2;
+  }, [mixer.masterVolume, mixer.muted]);
+
+  const VolumeIcon = volumeIcon;
+
+  return (
+    <div className={cn('h-16 bg-black/60 backdrop-blur-xl border-t border-white/[0.04] flex items-center px-2 gap-2 shrink-0 z-20', className)}>
+      <div className="w-12 flex justify-center">
+        {isOnAir ? <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" /> : <div className="w-3 h-3 rounded-full bg-zinc-700" />}
+      </div>
+
+      <div className="w-52 px-2 shrink-0">
+        <div className="text-[11px] font-bold text-white truncate tracking-wide">{deckA.track?.title ?? 'No track loaded'}</div>
+        <div className="text-[10px] text-zinc-500 truncate">{deckA.track?.artist ?? '—'}</div>
+      </div>
+
+      <div className="flex items-center gap-1 px-2 shrink-0">
+        <button type="button" onClick={onPrev} aria-label="Previous track" className="p-1.5 text-zinc-400 hover:text-white"><SkipBack size={14} /></button>
+        <button
+          type="button"
+          onClick={() => {
+            void toggleDeckPlayback('A');
+            onPlayPause?.();
+          }}
+          aria-label={effectiveIsPlaying ? 'Pause playback' : 'Start playback'}
+          aria-pressed={effectiveIsPlaying}
+          className={cn('p-2 rounded-full focus-visible:ring-2 focus-visible:ring-lime-400/70 focus-visible:ring-offset-2 focus-visible:ring-offset-black', effectiveIsPlaying ? 'bg-lime-400/90 text-black' : 'bg-zinc-700 text-white')}
+        >
+          {effectiveIsPlaying ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
+        </button>
+        <button type="button" onClick={onNext} aria-label="Next track" className="p-1.5 text-zinc-400 hover:text-white"><SkipForward size={14} /></button>
+      </div>
+
+      <div className="flex-1 flex items-center gap-3 px-2 min-w-0">
+        <span className="text-[10px] font-mono text-zinc-500 tabular-nums w-9 text-right shrink-0">{formatTime(elapsed)}</span>
+        <input
+          aria-label="Playback position"
+          type="range"
+          min={0}
+          max={1}
+          step={0.001}
+          value={progress}
+          onChange={(e) => seekDeck('A', parseFloat(e.target.value))}
+          className="w-full"
+        />
+        <span className="text-[10px] font-mono text-zinc-600 tabular-nums w-9 shrink-0">-{formatTime(remaining)}</span>
+      </div>
+
+      <div className="flex flex-col items-center px-2 py-1 rounded bg-white/[0.02]">
+        <span className="text-[8px] text-zinc-600 uppercase font-bold tracking-widest">BPM</span>
+        <span className="text-[12px] font-mono font-black text-zinc-300 tabular-nums">{deckA.bpm ?? '—'}</span>
+      </div>
+
+      <div className="flex flex-col items-center px-2 py-1 rounded bg-deck-b-soft border border-deck-b-soft">
+        <span className="text-[8px] text-zinc-600 uppercase font-bold tracking-widest">Key</span>
+        <span className="text-[12px] font-mono font-black text-[hsl(var(--color-deck-b))] tabular-nums">{deckA.key ?? '—'}</span>
+      </div>
+
+      <div className="px-2 shrink-0 border-l border-white/[0.04]">
+        <DegenStereoMeter leftLevel={vuLeft} rightLevel={vuRight} leftPeak={peakLeft} rightPeak={peakRight} size="sm" showDb />
+      </div>
+
+      <div className="flex items-center gap-2 px-2 w-36 shrink-0 border-l border-white/[0.04]">
+        <button
+          type="button"
+          onClick={toggleMuted}
+          aria-label={mixer.muted ? 'Unmute output' : 'Mute output'}
+          aria-pressed={mixer.muted}
+          className={cn('p-1 rounded', mixer.muted ? 'text-red-400' : 'text-zinc-500 hover:text-zinc-300')}
+        >
+          <VolumeIcon size={14} />
+        </button>
+        <input
+          aria-label="Output volume"
+          type="range"
+          min={0}
+          max={100}
+          value={mixer.masterVolume}
+          onChange={(e) => setMasterVolume(parseInt(e.target.value, 10))}
+          className="w-full"
+        />
+        <span className="text-[9px] font-mono text-zinc-600 tabular-nums w-6 text-right">{mixer.masterVolume}</span>
+      </div>
+
+      <div className="flex items-center gap-1 px-2">
+        <Radio size={10} className={cn(activeTelemetry?.signalFlags.clipDetected ? 'text-red-400' : 'text-zinc-700')} />
+        <span className={cn('text-[8px] font-black uppercase tracking-wider', activeTelemetry?.signalFlags.clipDetected ? 'text-red-400' : 'text-zinc-600')}>Clip</span>
+      </div>
+    </div>
+  );
 import { useEffect, useMemo, useState } from 'react';
 import {
     Pause,
@@ -35,6 +171,7 @@ interface DegenTransportProps {
     onPlayPause?: () => void;
     onNext?: () => void;
     onPrev?: () => void;
+    onSeek?: (position: number) => void;
     className?: string;
 }
 
@@ -63,8 +200,19 @@ export function DegenTransport({
     onPlayPause,
     onNext,
     onPrev,
+    onSeek,
     className,
 }: DegenTransportProps) {
+    const track = resolveTransportTrack(currentTrack);
+    const transportTelemetry = resolveTransportTelemetry(telemetry ? adaptDJTelemetryToTransportTelemetry(telemetry) : undefined);
+
+    const [telemetryStep, setTelemetryStep] = useState(0);
+    const [progressOverride, setProgressOverride] = useState<number | null>(null);
+    const [pendingSeekPosition, setPendingSeekPosition] = useState<number | null>(null);
+
+    useEffect(() => {
+        setVolume(transportTelemetry.volume);
+    }, [transportTelemetry.volume]);
     const track = currentTrack ?? DEFAULT_TRACK;
     const [volume, setVolume] = useState(75);
     const [isMuted, setIsMuted] = useState(false);
@@ -102,6 +250,23 @@ export function DegenTransport({
         vuRight: 0.35 + Math.random() * 0.15,
     }), [telemetry, playbackProgress, phase]);
 
+    const phase = typeof telemetryTick === 'number' ? telemetryTick : telemetryStep;
+    const [volume, setVolume] = useState(85);
+    const [isMuted, setIsMuted] = useState(false);
+    const [repeat, setRepeat] = useState(false);
+    const [shuffle, setShuffle] = useState(false);
+
+    const progress = progressOverride ?? transportTelemetry.progress ?? 0;
+
+    useEffect(() => {
+        if (pendingSeekPosition === null) return;
+
+        if (Math.abs(transportTelemetry.progress - pendingSeekPosition) <= 0.005) {
+            setPendingSeekPosition(null);
+            setProgressOverride(null);
+        }
+    }, [pendingSeekPosition, transportTelemetry.progress]);
+    const elapsed = telemetry?.transport.elapsedSeconds ?? progress * (track.duration || 0);
     const progress = transportTelemetry.progress ?? 0;
     const elapsedTime = telemetry?.transport.elapsedSeconds ?? progress * (track.duration || 0);
     const vuLeft =
@@ -120,6 +285,28 @@ export function DegenTransport({
         return (track.duration || 0) - elapsedTime;
     }, [elapsedTime, telemetry, track.duration]);
 
+    const formatTime = (seconds: number) => {
+        const safeSeconds = Math.max(0, seconds);
+        const m = Math.floor(safeSeconds / 60);
+        const s = Math.floor(safeSeconds % 60);
+        return `${m}:${s.toString().padStart(2, '0')}`;
+    };
+
+    const commitSeek = (nextPosition: number) => {
+        const clampedPosition = Math.max(0, Math.min(1, nextPosition));
+
+        if (!onSeek) {
+            setProgressOverride(null);
+            setPendingSeekPosition(null);
+            return;
+        }
+
+        onSeek(clampedPosition);
+        setPendingSeekPosition(clampedPosition);
+    };
+
+
+    const VolumeIcon = isMuted ? VolumeX : volume < 40 ? Volume1 : Volume2;
     const VolumeIcon = useMemo(() => {
         if (isMuted) return VolumeX;
         if (volume < 40) return Volume1;
@@ -153,20 +340,29 @@ export function DegenTransport({
             </div>
 
             <div className="flex items-center gap-1 px-3 border-r border-white/[0.05]">
-                <button type="button" onClick={() => setShuffle((p) => !p)} className={cn('p-1.5 rounded', shuffle ? 'text-lime-400' : 'text-zinc-500')}>
+                <button type="button" onClick={() => setShuffle((p) => !p)} className={cn('p-1.5 rounded', shuffle ? 'text-lime-400' : 'text-zinc-500')} aria-label="Shuffle">
                     <Shuffle size={12} />
                 </button>
-                <button type="button" onClick={onPrev} className="p-1.5 rounded text-zinc-400 hover:text-white"><SkipBack size={14} /></button>
+                <button type="button" onClick={onPrev} className="p-1.5 rounded text-zinc-400 hover:text-white" aria-label="Previous track"><SkipBack size={14} /></button>
                 <button
                     type="button"
                     onClick={handlePlayPause}
-                    className={cn('p-2 rounded-full', isPlaying ? 'bg-lime-400 text-black' : 'bg-zinc-700 text-white')}
+                    className={cn(
+                        'p-2 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400',
+                        isPlaying ? 'bg-lime-400 text-black' : 'bg-zinc-700 text-white'
+                    )}
                     aria-pressed={isPlaying}
+                    aria-label={isPlaying ? "Pause playback" : "Start playback"}
+                        'p-2 rounded-full focus-visible:ring-2 focus-visible:ring-lime-400 focus-visible:outline-none',
+                        isPlaying ? 'bg-lime-400 text-black' : 'bg-zinc-700 text-white'
+                    )}
+                    aria-pressed={isPlaying}
+                    aria-label={isPlaying ? 'Pause playback' : 'Start playback'}
                 >
                     {isPlaying ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
                 </button>
-                <button type="button" onClick={onNext} className="p-1.5 rounded text-zinc-400 hover:text-white"><SkipForward size={14} /></button>
-                <button type="button" onClick={() => setRepeat((p) => !p)} className={cn('p-1.5 rounded', repeat ? 'text-indigo-400' : 'text-zinc-500')}>
+                <button type="button" onClick={onNext} className="p-1.5 rounded text-zinc-400 hover:text-white" aria-label="Next track"><SkipForward size={14} /></button>
+                <button type="button" onClick={() => setRepeat((p) => !p)} className={cn('p-1.5 rounded', repeat ? 'text-indigo-400' : 'text-zinc-500')} aria-label="Repeat">
                     <Repeat size={12} />
                 </button>
             </div>
@@ -176,6 +372,7 @@ export function DegenTransport({
                 <div className="flex-1 group relative h-7 flex items-center">
                     <div className="absolute inset-x-0 h-[3px] rounded-full bg-white/[0.06] overflow-hidden">
                         <div
+                            data-testid="transport-progress-fill"
                             className="h-full rounded-full transition-[width] duration-100"
                             style={{
                                 width: `${progress * 100}%`,
@@ -191,6 +388,15 @@ export function DegenTransport({
                         max={1}
                         step={0.001}
                         value={progress}
+                        onChange={(e) => setProgressOverride(parseFloat(e.target.value))}
+                        onMouseUp={(e) => commitSeek(parseFloat(e.currentTarget.value))}
+                        onTouchEnd={(e) => commitSeek(parseFloat(e.currentTarget.value))}
+                        onKeyUp={(e) => {
+                            const seekKeys = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
+                            if (seekKeys.includes(e.key)) {
+                                commitSeek(parseFloat(e.currentTarget.value));
+                            }
+                        }}
                         onChange={(e) => setPlaybackProgress(parseFloat(e.target.value))}
                         className="absolute inset-x-0 h-7 w-full opacity-0 cursor-pointer z-10"
                     />
@@ -205,12 +411,61 @@ export function DegenTransport({
                 <span className="text-[10px] font-mono text-zinc-600 tabular-nums w-9 shrink-0">-{formatTime(remaining)}</span>
             </div>
 
+            <div className="flex items-center gap-2 px-3 shrink-0 border-l border-white/[0.04]">
+                <div className="flex flex-col items-center px-2 py-1 rounded bg-white/[0.02]">
+                    <span className="text-[8px] text-zinc-600 uppercase font-bold tracking-widest">BPM</span>
+                    <span className="text-[12px] font-mono font-black text-zinc-300 tabular-nums">{track.bpm || '—'}</span>
+                </div>
+                <div className="flex flex-col items-center px-2 py-1 rounded bg-deck-b-soft border border-deck-b-soft">
+                    <span className="text-[8px] text-zinc-600 uppercase font-bold tracking-widest">Key</span>
+                    <span className="text-[12px] font-mono font-black text-[hsl(var(--color-deck-b))] tabular-nums">{track.key || '—'}</span>
+                </div>
+                <div className="flex flex-col gap-0.5 ml-1">
+                    <div className="flex items-center gap-1">
+                        <Radio size={10} className={cn(telemetry?.signalFlags.clipDetected ? 'text-red-400' : 'text-zinc-700')} />
+                        <span
+                            className={cn(
+                                'text-[8px] font-black uppercase tracking-wider',
+                                telemetry?.signalFlags.clipDetected ? 'text-red-400' : 'text-zinc-600'
+                            )}
+                        >
+                            Clip
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <div
+                            className={cn(
+                                'w-1.5 h-1.5 rounded-full',
+                                telemetry?.signalFlags.limiterEngaged ? 'bg-orange-400' : 'bg-zinc-700'
+                            )}
+                        />
+                        <span
+                            className={cn(
+                                'text-[8px] font-black uppercase tracking-wider',
+                                telemetry?.signalFlags.limiterEngaged ? 'text-orange-400' : 'text-zinc-600'
+                            )}
+                        >
+                            Lim
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="px-3 shrink-0 border-l border-white/[0.04]">
+                <DegenStereoMeter
+                    leftLevel={vuLeft}
+                    rightLevel={vuRight}
+                    leftPeak={peakLeft}
+                    rightPeak={peakRight}
+                    size="sm"
+                    showDb
+                />
             <div className="px-3 border-l border-white/[0.05]">
                 <DegenStereoMeter leftLevel={vuLeft} rightLevel={vuRight} leftPeak={peakLeft} rightPeak={peakRight} size="sm" />
             </div>
 
             <div className="flex items-center gap-2 px-3 w-36 border-l border-white/[0.05]">
-                <button type="button" onClick={() => setIsMuted((p) => !p)} className={cn('p-1 rounded', isMuted ? 'text-red-400' : 'text-zinc-500')}>
+                <button type="button" onClick={() => setIsMuted((p) => !p)} className={cn('p-1 rounded', isMuted ? 'text-red-400' : 'text-zinc-500')} aria-label={isMuted ? "Unmute" : "Mute"}>
                     <VolumeIcon size={14} />
                 </button>
                 <div className="flex-1 h-[3px] rounded-full bg-white/[0.06] overflow-hidden">

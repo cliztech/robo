@@ -9,7 +9,8 @@
         "lint": "next lint",
         "test": "vitest run",
         "test:watch": "vitest",
-        "test:ui": "vitest run"
+        "test:ui": "vitest run",
+        "test:perf:analysis-latency": "vitest run tests/perf/ai-analysis-latency.test.ts"
     },
     "dependencies": {
         "@google/adk": "^0.3.0",
@@ -20,7 +21,8 @@
         "next": "15.5.10",
         "react": "^18",
         "react-dom": "^18",
-        "tailwind-merge": "^2.3.0"
+        "tailwind-merge": "^2.3.0",
+        "zustand": "^4.5.7"
     },
     "devDependencies": {
         "@testing-library/dom": "^10.4.0",
@@ -40,5 +42,8 @@
         "typescript": "^5",
         "vitest": "^4.0.18",
         "webpack-cli": "^6.0.1"
+    },
+    "engines": {
+        "node": "20.x"
     }
 }
