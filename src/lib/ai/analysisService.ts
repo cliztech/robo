@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 export type TrackMood = 'calm' | 'chill' | 'energetic' | 'intense' | 'uplifting';
 
 export interface TrackAnalysisInput {
@@ -42,6 +44,8 @@ export interface AnalysisAdapter {
 export interface AnalysisServiceOptions {
     adapter: AnalysisAdapter;
     promptVersion: string;
+    modelVersion?: string;
+    promptProfileVersion?: string;
     maxRetries?: number;
     now?: () => Date;
     onRetry?: (attempt: number, error: unknown) => void;
@@ -89,6 +93,27 @@ function normalizeEra(era?: string): string {
     return clean.length > 0 ? clean : 'unknown';
 }
 
+function normalizeText(value?: string): string {
+    return (value ?? '').trim().toLowerCase();
+}
+
+function normalizeOptionalNumber(value?: number): string {
+    return typeof value === 'number' && Number.isFinite(value) ? `${value}` : '';
+}
+
+function buildAnalysisInputCanonicalPayload(input: TrackAnalysisInput): string {
+    const normalized = {
+        trackId: normalizeText(input.trackId),
+        title: normalizeText(input.title),
+        artist: normalizeText(input.artist),
+        genre: normalizeText(input.genre),
+        bpm: normalizeOptionalNumber(input.bpm),
+        durationSeconds: normalizeOptionalNumber(input.durationSeconds),
+    };
+
+    return JSON.stringify(normalized);
+}
+
 function createFallbackAnalysis(input: TrackAnalysisInput): RawTrackAnalysis {
     const energy = inferEnergyFallback(input);
     return {
@@ -102,6 +127,8 @@ function createFallbackAnalysis(input: TrackAnalysisInput): RawTrackAnalysis {
 export class AnalysisService {
     private readonly adapter: AnalysisAdapter;
     private readonly promptVersion: string;
+    private readonly modelVersion: string;
+    private readonly promptProfileVersion: string;
     private readonly maxRetries: number;
     private readonly now: () => Date;
     private readonly onRetry?: (attempt: number, error: unknown) => void;
@@ -110,6 +137,8 @@ export class AnalysisService {
     constructor(options: AnalysisServiceOptions) {
         this.adapter = options.adapter;
         this.promptVersion = options.promptVersion;
+        this.modelVersion = options.modelVersion ?? 'default';
+        this.promptProfileVersion = options.promptProfileVersion ?? 'default';
         this.maxRetries = options.maxRetries ?? 2;
         this.now = options.now ?? (() => new Date());
         this.onRetry = options.onRetry;
@@ -120,7 +149,7 @@ export class AnalysisService {
     }
 
     async analyze(input: TrackAnalysisInput): Promise<AnalysisResult> {
-        const idempotencyKey = this.buildIdempotencyKey(input.trackId, this.promptVersion);
+        const idempotencyKey = this.buildFingerprintKey(input);
         const cached = this.byIdempotencyKey.get(idempotencyKey);
         if (cached) {
             return { status: 'skipped', record: cached };
@@ -152,8 +181,19 @@ export class AnalysisService {
         return { status: 'analyzed', record: normalized };
     }
 
-    private buildIdempotencyKey(trackId: string, promptVersion: string): string {
-        return `${trackId}:${promptVersion}`;
+    private buildFingerprintKey(input: TrackAnalysisInput): string {
+        const payload = JSON.stringify({
+            analysisInput: buildAnalysisInputCanonicalPayload(input),
+            versions: {
+                promptVersion: this.promptVersion,
+                modelVersion: this.modelVersion,
+                promptProfileVersion: this.promptProfileVersion,
+            },
+        });
+
+        const hash = createHash('sha256').update(payload).digest('hex');
+        const debugPrefix = normalizeText(input.trackId).slice(0, 24) || 'unknown-track';
+        return `analysis:${debugPrefix}:${hash}`;
     }
 
     private normalize(
