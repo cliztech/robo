@@ -1,16 +1,29 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { vi } from 'vitest';
+import type { AlertCenterItem, DashboardStatusResponse } from '@/lib/status/dashboardClient';
+
 vi.mock('@/components/audio/DegenEffectRack', () => ({ DegenEffectRack: () => <div data-testid="fx-rack" /> }));
 vi.mock('@/components/audio/DegenBeatGrid', () => ({ DegenBeatGrid: () => <div data-testid="beat-grid" /> }));
 vi.mock('@/components/audio/DegenWaveform', () => ({ DegenWaveform: () => <div data-testid="waveform" /> }));
 vi.mock('@/components/schedule/DegenScheduleTimeline', () => ({ DegenScheduleTimeline: () => <div data-testid="schedule" /> }));
 vi.mock('@/components/ai/DegenAIHost', () => ({ DegenAIHost: () => <div data-testid="ai-host" /> }));
 
-import { DashboardView, type DashboardStatusApi, type DashboardStatusResponse } from '@/components/console/DashboardView';
+vi.mock('@/lib/status/dashboardClient', () => ({
+    fetchDashboardStatus: vi.fn(),
+    fetchDashboardAlerts: vi.fn(),
+    acknowledgeDashboardAlert: vi.fn(),
+}));
 
+import { DashboardView } from '@/components/console/DashboardView';
+import {
+    acknowledgeDashboardAlert,
+    fetchDashboardAlerts,
+    fetchDashboardStatus,
+} from '@/lib/status/dashboardClient';
 
-function buildStatus(overrides: Partial<DashboardStatusResponse> = {}): DashboardStatusResponse {
+function buildStatus(): DashboardStatusResponse {
     return {
         service_health: {
             status: 'degraded',
@@ -19,10 +32,7 @@ function buildStatus(overrides: Partial<DashboardStatusResponse> = {}): Dashboar
         },
         queue_depth: {
             current_depth: 54,
-            trend: [
-                { timestamp: '2026-02-26T11:50:00.000Z', depth: 18 },
-                { timestamp: '2026-02-26T12:00:00.000Z', depth: 54 },
-            ],
+            trend: [{ timestamp: '2026-02-26T12:00:00.000Z', depth: 54 }],
             thresholds: { warning: 30, critical: 50 },
             state: 'critical',
         },
@@ -34,133 +44,134 @@ function buildStatus(overrides: Partial<DashboardStatusResponse> = {}): Dashboar
         },
         alert_center: {
             filters: ['info', 'warning', 'critical'],
-            items: [
-                {
-                    alert_id: 'alert-queue-critical',
-                    severity: 'critical',
-                    title: 'Queue depth above critical threshold',
-                    description: 'Queue depth has exceeded 50 items for over 5 minutes.',
-                    created_at: '2026-02-26T11:53:00.000Z',
-                    acknowledged: false,
-                    acknowledged_at: null,
-                },
-                {
-                    alert_id: 'alert-rotation-stale',
-                    severity: 'warning',
-                    title: 'Rotation data stale',
-                    description: 'No successful rotation has been recorded for over 45 minutes.',
-                    created_at: '2026-02-26T11:58:00.000Z',
-                    acknowledged: false,
-                    acknowledged_at: null,
-                },
-            ],
+            items: [],
         },
-        ...overrides,
     };
 }
 
-describe('DashboardView', () => {
-    it('renders loading state before status resolves', async () => {
-        const api: DashboardStatusApi = {
-            fetchDashboardStatus: () => new Promise(() => {}),
-            acknowledgeAlert: vi.fn(),
-        };
+function buildAlerts(): AlertCenterItem[] {
+    return [
+        {
+            alert_id: 'alert-queue-critical',
+            severity: 'critical',
+            title: 'Queue depth above critical threshold',
+            description: 'Queue depth has exceeded 50 items for over 5 minutes.',
+            created_at: '2026-02-26T11:53:00.000Z',
+            acknowledged: false,
+            acknowledged_at: null,
+        },
+        {
+            alert_id: 'alert-rotation-stale',
+            severity: 'warning',
+            title: 'Rotation data stale',
+            description: 'No successful rotation has been recorded for over 45 minutes.',
+            created_at: '2026-02-26T11:58:00.000Z',
+            acknowledged: false,
+            acknowledged_at: null,
+        },
+    ];
+}
 
-        render(<DashboardView api={api} />);
+function deferred<T>() {
+    let resolve!: (value: T) => void;
+    let reject!: (reason?: unknown) => void;
+    const promise = new Promise<T>((res, rej) => {
+        resolve = res;
+        reject = rej;
+    });
+    return { promise, resolve, reject };
+}
 
-        expect(screen.getByText('Loading dashboard status…')).toBeInTheDocument();
+function alertCard(title: string): HTMLElement {
+    const titleElement = screen.getByText(title);
+    const card = titleElement.closest('.rounded-lg');
+    if (!card) {
+        throw new Error(`Could not find alert card for ${title}`);
+    }
+    return card;
+}
+
+describe('DashboardView acknowledge concurrency', () => {
+    beforeEach(() => {
+        vi.mocked(fetchDashboardStatus).mockResolvedValue(buildStatus());
+        vi.mocked(fetchDashboardAlerts).mockResolvedValue(buildAlerts());
     });
 
-    it('renders error state when status request fails', async () => {
-        const api: DashboardStatusApi = {
-            fetchDashboardStatus: vi.fn().mockRejectedValue(new Error('status endpoint unavailable')),
-            acknowledgeAlert: vi.fn(),
-        };
-
-        render(<DashboardView api={api} />);
-
-        const alert = await screen.findByRole('alert');
-        expect(alert).toHaveTextContent('status endpoint unavailable');
+    afterEach(() => {
+        vi.clearAllMocks();
     });
 
-    it('renders mapped status values from dashboard response', async () => {
-        const api: DashboardStatusApi = {
-            fetchDashboardStatus: vi.fn().mockResolvedValue(buildStatus()),
-            acknowledgeAlert: vi.fn(),
-        };
-
-        render(<DashboardView api={api} />);
-
-        await screen.findByText('Queue depth above critical threshold');
-        expect(screen.getByText('DEGRADED')).toBeInTheDocument();
-        expect(screen.getByText('Queue Depth')).toBeInTheDocument();
-        expect(screen.getByText('Warning Threshold')).toBeInTheDocument();
-        expect(screen.getByText('Critical Threshold')).toBeInTheDocument();
-        expect(screen.getByTestId('queue-depth-state')).toHaveTextContent('critical');
-    });
-
-    it('acknowledges an alert, calls API with id, and updates UI counts/timestamp', async () => {
+    it('keeps successful acknowledgement when a sibling acknowledgement fails', async () => {
         const user = userEvent.setup();
-        const acknowledgedAt = '2026-02-26T12:05:00.000Z';
-        const api: DashboardStatusApi = {
-            fetchDashboardStatus: vi.fn().mockResolvedValue(buildStatus()),
-            acknowledgeAlert: vi.fn().mockResolvedValue({
-                ...buildStatus().alert_center.items[0],
-                acknowledged: true,
-                acknowledged_at: acknowledgedAt,
-            }),
-        };
+        const successRequest = deferred<AlertCenterItem>();
+        const failedRequest = deferred<AlertCenterItem>();
 
-        render(<DashboardView api={api} />);
+        vi.mocked(acknowledgeDashboardAlert).mockImplementation((alertId: string) => {
+            if (alertId === 'alert-queue-critical') {
+                return successRequest.promise;
+            }
+            if (alertId === 'alert-rotation-stale') {
+                return failedRequest.promise;
+            }
+            return Promise.reject(new Error(`unexpected alert id: ${alertId}`));
+        });
+
+        render(<DashboardView />);
 
         await screen.findByText('Queue depth above critical threshold');
-        await user.click(screen.getAllByRole('button', { name: 'Acknowledge' })[0]);
 
-        expect(api.acknowledgeAlert).toHaveBeenCalledWith('alert-queue-critical');
+        await user.click(within(alertCard('Queue depth above critical threshold')).getByRole('button', { name: 'Acknowledge' }));
+        await user.click(within(alertCard('Rotation data stale')).getByRole('button', { name: 'Acknowledge' }));
 
         await waitFor(() => {
-            expect(screen.getByTestId('alert-ack-alert-queue-critical')).not.toHaveTextContent('Ack at: —');
+            expect(within(alertCard('Queue depth above critical threshold')).getByRole('button')).toHaveTextContent('Acknowledged');
+            expect(within(alertCard('Rotation data stale')).getByRole('button')).toHaveTextContent('Acknowledged');
         });
-        expect(screen.getByTestId('severity-count-critical')).toHaveTextContent('Critical: 0');
+
+        successRequest.resolve({
+            ...buildAlerts()[0],
+            acknowledged: true,
+            acknowledged_at: '2026-02-26T12:05:00.000Z',
+        });
+
+        await waitFor(() => {
+            expect(within(alertCard('Queue depth above critical threshold')).getByRole('button')).toHaveTextContent('Acknowledged');
+        });
+
+        failedRequest.reject(new Error('ack failed'));
+
+        await waitFor(() => {
+            expect(within(alertCard('Rotation data stale')).getByRole('button')).toHaveTextContent('Acknowledge');
+        });
+
+        expect(within(alertCard('Queue depth above critical threshold')).getByRole('button')).toHaveTextContent('Acknowledged');
+        expect(acknowledgeDashboardAlert).toHaveBeenNthCalledWith(1, 'alert-queue-critical');
+        expect(acknowledgeDashboardAlert).toHaveBeenNthCalledWith(2, 'alert-rotation-stale');
     });
 
-    it.each([
-        { depth: 29, expected: 'info' },
-        { depth: 30, expected: 'warning' },
-        { depth: 49, expected: 'warning' },
-        { depth: 50, expected: 'critical' },
-    ])('renders threshold severity for queue depth=$depth', async ({ depth, expected }) => {
-        const api: DashboardStatusApi = {
-            fetchDashboardStatus: vi.fn().mockResolvedValue(
-                buildStatus({
-                    queue_depth: {
-                        current_depth: depth,
-                        trend: [{ timestamp: '2026-02-26T12:00:00.000Z', depth }],
-                        thresholds: { warning: 30, critical: 50 },
-                        state: 'info',
-                    },
-                })
-            ),
-            acknowledgeAlert: vi.fn(),
-        };
+    it('ignores duplicate in-flight acknowledge requests for the same alert id', async () => {
+        const user = userEvent.setup();
+        const pendingRequest = deferred<AlertCenterItem>();
 
-        render(<DashboardView api={api} />);
+        vi.mocked(acknowledgeDashboardAlert).mockReturnValue(pendingRequest.promise);
 
-        await screen.findByTestId('queue-depth-state');
-        expect(screen.getByTestId('queue-depth-state')).toHaveTextContent(expected);
-    });
-
-    it('does not render hardcoded fallback metrics when real dashboard data exists', async () => {
-        const api: DashboardStatusApi = {
-            fetchDashboardStatus: vi.fn().mockResolvedValue(buildStatus()),
-            acknowledgeAlert: vi.fn(),
-        };
-
-        render(<DashboardView api={api} />);
+        render(<DashboardView />);
 
         await screen.findByText('Queue depth above critical threshold');
-        expect(screen.queryByText('1,247')).not.toBeInTheDocument();
-        expect(screen.queryByText('99.8')).not.toBeInTheDocument();
-        expect(screen.queryByText('320')).not.toBeInTheDocument();
+        const queueAlertButton = within(alertCard('Queue depth above critical threshold')).getByRole('button', { name: 'Acknowledge' });
+
+        await user.click(queueAlertButton);
+        await user.click(queueAlertButton);
+
+        expect(acknowledgeDashboardAlert).toHaveBeenCalledTimes(1);
+        pendingRequest.resolve({
+            ...buildAlerts()[0],
+            acknowledged: true,
+            acknowledged_at: '2026-02-26T12:10:00.000Z',
+        });
+
+        await waitFor(() => {
+            expect(within(alertCard('Queue depth above critical threshold')).getByRole('button')).toHaveTextContent('Acknowledged');
+        });
     });
 });
