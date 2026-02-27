@@ -23,9 +23,9 @@ This index tracks all currently unchecked items from `TODO.md` under:
 
 | ID | Title | Owner Role | Effort | Status | Issue File |
 | --- | --- | --- | --- | --- | --- |
-| TI-039 | v1.2 UI: drag/drop weekly timeline on normalized schedule contracts | UI Engineer | L | In Progress | [`TI-039.md`](tracked-issues/TI-039.md) |
-| TI-040 | v1.2 UI: inline conflict rendering and resolution actions | UI Engineer | M | Open | [`TI-040.md`](tracked-issues/TI-040.md) |
-| TI-041 | v1.2 UI: keyboard parity for timeline edit and conflict resolution | Accessibility Engineer | M | Open | [`TI-041.md`](tracked-issues/TI-041.md) |
+| TI-007 | v1.2 UI: drag/drop weekly timeline on normalized schedule contracts | UI Engineer | L | Closed | [`TI-007.md`](tracked-issues/TI-007.md) |
+| TI-008 | v1.2 UI: inline conflict rendering and resolution actions | UI Engineer | M | Closed | [`TI-008.md`](tracked-issues/TI-008.md) |
+| TI-009 | v1.2 UI: keyboard parity for timeline edit and conflict resolution | Accessibility Engineer | M | Closed | [`TI-009.md`](tracked-issues/TI-009.md) |
 
 ## Coverage check (Track A/B/C/D indexing)
 
@@ -37,11 +37,11 @@ Requirement: each `PRODUCT_READINESS_PLAN.md` Track A/B/C/D task is indexed by e
 | --- | --- |
 | A1.1 | TI-002 |
 | A1.2 | TI-003 |
-| A1.3 | TI-007 |
+| A1.3 | TI-039 |
 | A2.1 | TI-004 |
-| A2.2 | TI-008 |
+| A2.2 | TI-040 |
 | A2.3 | TI-005 |
-| A3.1 | TI-009 |
+| A3.1 | TI-041 |
 | A3.2 | TI-006 |
 
 ### Track B mapping (8 tasks)

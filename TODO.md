@@ -28,6 +28,7 @@ Use the roadmap helper to continuously surface the next open tasks while you wor
 - [ ] Add per-action approval workflows and immutable audit trail export ([TI-039](docs/exec-plans/active/tracked-issues/TI-039.md)).
 - [ ] Add config-at-rest encryption for high-risk fields in JSON configs ([TI-040](docs/exec-plans/active/tracked-issues/TI-040.md)).
 - [ ] Add security smoke script (authN/authZ checks, lockout checks) ([TI-041](docs/exec-plans/active/tracked-issues/TI-041.md)).
+- Canonical Track A security IDs are TI-039/TI-040/TI-041; TI-007/TI-008/TI-009 remain archived v1.2 scheduler UI records.
 
 ## P1 — Reliability & Observability
 
