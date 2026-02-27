@@ -92,6 +92,26 @@ Management Team can audit all artifacts, but ownership remains with the primary 
 - Verification artifacts should contain command outputs or summaries sufficient for reproducibility.
 - Handoff artifacts should link to verification artifacts when checks were run.
 
+## TI-040 Security Artifacts (Config Encryption)
+
+For TI-040 config-at-rest encryption work, store artifacts in the following canonical paths:
+
+- `artifacts/security/hashes/ti-040-config-before-after.sha256`
+  - SHA256 pairs for `config/schedules.json` and `config/prompt_variables.json` before and after value-level encryption edits.
+- `artifacts/security/reports/ti-040-high-risk-field-inventory.md`
+  - Checklist evidence (`CHK-TI040-01` .. `CHK-TI040-04`), mapped fields, and envelope compliance details.
+- `artifacts/security/logs/ti-040-config-encryption.log`
+  - Command transcript for encryption/decryption validation runs and failure classifications.
+
+Recommended command bundle to capture in the log:
+
+```bash
+python -m json.tool config/schedules.json > /tmp/schedules.validated.json
+python -m json.tool config/prompt_variables.json > /tmp/prompt_variables.validated.json
+python config/validate_config.py
+python -m pytest backend/tests/test_config_crypto.py
+sha256sum config/schedules.json config/prompt_variables.json > artifacts/security/hashes/ti-040-config-before-after.sha256
+```
 ## TI-041 Security Smoke Artifacts
 
 Security smoke execution (`pnpm test:security`) must emit and retain:
