@@ -178,6 +178,8 @@ mkdir -p "$TASK_ROOT"/{packets,results,merged}
 cat > "$TASK_ROOT/packets/01-research.md" <<'P1'
 # Packet: Research
 ## Question
+## Phase Namespace (`delivery|workflow`)
+## Phase ID (`delivery_phase_<n>|workflow_phase_<n>|unphased`)
 ## Inputs
 ## Constraints
 ## Deliverable
@@ -186,6 +188,8 @@ P1
 cat > "$TASK_ROOT/packets/02-risk-review.md" <<'P2'
 # Packet: Risk Review
 ## Question
+## Phase Namespace (`delivery|workflow`)
+## Phase ID (`delivery_phase_<n>|workflow_phase_<n>|unphased`)
 ## Inputs
 ## Constraints
 ## Deliverable
@@ -194,6 +198,8 @@ P2
 cat > "$TASK_ROOT/packets/03-validation.md" <<'P3'
 # Packet: Validation
 ## Question
+## Phase Namespace (`delivery|workflow`)
+## Phase ID (`delivery_phase_<n>|workflow_phase_<n>|unphased`)
 ## Inputs
 ## Constraints
 ## Deliverable

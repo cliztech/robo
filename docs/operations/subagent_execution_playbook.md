@@ -68,6 +68,8 @@ Every delegated task must use this schema before execution:
 task_packet:
   packet_id: "PKT-<timestamp>-<slug>"
   route: "QA|Change|Proposal"
+  phase_namespace: "delivery|workflow"
+  phase_id: "delivery_phase_<n>|workflow_phase_<n>|unphased"
   priority: "P0|P1|P2|P3"
   owner_role: "team.agent-role"
   objective: "single measurable outcome"
@@ -102,6 +104,7 @@ task_packet:
 2. Dependencies are complete and reference packet IDs.
 3. Acceptance criteria are testable.
 4. Evidence format defines exact commands/artifacts.
+5. If a packet references a phase, it must include both `phase_namespace` and `phase_id` (plain `Phase N` is invalid).
 
 ## 4) Result Reconciliation Rules
 
