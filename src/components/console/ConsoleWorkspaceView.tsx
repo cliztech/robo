@@ -17,6 +17,7 @@ import {
   type LayoutPanelId,
 } from "@/lib/layout/types";
 import { DashboardView } from "./DashboardView";
+import { SkinManagerPanel } from '@/components/theme/SkinManagerPanel';
 import { DEFAULT_DASHBOARD_TELEMETRY } from "./dashboard.types";
 import { DJStudioSurface } from "./DJStudioSurface";
 import type { ConsoleViewMode } from "./types";
@@ -468,6 +469,12 @@ export function ConsoleWorkspaceView({
         {currentView === "ai-host" && (
           <div className="max-w-3xl mx-auto">
             <DegenAIHost className="max-h-[calc(100vh-160px)]" />
+          </div>
+        )}
+
+        {currentView === "skin-manager" && (
+          <div className="max-w-4xl mx-auto">
+            <SkinManagerPanel />
           </div>
         )}
       </motion.div>
