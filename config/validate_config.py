@@ -23,6 +23,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from backend.security.config_crypto import ConfigCryptoError, decrypt_config_payload
 from pydantic import ValidationError as PydanticValidationError
 
 from backend.scheduling.schedule_conflict_detection import detect_schedule_conflicts
@@ -371,9 +372,12 @@ def _validate(instance: Any, schema: dict[str, Any], path: str, errors: list[str
 
 def _load_json(path: Path) -> Any:
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        return decrypt_config_payload(path, payload)
     except FileNotFoundError as exc:
         raise ValidationError(f"Missing file: {path}") from exc
+    except ConfigCryptoError as exc:
+        raise ValidationError(f"Encrypted config read failed for {path}: {exc}") from exc
     except json.JSONDecodeError as exc:
         raise ValidationError(
             f"Invalid JSON in {path}: line {exc.lineno}, column {exc.colno}: {exc.msg}"

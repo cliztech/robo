@@ -121,3 +121,12 @@
 - [x] Added value-level encryption envelope validation for high-risk fields (`openai_api_key`, `tts_api_key`, `webhook_auth_token`, `stream_fallback_password`, `remote_ingest_secret`) in `config/validate_config.py`.
 - [x] Added deterministic encryption evidence emission (`--encryption-evidence`) to support `before_hash_sha256`/`after_hash_sha256` audit trails.
 - [x] Updated `CONFIG_VALIDATION.md`, `docs/operations/artifacts.md`, and TI-040 tracked issue docs with provenance, rotation, rollback, and operator evidence contract requirements aligned to TI-039 exports.
+- [x] Completed TI-041 security smoke workflow: added `scripts/ci/security_smoke_check.mjs`, deterministic pass/fail markers, evidence artifact outputs, and release/security escalation routing documentation.
+- [x] TI-040 baseline delivered: `backend/security/config_crypto.py` added (AES-256-GCM envelopes + KID provenance), config read/write integration in scheduler/AI/validator paths, TI-040 docs evidence contract updates, and crypto regression tests (round-trip/wrong-key/nonce/schema-preserving).
+## 2026-02-27 TI-041 Security Smoke Delivery
+
+- [x] Added root `test:security` script mapped to deterministic wrapper execution.
+- [x] Implemented scenario markers for `SMK-AUTHN-01`, `SMK-AUTHZ-01`, `SMK-LOCKOUT-01`, `SMK-PRIV-01` with non-zero exit on mismatch.
+- [x] Added privileged-action fail guard for unexpected `PRIV_ACTION_EXECUTED` outcomes.
+- [x] Added artifact-producing wrapper for smoke logs/report/hashes under `artifacts/security/*`.
+- [x] Updated operations command and artifact docs with pre-release invocation and required signatures.
