@@ -63,6 +63,7 @@
 
 ## Recent Ops Updates
 
+- [x] Security tracked issue execution packet hardening: TI-039/TI-040/TI-041 now include explicit scope targets, dependency checkpoints, validation command signatures, required evidence artifacts, and rollback steps.
 - [x] Hardened `radio-agentic/services/streaming-gateway` process resilience with FFmpeg supervision, restart controls, structured lifecycle logging, and orchestration-facing health signaling.
 - [x] Phase 5 analysis status hardening: added invocation health status + typed error classification with queue-level propagation and test coverage.
 - [x] Hardened analysis idempotency keying with normalized-input/version fingerprint hashing and expanded unit/integration coverage for skip/reanalyze semantics.
