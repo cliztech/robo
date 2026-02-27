@@ -70,6 +70,94 @@ Create structured experiment cycles:
 - Introduce run metadata (`run_id`, `requested_by`, `risk_level`, `status`).
 - Add execution policy profiles (`manual`, `assisted`, `autonomous`).
 
+### Data Contracts
+
+Phase 1 requires a normalized run metadata envelope persisted at run creation and updated at each stage transition.
+
+| Field | Type | Required | Constraints / Notes |
+| --- | --- | --- | --- |
+| `run_id` | string (UUIDv7 preferred) | yes | Globally unique per workflow run; stable idempotency key for retries/replays. |
+| `requested_by` | string | yes | Principal that initiated the run (human user ID, service account, or scheduled job ID). |
+| `risk_level` | enum | yes | One of `low`, `medium`, `high`; drives approval and auto-execution policy. |
+| `status` | enum | yes | One of `queued`, `running`, `waiting_approval`, `succeeded`, `failed`, `rolled_back`, `cancelled`. |
+| `created_at` | RFC3339 timestamp | yes | Set once at run creation. |
+| `updated_at` | RFC3339 timestamp | yes | Updated on every status transition and metadata mutation. |
+| `started_at` | RFC3339 timestamp | conditional | Required when status first becomes `running`. |
+| `completed_at` | RFC3339 timestamp | conditional | Required for terminal statuses: `succeeded`, `failed`, `rolled_back`, `cancelled`. |
+| `actor` | object | yes | `{ actor_type, actor_id, actor_display }`; actor_type in `human`, `service`, `scheduler`, `system`. |
+| `source` | object | yes | `{ trigger_type, trigger_ref, correlation_id }`; trigger_type in `manual`, `scheduled`, `api`, `webhook`, `retry`. |
+
+Contract invariants:
+- `created_at <= started_at <= completed_at` when both optional timestamps are present.
+- `updated_at` must be monotonic non-decreasing per `run_id`.
+- `risk_level=high` cannot transition directly from `queued` to `running` without policy gate evaluation.
+- All metadata updates must emit an immutable audit event keyed by `run_id` + `updated_at`.
+
+### Workflow Graph Definition
+
+Stage nodes (canonical):
+1. `intake`
+2. `plan`
+3. `generate`
+4. `validate`
+5. `simulate`
+6. `approve`
+7. `publish`
+8. `observe`
+9. `learn`
+
+Allowed transitions:
+- Normal path: `intake -> plan -> generate -> validate -> simulate -> approve -> publish -> observe -> learn`.
+- Validation feedback path: `validate -> generate` (bounded correction loop).
+- Simulation feedback path: `simulate -> plan` (re-plan on feasibility failure).
+- Approval hold path: `approve -> approve` (awaiting operator action).
+- Post-publish learning loop: `learn -> plan` (explicitly new child run referencing parent `run_id`).
+
+Retry behavior:
+- Per-stage retry budget: default 2 retries (`max_attempts=3`) with exponential backoff (5s, 25s) and jitter.
+- Retries are only allowed for transient classes (`timeout`, `upstream_unavailable`, `rate_limited`, `contention`).
+- Non-retryable classes (`policy_violation`, `invalid_contract`, `authorization_denied`) transition immediately to terminal failure.
+- Each retry increments `attempt_index` and appends structured failure reason to run events.
+
+Terminal failure states:
+- `failed_validation`: contract/safety gate failure after retry budget exhausted.
+- `failed_policy`: policy or approval denial (including timeout on required manual approval).
+- `failed_publish`: publish step failed and rollback failed or unavailable.
+- `failed_system`: unrecoverable orchestration/runtime error.
+
+Any terminal failure must produce:
+- a final `status=failed`,
+- a `failure_class` and `failure_code`,
+- an automated remediation hint,
+- and rollback attempt evidence (`rollback_attempted`, `rollback_result`).
+
+### Policy Profiles
+
+Execution policy is selected per run and enforced at each gate.
+
+| Profile | Approval Gates | Auto-Execution Limits | Rollback Permissions |
+| --- | --- | --- | --- |
+| `manual` | Required before `generate`, `publish`, and any retry beyond first attempt. | No unattended stage progression; operator confirms each stage transition. | Operator-only rollback; system may suggest but not execute. |
+| `assisted` | Required for `risk_level=high` at `approve` and `publish`; optional for medium risk if prior checks are green. | Auto-progress allowed through `simulate` for low/medium risk with <=1 retry per stage. | System may execute rollback for low/medium risk; high risk requires operator confirmation. |
+| `autonomous` | Approval required only for `risk_level=high` publish actions or explicit policy exceptions. | Auto-progress across all stages; retries up to configured budget; degrade to safe fallback on recoverable failures. | System-initiated rollback allowed for all non-destructive actions; destructive rollback requires pre-registered runbook policy. |
+
+Policy override rules:
+- `risk_level=high` always upgrades at least to `assisted` approval semantics even if profile is `autonomous`.
+- Profile change during a run is allowed only at stage boundaries and must emit override audit events.
+
+### Phase 1 Acceptance Criteria and Verification
+
+Acceptance criteria:
+1. Run metadata contract documented with required fields, types, constraints, and invariants.
+2. Workflow graph documented with canonical nodes, allowed transitions, retry classes, and terminal failures.
+3. Policy profile matrix defines approval gates, auto-execution limits, and rollback permissions for `manual`, `assisted`, and `autonomous`.
+4. All Phase 1 open items in `docs/exec-plans/active/unfinished-task-build-plan.md` deep-link to specific anchors in this document.
+
+Verification commands:
+- `python -m json.tool config/massive_workflow_program.json`
+- `python scripts/roadmap_autopilot.py --help`
+- `rg -n "phase-1-unified-workflow-orchestrator|data-contracts|workflow-graph-definition|policy-profiles|phase-1-acceptance-criteria-and-verification" docs/massive_workflow_blueprint.md docs/exec-plans/active/unfinished-task-build-plan.md`
+
 ## Phase 2 — Quality and Safety Gates
 - Content checks (tone, banned terms, policy conformance).
 - Schedule checks (conflicts, inventory starvation, daypart drift).

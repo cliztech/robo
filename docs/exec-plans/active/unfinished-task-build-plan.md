@@ -112,6 +112,6 @@ Open tasks by phase: P1=3, Unphased=101
 - [ ] `TODO.md:74` (todo) Tracking Cadence -> 2026-03-31 (Owner: Management Team — Sprint Planner): Monthly roadmap-variant reassessment recorded (Security-first / UX-first / Scale-first / Balanced).
 - [ ] `docs/massive_workflow_blueprint.md:19` (workflow) Idea A: Mission Control Workflow (central orchestration) -> Validate
 - [ ] `docs/massive_workflow_blueprint.md:22` (workflow) Idea A: Mission Control Workflow (central orchestration) -> Publish
-- [ ] `docs/massive_workflow_blueprint.md:69` (workflow) Phase 1 — Unified Workflow Orchestrator -> Define workflow graph with stage dependencies.
-- [ ] `docs/massive_workflow_blueprint.md:70` (workflow) Phase 1 — Unified Workflow Orchestrator -> Introduce run metadata (`run_id`, `requested_by`, `risk_level`, `status`).
-- [ ] `docs/massive_workflow_blueprint.md:71` (workflow) Phase 1 — Unified Workflow Orchestrator -> Add execution policy profiles (`manual`, `assisted`, `autonomous`).
+- [ ] `docs/massive_workflow_blueprint.md:69` (workflow) Phase 1 — Unified Workflow Orchestrator -> Define workflow graph with stage dependencies ([Workflow Graph Definition](docs/massive_workflow_blueprint.md#workflow-graph-definition)).
+- [ ] `docs/massive_workflow_blueprint.md:70` (workflow) Phase 1 — Unified Workflow Orchestrator -> Introduce run metadata (`run_id`, `requested_by`, `risk_level`, `status`) ([Data Contracts](docs/massive_workflow_blueprint.md#data-contracts)).
+- [ ] `docs/massive_workflow_blueprint.md:71` (workflow) Phase 1 — Unified Workflow Orchestrator -> Add execution policy profiles (`manual`, `assisted`, `autonomous`) ([Policy Profiles](docs/massive_workflow_blueprint.md#policy-profiles)).
