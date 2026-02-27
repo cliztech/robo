@@ -49,7 +49,20 @@ export interface TrackIntelligenceRecord {
     analyzedAt: string;
 }
 
+export type InvocationStatus = 'success' | 'degraded' | 'failed';
+export type ErrorClassification = 'timeout' | 'rate_limit' | 'invalid_payload' | 'unknown';
+export type CacheBehavior = 'processed' | 'skipped';
+
+export interface AnalysisResultMetadata {
+    cacheBehavior: CacheBehavior;
+    errorClassification?: ErrorClassification;
+    attempts: number;
+}
+
 export interface AnalysisResult {
+    invocationStatus: InvocationStatus;
+    record?: TrackIntelligenceRecord;
+    metadata: AnalysisResultMetadata;
     status: 'analyzed' | 'skipped';
     executionStatus: 'success' | 'degraded';
     record: TrackIntelligenceRecord;
@@ -370,6 +383,17 @@ function normalizeFingerprintInput(input: TrackAnalysisInput): Record<string, nu
     };
 }
 
+function classifyError(error: unknown): ErrorClassification {
+    const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+
+    if (/(timeout|timed out|abort)/i.test(message)) return 'timeout';
+    if (/(rate\s*limit|429|too many requests)/i.test(message)) return 'rate_limit';
+    if (/(invalid payload|malformed|schema|validation)/i.test(message)) return 'invalid_payload';
+    return 'unknown';
+}
+
+function invocationStatusFromSource(source: 'ai' | 'fallback'): Exclude<InvocationStatus, 'failed'> {
+    return source === 'ai' ? 'success' : 'degraded';
 function buildFingerprint(payload: Record<string, number | string | null>): string {
     const canonicalPayload = Object.fromEntries(Object.entries(payload).sort());
     const canonical = JSON.stringify(canonicalPayload);
@@ -471,6 +495,13 @@ export class AnalysisService {
         const idempotencyKey = this.buildIdempotencyKey(input.trackId, this.promptVersion);
         const cached = this.getCachedRecord(idempotencyKey);
         if (cached) {
+            return {
+                invocationStatus: invocationStatusFromSource(cached.source),
+                record: cached,
+                metadata: {
+                    cacheBehavior: 'skipped',
+                    attempts: 0,
+                },
             cached.lastAccessAt = this.now().getTime();
             return { status: 'skipped', record: cached.record };
             return {
@@ -484,6 +515,7 @@ export class AnalysisService {
         this.telemetry.cacheMisses += 1;
 
         let attempt = 0;
+        while (attempt <= this.maxRetries) {
         let normalized: TrackIntelligenceRecord | null = null;
         let source: 'ai' | 'fallback' = 'ai';
 
@@ -497,6 +529,17 @@ export class AnalysisService {
                     const fallback = createFallbackAnalysis(input);
                     normalized = this.normalize(fallback, input, idempotencyKey, 'fallback', attempt, promptProfileVersion);
                 const raw = await this.adapter.analyzeTrack(input, this.promptVersion);
+                const normalized = this.normalize(raw, input, idempotencyKey, 'ai', attempt);
+                this.byIdempotencyKey.set(idempotencyKey, normalized);
+
+                return {
+                    invocationStatus: 'success',
+                    record: normalized,
+                    metadata: {
+                        cacheBehavior: 'processed',
+                        attempts: attempt,
+                    },
+                };
                 normalized = this.normalize(raw, input, fingerprint, 'ai', attempt);
             } catch (error) {
                 if (attempt > this.maxRetries) {
@@ -510,16 +553,51 @@ export class AnalysisService {
                 normalized = this.normalize(raw, input, idempotencyKey, 'ai', attempt);
                 source = 'ai';
             } catch (error) {
+                const errorClassification = classifyError(error);
+                const isRetryable = errorClassification === 'timeout' || errorClassification === 'rate_limit';
+
+                if (!isRetryable) {
+                    return {
+                        invocationStatus: 'failed',
+                        metadata: {
+                            cacheBehavior: 'processed',
+                            errorClassification,
+                            attempts: attempt,
+                        },
+                    };
+                }
+
                 if (attempt > this.maxRetries) {
                     const fallback = createFallbackAnalysis(input);
+                    const normalized = this.normalize(fallback, input, idempotencyKey, 'fallback', attempt);
+                    this.byIdempotencyKey.set(idempotencyKey, normalized);
+
+                    return {
+                        invocationStatus: 'degraded',
+                        record: normalized,
+                        metadata: {
+                            cacheBehavior: 'processed',
+                            errorClassification,
+                            attempts: attempt,
+                        },
+                    };
                     normalized = this.normalize(fallback, input, idempotencyKey, 'fallback', attempt);
                     source = 'fallback';
                     break;
                 }
+
                 this.onRetry?.(attempt, error);
             }
         }
 
+        return {
+            invocationStatus: 'failed',
+            metadata: {
+                cacheBehavior: 'processed',
+                errorClassification: 'unknown',
+                attempts: attempt,
+            },
+        };
         if (!normalized) {
             return {
                 status: 'analyzed',
@@ -808,6 +886,10 @@ export interface AnalysisQueueItem {
 
 export interface AnalysisQueueResult {
     itemId: string;
+    invocationStatus: InvocationStatus;
+    cacheBehavior: CacheBehavior;
+    source?: 'ai' | 'fallback';
+    errorClassification?: ErrorClassification;
     status: 'analyzed' | 'skipped';
     outcome: 'success' | 'degraded' | 'failed';
     source: 'ai' | 'fallback';
@@ -823,6 +905,10 @@ export async function processAnalysisQueue(
         const outcome = await service.analyze(item.input);
         results.push({
             itemId: item.id,
+            invocationStatus: outcome.invocationStatus,
+            cacheBehavior: outcome.metadata.cacheBehavior,
+            source: outcome.record?.source,
+            errorClassification: outcome.metadata.errorClassification,
             status: outcome.status,
             outcome: outcome.outcome,
             source: outcome.source,
