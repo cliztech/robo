@@ -126,3 +126,10 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 ## 2026-02-27 TI-039 Enforcement Update
 - TI-039 security policy enforcement completed: approval catalog module added, scheduler/autonomy/config-script high-risk hooks now deny without required approver roles, and audit export path landed with integrity manifests.
+- Implemented TI-040 config crypto module with AES-256-GCM envelope serialization, TI-004 KID provenance + previous-key compatibility, read/write path integration for schedules/prompt variables, and fail-closed decrypt classification with dedicated tests.
+## 2026-02-27 TI-041 Execution Update
+
+- Added deterministic `test:security` runner + wrapper (`pnpm test:security`) with scenario-level marker enforcement for `SMK-AUTHN-01`, `SMK-AUTHZ-01`, `SMK-LOCKOUT-01`, and `SMK-PRIV-01`.
+- Wired smoke checks to TI-002 role deny expectations, TI-003 timeout/reauth contract variables, and TI-039 privileged action catalog IDs through startup contract validation.
+- Added mandatory artifact outputs under `artifacts/security/logs`, `artifacts/security/reports`, and `artifacts/security/hashes`.
+- Updated operations docs with exact pre-release invocation and pass/fail signatures.

@@ -471,3 +471,38 @@ Optional PR checks:
 gh pr checks <pr-number>
 gh pr view <pr-number> --json state,reviewDecision
 ```
+
+## 8) TI-041 pre-release security smoke invocation
+
+Run this command from repository root before release cut:
+
+```bash
+pnpm test:security
+```
+
+Optional single-scenario runs:
+
+```bash
+pnpm test:security -- --case authn-invalid-password
+pnpm test:security -- --case authz-role-deny
+pnpm test:security -- --case lockout-threshold
+pnpm test:security -- --case privileged-action-block
+```
+
+Expected pass signatures:
+
+- Process exit code: `0`
+- Output markers include:
+  - `AUTHN_DENIED_EXPECTED`
+  - `AUTHZ_DENIED_EXPECTED`
+  - `LOCKOUT_TRIGGERED`
+  - `LOCKOUT_WINDOW_ACTIVE`
+  - `PRIV_ACTION_BLOCKED`
+- Output must **not** include `PRIV_ACTION_EXECUTED`
+
+Expected fail signatures:
+
+- Non-zero exit code.
+- Any required marker is missing.
+- `PRIV_ACTION_EXECUTED` appears in output.
+- Contract validation fails for TI-002/TI-003/TI-039 references.
