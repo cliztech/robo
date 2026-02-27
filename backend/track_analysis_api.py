@@ -1,17 +1,19 @@
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 
+from backend.ai.contracts.track_analysis import TrackAnalysisRequest, TrackAnalysisResult
 from backend.security.auth import verify_api_key
-from backend.track_analysis_service import (
-    TrackAnalysisEnvelope,
-    TrackAnalysisRequest,
-    TrackAnalysisService,
-)
+from backend.track_analysis_service import TrackAnalysisService
 
 router = APIRouter(prefix="/api/v1/ai", tags=["track-analysis"])
 
 
+class TrackAnalysisEnvelope(BaseModel):
+    success: bool
+    data: TrackAnalysisResult | None
+    error: str | None
 _FAILED_STATUS_CODE_BY_EXCEPTION: dict[str, int] = {
     "TimeoutError": 504,
     "AITimeoutError": 504,
@@ -46,3 +48,12 @@ def analyze_track(
         status_code = _FAILED_STATUS_CODE_BY_EXCEPTION.get(type(exc), 500)
         envelope = TrackAnalysisEnvelope(status="failed", success=False, data=None, error=str(exc))
         return JSONResponse(status_code=status_code, content=envelope.model_dump())
+    except (TimeoutError, AITimeoutError) as exc:
+        envelope = TrackAnalysisEnvelope(status="failed", success=False, data=None, error=str(exc))
+        return JSONResponse(status_code=504, content=envelope.model_dump())
+    except (AICircuitOpenError, AIServiceError) as exc:
+        envelope = TrackAnalysisEnvelope(status="failed", success=False, data=None, error=str(exc))
+        return JSONResponse(status_code=503, content=envelope.model_dump())
+    except Exception as exc:
+        envelope = TrackAnalysisEnvelope(status="failed", success=False, data=None, error=str(exc))
+        return JSONResponse(status_code=500, content=envelope.model_dump())

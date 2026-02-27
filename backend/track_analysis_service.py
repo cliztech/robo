@@ -1,10 +1,23 @@
 from __future__ import annotations
 
+import hashlib
+import json
+import logging
 from dataclasses import dataclass
 
+from backend.ai.contracts.track_analysis import (
+    TrackAnalysis,
+    TrackAnalysisRequest,
+    TrackAnalysisResult,
+    TrackMood,
+    VocalStyle,
+)
 from typing import Literal
 
 from pydantic import BaseModel, Field
+
+
+logger = logging.getLogger(__name__)
 
 
 class TrackMetadata(BaseModel):
@@ -26,6 +39,8 @@ class TrackAnalysisRequest(BaseModel):
     track_id: str = Field(min_length=1)
     metadata: TrackMetadata
     audio_features: AudioFeatures | None = None
+    model_version: str = Field(default="track-analysis-v1", min_length=1)
+    prompt_profile_version: str = Field(default="prompt-profile-v1", min_length=1)
 
 
 class TrackAnalysis(BaseModel):
@@ -77,8 +92,42 @@ _GENRE_PROFILES: dict[str, _GenreProfile] = {
 _DEFAULT_PROFILE = _GenreProfile("balanced", 5, 5, 110, ("general",))
 
 
+class AnalysisCacheStore:
+    def get(self, fingerprint: str) -> TrackAnalysisResult | None:
+        raise NotImplementedError
+
+    def set(self, fingerprint: str, result: TrackAnalysisResult) -> None:
+        raise NotImplementedError
+
+
+class InMemoryAnalysisCacheStore(AnalysisCacheStore):
+    """Process-local cache store for analysis responses."""
+
+    def __init__(self) -> None:
+        self._cache: dict[str, TrackAnalysisResult] = {}
+
+    def get(self, fingerprint: str) -> TrackAnalysisResult | None:
+        cached = self._cache.get(fingerprint)
+        if cached is None:
+            return None
+        return cached.model_copy(deep=True)
+
+    def set(self, fingerprint: str, result: TrackAnalysisResult) -> None:
+        self._cache[fingerprint] = result.model_copy(deep=True)
+
+
 class TrackAnalysisService:
+    def __init__(self, cache_store: AnalysisCacheStore | None = None) -> None:
+        self._cache_store = cache_store or InMemoryAnalysisCacheStore()
+
     def analyze(self, request: TrackAnalysisRequest) -> TrackAnalysisResult:
+        fingerprint = self._fingerprint(request)
+        cached_result = self._cache_store.get(fingerprint)
+        if cached_result is not None:
+            self._log_cache_event(event="track_analysis_cache_hit", fingerprint=fingerprint, request=request)
+            return cached_result
+
+        self._log_cache_event(event="track_analysis_cache_miss", fingerprint=fingerprint, request=request)
         genre = self._resolve_genre(request.metadata.genre_hint)
         profile = _GENRE_PROFILES.get(genre, _DEFAULT_PROFILE)
         duration = request.metadata.duration_seconds
@@ -101,17 +150,49 @@ class TrackAnalysisService:
 
         analysis = TrackAnalysis(
             genre=genre,
-            mood=profile.mood,
+            mood=TrackMood(profile.mood),
             energy_level=energy_level,
             danceability=danceability,
             bpm_estimate=bpm_estimate,
-            vocal_style=vocal_style,
+            vocal_style=VocalStyle(vocal_style),
             best_for_time=best_for_time,
             tags=list(profile.tags),
             confidence_score=confidence,
             reasoning=reasoning,
         )
-        return TrackAnalysisResult(track_id=request.track_id, analysis=analysis)
+        result = TrackAnalysisResult(track_id=request.track_id, analysis=analysis)
+        self._cache_store.set(fingerprint, result)
+        return result
+
+    @staticmethod
+    def _fingerprint(request: TrackAnalysisRequest) -> str:
+        stable_payload = {
+            "metadata": request.metadata.model_dump(mode="json", exclude_none=True),
+            "audio_features": (
+                request.audio_features.model_dump(mode="json", exclude_none=True)
+                if request.audio_features
+                else None
+            ),
+            "model_version": request.model_version,
+            "prompt_profile_version": request.prompt_profile_version,
+        }
+        serialized = json.dumps(stable_payload, sort_keys=True, separators=(",", ":"))
+        return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
+
+    @staticmethod
+    def _log_cache_event(*, event: str, fingerprint: str, request: TrackAnalysisRequest) -> None:
+        logger.info(
+            json.dumps(
+                {
+                    "event": event,
+                    "track_id": request.track_id,
+                    "fingerprint": fingerprint,
+                    "model_version": request.model_version,
+                    "prompt_profile_version": request.prompt_profile_version,
+                },
+                sort_keys=True,
+            )
+        )
 
     @staticmethod
     def _resolve_genre(genre_hint: str | None) -> str:

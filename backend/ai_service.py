@@ -2,40 +2,25 @@ from __future__ import annotations
 
 import json
 import logging
+import os
+import hashlib
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from dataclasses import dataclass
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
+
+from backend.ai.contracts.track_analysis import (
+    TrackAnalysis,
+    TrackAnalysisRequest,
+    TrackAnalysisResult,
+    TrackMood,
+    VocalStyle,
+)
 
 logger = logging.getLogger(__name__)
-
-
-class TrackAnalysisRequest(BaseModel):
-    title: str = Field(min_length=1, max_length=160)
-    artist: str = Field(min_length=1, max_length=160)
-    genre: str = Field(min_length=1, max_length=80)
-    bpm: int = Field(ge=50, le=220)
-    duration_seconds: int = Field(ge=30, le=1800)
-    notes: str = Field(default="", max_length=800)
-
-    @field_validator("title", "artist", "genre", mode="before")
-    @classmethod
-    def _strip_required(cls, value: str) -> str:
-        cleaned = str(value).strip()
-        if not cleaned:
-            raise ValueError("value cannot be empty")
-        return cleaned
-
-
-class TrackAnalysisResult(BaseModel):
-    mood: Literal["uplifting", "moody", "chill", "energetic", "dark"]
-    energy_score: int = Field(ge=1, le=10)
-    talkover_windows_seconds: list[int]
-    transition_tags: list[str]
-    rationale: str = Field(min_length=1, max_length=400)
 
 
 class HostScriptRequest(BaseModel):
@@ -53,11 +38,14 @@ class HostScriptResult(BaseModel):
 
 class AIResponseEnvelope(BaseModel):
     success: bool
+    status: Literal["success", "degraded", "failed"]
     correlation_id: str
     data: TrackAnalysisResult | HostScriptResult | None
     error: str | None
     latency_ms: int = Field(ge=0)
     cost_usd: float = Field(ge=0)
+    cache_hit: bool = False
+    prompt_profile_version: str
 
 
 @dataclass
@@ -66,6 +54,33 @@ class _GuardrailPrompts:
     host_script: str
 
 
+
+
+class LegacyAITrackAnalysisRequest(BaseModel):
+    """Temporary compatibility input for /api/v1/ai/track-analysis.
+
+    TODO(phase-5-story-P5-05): Remove this adapter after all clients send
+    canonical TrackAnalysisRequest payloads with track_id + metadata fields.
+    """
+
+    title: str = Field(min_length=1, max_length=160)
+    artist: str = Field(min_length=1, max_length=160)
+    genre: str = Field(min_length=1, max_length=80)
+    bpm: int = Field(ge=50, le=220)
+    duration_seconds: int = Field(ge=30, le=1800)
+    notes: str = Field(default="", max_length=800)
+
+    def to_canonical(self, correlation_id: str) -> TrackAnalysisRequest:
+        return TrackAnalysisRequest(
+            track_id=f"legacy-{correlation_id}",
+            metadata={
+                "title": self.title.strip(),
+                "artist": self.artist.strip(),
+                "duration_seconds": self.duration_seconds,
+                "genre_hint": self.genre.strip(),
+            },
+            audio_features={"bpm": self.bpm},
+        )
 PROMPTS = _GuardrailPrompts(
     track_analysis=(
         "You are a broadcast-safe track analysis model. Return compact JSON with fields: "
@@ -131,12 +146,94 @@ class AIInferenceService:
     ) -> None:
         self.timeout_seconds = timeout_seconds
         self.circuit_breaker = circuit_breaker or AICircuitBreaker()
+        self._analysis_cache: dict[str, TrackAnalysisResult] = {}
+        self._cache_lock = threading.Lock()
+        self._max_cache_size = 1000
 
-    def analyze_track(self, request: TrackAnalysisRequest, correlation_id: str) -> tuple[TrackAnalysisResult, int, float]:
-        return self._run_inference("track_analysis", request, correlation_id)
+    def _resolve_prompt_profile(self) -> tuple[str, str]:
+        config_path = Path(__file__).parent.parent / "config" / "prompt_variables.json"
+        try:
+            with open(config_path, encoding="utf-8") as config_file:
+                payload = json.load(config_file)
+        except (OSError, json.JSONDecodeError):
+            return "default", "{}"
 
-    def generate_host_script(self, request: HostScriptRequest, correlation_id: str) -> tuple[HostScriptResult, int, float]:
-        return self._run_inference("host_script", request, correlation_id)
+        version = str(payload.get("version", "default")).strip() or "default"
+        variable_settings = payload.get("variable_settings", {})
+        custom_variables = payload.get("custom_variables", {})
+        deterministic_payload = {
+            "version": version,
+            "variable_settings": variable_settings,
+            "custom_variables": custom_variables,
+        }
+        serialized = json.dumps(deterministic_payload, sort_keys=True, separators=(",", ":"))
+        return version, serialized
+
+    def _compute_fingerprint(
+        self,
+        request: TrackAnalysisRequest,
+        *,
+        model_version: str,
+        prompt_profile_payload: str,
+    ) -> str:
+        raw = {
+            "track": request.model_dump(mode="json"),
+            "model_version": model_version,
+            "prompt_profile": prompt_profile_payload,
+        }
+        serialized = json.dumps(raw, sort_keys=True, separators=(",", ":"))
+        return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
+
+    def analyze_track(
+        self,
+        request: TrackAnalysisRequest,
+        correlation_id: str,
+    ) -> tuple[TrackAnalysisResult, int, float, bool, Literal["success", "degraded", "failed"], str]:
+        prompt_profile_version, prompt_profile_payload = self._resolve_prompt_profile()
+        model_version = "heuristic-v1"
+        fingerprint = self._compute_fingerprint(
+            request,
+            model_version=model_version,
+            prompt_profile_payload=prompt_profile_payload,
+        )
+        with self._cache_lock:
+            cached = self._analysis_cache.get(fingerprint)
+
+        if cached is not None:
+            self._log_event(
+                event="ai_analysis_cache_hit",
+                mode="track_analysis",
+                correlation_id=correlation_id,
+                latency_ms=0,
+                cost_usd=0.0,
+                failure_reason=None,
+                metadata={"prompt_profile_version": prompt_profile_version},
+            )
+            return cached, 0, 0.0, True, "success", prompt_profile_version
+
+        result, latency_ms, cost_usd, status = self._run_inference("track_analysis", request, correlation_id)
+        with self._cache_lock:
+            self._analysis_cache[fingerprint] = result
+
+        self._log_event(
+            event="ai_analysis_cache_miss",
+            mode="track_analysis",
+            correlation_id=correlation_id,
+            latency_ms=latency_ms,
+            cost_usd=cost_usd,
+            failure_reason=None,
+            metadata={"prompt_profile_version": prompt_profile_version},
+        )
+        return result, latency_ms, cost_usd, False, status, prompt_profile_version
+
+    def generate_host_script(
+        self,
+        request: HostScriptRequest,
+        correlation_id: str,
+    ) -> tuple[HostScriptResult, int, float, Literal["success", "degraded", "failed"], str]:
+        prompt_profile_version, _ = self._resolve_prompt_profile()
+        result, latency_ms, cost_usd, status = self._run_inference("host_script", request, correlation_id)
+        return result, latency_ms, cost_usd, status, prompt_profile_version
 
     def _run_inference(self, mode: Literal["track_analysis", "host_script"], request: BaseModel, correlation_id: str):
         if not self.circuit_breaker.allow():
@@ -158,11 +255,13 @@ class AIInferenceService:
                 latency_ms=latency_ms,
                 cost_usd=cost_usd,
                 failure_reason=None,
+                metadata=None,
             )
-            return result, latency_ms, cost_usd
+            return result, latency_ms, cost_usd, "success"
         except TimeoutError as exc:
             self.circuit_breaker.on_failure()
             latency_ms = int((time.monotonic() - started) * 1000)
+            fallback_result = self._build_fallback(mode)
             self._log_event(
                 event="ai_inference_failure",
                 mode=mode,
@@ -170,8 +269,9 @@ class AIInferenceService:
                 latency_ms=latency_ms,
                 cost_usd=0.0,
                 failure_reason="timeout",
+                metadata=None,
             )
-            raise AITimeoutError("inference timed out") from exc
+            return fallback_result, latency_ms, 0.0, "degraded"
         except Exception as exc:
             self.circuit_breaker.on_failure()
             latency_ms = int((time.monotonic() - started) * 1000)
@@ -182,21 +282,46 @@ class AIInferenceService:
                 latency_ms=latency_ms,
                 cost_usd=0.0,
                 failure_reason=type(exc).__name__,
+                metadata=None,
             )
             raise AIServiceError(str(exc)) from exc
+
+    def _build_fallback(self, mode: Literal["track_analysis", "host_script"]) -> TrackAnalysisResult | HostScriptResult:
+        if mode == "track_analysis":
+            return TrackAnalysisResult(
+                mood="chill",
+                energy_score=5,
+                talkover_windows_seconds=[8, 16],
+                transition_tags=["fallback"],
+                rationale="Fallback analysis used after timeout.",
+            )
+        return HostScriptResult(script="We're back with more music after this break.", safety_flags=["fallback"])
 
     def _invoke_model(self, mode: Literal["track_analysis", "host_script"], request: BaseModel):
         if mode == "track_analysis":
             payload = request.model_dump()
-            energy_base = min(10, max(1, round(payload["bpm"] / 20)))
-            mood = "chill" if payload["bpm"] < 95 else "energetic" if payload["bpm"] > 125 else "uplifting"
-            talkover = [8, max(10, payload["duration_seconds"] // 3)]
+            metadata = payload["metadata"]
+            audio = payload.get("audio_features") or {}
+            bpm = audio.get("bpm") or 120
+            energy_base = min(10, max(1, round(bpm / 20)))
+            mood = TrackMood.CHILL if bpm < 95 else TrackMood.ENERGETIC if bpm > 125 else TrackMood.UPLIFTING
+            talkover = [8, max(10, metadata["duration_seconds"] // 3)]
             return TrackAnalysisResult(
-                mood=mood,
-                energy_score=energy_base,
-                talkover_windows_seconds=talkover,
-                transition_tags=[payload["genre"].lower(), mood],
-                rationale=f"{PROMPTS.track_analysis[:60]}...",
+                track_id=payload["track_id"],
+                analysis=TrackAnalysis(
+                    genre=(metadata.get("genre_hint") or "pop").lower(),
+                    mood=mood,
+                    energy_level=energy_base,
+                    danceability=max(1, min(10, energy_base + 1)),
+                    bpm_estimate=bpm,
+                    vocal_style=VocalStyle.MIXED,
+                    best_for_time=["afternoon", "evening"] if energy_base >= 7 else ["morning", "afternoon"],
+                    tags=[(metadata.get("genre_hint") or "pop").lower(), mood.value],
+                    confidence_score=0.82,
+                    reasoning=(
+                        f"{PROMPTS.track_analysis[:60]}... talkover_windows_seconds={talkover}"
+                    ),
+                ),
             )
 
         req = request.model_dump()
@@ -221,17 +346,18 @@ class AIInferenceService:
         latency_ms: int,
         cost_usd: float,
         failure_reason: str | None,
+        metadata: dict[str, Any] | None,
     ) -> None:
+        payload: dict[str, Any] = {
+            "event": event,
+            "mode": mode,
+            "correlation_id": correlation_id,
+            "latency_ms": latency_ms,
+            "cost_usd": cost_usd,
+            "failure_reason": failure_reason,
+        }
+        if metadata:
+            payload["metadata"] = metadata
         logger.info(
-            json.dumps(
-                {
-                    "event": event,
-                    "mode": mode,
-                    "correlation_id": correlation_id,
-                    "latency_ms": latency_ms,
-                    "cost_usd": cost_usd,
-                    "failure_reason": failure_reason,
-                },
-                sort_keys=True,
-            )
+            json.dumps(payload, sort_keys=True)
         )

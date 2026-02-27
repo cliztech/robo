@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from backend.app import app
 from backend.track_analysis_api import get_track_analysis_service
+from backend.ai.contracts.track_analysis import AnalysisStatus
 from backend.track_analysis_service import TrackAnalysisService
 
 TEST_API_KEY = "valid_api_key_for_testing"
@@ -46,21 +47,33 @@ class _FailedStubService(TrackAnalysisService):
 
 
 def test_analyze_track_requires_api_key() -> None:
+def test_track_analysis_requires_api_key() -> None:
     client = TestClient(app)
-    response = client.post("/api/v1/ai/analyze-track", json={})
+    response = client.post(
+        "/api/v1/ai/track-analysis",
+        json={
+            "title": "Neon Skyline",
+            "artist": "Bytewave",
+            "genre": "Synthwave",
+            "bpm": 118,
+            "duration_seconds": 245,
+            "notes": "night drive",
+        },
+    )
     assert response.status_code == 401
 
 
-def test_analyze_track_returns_envelope() -> None:
-    app.dependency_overrides[get_track_analysis_service] = lambda: _StubService()
+def test_track_analysis_rejects_invalid_api_key() -> None:
     client = TestClient(app)
-    payload = {
-        "track_id": "trk_010",
-        "metadata": {
-            "title": "Golden Hour",
-            "artist": "DJ Arc",
-            "duration_seconds": 198,
-            "genre_hint": "dance",
+    response = client.post(
+        "/api/v1/ai/track-analysis",
+        json={
+            "title": "Neon Skyline",
+            "artist": "Bytewave",
+            "genre": "Synthwave",
+            "bpm": 118,
+            "duration_seconds": 245,
+            "notes": "night drive",
         },
         "audio_features": {"bitrate_kbps": 256, "sample_rate_hz": 44100, "channels": 2},
     }
@@ -81,6 +94,7 @@ def test_analyze_track_returns_envelope() -> None:
     assert body["error"] is None
     assert body["data"]["track_id"] == "trk_010"
     assert body["data"]["analysis"]["genre"] == "dance"
+    assert body["data"]["analysis"]["status"] == AnalysisStatus.SUCCESS.value
 
 
 def test_analyze_track_returns_degraded_on_contract_fallback() -> None:
@@ -139,3 +153,6 @@ def test_analyze_track_returns_failed_on_timeout() -> None:
     assert body["success"] is False
     assert body["data"] is None
     assert "timed out" in body["error"]
+        headers={"X-API-Key": "wrong"},
+    )
+    assert response.status_code == 401

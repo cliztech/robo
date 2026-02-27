@@ -52,10 +52,17 @@ Introduce an **analysis fingerprint cache key** (`track_hash + model_version + p
 - **Done when:** tests pass and latency report is generated.
 
 ## Validation Commands (Execution Gate)
-1. `python -m pytest backend/tests -k "analysis or ai"`
-2. `python -m pytest backend/tests -k "cache or fingerprint"`
+1. `npm run test -- tests/unit/ai-analysis-service.test.ts tests/integration/analysis-queue.test.ts`
+2. `npm run test:perf:analysis-latency`
 3. `python -m json.tool config/prompt_variables.json`
 4. `git diff --name-only`
+
+## Performance Gate Thresholds (CI)
+- Artifact path: `docs/artifacts/analysis-latency/analysis-latency-report.json`
+- Companion summary: `docs/artifacts/analysis-latency/analysis-latency-report.md`
+- Expected telemetry minimums: `cache.hit >= 1` and `cache.miss >= 1`
+- Latency thresholds: `p50 <= 10ms`, `p95 <= 14ms`
+- CI should fail if artifact is missing or threshold checks fail.
 
 ## Exit Criteria
 - All P5 stories decomposed into implementation tasks.
