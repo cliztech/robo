@@ -107,9 +107,10 @@ export function loadPromptVariablesConfig(configPath = DEFAULT_CONFIG_PATH): Pro
 
 export function createPromptProfileResolver(options: PromptProfileResolverOptions = {}): PromptProfileResolver {
     const loadConfig = options.loadConfig ?? (() => loadPromptVariablesConfig(options.configPath));
+    const config = loadConfig();
 
     return (_input: TrackAnalysisInput) => {
-        const config = loadConfig();
         return resolvePromptProfile(config);
     };
+}
 }
