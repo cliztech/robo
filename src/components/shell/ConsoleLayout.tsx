@@ -27,11 +27,7 @@ export function ConsoleLayout({
     children,
 }: ConsoleLayoutProps) {
     return (
-        <div className="flex h-screen bg-[hsl(var(--color-bg))] text-[hsl(var(--color-text))] overflow-hidden ambient-bg">
-            {/* Floating ambient orbs */}
-            <div className="floating-orb w-[300px] h-[300px] bg-[hsl(var(--color-deck-a))] top-[-80px] left-[10%]" style={{ animationDelay: '0s' }} />
-            <div className="floating-orb w-[250px] h-[250px] bg-[hsl(var(--color-deck-b))] bottom-[10%] right-[5%]" style={{ animationDelay: '5s' }} />
-            <div className="floating-orb w-[200px] h-[200px] bg-[hsl(var(--color-deck-mic))] top-[40%] left-[60%]" style={{ animationDelay: '10s' }} />
+        <div className="phase8-console flex h-screen bg-[hsl(0,0%,3%)] text-white overflow-hidden ambient-bg">
             <ConsoleSidebar
                 navItems={navItems}
                 utilityItems={utilityItems}

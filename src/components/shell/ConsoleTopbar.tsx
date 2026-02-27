@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
+import { Activity, AlertTriangle, Clock3, Disc3, Radio } from 'lucide-react';
 import { Activity, AlertTriangle, Disc3, Palette, Radio, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CONSOLE_NAV_ITEMS } from '@/components/console/consoleNav';
@@ -63,6 +64,11 @@ export function ConsoleTopbar({ currentView, isOnAir, onToggleOnAir }: ConsoleTo
                 >
                     {activeView}
                 </motion.span>
+            </div>
+
+            <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-md bg-black/45 border border-white/[0.12]">
+                <Clock3 size={11} className="text-zinc-500" />
+                <span className="text-[11px] font-mono text-zinc-100 tabular-nums tracking-[0.08em]">00:00:10</span>
             </div>
 
             <div className="flex items-center gap-3">

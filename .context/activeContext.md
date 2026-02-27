@@ -8,6 +8,7 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 ## Recent Decisions
 
+- Added Phase 8-inspired DJ console style pass: denser hardware panel treatment, deck-specific orange/cyan accents, and topbar session timer chip for high-density operator readability.
 - Removed legacy `DashboardView` telemetry prop wiring so dashboard cards are sourced exclusively from status API responses, and aligned dashboard UI tests with API-driven alert/metric rendering.
 - Hardened `DashboardView.handleAcknowledge` with per-alert rollback snapshots, duplicate in-flight request gating, and fully functional state updates to prevent stale-closure regressions under concurrent acknowledgements.
 - Replaced dashboard UI acknowledge tests with targeted concurrency coverage that validates mixed success/failure sibling acknowledgements preserve successful optimistic commits.
