@@ -101,3 +101,5 @@
 - [x] Enhanced `AnalysisService` cache controls with max entry cap, TTL expiry, and observability stats/hooks; expanded unit coverage for eviction, TTL refresh, and cap stability.
 
 - [x] Updated `docs/massive_workflow_blueprint.md` branding to canonical `DGN-DJ by DGNradio`, with `RoboDJ` retained only as an explicit legacy alias in historical context.
+
+- [x] Test-suite hygiene: rebuilt `tests/unit/ai-analysis-service.test.ts` and `tests/integration/analysis-queue.test.ts` to remove duplicated partial blocks and align assertions with current queue contract boundaries.
