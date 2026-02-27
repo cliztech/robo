@@ -140,3 +140,5 @@
 - [x] Added privileged-action fail guard for unexpected `PRIV_ACTION_EXECUTED` outcomes.
 - [x] Added artifact-producing wrapper for smoke logs/report/hashes under `artifacts/security/*`.
 - [x] Updated operations command and artifact docs with pre-release invocation and required signatures.
+
+- Added skin-pack foundation: manifest schema/contracts, sandboxed loader with fallback + token-gap detection, Skin Manager panel (import/preview/activate/deactivate/delete), and UI spec documentation.
