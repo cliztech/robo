@@ -18,6 +18,7 @@ import {
 } from "@/lib/layout/types";
 import { DashboardView } from "./DashboardView";
 import { DEFAULT_DASHBOARD_TELEMETRY } from "./dashboard.types";
+import { DJStudioSurface } from "./DJStudioSurface";
 import type { ConsoleViewMode } from "./types";
 
 interface ConsoleWorkspaceViewProps {
@@ -447,6 +448,10 @@ export function ConsoleWorkspaceView({
           <DashboardView telemetry={DEFAULT_DASHBOARD_TELEMETRY} />
         )}
         {(currentView === "decks" || currentView === "studio") && <DockWorkspace />}
+        {currentView === "dashboard" && <DashboardView />}
+        {(currentView === "decks" || currentView === "studio") && (
+          <DJStudioSurface />
+        )}
         {currentView === "mixer" && (
           <div className="max-w-4xl mx-auto">
             <DegenMixer />
