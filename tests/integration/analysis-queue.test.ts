@@ -59,6 +59,11 @@ describe('processAnalysisQueue', () => {
             { itemId: 'job-2', status: 'skipped', outcome: 'success', source: 'ai' },
             { itemId: 'job-3', status: 'analyzed', outcome: 'success', source: 'ai' },
         ]);
+        expect(adapter.analyzeTrack).toHaveBeenCalledTimes(2);
+        expect(service.getCacheTelemetry()).toEqual({
+            hit: 1,
+            miss: 2,
+        });
         expect(adapter.analyzeTrack).toHaveBeenCalledTimes(3);
     });
 

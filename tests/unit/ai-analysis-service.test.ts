@@ -207,6 +207,10 @@ describe('AnalysisService', () => {
         expect(first.outcome).toBe('success');
         expect(second.outcome).toBe('success');
         expect(adapter.analyzeTrack).toHaveBeenCalledTimes(1);
+        expect(service.getCacheTelemetry()).toEqual({
+            hit: 1,
+            miss: 1,
+        });
         expect(service.getTelemetry()).toEqual({
             cacheHits: 1,
             cacheMisses: 1,

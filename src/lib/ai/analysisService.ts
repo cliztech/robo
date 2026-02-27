@@ -104,6 +104,11 @@ export interface AnalysisServiceOptions {
     onCacheEvent?: (event: AnalysisCacheEvent) => void;
 }
 
+export interface AnalysisCacheTelemetry {
+    hit: number;
+    miss: number;
+}
+
 export interface AnalysisCacheStats {
     size: number;
     hits: number;
@@ -422,6 +427,9 @@ export class AnalysisService {
     private readonly cacheTtlMs?: number;
     private readonly now: () => Date;
     private readonly onRetry?: (attempt: number, error: unknown) => void;
+    private readonly byIdempotencyKey = new Map<string, TrackIntelligenceRecord>();
+    private cacheHitCount = 0;
+    private cacheMissCount = 0;
     private readonly byFingerprint = new Map<string, TrackIntelligenceRecord>();
     private readonly telemetry: AnalysisTelemetry = {
         cacheHits: 0,
@@ -472,6 +480,13 @@ export class AnalysisService {
         };
     }
 
+    getCacheTelemetry(): AnalysisCacheTelemetry {
+        return {
+            hit: this.cacheHitCount,
+            miss: this.cacheMissCount,
+        };
+    }
+
     async analyze(input: TrackAnalysisInput): Promise<AnalysisResult> {
         const fingerprint = this.buildFingerprint(input);
         const idempotencyKey = this.buildIdempotencyKey(fingerprint);
@@ -505,6 +520,8 @@ export class AnalysisService {
         const idempotencyKey = this.buildIdempotencyKey(input.trackId, this.promptVersion);
         const cached = this.getCachedRecord(idempotencyKey);
         if (cached) {
+            this.cacheHitCount += 1;
+            return { status: 'skipped', record: cached };
             return {
                 invocationStatus: invocationStatusFromSource(cached.source),
                 record: cached,
@@ -521,6 +538,7 @@ export class AnalysisService {
                 record: cached,
             };
         }
+        this.cacheMissCount += 1;
 
         this.telemetry.cacheMisses += 1;
 

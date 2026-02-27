@@ -29,6 +29,7 @@ Executing "Phase 5: AI Integration" through a quick-dev next-phase plan that dec
 
 ## Recent Decisions
 
+- Added Phase 5 latency verification harness (`tests/perf/ai-analysis-latency.test.ts`) with JSON/Markdown artifacts and cache telemetry assertions for queue integration tests.
 - Added caller-facing analysis outcome classification (`success`/`degraded`/`failed`) in analysis service + queue mapping, with updated unit/integration coverage.
 - Upgraded `docs/massive_workflow_blueprint.md` Phase 1 with implementation-grade Data Contracts, Workflow Graph Definition, Policy Profiles, and acceptance/verification criteria; cross-linked unfinished Phase 1 tasks to section anchors.
 - Normalized `bmad build dev` to the canonical BMAD quick-delivery route and captured build/dev validation evidence in `docs/operations/plans/2026-02-25-bmad-build-dev.md`.
