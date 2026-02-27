@@ -68,6 +68,8 @@ Every delegated task must use this schema before execution:
 task_packet:
   packet_id: "PKT-<timestamp>-<slug>"
   route: "QA|Change|Proposal"
+  phase_namespace: "delivery|workflow"
+  phase_id: "delivery_phase_<n>|workflow_phase_<n>|unphased"
   priority: "P0|P1|P2|P3"
   owner_role: "team.agent-role"
   objective: "single measurable outcome"
@@ -102,6 +104,40 @@ task_packet:
 2. Dependencies are complete and reference packet IDs.
 3. Acceptance criteria are testable.
 4. Evidence format defines exact commands/artifacts.
+5. If a packet references a phase, it must include both `phase_namespace` and `phase_id` (plain `Phase N` is invalid).
+
+## 3.1) High-risk stage-gate enforcement hook (TI-039)
+
+Apply this hook before dispatch and again before reconciliation when the packet includes any high-risk action (`ACT-DELETE`, `ACT-OVERRIDE`, `ACT-KEY-ROTATION`, `ACT-PUBLISH`, `ACT-CONFIG-EDIT`).
+
+### Required evidence payload
+
+`approval_chain_evidence` must be attached in packet artifacts and report output with no undefined fields:
+
+```yaml
+approval_chain_evidence:
+  action_id: "ACT-..."
+  actor_role_ti002: "admin|operator|viewer"
+  target_ref: "path-or-resource"
+  reauth_policy_ref: "TI-003:<section-or-control-id>"
+  reauth_verified: true
+  approvers:
+    - principal: "user-or-service"
+      role: "required approver role"
+      decision: "approved|denied|revoked"
+      decision_ts_utc: "2026-02-27T12:00:00Z"
+      signature_ref: "artifact-or-signature-uri"
+```
+
+### Dispatch gate checks
+
+- `GATE-HR-01`: `action_id` is in TI-039 action catalog and criticality is `High` or `Critical`.
+- `GATE-HR-02`: `actor_role_ti002` maps to an existing TI-002 role (`admin`, `operator`, `viewer`).
+- `GATE-HR-03`: For `ACT-DELETE` and `ACT-OVERRIDE`, `reauth_policy_ref` and `reauth_verified=true` prove TI-003 re-auth linkage.
+- `GATE-HR-04`: `approvers` satisfies TI-039 minimum approver count and role matrix for the selected action.
+- `GATE-HR-05`: Evidence artifacts include export bundle pointers (`.ndjson`, `.sha256`, line-count manifest).
+
+Packets failing any `GATE-HR-*` check are rejected as `F2 Scope failure` and must be re-issued with corrected evidence.
 
 ## 4) Result Reconciliation Rules
 
@@ -170,3 +206,13 @@ The command fails if required BMAD config files are missing, if `_bmad/bmm/confi
 
 - This playbook governs execution behavior for roadmap-to-task translation.
 - If this playbook conflicts with higher-priority repository instructions, follow precedence rules in `AGENTS.md`.
+
+
+## 7) TI-039 Approval Enforcement Hook
+
+- High-risk actions (`ACT-PUBLISH`, `ACT-DELETE`, `ACT-OVERRIDE`, `ACT-KEY-ROTATION`, `ACT-CONFIG-EDIT`) are enforced through `backend/security/approval_policy.py`.
+- Backend entry points must parse approval chains and call `require_approval(...)` before mutation or destructive operations.
+- Current concrete hooks:
+  - `backend/scheduling/scheduler_ui_api.py` + `backend/scheduling/scheduler_ui_service.py` for publish/config writes.
+  - `backend/scheduling/api.py` + `backend/scheduling/autonomy_service.py` for autonomy policy updates and audit event writes.
+  - `config/scripts/memory_service.py reset` for delete operations.

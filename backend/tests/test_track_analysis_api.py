@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 from backend.ai.contracts.track_analysis import AnalysisStatus
 from backend.app import app
 
-TEST_API_KEY = "valid_api_key_for_testing"
+TEST_API_KEY = os.environ.get("TEST_API_KEY", "valid_api_key_for_testing")
 
 
 @pytest.fixture(autouse=True)

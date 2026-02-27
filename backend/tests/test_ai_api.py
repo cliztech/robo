@@ -1,5 +1,6 @@
 import os
 from unittest import mock
+import logging
 
 import pytest
 from fastapi.testclient import TestClient
@@ -8,7 +9,7 @@ from backend.ai.contracts.track_analysis import AnalysisStatus, TrackAnalysisReq
 from backend.ai_service import AICircuitBreaker, AICircuitOpenError, AIInferenceService, HostScriptRequest
 from backend.app import app
 
-TEST_API_KEY = "valid_api_key_for_testing"
+TEST_API_KEY = os.environ.get("TEST_API_KEY", "valid_api_key_for_testing")
 
 
 @pytest.fixture(autouse=True)
@@ -139,8 +140,8 @@ def test_circuit_breaker_blocks_after_failure() -> None:
 
     try:
         service.analyze_track(request, correlation_id="cb-1")
-    except Exception:
-        pass
+    except Exception as e:
+        logging.error(f"Ignored exception: {e}")
 
     try:
         service.analyze_track(request, correlation_id="cb-2")

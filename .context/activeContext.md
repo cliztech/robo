@@ -7,6 +7,10 @@ Executing "Phase 6: Playlist Generation" hardening and preparing Phase 7 broadca
 Building the next unfinished execution plans from the roadmap queue, starting with P1 Security items (TI-039/TI-040/TI-041).
 
 ## Recent Decisions
+
+- Added cadence governance updates: TODO dated-entry outcomes refreshed, readiness scorecard weekly update appended, execution index cadence table added, and roadmap autopilot now emits due-date reminders into the unfinished task build plan.
+
+- Standardized phase naming contracts across planning artifacts: `Delivery Phase N` for delivery context and `Workflow Phase N` for workflow context, plus namespace-required packet/build-plan metadata.
 - Unified AI track-analysis routing on canonical `POST /api/v1/ai/track-analysis`, with deprecated `/api/v1/ai/analyze-track` compatibility alias sharing the same envelope + correlation-id behavior.
 - Hardened playlist generation infeasibility handling by removing hard-constraint fallback, emitting structured constraint diagnostics, and mapping API responses to HTTP 422 with envelope-level error details.
 
@@ -36,6 +40,8 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 ## Recent Decisions
 
+- Standardized phase naming contracts across planning artifacts: `Delivery Phase N` for delivery context and `Workflow Phase N` for workflow context, plus namespace-required packet/build-plan metadata.
+
 - Completed shared canonical track-analysis contract extraction (`backend/ai/contracts/track_analysis.py`) and aligned service/API/tests with temporary legacy adapter removal criteria for Phase 5 story P5-05.
 - Added Phase 5 latency verification harness (`tests/perf/ai-analysis-latency.test.ts`) with JSON/Markdown artifacts and cache telemetry assertions for queue integration tests.
 - Added caller-facing analysis outcome classification (`success`/`degraded`/`failed`) in analysis service + queue mapping, with updated unit/integration coverage.
@@ -62,12 +68,26 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 ## Recent Decisions
 
+- Standardized phase naming contracts across planning artifacts: `Delivery Phase N` for delivery context and `Workflow Phase N` for workflow context, plus namespace-required packet/build-plan metadata.
+
+- Reconciled unfinished-task generation: closed TODO tracked issues now suppress duplicate roadmap backlog rows using TI-first matching with normalized-title fallback and auditable skip reporting.
 - Added runtime-validated analysis schema + deterministic degraded-normalization reason codes in `src/lib/ai/analysisService.ts`.
 - Expanded malformed-payload unit test coverage in `tests/unit/ai-analysis-service.test.ts` (missing keys, wrong types, empty strings).
 
 - Hardened `backend/playlist_service.py` artist handling with centralized normalization and normalized repeat/transition scoring.
 
 ## Next Atomic Steps
+
+### Phase 5 closure status
+
+- [x] Implement Story P5-01 (Typed Track Analysis Contract: runtime schema validation, deterministic normalization, and reason codes).
+- [x] Implement Story P5-02 (Deterministic Prompt Profile Resolver). Evidence: `src/lib/ai/analysisService.ts`, `tests/unit/ai-analysis-service.test.ts`.
+- [x] Implement Story P5-03 (Resilient AI Invocation Layer). Evidence: `src/lib/ai/analysisService.ts`, `tests/integration/analysis-queue.test.ts`.
+- [x] Implement Story P5-04 (Analysis Fingerprint Cache). Evidence: `src/lib/ai/analysisService.ts`, `tests/unit/ai-analysis-service.test.ts`.
+- [x] Implement Story P5-05 (Verification Harness + latency baseline). Evidence: `tests/perf/ai-analysis-latency.test.ts`, `tests/unit/ai-analysis-service.test.ts`, `tests/integration/analysis-queue.test.ts`.
+- Reconciliation rule: no open checkbox may conflict with a later completion statement in this file.
+
+### Open tracked issues and follow-on work
 
 - [ ] Keep tracked-issue coverage table in sync with status/ownership updates.
 - [x] Add AnalysisService cache controls (LRU cap + TTL) with operational cache metrics and hooks.
@@ -81,13 +101,8 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - [ ] Sweep remaining deep docs/config script branding references (phase 2 rebrand pass).
 - [ ] Execute TI-039 packet (approval workflows + immutable audit export contract).
 - [ ] Execute TI-040 packet (config-at-rest encryption policy + operator workflow updates).
-- [ ] Execute TI-041 packet (security smoke script + expected signatures).
+- [x] Execute TI-041 packet (security smoke script + expected signatures).
 - [x] Regenerate unfinished-task build plan and publish the next phased build artifact for P1 Security.
-- [x] Implement Story P5-01 (Typed Track Analysis Contract: runtime schema validation, deterministic normalization, and reason codes).
-- [ ] Implement Story P5-02 (Deterministic Prompt Profile Resolver).
-- [ ] Implement Story P5-03 (Resilient AI Invocation Layer).
-- [ ] Implement Story P5-04 (Analysis Fingerprint Cache).
-- [ ] Implement Story P5-05 (Verification Harness + latency baseline).
 - [ ] Convert `docs/ui/gui_agent_team_review.md` into implementation stories mapped to GUI-001..GUI-030.
 - [x] Resume "Phase 5: AI Integration" (Implemented typed AI service contracts, guarded API routes, and UI wiring for host/persona flows).
 - [x] Resume "Phase 5: AI Integration" foundation (Implemented AI track analysis service + queue processor + tests).
@@ -109,3 +124,18 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 - [x] Replaced merge-corrupted `src/lib/ai/analysisService.ts` with a single canonical implementation (normalized result/record types, single idempotency key strategy, unified LRU+TTL cache map, deterministic analyze flow, and queue outcome mapping).
 - [x] Refactored malformed AI analysis unit/integration suites into clean non-overlapping describe trees and public-contract queue assertions.
+
+- Closed TI-039 documentation track by adding high-risk stage-gate approval-chain enforcement, immutable audit export bundle contract, and checklist/dependency evidence templates across operations docs.
+- Added dedicated P1 Security Lane execution section (TI-039/TI-040/TI-041) with explicit dependency gates, state checkboxes, owners/targets, and required evidence artifact paths; mirrored ordered state tags in `TODO.md`.
+- [x] Reconciled `docs/exec-plans/active/sprint-status.yaml` against `TODO.md` + `docs/exec-plans/active/sprint-telemetry.md`, added `last_reconciled`, and documented state-authority precedence + weekly parity check.
+
+
+## 2026-02-27 TI-039 Enforcement Update
+- TI-039 security policy enforcement completed: approval catalog module added, scheduler/autonomy/config-script high-risk hooks now deny without required approver roles, and audit export path landed with integrity manifests.
+- Implemented TI-040 config crypto module with AES-256-GCM envelope serialization, TI-004 KID provenance + previous-key compatibility, read/write path integration for schedules/prompt variables, and fail-closed decrypt classification with dedicated tests.
+## 2026-02-27 TI-041 Execution Update
+
+- Added deterministic `test:security` runner + wrapper (`pnpm test:security`) with scenario-level marker enforcement for `SMK-AUTHN-01`, `SMK-AUTHZ-01`, `SMK-LOCKOUT-01`, and `SMK-PRIV-01`.
+- Wired smoke checks to TI-002 role deny expectations, TI-003 timeout/reauth contract variables, and TI-039 privileged action catalog IDs through startup contract validation.
+- Added mandatory artifact outputs under `artifacts/security/logs`, `artifacts/security/reports`, and `artifacts/security/hashes`.
+- Updated operations docs with exact pre-release invocation and pass/fail signatures.

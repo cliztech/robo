@@ -59,3 +59,41 @@ def test_collect_open_tasks_reads_current_checkbox_state() -> None:
     assert (
         "End-to-end recovery path consistently completes in under 2 minutes." not in task_texts
     )
+
+
+def test_reconcile_closed_ti_deduplicates_roadmap_duplicate(tmp_path: Path) -> None:
+    closed_tasks = [
+        ra.OpenTask(
+            source=Path("TODO.md"),
+            line_number=3,
+            section="P1",
+            phase="P1",
+            text="Implement widget pipeline ([TI-007](docs/exec-plans/active/tracked-issues/TI-007.md)).",
+        )
+    ]
+    open_tasks = [
+        ra.QueueItem(
+            source=Path("TODO.md"),
+            line_number=4,
+            section="P1",
+            phase="P1",
+            text="Keep this open ([TI-042](docs/exec-plans/active/tracked-issues/TI-042.md)).",
+            kind="todo",
+        ),
+        ra.QueueItem(
+            source=Path("FEATURE_HEAVY_ROADMAP_TODO.md"),
+            line_number=7,
+            section="UI Scope",
+            phase="P1",
+            text="Implement widget pipeline ([TI-007](docs/exec-plans/active/tracked-issues/TI-007.md)).",
+            kind="todo",
+        ),
+    ]
+
+    reconciled, skipped = ra.reconcile_tasks(open_tasks, closed_tasks)
+
+    assert len(reconciled) == 1
+    assert "TI-042" in reconciled[0].text
+    assert len(skipped) == 1
+    assert skipped[0].reason == "closed_ti_reference"
+    assert skipped[0].matched_value == "TI-007"

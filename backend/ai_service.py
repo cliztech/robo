@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import hashlib
 import threading
 import time
@@ -20,6 +19,8 @@ from backend.ai.contracts.track_analysis import (
     TrackMood,
     VocalStyle,
 )
+
+from backend.security.config_crypto import ConfigCryptoError, load_config_json
 
 logger = logging.getLogger(__name__)
 
@@ -154,9 +155,8 @@ class AIInferenceService:
     def _resolve_prompt_profile(self) -> tuple[str, str]:
         config_path = Path(__file__).parent.parent / "config" / "prompt_variables.json"
         try:
-            with open(config_path, encoding="utf-8") as config_file:
-                payload = json.load(config_file)
-        except (OSError, json.JSONDecodeError):
+            payload = load_config_json(config_path)
+        except (OSError, json.JSONDecodeError, ConfigCryptoError):
             return "default", "{}"
 
         version = str(payload.get("version", "default")).strip() or "default"
@@ -259,7 +259,7 @@ class AIInferenceService:
                 metadata=None,
             )
             return result, latency_ms, cost_usd, "success"
-        except TimeoutError as exc:
+        except TimeoutError:
             self.circuit_breaker.on_failure()
             latency_ms = int((time.monotonic() - started) * 1000)
             fallback_result = self._build_fallback(mode)

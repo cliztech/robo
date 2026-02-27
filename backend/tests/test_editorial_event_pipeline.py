@@ -1,4 +1,3 @@
-import json
 import importlib.util
 from pathlib import Path
 from urllib.error import HTTPError, URLError

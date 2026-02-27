@@ -3,14 +3,26 @@
 Canonical endpoint: POST /api/v1/ai/track-analysis
 Legacy compatibility endpoint: POST /api/v1/ai/analyze-track
 """
+from __future__ import annotations
+
+from fastapi import APIRouter, Depends
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, ValidationError
+
+from backend.ai.contracts.track_analysis import TrackAnalysisRequest, TrackAnalysisResult
+from backend.ai_service import AICircuitOpenError, AIServiceError, AITimeoutError
+from backend.security.auth import verify_api_key
+from backend.track_analysis_service import TrackAnalysisService
 
 router = APIRouter(prefix="/api/v1/ai", tags=["track-analysis"])
 
 
 class TrackAnalysisEnvelope(BaseModel):
+    status: str
     success: bool
     data: TrackAnalysisResult | None
     error: str | None
+
 _FAILED_STATUS_CODE_BY_EXCEPTION: dict[str, int] = {
     "TimeoutError": 504,
     "AITimeoutError": 504,
@@ -41,19 +53,17 @@ def analyze_track(
         return TrackAnalysisEnvelope(status="success", success=True, data=result, error=None)
     except (ValidationError, ValueError, TypeError) as exc:
         return TrackAnalysisEnvelope(status="degraded", success=True, data=None, error=str(exc))
-    except Exception as exc:  # noqa: BLE001
-        status_code = _FAILED_STATUS_CODE_BY_EXCEPTION.get(type(exc), 500)
-        envelope = TrackAnalysisEnvelope(status="failed", success=False, data=None, error=str(exc))
-        return JSONResponse(status_code=status_code, content=envelope.model_dump())
     except (TimeoutError, AITimeoutError) as exc:
         envelope = TrackAnalysisEnvelope(status="failed", success=False, data=None, error=str(exc))
         return JSONResponse(status_code=504, content=envelope.model_dump())
     except (AICircuitOpenError, AIServiceError) as exc:
         envelope = TrackAnalysisEnvelope(status="failed", success=False, data=None, error=str(exc))
         return JSONResponse(status_code=503, content=envelope.model_dump())
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
+        status_code = _FAILED_STATUS_CODE_BY_EXCEPTION.get(type(exc).__name__, 500)
         envelope = TrackAnalysisEnvelope(status="failed", success=False, data=None, error=str(exc))
-        return JSONResponse(status_code=500, content=envelope.model_dump())
+        return JSONResponse(status_code=status_code, content=envelope.model_dump())
+
 LEGACY_TRACK_ANALYSIS_DEPRECATION = "true"
 LEGACY_TRACK_ANALYSIS_WARNING = (
     '299 - "Deprecated endpoint: use /api/v1/ai/track-analysis; '

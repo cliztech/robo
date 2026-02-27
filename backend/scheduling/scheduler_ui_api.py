@@ -5,6 +5,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 
+from backend.security.approval_policy import ApprovalPolicyError, parse_approval_chain
 from backend.security.auth import get_scheduler_api_key
 
 from .scheduler_models import (
@@ -46,8 +47,9 @@ def write_scheduler_state(
     service: SchedulerUiService = Depends(get_scheduler_service),
 ) -> SchedulerUiState:
     try:
-        return service.update_schedules(payload.schedules)
-    except ValueError as exc:
+        approval_chain = parse_approval_chain([entry.model_dump() for entry in payload.approval_chain])
+        return service.update_schedules(payload.schedules, approval_chain=approval_chain)
+    except (ValueError, ApprovalPolicyError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
@@ -65,8 +67,9 @@ def publish_scheduler_state(
     service: SchedulerUiService = Depends(get_scheduler_service),
 ):
     try:
-        return service.publish_schedules(payload.schedules)
-    except ValueError as exc:
+        approval_chain = parse_approval_chain([entry.model_dump() for entry in payload.approval_chain])
+        return service.publish_schedules(payload.schedules, approval_chain=approval_chain)
+    except (ValueError, ApprovalPolicyError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
