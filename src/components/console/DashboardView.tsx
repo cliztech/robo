@@ -9,9 +9,6 @@ import {
   Signal,
   TrendingDown,
   TrendingUp,
-  Users,
-  Wifi,
-  Zap,
   AlertTriangle,
   CheckCircle2,
   RefreshCw,
@@ -22,20 +19,34 @@ import { DegenWaveform } from "@/components/audio/DegenWaveform";
 import { DegenScheduleTimeline } from "@/components/schedule/DegenScheduleTimeline";
 import { DegenAIHost } from "@/components/ai/DegenAIHost";
 import { cn } from "@/lib/utils";
+import { type DashboardCardColor } from "./dashboard.types";
 import {
-  type DashboardCardColor,
-  mapSeverityToCardColor,
-  mapSeverityToStatusTextClass,
-  mapStatusToTrend,
-} from "./dashboard.types";
-import {
-    acknowledgeDashboardAlert,
-    fetchDashboardAlerts,
-    fetchDashboardStatus,
-    type AlertCenterItem,
-    type AlertSeverity,
-    type DashboardStatusResponse,
-} from '@/lib/status/dashboardClient';
+  acknowledgeDashboardAlert,
+  fetchDashboardAlerts,
+  fetchDashboardStatus,
+  type AlertCenterItem,
+  type AlertSeverity,
+  type DashboardStatusResponse,
+} from "@/lib/status/dashboardClient";
+
+export type { DashboardStatusResponse };
+
+export interface DashboardStatusApi {
+  fetchDashboardStatus: (signal?: AbortSignal) => Promise<DashboardStatusResponse>;
+  fetchDashboardAlerts?: (
+    severity?: AlertSeverity,
+    signal?: AbortSignal,
+  ) => Promise<AlertCenterItem[]>;
+  acknowledgeAlert: (
+    alertId: string,
+    signal?: AbortSignal,
+  ) => Promise<AlertCenterItem>;
+}
+
+interface DashboardViewProps {
+  telemetry?: unknown;
+  api?: Partial<DashboardStatusApi>;
+}
 
 interface StatCardProps {
   label: string;
@@ -203,7 +214,14 @@ function formatTimestamp(value: string | null): string {
     return new Date(value).toLocaleString();
 }
 
-export function DashboardView({ telemetry }: { telemetry?: any }) {
+export function DashboardView({ telemetry, api }: DashboardViewProps) {
+    void telemetry;
+    const dashboardApi = useMemo<DashboardStatusApi>(() => ({
+        fetchDashboardStatus: api?.fetchDashboardStatus ?? fetchDashboardStatus,
+        fetchDashboardAlerts: api?.fetchDashboardAlerts ?? fetchDashboardAlerts,
+        acknowledgeAlert: api?.acknowledgeAlert ?? acknowledgeDashboardAlert,
+    }), [api?.acknowledgeAlert, api?.fetchDashboardAlerts, api?.fetchDashboardStatus]);
+
     const [currentTime, setCurrentTime] = useState('');
     const [dashboardStatus, setDashboardStatus] = useState<DashboardStatusResponse | null>(null);
     const [alerts, setAlerts] = useState<AlertCenterItem[]>([]);
@@ -239,12 +257,12 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
 
             try {
                 const [dashboard, alertRows] = await Promise.all([
-                    fetchDashboardStatus(abortController.signal),
-                    fetchDashboardAlerts(undefined, abortController.signal),
+                    dashboardApi.fetchDashboardStatus(abortController.signal),
+                    dashboardApi.fetchDashboardAlerts?.(undefined, abortController.signal),
                 ]);
                 if (mounted) {
                     setDashboardStatus(dashboard);
-                    setAlerts(alertRows);
+                    setAlerts(alertRows ?? dashboard.alert_center.items);
                 }
             } catch (fetchError) {
                 if (abortController.signal.aborted) return;
@@ -264,7 +282,7 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
             mounted = false;
             abortController.abort();
         };
-    }, [refreshTick]);
+    }, [dashboardApi, refreshTick]);
 
     const alertCounts = useMemo(() => {
         const counts: Record<AlertSeverity, number> = { critical: 0, warning: 0, info: 0 };
@@ -290,7 +308,7 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
         );
 
         try {
-            const acknowledgedAlert = await acknowledgeDashboardAlert(alertId);
+            const acknowledgedAlert = await dashboardApi.acknowledgeAlert(alertId);
             setAlerts((prev) =>
                 prev.map((item) => (item.alert_id === alertId ? acknowledgedAlert : item))
             );
@@ -360,7 +378,7 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
             <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
                 <StatCard
                     label="Service Health"
-                    value={dashboardStatus?.service_health.status ?? '--'}
+                    value={dashboardStatus?.service_health.status.toUpperCase() ?? '--'}
                     icon={Activity}
                     color={healthColor}
                     trend="stable"
@@ -383,13 +401,22 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
                     delay={0.05}
                 />
                 <StatCard
-                    label="Queue Thresholds"
-                    value={dashboardStatus ? `${dashboardStatus.queue_depth.thresholds.warning}/${dashboardStatus.queue_depth.thresholds.critical}` : '--'}
-                    unit="warn/crit"
+                    label="Warning Threshold"
+                    value={dashboardStatus ? dashboardStatus.queue_depth.thresholds.warning : '--'}
+                    unit="items"
                     icon={AlertTriangle}
                     color={queueColor}
                     trend="stable"
                     delay={0.1}
+                />
+                <StatCard
+                    label="Critical Threshold"
+                    value={dashboardStatus ? dashboardStatus.queue_depth.thresholds.critical : '--'}
+                    unit="items"
+                    icon={AlertTriangle}
+                    color={queueColor}
+                    trend="stable"
+                    delay={0.15}
                 />
                 <StatCard
                     label="Rotation"
@@ -397,7 +424,7 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
                     icon={Signal}
                     color={rotationColor}
                     trend={dashboardStatus?.rotation.is_stale ? 'down' : 'up'}
-                    delay={0.15}
+                    delay={0.2}
                 />
                 <StatCard
                     label="Alert Center"
@@ -406,17 +433,17 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
                     icon={CheckCircle2}
                     color={alertCenterColor}
                     trend={activeAlerts.length > 0 ? 'down' : 'up'}
-                    delay={0.2}
+                    delay={0.25}
                 />
             </div>
 
             {loading ? (
-                <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3 text-xs text-zinc-400">
-                    Loading status telemetry…
+                <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3 text-xs text-zinc-400" role="status" aria-live="polite">
+                    Loading dashboard status…
                 </div>
             ) : null}
             {error ? (
-                <div className="rounded-xl border border-red-900/70 bg-red-950/40 p-3 text-xs text-red-200">
+                <div className="rounded-xl border border-red-900/70 bg-red-950/40 p-3 text-xs text-red-200" role="alert">
                     Status API unavailable: {error}
                 </div>
             ) : null}
@@ -425,8 +452,15 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
                 <div className="flex items-center justify-between">
                     <h2 className="text-xs font-semibold tracking-wide text-zinc-300 uppercase">Alert Center</h2>
                     <div className="text-[10px] text-zinc-500">
-                        critical {alertCounts.critical} · warning {alertCounts.warning} · info {alertCounts.info}
+                        <span data-testid="severity-count-critical">Critical: {alertCounts.critical}</span>
+                        {' · '}
+                        <span>Warning: {alertCounts.warning}</span>
+                        {' · '}
+                        <span>Info: {alertCounts.info}</span>
                     </div>
+                </div>
+                <div className="text-xs text-zinc-500" data-testid="queue-depth-state">
+                    {queueSeverity}
                 </div>
                 {alerts.length === 0 ? (
                     <div className="text-xs text-zinc-500">No alerts in timeline.</div>
@@ -450,7 +484,7 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
                                         </div>
                                         <p className="text-xs text-zinc-400">{alert.description}</p>
                                         {alert.acknowledged && (
-                                            <p className="text-[10px] text-zinc-500">
+                                            <p className="text-[10px] text-zinc-500" data-testid={`alert-ack-${alert.alert_id}`}>
                                                 Ack at: {formatTimestamp(alert.acknowledged_at)}
                                             </p>
                                         )}

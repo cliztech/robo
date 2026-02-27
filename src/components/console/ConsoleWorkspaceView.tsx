@@ -6,7 +6,6 @@ import { DegenMixer } from "@/components/audio/DegenMixer";
 import { DegenTrackList } from "@/components/audio/DegenTrackList";
 import { DegenScheduleTimeline } from "@/components/schedule/DegenScheduleTimeline";
 import { DashboardView } from "./DashboardView";
-import { DEFAULT_DASHBOARD_TELEMETRY } from "./dashboard.types";
 import { DJStudioSurface } from "./DJStudioSurface";
 import type { ConsoleViewMode } from "./types";
 
@@ -27,7 +26,7 @@ export function ConsoleWorkspaceView({
         transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
       >
         {currentView === "dashboard" && (
-          <DashboardView telemetry={DEFAULT_DASHBOARD_TELEMETRY} />
+          <DashboardView />
         )}
         {(currentView === "decks" || currentView === "studio") && (
           <DJStudioSurface />
