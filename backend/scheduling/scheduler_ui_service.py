@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-import json
 import logging
 import re
 from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
 from zoneinfo import ZoneInfo
+
+from backend.security.approval_policy import ActionId, ApprovalRecord, require_approval
+from backend.security.config_crypto import dump_config_json, load_config_json
 
 from .observability import emit_scheduler_event
 from .schedule_conflict_detection import detect_schedule_conflicts
@@ -72,7 +74,13 @@ class SchedulerUiService:
         self._cached_ui_state = state
         return state
 
-    def update_schedules(self, schedules: list[ScheduleRecord]) -> SchedulerUiState:
+    def update_schedules(
+        self,
+        schedules: list[ScheduleRecord],
+        *,
+        approval_chain: list[ApprovalRecord] | None = None,
+    ) -> SchedulerUiState:
+        require_approval(ActionId.ACT_CONFIG_EDIT, approval_chain or [])
         envelope = ScheduleEnvelope(schema_version=2, schedules=schedules)
         self._validate_schema(envelope)
 
@@ -80,15 +88,22 @@ class SchedulerUiService:
         if conflicts:
             raise ValueError(self._format_conflict_error(conflicts))
 
-        self.schedules_path.write_text(envelope.model_dump_json(indent=2), encoding="utf-8")
+        payload = envelope.model_dump(mode="json")
+        self.schedules_path.write_text(dump_config_json(self.schedules_path, payload, indent=2), encoding="utf-8")
         timeline = self._build_timeline_blocks(schedules)
 
         # We don't update cache here immediately because we rely on mtime check in _load_and_migrate
         # to refresh the data on next read. The file write above changes mtime.
         return SchedulerUiState(schedule_file=envelope, timeline_blocks=timeline, conflicts=[])
 
-    def publish_schedules(self, schedules: list[ScheduleRecord]) -> dict[str, object]:
-        ui_state = self.update_schedules(schedules)
+    def publish_schedules(
+        self,
+        schedules: list[ScheduleRecord],
+        *,
+        approval_chain: list[ApprovalRecord] | None = None,
+    ) -> dict[str, object]:
+        require_approval(ActionId.ACT_PUBLISH, approval_chain or [])
+        ui_state = self.update_schedules(schedules, approval_chain=approval_chain)
         return {
             "status": "published",
             "published_at": datetime.now(tz=ZoneInfo("UTC")).isoformat(),
@@ -148,7 +163,8 @@ class SchedulerUiService:
     def _load_and_migrate(self) -> ScheduleEnvelope:
         if not self.schedules_path.exists():
             envelope = ScheduleEnvelope(schema_version=2, schedules=[])
-            self.schedules_path.write_text(envelope.model_dump_json(indent=2), encoding="utf-8")
+            payload = envelope.model_dump(mode="json")
+            self.schedules_path.write_text(dump_config_json(self.schedules_path, payload, indent=2), encoding="utf-8")
             self._cached_envelope = envelope
             try:
                 self._last_mtime = self.schedules_path.stat().st_mtime
@@ -184,7 +200,7 @@ class SchedulerUiService:
             )
 
         content = self.schedules_path.read_text(encoding="utf-8")
-        raw = json.loads(content)
+        raw = load_config_json(self.schedules_path)
         envelope = ScheduleEnvelope.model_validate(self._migrate_payload(raw))
         self._validate_schema(envelope)
 
@@ -193,7 +209,7 @@ class SchedulerUiService:
             raise ValueError(self._format_conflict_error(conflicts))
 
         # Only write back if the content has changed or we want to enforce formatting/migration
-        serialized = envelope.model_dump_json(indent=2)
+        serialized = dump_config_json(self.schedules_path, envelope.model_dump(mode="json"), indent=2)
         # Check if semantic content or formatting differs before writing
         if serialized != content:
             self.schedules_path.write_text(serialized, encoding="utf-8")

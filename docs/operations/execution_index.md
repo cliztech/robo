@@ -14,6 +14,17 @@ This index lists active tracks, owners, and current status pointers. The status 
 | One-click backup snapshot (`feature_one_click_backup_snapshot`) | Config owner | Complete | [`TODO_v1_1.md` → "4) One-click backup snapshot"](../../TODO_v1_1.md#4-one-click-backup-snapshot-feature_one_click_backup_snapshot) |
 | Product readiness scorecard | Management Team (Project Coordinator) | Active weekly refresh | [`docs/readiness_scorecard.md` → "Scoring model"](../readiness_scorecard.md#scoring-model) |
 
+## Cadence operations table
+
+| Task | Owner | Frequency | Next due (UTC) | Last completed (UTC) |
+| --- | --- | --- | --- | --- |
+| Weekly readiness score refresh (`docs/readiness_scorecard.md`) | Management Team (Project Coordinator) | Weekly | 2026-03-03 | 2026-02-27 |
+| Weekly backlog hygiene reconciliation (`TODO.md` ↔ tracked issues) | Management Team (Project Coordinator) | Weekly | 2026-03-01 | 2026-02-24 |
+| Bi-weekly blocked-item pruning (`TI-037`) | Planner Agent | Bi-weekly | 2026-03-10 | 2026-02-24 |
+| Monthly roadmap-variant reassessment (`TI-038`) | Management Team (Sprint Planner) | Monthly | 2026-03-31 | 2026-02-24 |
+
+> Defer log: backlog hygiene window due 2026-02-27 was deferred to 2026-03-01 to preserve Phase 5 stabilization throughput.
+
 ## Planning runbooks
 
 - [`BMAD Deep Research Runbook`](./bmad_deep_research_runbook.md) — Mandatory sequence and quality gates for Market Research → Domain Research → Technical Research → PRD → Architecture → Epics/Stories → Readiness Check.
@@ -54,6 +65,7 @@ Use this compact template when posting weekly updates in the SoT file for that t
 - Any track status entry is considered **stale after 7 days** without an update in its SoT section.
 - Stale tracks must be marked `⚠ stale` in planning discussions until refreshed.
 - During weekly review, stale tracks are escalated to the listed owner for same-week refresh.
+- Sprint close gate: all dated cadence items within the sprint window must be either completed or formally deferred with rationale, owner, and replacement due date.
 
 ## Weekly updates log
 

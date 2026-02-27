@@ -36,9 +36,9 @@ The generated unfinished-task queue now shows only **3 phased items**, all in **
 - Update operator runbook references for rotation + restore behavior.
 
 ### Packet C — TI-041
-- Define smoke script checks for authN failure, authZ denial, lockout trigger, and privileged action blocking.
-- Add expected pass/fail signatures and incident escalation mapping.
-- Attach command examples and output evidence requirements.
+- Implement smoke script checks for authN failure, authZ denial, lockout trigger, and privileged action blocking via `pnpm test:security`.
+- Define deterministic pass/fail signatures, artifact paths, and TI-039/TI-040 control markers.
+- Attach command examples and escalation mapping to release/security incident gates (`PRE_RELEASE_CHECKLIST.md`, `docs/runbooks/index.md`, `docs/reliability_incident_response.md`).
 
 ## Verification gates
 

@@ -10,6 +10,14 @@ from backend.security.auth import verify_api_key
 
 TEST_API_KEY = os.environ.get("TEST_API_KEY", "test-secret-key")
 
+
+def _approval_header(*roles: str) -> dict[str, str]:
+    chain = [
+        {"principal": f"test:{role}", "role": role, "approved_at_utc": "2026-01-01T00:00:00Z"}
+        for role in roles
+    ]
+    return {"X-Approval-Chain": __import__("json").dumps(chain)}
+
 @pytest.fixture(autouse=True)
 def mock_env_api_key():
     from backend.security.auth import _get_secret_key
@@ -42,7 +50,7 @@ def test_get_put_and_effective_policy_endpoints(tmp_path):
     app.dependency_overrides[get_policy_service] = _override_service(tmp_path)
     app.dependency_overrides[verify_api_key] = lambda: "test-key"
     client = TestClient(app)
-    auth_headers = {"X-API-Key": TEST_API_KEY}
+    auth_headers = {"X-API-Key": TEST_API_KEY, **_approval_header("producer", "admin")}
 
     try:
         get_response = client.get("/api/v1/autonomy-policy", headers=auth_headers)
@@ -107,7 +115,7 @@ def test_audit_event_create_and_list_endpoints(tmp_path):
     app.dependency_overrides[get_policy_service] = _override_service(tmp_path)
     app.dependency_overrides[verify_api_key] = lambda: "test-key"
     client = TestClient(app)
-    auth_headers = {"X-API-Key": TEST_API_KEY}
+    auth_headers = {"X-API-Key": TEST_API_KEY, "X-Actor-Principal": "test:ai", **_approval_header("operator", "admin")}
 
     try:
         create = client.post(
@@ -143,7 +151,7 @@ def test_invalid_payload_rejections_api(tmp_path):
     app.dependency_overrides[get_policy_service] = _override_service(tmp_path)
     app.dependency_overrides[verify_api_key] = lambda: "test-key"
     client = TestClient(app)
-    auth_headers = {"X-API-Key": TEST_API_KEY}
+    auth_headers = {"X-API-Key": TEST_API_KEY, **_approval_header("producer", "admin")}
 
     try:
         invalid_policy = {
@@ -213,5 +221,22 @@ def test_get_policy_auto_recovers_invalid_policy_file(tmp_path, monkeypatch):
 
         recovered_files = list(tmp_path.glob("autonomy_policy.crash_recovery_*.json"))
         assert len(recovered_files) == 1
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_put_policy_rejects_missing_approvers(tmp_path):
+    app.dependency_overrides[get_policy_service] = _override_service(tmp_path)
+    app.dependency_overrides[verify_api_key] = lambda: "test-key"
+    client = TestClient(app)
+
+    try:
+        baseline = client.get("/api/v1/autonomy-policy", headers={"X-API-Key": TEST_API_KEY}).json()
+        response = client.put(
+            "/api/v1/autonomy-policy",
+            json=baseline,
+            headers={"X-API-Key": TEST_API_KEY, **_approval_header("producer")},
+        )
+        assert response.status_code == 403
     finally:
         app.dependency_overrides.clear()
