@@ -1,4 +1,10 @@
-from backend.playlist_service import PlaylistGenerationRequest, PlaylistGenerationService
+import pytest
+
+from backend.playlist_service import (
+    PlaylistConstraintsInfeasibleError,
+    PlaylistGenerationRequest,
+    PlaylistGenerationService,
+)
 
 
 def _track(idx: int, artist: str, genre: str, mood: str, energy: int, bpm: int, duration_seconds: int = 180) -> dict:
@@ -87,3 +93,29 @@ def test_respects_max_bpm_delta_when_candidates_available():
 
     result = service.generate(request)
     assert abs(result.entries[0].bpm - result.entries[1].bpm) <= 15
+
+
+def test_raises_infeasible_error_with_blocked_constraints():
+    service = PlaylistGenerationService()
+    request = PlaylistGenerationRequest(
+        tracks=[
+            _track(1, "A", "house", "energetic", 7, 100),
+            _track(2, "B", "house", "energetic", 8, 130),
+            _track(3, "C", "house", "energetic", 9, 140),
+        ],
+        desired_count=3,
+        max_bpm_delta=10,
+        max_consecutive_same_genre=1,
+    )
+
+    with pytest.raises(PlaylistConstraintsInfeasibleError) as exc_info:
+        service.generate(request)
+
+    error = exc_info.value.error
+    assert error.code == "playlist_constraints_infeasible"
+    assert error.slot == 1
+    assert error.generated_entries == 1
+    assert "bpm_delta" in error.blocked_constraints
+    assert "genre_run_length" in error.blocked_constraints
+    assert error.blocked_counts["bpm_delta"] > 0
+    assert error.blocked_counts["genre_run_length"] > 0
