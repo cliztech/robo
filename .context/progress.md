@@ -49,6 +49,7 @@
 
 
 ## Recent Ops Updates
+- [x] Added caller-facing analysis outcomes (`success`/`degraded`/`failed`) with queue mapping + test coverage updates.
 - [x] Security automation hardening: re-enabled CodeQL, removed unsupported defaults, and added high/critical gate + RB-023 triage flow.
 - [x] Implemented release readiness gate automation (tests/config/security/docs) with consolidated artifact reporting and protected-branch ruleset sync.
 
