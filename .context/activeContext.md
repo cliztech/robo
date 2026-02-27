@@ -43,6 +43,8 @@ Executing "Phase 5: AI Integration" through a quick-dev next-phase plan that dec
 - Extended BMAD command normalization guidance to explicitly map `bmad build dev` to `bmad-bmm-quick-dev`.
 - Completed targeted branding alignment for `docs/massive_workflow_blueprint.md`: canonicalized title/objective to "DGN-DJ by DGNradio" and labeled `RoboDJ` as a legacy alias.
 
+- Consolidated AI track-analysis API surface on `/api/v1/ai/track-analysis`, removed duplicate router mounting, and aligned auth/tests to canonical API-key policy.
+
 ## Next Atomic Steps
 - [ ] Keep tracked-issue coverage table in sync with status/ownership updates.
 - [x] Add AnalysisService cache controls (LRU cap + TTL) with operational cache metrics and hooks.
