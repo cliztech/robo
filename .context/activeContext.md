@@ -6,6 +6,7 @@ Executing "Phase 6: Playlist Generation" hardening and preparing Phase 7 broadca
 Building the next unfinished execution plans from the roadmap queue, starting with P1 Security items (TI-039/TI-040/TI-041).
 
 ## Recent Decisions
+- Refactored streaming-gateway FFmpeg lifecycle into a supervisor with jittered backoff restarts, degraded-mode thresholding, health endpoints, heartbeat events, and signal-aware shutdown.
 - Refactored `AnalysisService` idempotency fingerprinting to hash canonicalized track metadata + model/prompt versions with observability fields and cache-invalidation test coverage.
 - Updated AnalysisService idempotency to SHA-256 fingerprints over normalized track metadata + version dimensions (prompt/model/profile) with cache behavior tests for metadata/version churn.
 - Updated AnalysisService idempotency to fingerprint normalized metadata + model/prompt profile versions, with cache invalidation coverage for metadata mutations.

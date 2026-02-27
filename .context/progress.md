@@ -51,6 +51,7 @@
 
 
 ## Recent Ops Updates
+- [x] Hardened `radio-agentic/services/streaming-gateway` process resilience with FFmpeg supervision, restart controls, structured lifecycle logging, and orchestration-facing health signaling.
 - [x] Phase 5 analysis status hardening: added invocation health status + typed error classification with queue-level propagation and test coverage.
 - [x] Hardened analysis idempotency keying with normalized-input/version fingerprint hashing and expanded unit/integration coverage for skip/reanalyze semantics.
 - [x] Hardened AI analysis cache keys with deterministic input fingerprints and added unit/integration coverage for metadata-driven re-analysis behavior.
