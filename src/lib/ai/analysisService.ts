@@ -32,7 +32,9 @@ export interface TrackIntelligenceRecord {
 
 export interface AnalysisResult {
     status: 'analyzed' | 'skipped';
-    record: TrackIntelligenceRecord;
+    outcome: 'success' | 'degraded' | 'failed';
+    source: 'ai' | 'fallback';
+    record: TrackIntelligenceRecord | null;
 }
 
 export interface AnalysisAdapter {
@@ -165,24 +167,41 @@ export class AnalysisService {
     }
 
     async analyze(input: TrackAnalysisInput): Promise<AnalysisResult> {
+        if (input.trackId.trim().length === 0) {
+            return {
+                status: 'analyzed',
+                outcome: 'failed',
+                source: 'fallback',
+                record: null,
+            };
+        }
+
         const idempotencyKey = this.buildIdempotencyKey(input.trackId, this.promptVersion);
         const cached = this.getCachedRecord(idempotencyKey);
         if (cached) {
-            return { status: 'skipped', record: cached };
+            return {
+                status: 'skipped',
+                outcome: cached.source === 'ai' ? 'success' : 'degraded',
+                source: cached.source,
+                record: cached,
+            };
         }
 
         let attempt = 0;
         let normalized: TrackIntelligenceRecord | null = null;
+        let source: 'ai' | 'fallback' = 'ai';
 
         while (attempt <= this.maxRetries && !normalized) {
             attempt += 1;
             try {
                 const raw = await this.adapter.analyzeTrack(input, this.promptVersion);
                 normalized = this.normalize(raw, input, idempotencyKey, 'ai', attempt);
+                source = 'ai';
             } catch (error) {
                 if (attempt > this.maxRetries) {
                     const fallback = createFallbackAnalysis(input);
                     normalized = this.normalize(fallback, input, idempotencyKey, 'fallback', attempt);
+                    source = 'fallback';
                     break;
                 }
                 this.onRetry?.(attempt, error);
@@ -190,11 +209,81 @@ export class AnalysisService {
         }
 
         if (!normalized) {
-            throw new Error('Analysis did not complete.');
+            return {
+                status: 'analyzed',
+                outcome: 'failed',
+                source,
+                record: null,
+            };
         }
 
         this.cacheRecord(idempotencyKey, normalized);
         return { status: 'analyzed', record: normalized };
+        this.byIdempotencyKey.set(idempotencyKey, normalized);
+        return {
+            status: 'analyzed',
+            outcome: normalized.source === 'ai' ? 'success' : 'degraded',
+            source: normalized.source,
+            record: normalized,
+        };
+    }
+
+    private getCachedRecord(idempotencyKey: string): TrackIntelligenceRecord | null {
+        const cached = this.byIdempotencyKey.get(idempotencyKey);
+        if (!cached) {
+            this.cacheStats.misses += 1;
+            this.emitCacheEvent('miss', idempotencyKey);
+            return null;
+        }
+
+        if (this.cacheTtlMs !== undefined) {
+            const ageMs = this.now().getTime() - cached.cachedAtMs;
+            if (ageMs > this.cacheTtlMs) {
+                this.byIdempotencyKey.delete(idempotencyKey);
+                this.cacheStats.expirations += 1;
+                this.cacheStats.misses += 1;
+                this.emitCacheEvent('expire', idempotencyKey);
+                this.emitCacheEvent('miss', idempotencyKey);
+                return null;
+            }
+        }
+
+        this.byIdempotencyKey.delete(idempotencyKey);
+        this.byIdempotencyKey.set(idempotencyKey, cached);
+        this.cacheStats.hits += 1;
+        this.emitCacheEvent('hit', idempotencyKey);
+        return cached.record;
+    }
+
+    private cacheRecord(idempotencyKey: string, record: TrackIntelligenceRecord): void {
+        if (this.byIdempotencyKey.has(idempotencyKey)) {
+            this.byIdempotencyKey.delete(idempotencyKey);
+        }
+
+        this.byIdempotencyKey.set(idempotencyKey, {
+            record,
+            cachedAtMs: this.now().getTime(),
+        });
+
+        while (this.byIdempotencyKey.size > this.maxCacheEntries) {
+            const oldestKey = this.byIdempotencyKey.keys().next().value;
+            if (!oldestKey) {
+                break;
+            }
+            this.byIdempotencyKey.delete(oldestKey);
+            this.cacheStats.evictions += 1;
+            this.emitCacheEvent('evict', oldestKey);
+        }
+
+        this.emitCacheEvent('set', idempotencyKey);
+    }
+
+    private emitCacheEvent(type: AnalysisCacheEvent['type'], key: string): void {
+        this.onCacheEvent?.({
+            type,
+            key,
+            size: this.byIdempotencyKey.size,
+        });
     }
 
     private getCachedRecord(idempotencyKey: string): TrackIntelligenceRecord | null {
@@ -265,7 +354,11 @@ export class AnalysisService {
         idempotencyKey: string,
         source: 'ai' | 'fallback',
         attempts: number
-    ): TrackIntelligenceRecord {
+    ): TrackIntelligenceRecord | null {
+        if (input.trackId.trim().length === 0) {
+            return null;
+        }
+
         const energy = clamp01(typeof raw.energy === 'number' ? raw.energy : inferEnergyFallback(input));
         const mood = normalizeMood(raw.mood) ?? inferMoodFromEnergy(energy);
         const genreConfidence = clamp01(typeof raw.genreConfidence === 'number' ? raw.genreConfidence : input.genre ? 0.6 : 0.3);
@@ -294,6 +387,7 @@ export interface AnalysisQueueItem {
 export interface AnalysisQueueResult {
     itemId: string;
     status: 'analyzed' | 'skipped';
+    outcome: 'success' | 'degraded' | 'failed';
     source: 'ai' | 'fallback';
 }
 
@@ -308,7 +402,8 @@ export async function processAnalysisQueue(
         results.push({
             itemId: item.id,
             status: outcome.status,
-            source: outcome.record.source,
+            outcome: outcome.outcome,
+            source: outcome.source,
         });
     }
 
