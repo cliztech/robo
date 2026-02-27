@@ -35,6 +35,8 @@
 
 ## Recent Completed Work
 
+- [x] Hardened dashboard alert acknowledgement mutation flow to use per-alert rollback snapshots, in-flight dedupe by alert ID, and functional updates for all ack-path state writes.
+- [x] Added targeted dashboard UI tests for concurrent sibling acknowledgements (one success, one failure) and duplicate-click in-flight dedupe behavior.
 - Added Delivery Phase 8 dashboard automated coverage for loading/error/success states, alert acknowledge interaction, threshold boundary rendering, and fallback-metric regression in `tests/ui/dashboard-view.test.tsx`.
 - [x] Hardened dashboard state typing via `src/components/console/dashboard.types.ts` and wired typed telemetry into `DashboardView`/`ConsoleWorkspaceView` with exhaustive status/severity mappers.
 - [x] Dashboard status UI data layer now consumes `/api/v1/status/dashboard*` endpoints with typed client contracts and optimistic alert acknowledgements.
@@ -143,3 +145,8 @@
 
 ## 2026-02-27 UI Skin Token Update
 - [x] Studio skin-token hardening completed for ConsoleLayout/Topbar, DJStudioSurface deck accents, and DegenMixer channel/control states; added `tests/ui/console-skin-visual.test.tsx` snapshot coverage for dark/light skins.
+## 2026-02-27 Design Token Contract Update
+- [x] Token system normalized around semantic `--color-*` roles in `src/styles/tokens.css`.
+- [x] Added `[data-skin='degen-dark']` and `[data-skin='degen-light']` overrides for skin-specific color changes.
+- [x] Added unresolved CSS variable validation in `scripts/check_tokens.mjs` with `npm run check:tokens`.
+- [x] Published third-party skin required token set and lint contract in `docs/ui/design_tokens_v1.md`.
