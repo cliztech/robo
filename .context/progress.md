@@ -116,3 +116,4 @@
 - [x] Test-suite hygiene: rebuilt `tests/unit/ai-analysis-service.test.ts` and `tests/integration/analysis-queue.test.ts` to remove duplicated partial blocks and align assertions with current queue contract boundaries.
 
 - [x] Phase namespace hardening: planning/context artifacts now require explicit namespace (`delivery` or `workflow`) and generator output rejects missing namespace metadata.
+- [x] Sprint-state hygiene update: synchronized sprint-status epic/story states (including P1 security open items and D2 completed artifacts), added `last_reconciled`, and added weekly status parity checklist guidance.
