@@ -106,6 +106,8 @@
 - [x] Updated `docs/massive_workflow_blueprint.md` branding to canonical `DGN-DJ by DGNradio`, with `RoboDJ` retained only as an explicit legacy alias in historical context.
 
 ## 2026-02-27 Progress Update
+
+- Added cadence governance updates: TODO dated-entry outcomes refreshed, readiness scorecard weekly update appended, execution index cadence table added, and roadmap autopilot now emits due-date reminders into the unfinished task build plan.
 - [x] **Delivery Phase 5: AI Integration** (Completed resilient track analysis service rebuild with deterministic fingerprint/idempotency keys, bounded retry/fallback, TTL+LRU cache controls, and queue outcome mapping.)
 - [x] **Delivery Phase 5: AI Integration** (Repaired and expanded verification harness in `tests/unit/ai-analysis-service.test.ts` + `tests/integration/analysis-queue.test.ts` for normalization, cache behavior, and degraded/failed outcomes.)
 - [x] **Delivery Phase 5: AI Integration** (Validation baseline established through targeted vitest runs for AI analysis unit/integration suites.)
@@ -118,3 +120,19 @@
 - [x] Phase namespace hardening: planning/context artifacts now require explicit namespace (`delivery` or `workflow`) and generator output rejects missing namespace metadata.
 
 - [x] Closed TI-039: aligned action catalog enforcement hooks, audit export artifact contract (`.ndjson` + `.sha256` + `.linecount`), and verification checklist/dependency evidence requirements end-to-end with no undefined fields.
+- [x] P1 Security lane documentation hardened: `2026-02-25-next-unfinished-phase-build.md` now carries TI-039/TI-040/TI-041 state gates + dependency gates + evidence paths, and `TODO.md` mirrors order with explicit `ready`/`blocked`/`in-progress` tags.
+- [x] Sprint-state hygiene update: synchronized sprint-status epic/story states (including P1 security open items and D2 completed artifacts), added `last_reconciled`, and added weekly status parity checklist guidance.
+
+## 2026-02-27 TI-040 Completion Update
+- [x] Added value-level encryption envelope validation for high-risk fields (`openai_api_key`, `tts_api_key`, `webhook_auth_token`, `stream_fallback_password`, `remote_ingest_secret`) in `config/validate_config.py`.
+- [x] Added deterministic encryption evidence emission (`--encryption-evidence`) to support `before_hash_sha256`/`after_hash_sha256` audit trails.
+- [x] Updated `CONFIG_VALIDATION.md`, `docs/operations/artifacts.md`, and TI-040 tracked issue docs with provenance, rotation, rollback, and operator evidence contract requirements aligned to TI-039 exports.
+- [x] Completed TI-041 security smoke workflow: added `scripts/ci/security_smoke_check.mjs`, deterministic pass/fail markers, evidence artifact outputs, and release/security escalation routing documentation.
+- [x] TI-040 baseline delivered: `backend/security/config_crypto.py` added (AES-256-GCM envelopes + KID provenance), config read/write integration in scheduler/AI/validator paths, TI-040 docs evidence contract updates, and crypto regression tests (round-trip/wrong-key/nonce/schema-preserving).
+## 2026-02-27 TI-041 Security Smoke Delivery
+
+- [x] Added root `test:security` script mapped to deterministic wrapper execution.
+- [x] Implemented scenario markers for `SMK-AUTHN-01`, `SMK-AUTHZ-01`, `SMK-LOCKOUT-01`, `SMK-PRIV-01` with non-zero exit on mismatch.
+- [x] Added privileged-action fail guard for unexpected `PRIV_ACTION_EXECUTED` outcomes.
+- [x] Added artifact-producing wrapper for smoke logs/report/hashes under `artifacts/security/*`.
+- [x] Updated operations command and artifact docs with pre-release invocation and required signatures.

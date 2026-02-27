@@ -1,5 +1,7 @@
 # RoboDJ TODO List
 
+> **State authority:** When execution artifacts disagree, `docs/exec-plans/active/sprint-status.yaml` is the canonical state for epic/story status, and this checklist must be reconciled to match it during weekly hygiene.
+
 This checklist converts the current product-readiness plan into a practical execution queue.
 
 
@@ -9,6 +11,7 @@ Use the roadmap helper to continuously surface the next open tasks while you wor
 
 - `python scripts/roadmap_autopilot.py --limit 10`
 - `python scripts/roadmap_autopilot.py --loop --interval 60 --limit 10`
+- `python scripts/roadmap_autopilot.py --limit 25 --build-plan docs/exec-plans/active/unfinished-task-build-plan.md` (regenerates unfinished queue + dated cadence due-date reminders)
 
 ## P0 — Foundations (Start Here)
 
@@ -25,9 +28,9 @@ Use the roadmap helper to continuously surface the next open tasks while you wor
 - [x] Implement key-rotation workflow CLI + operator checklist integration ([TI-004](docs/exec-plans/active/tracked-issues/TI-004.md)).
 - [x] Add redaction policy contract tests for logs/API responses ([TI-005](docs/exec-plans/active/tracked-issues/TI-005.md)).
 - [x] Add a pre-release security gate in release documentation ([TI-006](docs/exec-plans/active/tracked-issues/TI-006.md)).
-- [ ] Add per-action approval workflows and immutable audit trail export ([TI-039](docs/exec-plans/active/tracked-issues/TI-039.md)).
-- [ ] Add config-at-rest encryption for high-risk fields in JSON configs ([TI-040](docs/exec-plans/active/tracked-issues/TI-040.md)).
-- [ ] Add security smoke script (authN/authZ checks, lockout checks) ([TI-041](docs/exec-plans/active/tracked-issues/TI-041.md)).
+- [ ] **[in-progress]** Add per-action approval workflows and immutable audit trail export ([TI-039](docs/exec-plans/active/tracked-issues/TI-039.md)) — owner: Security Architect; target: 2026-03-03; evidence: `artifacts/security/logs/ti-039-approval-enforcement.log`, `artifacts/security/reports/ti-039-immutable-audit-export.md`, `artifacts/security/audit_exports/<yyyy-mm-dd>/<batch_id>.sha256`.
+- [ ] **[ready]** Add config-at-rest encryption for high-risk fields in JSON configs ([TI-040](docs/exec-plans/active/tracked-issues/TI-040.md)) — owner: Security Engineer; target: 2026-03-05; evidence: `artifacts/security/logs/ti-040-config-encryption.log`, `artifacts/security/reports/ti-040-high-risk-field-inventory.md`, `artifacts/security/hashes/ti-040-config-before-after.sha256`.
+- [ ] **[blocked]** Add security smoke script (authN/authZ checks, lockout checks) ([TI-041](docs/exec-plans/active/tracked-issues/TI-041.md)) — owner: QA Engineer; target: 2026-03-07; dependency gates: TI-039 outputs unblock TI-041 privileged-action checks; TI-040 encrypted-field coverage feeds TI-041 authz tests; evidence: `artifacts/security/logs/ti-041-security-smoke.log`, `artifacts/security/reports/ti-041-smoke-matrix-report.md`, `artifacts/security/hashes/ti-041-smoke-output.sha256`.
 
 ## P1 — Reliability & Observability
 
@@ -65,11 +68,15 @@ Use the roadmap helper to continuously surface the next open tasks while you wor
 ## Tracking Cadence
 
 - [ ] Weekly: update readiness percentages by category ([TI-035](docs/exec-plans/active/tracked-issues/TI-035.md)).
-- [ ] Weekly backlog hygiene review owner/date: Project Coordinator — every Friday (next review: 2026-02-27) ([TI-036](docs/exec-plans/active/tracked-issues/TI-036.md)).
+- [ ] Weekly backlog hygiene review owner/date: Project Coordinator — every Friday (next review: 2026-03-01) ([TI-036](docs/exec-plans/active/tracked-issues/TI-036.md)).
 - Status sync note: For closed tracked issues, `TODO.md` checkbox state must mirror each TI `Status` field during weekly hygiene reconciliation.
 - [ ] Bi-weekly: remove blocked items or split oversized tasks ([TI-037](docs/exec-plans/active/tracked-issues/TI-037.md)).
 - [ ] Monthly: reassess roadmap variation (Security-first, UX-first, Scale-first, Balanced) ([TI-038](docs/exec-plans/active/tracked-issues/TI-038.md)).
-- [ ] 2026-02-24 (Owner: Management Team — Project Coordinator): Weekly readiness metric refresh posted in `docs/readiness_scorecard.md` (next due: 2026-03-03).
-- [ ] 2026-02-27 (Owner: Management Team — Project Coordinator): Weekly backlog hygiene review completed and stale-track escalations logged per `docs/operations/execution_index.md`.
+- [x] 2026-02-24 (Owner: Management Team — Project Coordinator): Weekly readiness metric refresh posted in `docs/readiness_scorecard.md` (Outcome: completed 2026-02-27 with refreshed weighted score + blocker status; next due 2026-03-03).
+- [ ] 2026-03-01 (Owner: Management Team — Project Coordinator): Weekly backlog hygiene review + stale-track escalation log posted in `docs/operations/execution_index.md` (Outcome: 2026-02-27 window formally deferred due to Phase 5 stabilization priority; defer rationale logged in execution index cadence table).
 - [ ] 2026-03-10 (Owner: Planner Agent): Bi-weekly blocked-item pruning complete (remove blocked items or split oversized tasks).
 - [ ] 2026-03-31 (Owner: Management Team — Sprint Planner): Monthly roadmap-variant reassessment recorded (Security-first / UX-first / Scale-first / Balanced).
+
+### Sprint-close guardrail
+
+- No sprint may be closed unless all dated cadence items within the sprint window are either marked complete or formally deferred with explicit rationale, owner, and replacement due date.
