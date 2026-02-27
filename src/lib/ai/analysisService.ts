@@ -250,7 +250,7 @@ export function validateAndNormalizeAnalysis(raw: unknown, input: TrackAnalysisI
     const genreConfidence = clamp01(typeof parsed.genreConfidence === 'number' ? parsed.genreConfidence : input.genre ? 0.6 : 0.3);
     const rationale = parsed.rationale ?? DEFAULT_RATIONALE;
     const tempo_bucket = parsed.tempo_bucket ?? inferTempoBucket(input);
-    const confidence = clamp01(Number(((energy + genreConfidence) / 2).toFixed(4)));
+    const confidence = clamp01(Math.round(((energy + genreConfidence) / 2) * 10000) / 10000);
 
     return {
         energy,
