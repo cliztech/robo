@@ -167,3 +167,5 @@
 - [x] Added `[data-skin='degen-dark']` and `[data-skin='degen-light']` overrides for skin-specific color changes.
 - [x] Added unresolved CSS variable validation in `scripts/check_tokens.mjs` with `npm run check:tokens`.
 - [x] Published third-party skin required token set and lint contract in `docs/ui/design_tokens_v1.md`.
+
+- [x] Documented recommended GitHub workflow additions in `docs/operations/github_workflows_recommendations.md` with phased rollout order centered on security posture and CI control-plane reliability.
