@@ -85,6 +85,7 @@
 
 - [x] Phase 5 foundation: implemented `AnalysisService` (normalization, retry with fallback, idempotency) and queue processor with unit/integration tests.
 
+- [x] Playlist generation hardening: normalized artist-key comparisons in candidate and transition scoring with regression coverage.
 - [x] Added Icecast stats polling in `streaming-gateway` with structured `stream.listeners` events and threshold-based polling failure alerts.
 - [x] Phase 5 P5-01 hardening: added runtime-validated analysis normalization (`rationale`, deterministic `confidence`, optional `tempo_bucket`) plus degraded reason codes and malformed-payload tests.
 - [x] Phase 5 mood normalization refactor: explicit alias mapping + energy-based fallback policy, with unit coverage for alias/missing/unknown mood scenarios.

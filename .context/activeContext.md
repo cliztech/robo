@@ -60,6 +60,8 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added runtime-validated analysis schema + deterministic degraded-normalization reason codes in `src/lib/ai/analysisService.ts`.
 - Expanded malformed-payload unit test coverage in `tests/unit/ai-analysis-service.test.ts` (missing keys, wrong types, empty strings).
 
+- Hardened `backend/playlist_service.py` artist handling with centralized normalization and normalized repeat/transition scoring.
+
 ## Next Atomic Steps
 
 - [ ] Keep tracked-issue coverage table in sync with status/ownership updates.

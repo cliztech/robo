@@ -54,6 +54,25 @@ def test_avoids_recent_artist_repeats_when_possible():
     assert result.entries[0].artist != result.entries[1].artist
 
 
+def test_artist_repeat_detection_normalizes_case_and_whitespace():
+    service = PlaylistGenerationService()
+    request = PlaylistGenerationRequest(
+        tracks=[
+            _track(1, " Artist One ", "dance", "energetic", 7, 124),
+            _track(2, "artist one", "dance", "energetic", 8, 126),
+            _track(3, "Other", "dance", "energetic", 7, 125),
+        ],
+        desired_count=2,
+        avoid_recent_artist_window=1,
+    )
+
+    result = service.generate(request)
+
+    assert service._normalize_artist(result.entries[0].artist) != service._normalize_artist(
+        result.entries[1].artist
+    )
+
+
 def test_respects_max_bpm_delta_when_candidates_available():
     service = PlaylistGenerationService()
     request = PlaylistGenerationRequest(
