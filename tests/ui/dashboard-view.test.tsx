@@ -130,7 +130,7 @@ describe('DashboardView', () => {
     render(<DashboardView />);
 
     await screen.findByText('Queue depth above critical threshold');
-    await user.click(screen.getByRole('button', { name: 'Acknowledge' }));
+    await user.click(screen.getAllByRole('button', { name: 'Acknowledge' })[0]);
 
     expect(acknowledgeDashboardAlertMock).toHaveBeenCalledWith('alert-queue-critical', undefined);
     await waitFor(() => {
