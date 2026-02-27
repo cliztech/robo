@@ -146,6 +146,10 @@
 - [x] Added artifact-producing wrapper for smoke logs/report/hashes under `artifacts/security/*`.
 - [x] Updated operations command and artifact docs with pre-release invocation and required signatures.
 
+## 2026-02-27 Build Stabilization Update
+- [x] Fixed malformed `package.json` JSON structure and refreshed lockfile via `npm install` to unblock package scripts.
+- [x] Repaired build-blocking TS issues in `src/components/ai/TrackAnalyzer.tsx`, `src/lib/ai/promptProfileResolver.ts`, `src/lib/supabase/server.ts`, and `tests/ui/setup.tsx`.
+- [x] Replaced merge-corrupted `src/lib/ai/analysisService.ts` with a compile-safe canonical implementation and confirmed full `npm run build` success.
 ## 2026-02-27 Dashboard Queue Severity Precedence Update
 - [x] Updated `DashboardView` queue severity resolution to prioritize API-provided `queue_depth.state` with threshold fallback only for missing/malformed state.
 - [x] Added unit coverage in `tests/ui/dashboard-view.test.tsx` to verify API state precedence and fallback behavior.
