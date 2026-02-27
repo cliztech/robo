@@ -7,7 +7,8 @@ export type ConsoleViewMode =
     | 'mixer'
     | 'library'
     | 'schedule'
-    | 'ai-host';
+    | 'ai-host'
+    | 'skin-manager';
 
 export interface ConsoleNavItem {
     view: ConsoleViewMode;
