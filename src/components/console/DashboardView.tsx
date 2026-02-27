@@ -378,7 +378,7 @@ export function DashboardView({ telemetry, api }: DashboardViewProps) {
             <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
                 <StatCard
                     label="Service Health"
-                    value={dashboardStatus?.service_health.status.toUpperCase() ?? '--'}
+                    value={dashboardStatus?.service_health.status ? dashboardStatus.service_health.status.toUpperCase() : '--'}
                     icon={Activity}
                     color={healthColor}
                     trend="stable"
