@@ -143,6 +143,11 @@
 - [x] Added artifact-producing wrapper for smoke logs/report/hashes under `artifacts/security/*`.
 - [x] Updated operations command and artifact docs with pre-release invocation and required signatures.
 
+## 2026-02-27 Dashboard Accessibility Structure
+
+- [x] Added semantic landmarks and `aria-labelledby` region wiring for DashboardView primary operator sections (status cards, alert center, now playing, audio engine).
+- [x] Added async accessibility semantics: `role="status"` loading telemetry state and `role="alert"` error state.
+- [x] Refreshed dashboard UI tests to validate landmark presence, live-region roles, and keyboard task-flow tab order.
 ## 2026-02-27 Theme Preferences Delivery
 
 - [x] Implemented `src/lib/theme/themeStore.ts` with versioned persistence, defaults, and mode resolution helpers.

@@ -72,6 +72,35 @@ function buildAlerts(): AlertCenterItem[] {
     ];
 }
 
+describe('DashboardView accessibility structure', () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+        fetchDashboardStatusMock.mockResolvedValue(buildStatus());
+        fetchDashboardAlertsMock.mockResolvedValue(buildAlerts());
+        acknowledgeDashboardAlertMock.mockImplementation(async (alertId) => {
+            const alert = buildAlerts().find((item) => item.alert_id === alertId);
+            if (!alert) {
+                throw new Error(`Missing alert ${alertId}`);
+            }
+            return {
+                ...alert,
+                acknowledged: true,
+                acknowledged_at: '2026-02-26T12:05:00.000Z',
+            };
+        });
+    });
+
+    it('renders semantic landmarks and labelled regions', async () => {
+        render(<DashboardView />);
+
+        await screen.findByText('Queue depth above critical threshold');
+
+        expect(screen.getByRole('main', { name: 'Station Overview' })).toBeInTheDocument();
+        expect(screen.getByRole('region', { name: 'Status cards' })).toBeInTheDocument();
+        expect(screen.getByRole('region', { name: 'Alert Center' })).toBeInTheDocument();
+        expect(screen.getByRole('region', { name: 'Now playing' })).toBeInTheDocument();
+        expect(screen.getByRole('region', { name: 'Audio engine' })).toBeInTheDocument();
+
 function deferred<T>() {
     let resolve!: (value: T) => void;
     let reject!: (reason?: unknown) => void;
@@ -101,6 +130,25 @@ describe('DashboardView acknowledge concurrency', () => {
         vi.clearAllMocks();
     });
 
+    it('keeps keyboard task flow refresh -> status cards -> alert actions', async () => {
+        const user = userEvent.setup();
+        render(<DashboardView />);
+
+        await screen.findByText('Queue depth above critical threshold');
+
+        await user.tab();
+        expect(screen.getByRole('button', { name: /Refresh status/i })).toHaveFocus();
+
+        await user.tab();
+        expect(screen.getByRole('region', { name: 'Status cards' })).toHaveFocus();
+
+        await user.tab();
+        expect(screen.getAllByRole('button', { name: 'Acknowledge' })[0]).toHaveFocus();
+    });
+
+    it('acknowledges alerts through the API and updates the row state', async () => {
+        const user = userEvent.setup();
+        render(<DashboardView />);
     it('keeps successful acknowledgement when a sibling acknowledgement fails', async () => {
         const user = userEvent.setup();
         const successRequest = deferred<AlertCenterItem>();
@@ -128,6 +176,11 @@ describe('DashboardView acknowledge concurrency', () => {
             expect(within(alertCard('Rotation data stale')).getByRole('button')).toHaveTextContent('Acknowledged');
         });
 
+        expect(acknowledgeDashboardAlertMock).toHaveBeenCalledWith('alert-queue-critical');
+
+        await waitFor(() => {
+            expect(screen.getByText(/Ack at:/)).toBeInTheDocument();
+        });
         successRequest.resolve({
             ...buildAlerts()[0],
             acknowledged: true,

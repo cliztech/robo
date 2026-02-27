@@ -353,12 +353,16 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
     const rotationColor = dashboardStatus?.rotation.is_stale ? 'red' : 'lime';
     const alertCenterColor = activeAlerts.length > 0 ? 'orange' : 'lime';
     const queueSparkline = dashboardStatus?.queue_depth.trend.map((point) => point.depth);
+    const statusCardsHeadingId = 'dashboard-status-cards-heading';
+    const alertCenterHeadingId = 'dashboard-alert-center-heading';
+    const nowPlayingHeadingId = 'dashboard-now-playing-heading';
+    const audioEngineHeadingId = 'dashboard-audio-engine-heading';
 
     return (
-        <div className="space-y-5">
+        <main className="space-y-5" aria-labelledby="dashboard-overview-heading">
             <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-end justify-between">
                 <div>
-                    <h1 className="text-2xl font-black tracking-tight text-white">
+                    <h1 id="dashboard-overview-heading" className="text-2xl font-black tracking-tight text-white">
                         Station <span className="text-lime-400">Overview</span>
                     </h1>
                     <p className="text-[11px] text-zinc-500 mt-0.5">
@@ -384,7 +388,13 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
+            <section
+                aria-labelledby={statusCardsHeadingId}
+                className="space-y-3"
+                tabIndex={0}
+            >
+                <h2 id={statusCardsHeadingId} className="sr-only">Status cards</h2>
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
                 <StatCard
                     label="Service Health"
                     value={dashboardStatus?.service_health.status ?? '--'}
@@ -435,22 +445,23 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
                     trend={activeAlerts.length > 0 ? 'down' : 'up'}
                     delay={0.2}
                 />
-            </div>
+                </div>
+            </section>
 
             {loading ? (
-                <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3 text-xs text-zinc-400">
+                <div role="status" aria-live="polite" aria-atomic="true" className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3 text-xs text-zinc-400">
                     Loading status telemetry…
                 </div>
             ) : null}
             {error ? (
-                <div className="rounded-xl border border-red-900/70 bg-red-950/40 p-3 text-xs text-red-200">
+                <div role="alert" aria-live="assertive" aria-atomic="true" className="rounded-xl border border-red-900/70 bg-red-950/40 p-3 text-xs text-red-200">
                     Status API unavailable: {error}
                 </div>
             ) : null}
 
-            <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 space-y-2">
+            <section aria-labelledby={alertCenterHeadingId} className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 space-y-2">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xs font-semibold tracking-wide text-zinc-300 uppercase">Alert Center</h2>
+                    <h2 id={alertCenterHeadingId} className="text-xs font-semibold tracking-wide text-zinc-300 uppercase">Alert Center</h2>
                     <div className="text-[10px] text-zinc-500">
                         critical {alertCounts.critical} · warning {alertCounts.warning} · info {alertCounts.info}
                     </div>
@@ -495,10 +506,12 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
                         ))}
                     </div>
                 )}
-            </div>
+            </section>
 
             <SectionHeader>Now Playing</SectionHeader>
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_340px]">
+            <section aria-labelledby={nowPlayingHeadingId} className="space-y-4">
+                <h2 id={nowPlayingHeadingId} className="sr-only">Now playing</h2>
+                <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_340px]">
                 <div className="space-y-4">
                     <div className="glass-panel overflow-hidden">
                         <div className="panel-header">
@@ -536,10 +549,13 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
                 <div className="space-y-4">
                     <DegenAIHost className="glass-panel" />
                 </div>
-            </div>
+                </div>
+            </section>
 
             <SectionHeader>Audio Engine</SectionHeader>
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+            <section aria-labelledby={audioEngineHeadingId} className="space-y-4">
+                <h2 id={audioEngineHeadingId} className="sr-only">Audio engine</h2>
+                <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                 <div className="glass-panel overflow-hidden">
                     <div className="panel-header">
                         <span className="panel-header-title">Beat Sequencer</span>
@@ -561,7 +577,8 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
                         { key: 'width', label: 'Stereo', unit: '%' },
                     ]}
                 />
-            </div>
-        </div>
+                </div>
+            </section>
+        </main>
     );
 }
