@@ -106,6 +106,39 @@ task_packet:
 4. Evidence format defines exact commands/artifacts.
 5. If a packet references a phase, it must include both `phase_namespace` and `phase_id` (plain `Phase N` is invalid).
 
+## 3.1) High-risk stage-gate enforcement hook (TI-039)
+
+Apply this hook before dispatch and again before reconciliation when the packet includes any high-risk action (`ACT-DELETE`, `ACT-OVERRIDE`, `ACT-KEY-ROTATION`, `ACT-PUBLISH`, `ACT-CONFIG-EDIT`).
+
+### Required evidence payload
+
+`approval_chain_evidence` must be attached in packet artifacts and report output with no undefined fields:
+
+```yaml
+approval_chain_evidence:
+  action_id: "ACT-..."
+  actor_role_ti002: "admin|operator|viewer"
+  target_ref: "path-or-resource"
+  reauth_policy_ref: "TI-003:<section-or-control-id>"
+  reauth_verified: true
+  approvers:
+    - principal: "user-or-service"
+      role: "required approver role"
+      decision: "approved|denied|revoked"
+      decision_ts_utc: "2026-02-27T12:00:00Z"
+      signature_ref: "artifact-or-signature-uri"
+```
+
+### Dispatch gate checks
+
+- `GATE-HR-01`: `action_id` is in TI-039 action catalog and criticality is `High` or `Critical`.
+- `GATE-HR-02`: `actor_role_ti002` maps to an existing TI-002 role (`admin`, `operator`, `viewer`).
+- `GATE-HR-03`: For `ACT-DELETE` and `ACT-OVERRIDE`, `reauth_policy_ref` and `reauth_verified=true` prove TI-003 re-auth linkage.
+- `GATE-HR-04`: `approvers` satisfies TI-039 minimum approver count and role matrix for the selected action.
+- `GATE-HR-05`: Evidence artifacts include export bundle pointers (`.ndjson`, `.sha256`, line-count manifest).
+
+Packets failing any `GATE-HR-*` check are rejected as `F2 Scope failure` and must be re-issued with corrected evidence.
+
 ## 4) Result Reconciliation Rules
 
 Main agent is the reconciler of record and applies these rules in order.

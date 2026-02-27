@@ -116,3 +116,5 @@
 - [x] Test-suite hygiene: rebuilt `tests/unit/ai-analysis-service.test.ts` and `tests/integration/analysis-queue.test.ts` to remove duplicated partial blocks and align assertions with current queue contract boundaries.
 
 - [x] Phase namespace hardening: planning/context artifacts now require explicit namespace (`delivery` or `workflow`) and generator output rejects missing namespace metadata.
+
+- [x] Closed TI-039: aligned action catalog enforcement hooks, audit export artifact contract (`.ndjson` + `.sha256` + `.linecount`), and verification checklist/dependency evidence requirements end-to-end with no undefined fields.
