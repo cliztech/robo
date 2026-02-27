@@ -1,3 +1,7 @@
+import os
+from unittest import mock
+
+import pytest
 from fastapi.testclient import TestClient
 
 from backend.ai.contracts.track_analysis import AnalysisStatus, TrackAnalysisRequest
@@ -9,6 +13,27 @@ from backend.ai_service import (
     HostScriptRequest,
 )
 from backend.app import app
+
+TEST_API_KEY = "valid_api_key_for_testing"
+
+
+@pytest.fixture(autouse=True)
+def mock_env_api_key():
+    with mock.patch.dict(
+        os.environ,
+        {"ROBODJ_SECRET_KEY": TEST_API_KEY, "ROBODJ_SCHEDULER_API_KEY": TEST_API_KEY},
+        clear=False,
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def clear_auth_cache():
+    from backend.security.auth import _get_secret_key
+
+    _get_secret_key.cache_clear()
+    yield
+    _get_secret_key.cache_clear()
 
 
 def test_track_analysis_contract_success() -> None:
@@ -23,7 +48,7 @@ def test_track_analysis_contract_success() -> None:
             "duration_seconds": 245,
             "notes": "night drive",
         },
-        headers={"X-Correlation-ID": "corr-track-001"},
+        headers={"X-Correlation-ID": "corr-track-001", "X-API-Key": TEST_API_KEY},
     )
 
     assert response.status_code == 200
