@@ -203,7 +203,7 @@ function formatTimestamp(value: string | null): string {
     return new Date(value).toLocaleString();
 }
 
-export function DashboardView({ telemetry }: { telemetry?: any }) {
+export function DashboardView() {
     const [currentTime, setCurrentTime] = useState('');
     const [dashboardStatus, setDashboardStatus] = useState<DashboardStatusResponse | null>(null);
     const [alerts, setAlerts] = useState<AlertCenterItem[]>([]);
