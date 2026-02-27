@@ -139,3 +139,8 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Wired smoke checks to TI-002 role deny expectations, TI-003 timeout/reauth contract variables, and TI-039 privileged action catalog IDs through startup contract validation.
 - Added mandatory artifact outputs under `artifacts/security/logs`, `artifacts/security/reports`, and `artifacts/security/hashes`.
 - Updated operations docs with exact pre-release invocation and pass/fail signatures.
+
+## 2026-02-27 Mixxx Reference Intake Update
+- [x] Cloned `mixxxdj/mixxx` into local workspace for architecture benchmarking and pattern extraction.
+- [x] Added `docs/references/mixxx_adoption_blueprint.md` to map DGN-DJ priorities to Mixxx subsystem patterns (audio engine, broadcast reliability, analysis throughput, controller UX).
+- [x] Captured licensing guardrail: pattern-level adoption only, no direct GPL source import without explicit legal review.

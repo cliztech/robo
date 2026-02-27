@@ -140,3 +140,8 @@
 - [x] Added privileged-action fail guard for unexpected `PRIV_ACTION_EXECUTED` outcomes.
 - [x] Added artifact-producing wrapper for smoke logs/report/hashes under `artifacts/security/*`.
 - [x] Updated operations command and artifact docs with pre-release invocation and required signatures.
+
+## 2026-02-27 Mixxx Benchmarking Update
+- [x] Completed external reference intake from `mixxxdj/mixxx` and documented subsystem analog mapping in `docs/references/mixxx_adoption_blueprint.md`.
+- [x] Defined 30/60/90 execution framing for applying Mixxx-derived reliability patterns to DGN-DJ without direct source reuse.
+- [x] Added clean-room licensing guardrails to prevent accidental GPL code-path contamination.
