@@ -106,6 +106,7 @@
 - [x] Updated `docs/massive_workflow_blueprint.md` branding to canonical `DGN-DJ by DGNradio`, with `RoboDJ` retained only as an explicit legacy alias in historical context.
 
 ## 2026-02-27 Progress Update
+- [x] Tracked-issue hygiene hardening follow-up: split TI-007/TI-008/TI-009 into single-header/single-status docs, restored v1.2 scheduler UI ID mapping, and added strict tracked-issue structure validation in `scripts/roadmap_autopilot.py`.
 - [x] **Delivery Phase 5: AI Integration** (Completed resilient track analysis service rebuild with deterministic fingerprint/idempotency keys, bounded retry/fallback, TTL+LRU cache controls, and queue outcome mapping.)
 - [x] **Delivery Phase 5: AI Integration** (Repaired and expanded verification harness in `tests/unit/ai-analysis-service.test.ts` + `tests/integration/analysis-queue.test.ts` for normalization, cache behavior, and degraded/failed outcomes.)
 - [x] **Delivery Phase 5: AI Integration** (Validation baseline established through targeted vitest runs for AI analysis unit/integration suites.)
