@@ -37,6 +37,11 @@ Executing "Phase 5: AI Integration" through a quick-dev next-phase plan that dec
 
 - Extended BMAD command normalization guidance to explicitly map `bmad build dev` to `bmad-bmm-quick-dev`.
 
+## Recent Decisions
+
+- Added runtime-validated analysis schema + deterministic degraded-normalization reason codes in `src/lib/ai/analysisService.ts`.
+- Expanded malformed-payload unit test coverage in `tests/unit/ai-analysis-service.test.ts` (missing keys, wrong types, empty strings).
+
 ## Next Atomic Steps
 - [ ] Keep tracked-issue coverage table in sync with status/ownership updates.
 - [x] Implement unified DJ studio surface layout for decks/studio route.
@@ -51,7 +56,7 @@ Executing "Phase 5: AI Integration" through a quick-dev next-phase plan that dec
 - [ ] Execute TI-040 packet (config-at-rest encryption policy + operator workflow updates).
 - [ ] Execute TI-041 packet (security smoke script + expected signatures).
 - [x] Regenerate unfinished-task build plan and publish the next phased build artifact for P1 Security.
-- [ ] Implement Story P5-01 (Typed Track Analysis Contract).
+- [x] Implement Story P5-01 (Typed Track Analysis Contract: runtime schema validation, deterministic normalization, and reason codes).
 - [ ] Implement Story P5-02 (Deterministic Prompt Profile Resolver).
 - [ ] Implement Story P5-03 (Resilient AI Invocation Layer).
 - [ ] Implement Story P5-04 (Analysis Fingerprint Cache).

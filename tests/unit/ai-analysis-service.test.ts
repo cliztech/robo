@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { AnalysisService } from '@/lib/ai/analysisService';
+import { AnalysisService, validateAndNormalizeAnalysis } from '@/lib/ai/analysisService';
 
 describe('AnalysisService', () => {
     it('normalizes successful adapter output', async () => {
@@ -33,6 +33,9 @@ describe('AnalysisService', () => {
         expect(result.record.mood).toBe('energetic');
         expect(result.record.genreConfidence).toBe(0);
         expect(result.record.confidence).toBe(0.5);
+        expect(result.record.rationale).toBe('Model output was incomplete; deterministic fallback normalization was applied.');
+        expect(result.record.tempo_bucket).toBe('mid');
+        expect(result.record.normalizationReasonCode).toBe('missing_required_fields');
         expect(result.record.analyzedAt).toBe('2026-02-26T12:00:00.000Z');
     });
 
@@ -64,6 +67,8 @@ describe('AnalysisService', () => {
         expect(result.record.attempts).toBe(3);
         expect(result.record.energy).toBe(0.82);
         expect(result.record.mood).toBe('energetic');
+        expect(result.record.rationale).toBe('Model output was incomplete; deterministic fallback normalization was applied.');
+        expect(result.record.tempo_bucket).toBe('fast');
     });
 
     it('returns skipped status for existing idempotency key', async () => {
@@ -93,5 +98,71 @@ describe('AnalysisService', () => {
         expect(first.status).toBe('analyzed');
         expect(second.status).toBe('skipped');
         expect(adapter.analyzeTrack).toHaveBeenCalledTimes(1);
+    });
+
+    it('normalizes malformed payloads deterministically with reason codes', () => {
+        const input = {
+            trackId: 'track-004',
+            title: 'Malformed Signals',
+            artist: 'QA Bot',
+            genre: 'electronic',
+            bpm: 92,
+        };
+
+        expect(validateAndNormalizeAnalysis(undefined, input)).toEqual({
+            energy: 0.38,
+            mood: 'chill',
+            era: 'unknown',
+            genreConfidence: 0.6,
+            rationale: 'Model output was incomplete; deterministic fallback normalization was applied.',
+            tempo_bucket: 'slow',
+            confidence: 0.49,
+            normalizationReasonCode: 'invalid_payload',
+        });
+
+        expect(
+            validateAndNormalizeAnalysis(
+                {
+                    energy: 'loud',
+                    mood: 123,
+                    era: 1990,
+                    genreConfidence: 'high',
+                    rationale: ['why'],
+                    tempo_bucket: 'very_fast',
+                },
+                input
+            )
+        ).toEqual({
+            energy: 0.38,
+            mood: 'chill',
+            era: 'unknown',
+            genreConfidence: 0.6,
+            rationale: 'Model output was incomplete; deterministic fallback normalization was applied.',
+            tempo_bucket: 'slow',
+            confidence: 0.49,
+            normalizationReasonCode: 'invalid_field_types',
+        });
+
+        expect(
+            validateAndNormalizeAnalysis(
+                {
+                    energy: 0.72,
+                    mood: ' ',
+                    era: '',
+                    genreConfidence: 0.8,
+                    rationale: '   ',
+                },
+                input
+            )
+        ).toEqual({
+            energy: 0.72,
+            mood: 'chill',
+            era: 'unknown',
+            genreConfidence: 0.8,
+            rationale: 'Model output was incomplete; deterministic fallback normalization was applied.',
+            tempo_bucket: 'slow',
+            confidence: 0.76,
+            normalizationReasonCode: 'missing_required_fields',
+        });
     });
 });
