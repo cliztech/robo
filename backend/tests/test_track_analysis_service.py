@@ -56,10 +56,14 @@ def test_track_analysis_cache_hit_for_identical_requests() -> None:
         prompt_profile_version="prompt-profile-2026-02",
     )
 
-    first = service.analyze(request)
-    second = service.analyze(request)
+    from unittest.mock import patch
 
-    assert first == second
+    with patch.object(service, "_resolve_genre", wraps=service._resolve_genre) as mock_resolve:
+        first = service.analyze(request)
+        second = service.analyze(request)
+
+        assert first == second
+        mock_resolve.assert_called_once()
 
 
 def test_track_analysis_cache_miss_when_prompt_profile_version_changes() -> None:
