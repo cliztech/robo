@@ -36,6 +36,7 @@ Executing "Phase 5: AI Integration" through a quick-dev next-phase plan that dec
 - [x] Re-enabled CodeQL workflow with repo-scoped languages and high/critical severity gate; added RB-023 triage runbook.
 
 - Extended BMAD command normalization guidance to explicitly map `bmad build dev` to `bmad-bmm-quick-dev`.
+- Completed targeted branding alignment for `docs/massive_workflow_blueprint.md`: canonicalized title/objective to "DGN-DJ by DGNradio" and labeled `RoboDJ` as a legacy alias.
 
 ## Next Atomic Steps
 - [ ] Keep tracked-issue coverage table in sync with status/ownership updates.
