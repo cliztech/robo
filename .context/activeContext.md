@@ -139,3 +139,6 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Wired smoke checks to TI-002 role deny expectations, TI-003 timeout/reauth contract variables, and TI-039 privileged action catalog IDs through startup contract validation.
 - Added mandatory artifact outputs under `artifacts/security/logs`, `artifacts/security/reports`, and `artifacts/security/hashes`.
 - Updated operations docs with exact pre-release invocation and pass/fail signatures.
+
+## 2026-02-27 UI Skin Token Update
+- Added token-driven studio skin utility classes and refactored console shell/mixer/deck surfaces to consume semantic control/deck/status roles; added per-theme visual snapshot coverage for deck, mixer, library, and transport core surfaces.
