@@ -141,7 +141,7 @@ class AIInferenceService:
         self._max_cache_size = 1000
 
     def _resolve_prompt_profile(self) -> tuple[str, str]:
-        config_path = os.path.join(os.getcwd(), "config", "prompt_variables.json")
+        config_path = Path(__file__).parent.parent / "config" / "prompt_variables.json"
         try:
             with open(config_path, encoding="utf-8") as config_file:
                 payload = json.load(config_file)
