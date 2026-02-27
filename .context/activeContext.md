@@ -7,6 +7,7 @@ Executing "Phase 6: Playlist Generation" hardening and preparing Phase 7 broadca
 Building the next unfinished execution plans from the roadmap queue, starting with P1 Security items (TI-039/TI-040/TI-041).
 
 ## Recent Decisions
+- Unified AI track-analysis routing on canonical `POST /api/v1/ai/track-analysis`, with deprecated `/api/v1/ai/analyze-track` compatibility alias sharing the same envelope + correlation-id behavior.
 - Hardened playlist generation infeasibility handling by removing hard-constraint fallback, emitting structured constraint diagnostics, and mapping API responses to HTTP 422 with envelope-level error details.
 
 - Hardened TI-039/TI-040/TI-041 tracked issue packets with explicit implementation scope, dependency checkpoints, runnable validation commands, evidence artifacts, and rollback procedures for sprint execution.
@@ -102,3 +103,4 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 
 - [x] Replaced merge-corrupted `src/lib/ai/analysisService.ts` with a single canonical implementation (normalized result/record types, single idempotency key strategy, unified LRU+TTL cache map, deterministic analyze flow, and queue outcome mapping).
+- [x] Refactored malformed AI analysis unit/integration suites into clean non-overlapping describe trees and public-contract queue assertions.

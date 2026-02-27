@@ -65,6 +65,7 @@
 
 ## Recent Ops Updates
 - [x] Replaced merge-corrupted `src/lib/ai/analysisService.ts` with a single canonical implementation (normalized result/record types, single idempotency key strategy, unified LRU+TTL cache map, deterministic analyze flow, and queue outcome mapping).
+- [x] Unified Phase 5 AI analysis routing to canonical `/api/v1/ai/track-analysis`, retained `/api/v1/ai/analyze-track` as deprecated compatibility alias with shared envelope/correlation-id semantics, and aligned API tests/docs.
 - [x] Playlist generation constraint hardening: removed silent hard-filter fallback, added structured infeasibility diagnostics (bpm_delta/genre_run_length/duration_target), and returned API-level 422 envelopes when constraints cannot be satisfied.
 
 - [x] Security tracked issue execution packet hardening: TI-039/TI-040/TI-041 now include explicit scope targets, dependency checkpoints, validation command signatures, required evidence artifacts, and rollback steps.
@@ -102,3 +103,5 @@
 - [x] Enhanced `AnalysisService` cache controls with max entry cap, TTL expiry, and observability stats/hooks; expanded unit coverage for eviction, TTL refresh, and cap stability.
 
 - [x] Updated `docs/massive_workflow_blueprint.md` branding to canonical `DGN-DJ by DGNradio`, with `RoboDJ` retained only as an explicit legacy alias in historical context.
+
+- [x] Test-suite hygiene: rebuilt `tests/unit/ai-analysis-service.test.ts` and `tests/integration/analysis-queue.test.ts` to remove duplicated partial blocks and align assertions with current queue contract boundaries.
