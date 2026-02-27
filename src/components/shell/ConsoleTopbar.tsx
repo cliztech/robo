@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Activity, AlertTriangle, Disc3, Radio } from 'lucide-react';
+import { Activity, AlertTriangle, Clock3, Disc3, Radio } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CONSOLE_NAV_ITEMS } from '@/components/console/consoleNav';
 import type { ConsoleViewMode } from '@/components/console/types';
@@ -16,7 +16,7 @@ export function ConsoleTopbar({ currentView, isOnAir, onToggleOnAir }: ConsoleTo
     const activeView = CONSOLE_NAV_ITEMS.find((item) => item.view === currentView)?.label ?? currentView;
 
     return (
-        <header className="h-11 bg-[#050608] border-b border-white/[0.08] flex items-center justify-between px-5 shrink-0 z-10">
+        <header className="h-11 bg-[#111319] border-b border-white/[0.12] flex items-center justify-between px-5 shrink-0 z-10">
             <div className="flex items-center gap-4 min-w-0">
                 <div className="flex items-center gap-2">
                     <Disc3 size={11} className="text-cyan-300/80" />
@@ -33,6 +33,11 @@ export function ConsoleTopbar({ currentView, isOnAir, onToggleOnAir }: ConsoleTo
                 >
                     {activeView}
                 </motion.span>
+            </div>
+
+            <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-md bg-black/45 border border-white/[0.12]">
+                <Clock3 size={11} className="text-zinc-500" />
+                <span className="text-[11px] font-mono text-zinc-100 tabular-nums tracking-[0.08em]">00:00:10</span>
             </div>
 
             <div className="flex items-center gap-3">
