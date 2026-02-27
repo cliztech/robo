@@ -34,6 +34,7 @@ export type CacheBehavior = 'processed' | 'skipped';
 
 export interface TrackIntelligenceRecord {
     trackId: string;
+    fingerprint: string;
     idempotencyKey: string;
     energy: number;
     mood: TrackMood;
@@ -61,6 +62,7 @@ export interface AnalysisResult {
     invocationStatus: InvocationStatus;
     metadata: AnalysisResultMetadata;
     status: 'analyzed' | 'skipped';
+    executionStatus: 'success' | 'degraded';
     outcome: 'success' | 'degraded' | 'failed';
     source: 'ai' | 'fallback';
     record: TrackIntelligenceRecord | null;
@@ -70,6 +72,19 @@ export interface AnalysisAdapter {
     analyzeTrack(input: TrackAnalysisInput, promptProfile: ResolvedPromptProfile): Promise<RawTrackAnalysis>;
 }
 
+export interface AnalysisCacheStats {
+    size: number;
+    hits: number;
+    misses: number;
+    evictions: number;
+    expirations: number;
+}
+
+export interface AnalysisCacheEvent {
+    type: 'hit' | 'miss' | 'set' | 'evict' | 'expire';
+    key: string;
+    size: number;
+}
 export interface ResolvedPromptProfile {
     promptTemplate: string;
     promptProfileVersion: string;
@@ -131,6 +146,7 @@ interface NormalizedAnalysisView {
 
 interface CacheEntry {
     record: TrackIntelligenceRecord;
+    cachedAtMs: number;
     cachedAt: number;
     lastAccessAt: number;
 }
@@ -174,6 +190,8 @@ function inferEnergyFallback(input: TrackAnalysisInput): number {
     return 0.38;
 }
 
+function normalizeText(value?: string): string {
+    return (value ?? '').trim().toLowerCase();
 function normalizeEra(era?: string): string {
     return era?.trim() ? era.trim() : 'unknown';
 }
@@ -191,6 +209,9 @@ function normalizeTempoBucket(value?: string): TempoBucket | undefined {
     return SUPPORTED_TEMPO_BUCKETS.includes(normalized as TempoBucket) ? (normalized as TempoBucket) : undefined;
 }
 
+function normalizeEra(era?: string): string {
+    const candidate = (era ?? '').trim();
+    return candidate.length > 0 ? candidate : 'unknown';
 function asNonEmptyString(value: unknown): string | undefined {
     if (typeof value !== 'string') return undefined;
     const trimmed = value.trim();
@@ -303,6 +324,20 @@ function createFallbackAnalysis(input: TrackAnalysisInput): RawTrackAnalysis {
     };
 }
 
+function buildHash(payload: Record<string, number | string | null>): string {
+    const canonical = JSON.stringify(Object.fromEntries(Object.entries(payload).sort(([a], [b]) => a.localeCompare(b))));
+    return createHash('sha256').update(canonical).digest('hex');
+}
+
+function normalizeFingerprintInput(input: TrackAnalysisInput): Record<string, number | string | null> {
+    return {
+        trackId: input.trackId.trim(),
+        title: normalizeText(input.title),
+        artist: normalizeText(input.artist),
+        genre: normalizeText(input.genre) || null,
+        bpm: typeof input.bpm === 'number' && Number.isFinite(input.bpm) ? input.bpm : null,
+        durationSeconds: typeof input.durationSeconds === 'number' && Number.isFinite(input.durationSeconds) ? input.durationSeconds : null,
+    };
 function classifyError(error: unknown): ErrorClassification {
     const message = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
     if (/(timeout|timed out|abort)/i.test(message)) return 'timeout';
@@ -313,6 +348,8 @@ function classifyError(error: unknown): ErrorClassification {
 
 export class AnalysisService {
     private readonly adapter: AnalysisAdapter;
+    private readonly promptVersion: string;
+    private readonly modelVersion?: string;
     private readonly promptProfile: ResolvedPromptProfile | PromptProfileResolver;
     private readonly modelVersion: string;
     private readonly promptVersion?: string;
@@ -322,6 +359,11 @@ export class AnalysisService {
     private readonly cacheTtlMs?: number;
     private readonly now: () => Date;
     private readonly onRetry?: (attempt: number, error: unknown) => void;
+    private readonly onCacheEvent?: (event: AnalysisCacheEvent) => void;
+
+    private readonly byIdempotencyKey = new Map<string, CacheEntry>();
+    private readonly telemetry: AnalysisTelemetry = { cacheHits: 0, cacheMisses: 0 };
+    private readonly cacheStats: AnalysisCacheStats = { size: 0, hits: 0, misses: 0, evictions: 0, expirations: 0 };
 
     private readonly byIdempotencyKey = new Map<string, CacheEntry>();
 
@@ -336,6 +378,43 @@ export class AnalysisService {
         this.modelVersion = options.modelVersion ?? 'unknown-model';
         this.promptVersion = options.promptVersion;
         this.promptProfileVersion = options.promptProfileVersion;
+        this.resolveVersionProfile = options.resolveVersionProfile;
+        this.maxRetries = options.maxRetries ?? 2;
+        this.maxCacheEntries = Math.max(1, options.maxCacheEntries ?? 512);
+        this.cacheTtlMs = typeof options.cacheTtlMs === 'number' && options.cacheTtlMs >= 0 ? options.cacheTtlMs : undefined;
+        this.now = options.now ?? (() => new Date());
+        this.onRetry = options.onRetry;
+        this.onCacheEvent = options.onCacheEvent;
+    }
+
+    getCacheSize(): number {
+        return this.byIdempotencyKey.size;
+    }
+
+    getTelemetry(): AnalysisTelemetry {
+        return { ...this.telemetry };
+    }
+
+    getCacheStats(): AnalysisCacheStats {
+        return {
+            ...this.cacheStats,
+            size: this.byIdempotencyKey.size,
+        };
+    }
+
+    async analyze(input: TrackAnalysisInput): Promise<AnalysisResult> {
+        if (input.trackId.trim().length === 0) {
+            return { status: 'analyzed', executionStatus: 'degraded', outcome: 'failed', source: 'fallback', record: null };
+        }
+
+        const versionProfile = this.resolveVersionProfile?.(input) ?? {
+            modelVersion: this.modelVersion ?? 'unknown-model',
+            promptProfileVersion: this.promptProfileVersion ?? this.promptVersion,
+        };
+        const idempotencyKey = this.buildIdempotencyKey(input, versionProfile);
+        const cached = this.getCachedRecord(idempotencyKey);
+        if (cached) {
+            this.telemetry.cacheHits += 1;
         this.maxRetries = Math.max(0, options.maxRetries ?? 2);
         this.maxCacheEntries = Math.max(1, options.maxCacheEntries ?? 1000);
         this.cacheTtlMs = options.cacheTtlMs !== undefined && options.cacheTtlMs >= 0 ? options.cacheTtlMs : undefined;
@@ -370,12 +449,53 @@ export class AnalysisService {
                 invocationStatus: cached.source === 'ai' ? 'success' : 'degraded',
                 metadata: { cacheBehavior: 'skipped', attempts: 0 },
                 status: 'skipped',
+                executionStatus: cached.source === 'ai' ? 'success' : 'degraded',
                 outcome: cached.source === 'ai' ? 'success' : 'degraded',
                 source: cached.source,
                 record: cached,
             };
         }
 
+        this.telemetry.cacheMisses += 1;
+
+        let attempts = 0;
+        let normalized: TrackIntelligenceRecord | null = null;
+        let source: 'ai' | 'fallback' = 'ai';
+
+        while (attempts <= this.maxRetries && !normalized) {
+            attempts += 1;
+            try {
+                const raw = await this.adapter.analyzeTrack(input, this.promptVersion);
+                normalized = this.normalize(raw, input, versionProfile, idempotencyKey, 'ai', attempts);
+                source = 'ai';
+            } catch (error) {
+                if (attempts > this.maxRetries) {
+                    const fallback = createFallbackAnalysis(input);
+                    normalized = this.normalize(fallback, input, versionProfile, idempotencyKey, 'fallback', attempts);
+                    source = 'fallback';
+                    break;
+                }
+                this.onRetry?.(attempts, error);
+            }
+        }
+
+        if (!normalized) {
+            return { status: 'analyzed', executionStatus: 'degraded', outcome: 'failed', source, record: null };
+        }
+
+        this.cacheRecord(idempotencyKey, normalized);
+        const success = normalized.source === 'ai';
+        return {
+            status: 'analyzed',
+            executionStatus: success ? 'success' : 'degraded',
+            outcome: success ? 'success' : 'degraded',
+            source: normalized.source,
+            record: normalized,
+        };
+    }
+
+    private emitCacheEvent(type: AnalysisCacheEvent['type'], key: string): void {
+        this.onCacheEvent?.({ type, key, size: this.byIdempotencyKey.size });
         // 3) bounded retry invoke
         let attempt = 0;
         let errorClassification: ErrorClassification | undefined;
@@ -502,6 +622,16 @@ export class AnalysisService {
             return null;
         }
 
+        if (this.cacheTtlMs !== undefined) {
+            const age = this.now().getTime() - cached.cachedAtMs;
+            if (age > this.cacheTtlMs) {
+                this.byIdempotencyKey.delete(idempotencyKey);
+                this.cacheStats.expirations += 1;
+                this.cacheStats.misses += 1;
+                this.emitCacheEvent('expire', idempotencyKey);
+                this.emitCacheEvent('miss', idempotencyKey);
+                return null;
+            }
         const nowMs = this.now().getTime();
         if (this.cacheTtlMs !== undefined && nowMs - entry.cachedAt > this.cacheTtlMs) {
             this.byIdempotencyKey.delete(idempotencyKey);
@@ -516,6 +646,43 @@ export class AnalysisService {
     }
 
     private cacheRecord(idempotencyKey: string, record: TrackIntelligenceRecord): void {
+        if (this.byIdempotencyKey.has(idempotencyKey)) {
+            this.byIdempotencyKey.delete(idempotencyKey);
+        }
+
+        this.byIdempotencyKey.set(idempotencyKey, { record, cachedAtMs: this.now().getTime() });
+        this.emitCacheEvent('set', idempotencyKey);
+
+        while (this.byIdempotencyKey.size > this.maxCacheEntries) {
+            const oldestKey = this.byIdempotencyKey.keys().next().value;
+            if (!oldestKey) break;
+            this.byIdempotencyKey.delete(oldestKey);
+            this.cacheStats.evictions += 1;
+            this.emitCacheEvent('evict', oldestKey);
+        }
+    }
+
+    private buildFingerprint(input: TrackAnalysisInput): string {
+        return [
+            input.trackId,
+            normalizeText(input.title),
+            normalizeText(input.artist),
+            normalizeText(input.genre),
+            normalizeOptionalNumber(input.bpm),
+            normalizeOptionalNumber(input.durationSeconds),
+            this.promptVersion,
+        ].join('|');
+    }
+
+    private buildIdempotencyKey(input: TrackAnalysisInput, versionProfile: AnalysisVersionProfile): string {
+        return buildHash({
+            ...normalizeFingerprintInput(input),
+            promptVersion: this.promptVersion,
+            modelVersion: versionProfile.modelVersion,
+            promptProfileVersion: versionProfile.promptProfileVersion,
+        });
+    }
+
         const nowMs = this.now().getTime();
         this.byIdempotencyKey.set(idempotencyKey, {
             record,
@@ -541,6 +708,7 @@ export class AnalysisService {
     private normalize(
         raw: unknown,
         input: TrackAnalysisInput,
+        versionProfile: AnalysisVersionProfile,
         idempotencyKey: string,
         source: 'ai' | 'fallback',
         attempts: number,
@@ -580,6 +748,7 @@ export interface AnalysisQueueResult {
     source: 'ai' | 'fallback';
 }
 
+export async function processAnalysisQueue(items: AnalysisQueueItem[], service: AnalysisService): Promise<AnalysisQueueResult[]> {
 export async function processAnalysisQueue(
     queue: AnalysisQueueItem[],
     service: AnalysisService

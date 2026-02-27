@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { AnalysisService, processAnalysisQueue } from '@/lib/ai/analysisService';
 
 describe('processAnalysisQueue', () => {
+    it('skips identical input and re-analyzes when input mutates', async () => {
     it('returns public queue contract for success + idempotent skip', async () => {
         const adapter = {
             analyzeTrack: vi.fn().mockResolvedValue({
@@ -24,14 +25,18 @@ describe('processAnalysisQueue', () => {
             [
                 { id: 'job-1', input: { trackId: 'track-1', title: 'Alpha', artist: 'A', genre: 'house' } },
                 { id: 'job-2', input: { trackId: 'track-1', title: 'Alpha', artist: 'A', genre: 'house' } },
+                { id: 'job-2b', input: { trackId: 'track-1', title: 'Alpha (VIP)', artist: 'A' } },
+                { id: 'job-3', input: { trackId: 'track-1', title: 'Alpha', artist: 'A', genre: 'techno' } },
                 { id: 'job-3', input: { trackId: 'track-1', title: 'Alpha (VIP)', artist: 'A', genre: 'house' } },
             ],
             service
         );
 
+        expect(results).toEqual([
         expect(results.map(({ itemId, status, outcome, source }) => ({ itemId, status, outcome, source }))).toEqual([
             { itemId: 'job-1', status: 'analyzed', outcome: 'success', source: 'ai' },
             { itemId: 'job-2', status: 'skipped', outcome: 'success', source: 'ai' },
+            { itemId: 'job-2b', status: 'analyzed', outcome: 'success', source: 'ai' },
             { itemId: 'job-3', status: 'analyzed', outcome: 'success', source: 'ai' },
         ]);
         expect(adapter.analyzeTrack).toHaveBeenCalledTimes(2);
