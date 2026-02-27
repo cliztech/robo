@@ -143,6 +143,8 @@
 - [x] Added artifact-producing wrapper for smoke logs/report/hashes under `artifacts/security/*`.
 - [x] Updated operations command and artifact docs with pre-release invocation and required signatures.
 
+## 2026-02-27 UI Skin Token Update
+- [x] Studio skin-token hardening completed for ConsoleLayout/Topbar, DJStudioSurface deck accents, and DegenMixer channel/control states; added `tests/ui/console-skin-visual.test.tsx` snapshot coverage for dark/light skins.
 ## 2026-02-27 Design Token Contract Update
 - [x] Token system normalized around semantic `--color-*` roles in `src/styles/tokens.css`.
 - [x] Added `[data-skin='degen-dark']` and `[data-skin='degen-light']` overrides for skin-specific color changes.
