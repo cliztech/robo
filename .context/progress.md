@@ -140,3 +140,4 @@
 - [x] Added privileged-action fail guard for unexpected `PRIV_ACTION_EXECUTED` outcomes.
 - [x] Added artifact-producing wrapper for smoke logs/report/hashes under `artifacts/security/*`.
 - [x] Updated operations command and artifact docs with pre-release invocation and required signatures.
+- [x] Dashboard UI test contract alignment: `DashboardView` now uses an injectable API surface with deterministic tests, canonical `DashboardStatusResponse` import source, stable queue/severity/ack test hooks, and alert-role error container semantics.

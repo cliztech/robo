@@ -139,3 +139,4 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Wired smoke checks to TI-002 role deny expectations, TI-003 timeout/reauth contract variables, and TI-039 privileged action catalog IDs through startup contract validation.
 - Added mandatory artifact outputs under `artifacts/security/logs`, `artifacts/security/reports`, and `artifacts/security/hashes`.
 - Updated operations docs with exact pre-release invocation and pass/fail signatures.
+- [x] Unified DashboardView dashboard UI test contract with injectable API dependency, canonical status type import path, stable test IDs, and alert-role error semantics for deterministic UI tests.
