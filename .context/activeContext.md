@@ -1,11 +1,14 @@
 # Active Context
 
 ## Current Focus
+
 Executing "Phase 5: AI Integration" (Implement AI track analysis) while stabilizing typed studio state management for deck/mixer transport telemetry and engine control bridging.
 Executing "Phase 6: Playlist Generation" hardening and preparing Phase 7 broadcasting handoff after completing Phase 5 track analysis API/service delivery.
 Building the next unfinished execution plans from the roadmap queue, starting with P1 Security items (TI-039/TI-040/TI-041).
 
 ## Recent Decisions
+
+- Strengthened DJ console dashboard type boundaries with `dashboard.types.ts`, typed telemetry props, and exhaustive severity/status mapping utilities to remove implicit UI string handling.
 - Refactored streaming-gateway FFmpeg lifecycle into a supervisor with jittered backoff restarts, degraded-mode thresholding, health endpoints, heartbeat events, and signal-aware shutdown.
 - Refactored `AnalysisService` idempotency fingerprinting to hash canonicalized track metadata + model/prompt versions with observability fields and cache-invalidation test coverage.
 - Updated AnalysisService idempotency to SHA-256 fingerprints over normalized track metadata + version dimensions (prompt/model/profile) with cache behavior tests for metadata/version churn.
@@ -25,7 +28,7 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Regenerated `docs/exec-plans/active/unfinished-task-build-plan.md` from the latest TODO/workflow state to refresh unfinished-task ordering.
 - Normalized workflow references in `docs/exec-plans/active/unfinished-task-build-plan.md` to canonical `docs/massive_workflow_blueprint.md` paths with valid line mappings.
 - Published `docs/exec-plans/active/2026-02-25-next-unfinished-phase-build.md` to sequence the next phased work (TI-039 -> TI-040 -> TI-041).
-Executing "Phase 5: AI Integration" through a quick-dev next-phase plan that decomposes AI track analysis into sprintable stories (P5-01..P5-05).
+  Executing "Phase 5: AI Integration" through a quick-dev next-phase plan that decomposes AI track analysis into sprintable stories (P5-01..P5-05).
 
 ## Recent Decisions
 
@@ -57,6 +60,7 @@ Executing "Phase 5: AI Integration" through a quick-dev next-phase plan that dec
 - Expanded malformed-payload unit test coverage in `tests/unit/ai-analysis-service.test.ts` (missing keys, wrong types, empty strings).
 
 ## Next Atomic Steps
+
 - [ ] Keep tracked-issue coverage table in sync with status/ownership updates.
 - [x] Add AnalysisService cache controls (LRU cap + TTL) with operational cache metrics and hooks.
 - [x] Implement unified DJ studio surface layout for decks/studio route.
