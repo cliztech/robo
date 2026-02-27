@@ -5,8 +5,8 @@ interface AlertAckParams {
   params: Promise<{ alertId: string }>;
 }
 
-export async function POST(request: NextRequest, context: AlertAckParams) {
-  const { alertId } = await context.params;
+export async function POST(request: NextRequest, { params }: { params: { alertId: string } }) {
+  const { alertId } = params;
   return proxyDashboardRequest(
     request,
     `/api/v1/status/dashboard/alerts/${encodeURIComponent(alertId)}/ack`,
