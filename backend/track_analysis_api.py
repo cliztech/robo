@@ -30,7 +30,7 @@ def analyze_track(
     request: TrackAnalysisRequest,
     _: str = Depends(verify_api_key),
     service: TrackAnalysisService = Depends(get_track_analysis_service),
-) -> TrackAnalysisEnvelope:
+) -> TrackAnalysisEnvelope | JSONResponse:
     """Deterministic mapping:
     - 200 + degraded envelope for validation/contract fallback failures.
     - 5xx + failed envelope for timeout/circuit/service failures.
