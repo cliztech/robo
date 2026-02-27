@@ -145,6 +145,10 @@
 - [x] Added artifact-producing wrapper for smoke logs/report/hashes under `artifacts/security/*`.
 - [x] Updated operations command and artifact docs with pre-release invocation and required signatures.
 
+## 2026-02-27 Mixxx Benchmarking Update
+- [x] Completed external reference intake from `mixxxdj/mixxx` and documented subsystem analog mapping in `docs/references/mixxx_adoption_blueprint.md`.
+- [x] Defined 30/60/90 execution framing for applying Mixxx-derived reliability patterns to DGN-DJ without direct source reuse.
+- [x] Added clean-room licensing guardrails to prevent accidental GPL code-path contamination.
 - Added skin-pack foundation: manifest schema/contracts, sandboxed loader with fallback + token-gap detection, Skin Manager panel (import/preview/activate/deactivate/delete), and UI spec documentation.
 ## 2026-02-27 UI Skin Token Update
 - [x] Studio skin-token hardening completed for ConsoleLayout/Topbar, DJStudioSurface deck accents, and DegenMixer channel/control states; added `tests/ui/console-skin-visual.test.tsx` snapshot coverage for dark/light skins.

@@ -144,6 +144,10 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added mandatory artifact outputs under `artifacts/security/logs`, `artifacts/security/reports`, and `artifacts/security/hashes`.
 - Updated operations docs with exact pre-release invocation and pass/fail signatures.
 
+## 2026-02-27 Mixxx Reference Intake Update
+- [x] Cloned `mixxxdj/mixxx` into local workspace for architecture benchmarking and pattern extraction.
+- [x] Added `docs/references/mixxx_adoption_blueprint.md` to map DGN-DJ priorities to Mixxx subsystem patterns (audio engine, broadcast reliability, analysis throughput, controller UX).
+- [x] Captured licensing guardrail: pattern-level adoption only, no direct GPL source import without explicit legal review.
 ## 2026-02-27 UI Skin Token Update
 - Added token-driven studio skin utility classes and refactored console shell/mixer/deck surfaces to consume semantic control/deck/status roles; added per-theme visual snapshot coverage for deck, mixer, library, and transport core surfaces.
 ## 2026-02-27 Console Layout Reliability Update
