@@ -81,3 +81,30 @@ export interface MemoryStore {
   pushRecent(trackId: string): Promise<void>;
   getRecent(limit: number): Promise<string[]>;
 }
+
+
+export type StreamListenerSourceMetric = {
+  mount: string;
+  listeners: number;
+  listenerPeak: number;
+  listenUrl: string;
+  streamName: string;
+  description: string;
+  startedAt?: string;
+};
+
+export type StreamListenersEvent = {
+  totalListeners: number;
+  streamCount: number;
+  streams: StreamListenerSourceMetric[];
+  polledAt: string;
+};
+
+export type StreamPollingAlertEvent = {
+  status: "degraded";
+  consecutiveFailures: number;
+  threshold: number;
+  statsUrl: string;
+  message: string;
+  detectedAt: string;
+};
