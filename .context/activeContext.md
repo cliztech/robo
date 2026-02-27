@@ -8,6 +8,10 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 ## Recent Decisions
 
+- Removed legacy `DashboardView` telemetry prop wiring so dashboard cards are sourced exclusively from status API responses, and aligned dashboard UI tests with API-driven alert/metric rendering.
+- Hardened `DashboardView.handleAcknowledge` with per-alert rollback snapshots, duplicate in-flight request gating, and fully functional state updates to prevent stale-closure regressions under concurrent acknowledgements.
+- Replaced dashboard UI acknowledge tests with targeted concurrency coverage that validates mixed success/failure sibling acknowledgements preserve successful optimistic commits.
+
 - Added cadence governance updates: TODO dated-entry outcomes refreshed, readiness scorecard weekly update appended, execution index cadence table added, and roadmap autopilot now emits due-date reminders into the unfinished task build plan.
 
 - Standardized phase naming contracts across planning artifacts: `Delivery Phase N` for delivery context and `Workflow Phase N` for workflow context, plus namespace-required packet/build-plan metadata.
@@ -144,3 +148,31 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - [x] Cloned `mixxxdj/mixxx` into local workspace for architecture benchmarking and pattern extraction.
 - [x] Added `docs/references/mixxx_adoption_blueprint.md` to map DGN-DJ priorities to Mixxx subsystem patterns (audio engine, broadcast reliability, analysis throughput, controller UX).
 - [x] Captured licensing guardrail: pattern-level adoption only, no direct GPL source import without explicit legal review.
+## 2026-02-27 UI Skin Token Update
+- Added token-driven studio skin utility classes and refactored console shell/mixer/deck surfaces to consume semantic control/deck/status roles; added per-theme visual snapshot coverage for deck, mixer, library, and transport core surfaces.
+## 2026-02-27 Console Layout Reliability Update
+- [x] Added typed dock-layout model (`src/lib/layout/types.ts`) covering panel visibility, panel position, split ratios, and tab-stack state.
+- [x] Replaced deck/studio workspace render path with a dock-grid container featuring preset switching (Broadcast/Mixing/Production/Minimal), drag swap, tabbed stack rendering, and keyboard operations.
+- [x] Added local preset persistence for built-in selection + user-defined custom presets using `localStorage`.
+- [x] Added lock/unlock guardrails for live operation plus restore-default action (`Ctrl+Shift+R`) and keyboard layout lock toggle (`Ctrl+L`/`F4`).
+- [x] Unified DashboardView dashboard UI test contract with injectable API dependency, canonical status type import path, stable test IDs, and alert-role error semantics for deterministic UI tests.
+
+## 2026-02-27 Dashboard Accessibility Update
+
+- Implemented semantic dashboard landmarks in `src/components/console/DashboardView.tsx` (`main` + labeled `section` regions for status cards, alert center, now playing, audio engine).
+- Added live region semantics for async states (`role="status"` for loading telemetry, `role="alert"` for status API failures).
+- Updated `tests/ui/dashboard-view.test.tsx` to assert landmark roles/labels, live-region behavior, and keyboard task-flow ordering.
+## 2026-02-27 Theme Preferences Delivery Update
+
+- Added a versioned UI theme-preferences layer (`themeMode` + `activeSkinId`) with migration-safe localStorage payload handling.
+- Wired app-wide theme provider + first-paint bootstrap script to resolve system theme and set `<html data-theme>` / `<html data-skin>` before hydration.
+- Added DJ console topbar theme settings (mode, skin, preview, reset) and UI tests for preference persistence and html attribute application.
+## 2026-02-27 UI Skin Token Update
+- Added token-driven studio skin utility classes and refactored console shell/mixer/deck surfaces to consume semantic control/deck/status roles; added per-theme visual snapshot coverage for deck, mixer, library, and transport core surfaces.
+## 2026-02-27 Token Contract Hardening Update
+- [x] Refactored `src/styles/tokens.css` into base semantic `--color-*` tokens with skin-only overrides in `[data-skin='degen-dark']` and `[data-skin='degen-light']`.
+- [x] Removed duplicate alias declarations and consolidated a single canonical legacy alias mapping table.
+- [x] Added token reference guard script (`scripts/check_tokens.mjs`) and package script (`npm run check:tokens`) to fail unresolved `var(--*)` references.
+- [x] Updated `docs/ui/design_tokens_v1.md` with a required semantic token set for third-party skin authors.
+
+- Added `docs/operations/github_workflows_recommendations.md` with prioritized GitHub Actions additions (dependency-review, actionlint/policy, OSSF scorecard, stale/label routing, nightly matrix) to guide next CI hardening pass.

@@ -8,6 +8,7 @@ import {
     Music,
     Settings,
     Sliders,
+    SwatchBook,
 } from 'lucide-react';
 import type { ConsoleNavItem } from './types';
 
@@ -19,6 +20,7 @@ export const CONSOLE_NAV_ITEMS: ConsoleNavItem[] = [
     { view: 'library', icon: Music, label: 'Library' },
     { view: 'schedule', icon: Clock, label: 'Schedule' },
     { view: 'ai-host', icon: Bot, label: 'AI Host', badge: '3' },
+    { view: 'skin-manager', icon: SwatchBook, label: 'Skins' },
 ];
 
 export const CONSOLE_UTILITY_ITEMS = [

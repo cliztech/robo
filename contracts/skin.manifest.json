@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://dgnradio.com/contracts/skin.manifest.schema.json",
+  "title": "DGN-DJ Skin Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "name",
+    "version",
+    "author",
+    "compatibility",
+    "tokens"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Globally unique skin id.",
+      "pattern": "^[a-z0-9][a-z0-9._-]{2,63}$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 80
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(?:[-+][0-9A-Za-z.-]+)?$"
+    },
+    "author": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 120
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 280
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min_app_version", "max_app_version"],
+      "properties": {
+        "min_app_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        },
+        "max_app_version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$"
+        }
+      }
+    },
+    "tokens": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "maxLength": 120
+      },
+      "required": [
+        "color_bg",
+        "color_surface",
+        "color_text",
+        "color_accent",
+        "color_deck_a",
+        "color_deck_b",
+        "radius_md",
+        "shadow_soft"
+      ],
+      "properties": {
+        "color_bg": { "type": "string" },
+        "color_surface": { "type": "string" },
+        "color_text": { "type": "string" },
+        "color_accent": { "type": "string" },
+        "color_deck_a": { "type": "string" },
+        "color_deck_b": { "type": "string" },
+        "radius_md": { "type": "string" },
+        "shadow_soft": { "type": "string" }
+      }
+    },
+    "assets": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fonts": {
+          "type": "array",
+          "maxItems": 4,
+          "items": {
+            "type": "string",
+            "pattern": "^(skins|assets)/[A-Za-z0-9._/-]+\\.(woff2?|ttf|otf)$"
+          }
+        },
+        "background_textures": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "type": "string",
+            "pattern": "^(skins|assets)/[A-Za-z0-9._/-]+\\.(png|jpe?g|webp|svg)$"
+          }
+        },
+        "icons": {
+          "type": "array",
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "pattern": "^(skins|assets)/[A-Za-z0-9._/-]+\\.(svg|png|webp)$"
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "not": {
+        "required": ["scripts"]
+      }
+    },
+    {
+      "not": {
+        "required": ["script"]
+      }
+    }
+  ]
+}
