@@ -13,14 +13,20 @@ interface DeckTransportClusterProps {
 }
 
 function DeckTransportCluster({ deck, isPlaying }: DeckTransportClusterProps) {
-    const isDeckA = deck === 'A';
+    const deckState = deck === 'A' ? 'live' : 'warning';
 
     return (
-        <section className="glass-panel overflow-hidden">
+        <section className="glass-panel skin-panel overflow-hidden" data-deck={deck}>
             <div className="panel-header">
                 <span className="panel-header-title">Deck {deck} Transport</span>
-                <span className={cn('dj-deck-badge', isDeckA ? 'dj-deck-a-tone' : 'dj-deck-b-tone')}>
-                    {isDeckA ? 'Live' : 'Standby'}
+                <span
+                    className={cn(
+                        'dj-deck-badge skin-deck-accent',
+                        deckState === 'live' ? 'status-badge-live' : 'status-badge-warning'
+                    )}
+                    data-deck={deck}
+                >
+                    {deckState === 'live' ? 'Live' : 'Standby'}
                 </span>
             </div>
             <div className="dj-deck-cluster" data-deck={deck}>
@@ -48,10 +54,10 @@ function DeckTransportCluster({ deck, isPlaying }: DeckTransportClusterProps) {
 
 function PerformancePadGrid() {
     return (
-        <section className="glass-panel overflow-hidden">
+        <section className="glass-panel skin-panel overflow-hidden">
             <div className="panel-header">
                 <span className="panel-header-title">Performance Pads</span>
-                <span className="text-[8px] text-zinc-500 uppercase tracking-[0.16em]">Bank B</span>
+                <span className="text-[8px] text-[hsl(var(--color-text-muted))] uppercase tracking-[0.16em]">Bank B</span>
             </div>
             <div className="dj-performance-pad-grid">
                 {Array.from({ length: 16 }, (_, index) => (
@@ -72,7 +78,7 @@ function PerformancePadGrid() {
 export function DJStudioSurface() {
     return (
         <div className="dj-studio-surface">
-            <section className="glass-panel overflow-hidden dj-area-wave-a">
+            <section className="glass-panel skin-panel overflow-hidden dj-area-wave-a">
                 <div className="panel-header">
                     <span className="panel-header-title">Waveform Rail A</span>
                 </div>
@@ -84,14 +90,14 @@ export function DJStudioSurface() {
                         trackTitle="Neural Drift v2.1 — SynthKong"
                         isPlaying
                         cuePoints={[
-                            { position: 0.12, label: 'CUE 1', color: '#ff6b00' },
-                            { position: 0.68, label: 'DROP', color: '#bf00ff' },
+                            { position: 0.12, label: 'CUE 1', color: 'hsl(var(--color-waveform-cue-default))' },
+                            { position: 0.68, label: 'DROP', color: 'hsl(var(--color-waveform-cue-highlight))' },
                         ]}
                     />
                 </div>
             </section>
 
-            <section className="glass-panel overflow-hidden dj-area-wave-b">
+            <section className="glass-panel skin-panel overflow-hidden dj-area-wave-b">
                 <div className="panel-header">
                     <span className="panel-header-title">Waveform Rail B</span>
                 </div>
@@ -103,16 +109,18 @@ export function DJStudioSurface() {
                         trackTitle="Bass Gorilla — DJ DegenApe"
                         isPlaying={false}
                         cuePoints={[
-                            { position: 0.08, label: 'INTRO', color: '#3b82f6' },
-                            { position: 0.52, label: 'BUILD', color: '#bf00ff' },
+                            { position: 0.08, label: 'INTRO', color: 'hsl(var(--color-waveform-cue-info))' },
+                            { position: 0.52, label: 'BUILD', color: 'hsl(var(--color-waveform-cue-highlight))' },
                         ]}
                     />
                 </div>
             </section>
 
-<section className="dj-area-deck-a"><DeckTransportCluster deck="A" isPlaying /></section>
+            <section className="dj-area-deck-a">
+                <DeckTransportCluster deck="A" isPlaying />
+            </section>
 
-            <section className="glass-panel overflow-hidden dj-area-mixer">
+            <section className="glass-panel skin-panel overflow-hidden dj-area-mixer">
                 <div className="panel-header">
                     <span className="panel-header-title">Mixer + Crossfader</span>
                 </div>
@@ -121,9 +129,11 @@ export function DJStudioSurface() {
                 </div>
             </section>
 
-<section className="dj-area-deck-b"><DeckTransportCluster deck="B" isPlaying={false} /></section>
+            <section className="dj-area-deck-b">
+                <DeckTransportCluster deck="B" isPlaying={false} />
+            </section>
 
-            <section className="glass-panel overflow-hidden dj-area-library">
+            <section className="glass-panel skin-panel overflow-hidden dj-area-library">
                 <div className="panel-header">
                     <span className="panel-header-title">Browser / Library</span>
                 </div>
