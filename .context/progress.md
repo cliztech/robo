@@ -146,6 +146,8 @@
 - [x] Added artifact-producing wrapper for smoke logs/report/hashes under `artifacts/security/*`.
 - [x] Updated operations command and artifact docs with pre-release invocation and required signatures.
 
+## 2026-02-27 Dashboard Testability Update
+- [x] Console dashboard UI hardening: added API dependency injection hooks, exported status types for tests, and standardized dashboard loading/error/test-id semantics for `tests/ui/dashboard-view.test.tsx`.
 - [x] Status dashboard telemetry refactor: replaced hardcoded queue trend fixtures with live telemetry adapters, evaluator-driven alert transitions, repository lifecycle persistence (`resolved_at`/`last_seen_at`), and coverage for warning/critical + stale-rotation boundaries.
 ## 2026-02-27 Dashboard Status Route-Proxy Completion
 

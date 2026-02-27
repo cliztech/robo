@@ -446,7 +446,7 @@ export function ConsoleWorkspaceView({
         transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
       >
         {currentView === "dashboard" && (
-          <DashboardView telemetry={DEFAULT_DASHBOARD_TELEMETRY} />
+          <DashboardView />
         )}
         {(currentView === "decks" || currentView === "studio") && <DockWorkspace />}
         {currentView === "dashboard" && <DashboardView />}

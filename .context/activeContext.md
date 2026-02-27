@@ -145,6 +145,8 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added mandatory artifact outputs under `artifacts/security/logs`, `artifacts/security/reports`, and `artifacts/security/hashes`.
 - Updated operations docs with exact pre-release invocation and pass/fail signatures.
 
+## 2026-02-27 Dashboard Testability Update
+- [x] Updated dashboard console testability contract: `DashboardView` now exports `DashboardStatusApi`/`DashboardStatusResponse`, supports injected dashboard API methods, and aligns loading/error/test-id expectations with UI tests.
 - Refactored backend status dashboard to consume live telemetry inputs via injected `StatusTelemetryProvider`, added deterministic queue/rotation evaluators with persisted lifecycle reconciliation in `status_alerts.db`, and expanded API tests for severity transitions + stale-boundary behavior.
 ## 2026-02-27 Dashboard Status Proxy Integration Update
 
