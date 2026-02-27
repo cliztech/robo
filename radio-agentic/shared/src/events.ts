@@ -5,6 +5,7 @@ export type EventName =
   | "playout.next_requested"
   | "playout.enqueue"
   | "now_playing"
+  | "stream.listeners"
   | "system.health";
 
 export type EventEnvelope<T> = {

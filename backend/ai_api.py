@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Header, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 
 from backend.ai_service import (
     AIInferenceService,
@@ -13,6 +13,7 @@ from backend.ai_service import (
     HostScriptRequest,
     TrackAnalysisRequest,
 )
+from backend.security.auth import verify_api_key
 
 router = APIRouter(prefix="/api/v1/ai", tags=["ai"])
 _service = AIInferenceService()
@@ -21,6 +22,7 @@ _service = AIInferenceService()
 @router.post("/track-analysis", response_model=AIResponseEnvelope)
 def analyze_track(
     request: TrackAnalysisRequest,
+    _: str = Depends(verify_api_key),
     x_correlation_id: str | None = Header(default=None, alias="X-Correlation-ID"),
 ) -> AIResponseEnvelope:
     correlation_id = x_correlation_id or str(uuid.uuid4())

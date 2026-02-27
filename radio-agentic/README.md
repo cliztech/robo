@@ -39,3 +39,21 @@ curl -X POST http://localhost:4002/requests \
 ```
 
 5. Listen at `http://localhost:8000/stream`.
+
+
+## Stream listener telemetry events
+
+The `streaming-gateway` service polls Icecast stats (`/status-json.xsl`) and publishes listener metrics to NATS: `stream.listeners`.
+
+Configuration:
+- `ICECAST_STATS_POLL_INTERVAL_MS` (default `10000`)
+- `ICECAST_STATS_FAILURE_THRESHOLD` (default `3`)
+- `ICECAST_STATS_PATH` (default `/status-json.xsl`; accepts full URL)
+
+Event payload (`stream.listeners`):
+- `totalListeners: number`
+- `streamCount: number`
+- `streams: Array<{ mount, listeners, listenerPeak, listenUrl, streamName, description, startedAt? }>`
+- `polledAt: string` (ISO-8601)
+
+After `ICECAST_STATS_FAILURE_THRESHOLD` consecutive poll failures, `streaming-gateway` logs the failure and emits `system.health` with a degraded alert payload (`StreamPollingAlertEvent`).
