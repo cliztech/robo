@@ -124,6 +124,7 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 - [x] Replaced merge-corrupted `src/lib/ai/analysisService.ts` with a single canonical implementation (normalized result/record types, single idempotency key strategy, unified LRU+TTL cache map, deterministic analyze flow, and queue outcome mapping).
 - [x] Refactored malformed AI analysis unit/integration suites into clean non-overlapping describe trees and public-contract queue assertions.
+- [x] Reconciled `docs/exec-plans/active/sprint-status.yaml` against `TODO.md` + `docs/exec-plans/active/sprint-telemetry.md`, added `last_reconciled`, and documented state-authority precedence + weekly parity check.
 
 
 ## 2026-02-27 TI-039 Enforcement Update

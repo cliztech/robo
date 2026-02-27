@@ -48,6 +48,7 @@ During the same weekly pass, reconcile `TODO.md` checkboxes against tracked-issu
 3. If TI status is not closed (`Open`, `In Progress`, `Blocked`, etc.), set corresponding `TODO.md` item to `[ ]`.
 4. Record any mismatch corrections in the weekly update entry under `Changed metrics`.
 5. Escalate unresolved ambiguity (missing TI link or unclear TI status) to Project Coordinator before closing weekly hygiene review.
+6. Add `Status parity check (TODO.md ↔ sprint-status.yaml): complete` to the weekly checklist/update entry.
 
 Use this compact template when posting weekly updates in the SoT file for that track:
 

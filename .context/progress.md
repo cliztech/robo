@@ -118,6 +118,7 @@
 - [x] Test-suite hygiene: rebuilt `tests/unit/ai-analysis-service.test.ts` and `tests/integration/analysis-queue.test.ts` to remove duplicated partial blocks and align assertions with current queue contract boundaries.
 
 - [x] Phase namespace hardening: planning/context artifacts now require explicit namespace (`delivery` or `workflow`) and generator output rejects missing namespace metadata.
+- [x] Sprint-state hygiene update: synchronized sprint-status epic/story states (including P1 security open items and D2 completed artifacts), added `last_reconciled`, and added weekly status parity checklist guidance.
 
 ## 2026-02-27 TI-040 Completion Update
 - [x] Added value-level encryption envelope validation for high-risk fields (`openai_api_key`, `tts_api_key`, `webhook_auth_token`, `stream_fallback_password`, `remote_ingest_secret`) in `config/validate_config.py`.

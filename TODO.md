@@ -1,5 +1,7 @@
 # RoboDJ TODO List
 
+> **State authority:** When execution artifacts disagree, `docs/exec-plans/active/sprint-status.yaml` is the canonical state for epic/story status, and this checklist must be reconciled to match it during weekly hygiene.
+
 This checklist converts the current product-readiness plan into a practical execution queue.
 
 
