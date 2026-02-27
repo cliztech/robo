@@ -286,6 +286,64 @@ export class AnalysisService {
         });
     }
 
+    private getCachedRecord(idempotencyKey: string): TrackIntelligenceRecord | null {
+        const cached = this.byIdempotencyKey.get(idempotencyKey);
+        if (!cached) {
+            this.cacheStats.misses += 1;
+            this.emitCacheEvent('miss', idempotencyKey);
+            return null;
+        }
+
+        if (this.cacheTtlMs !== undefined) {
+            const ageMs = this.now().getTime() - cached.cachedAtMs;
+            if (ageMs > this.cacheTtlMs) {
+                this.byIdempotencyKey.delete(idempotencyKey);
+                this.cacheStats.expirations += 1;
+                this.cacheStats.misses += 1;
+                this.emitCacheEvent('expire', idempotencyKey);
+                this.emitCacheEvent('miss', idempotencyKey);
+                return null;
+            }
+        }
+
+        this.byIdempotencyKey.delete(idempotencyKey);
+        this.byIdempotencyKey.set(idempotencyKey, cached);
+        this.cacheStats.hits += 1;
+        this.emitCacheEvent('hit', idempotencyKey);
+        return cached.record;
+    }
+
+    private cacheRecord(idempotencyKey: string, record: TrackIntelligenceRecord): void {
+        if (this.byIdempotencyKey.has(idempotencyKey)) {
+            this.byIdempotencyKey.delete(idempotencyKey);
+        }
+
+        this.byIdempotencyKey.set(idempotencyKey, {
+            record,
+            cachedAtMs: this.now().getTime(),
+        });
+
+        while (this.byIdempotencyKey.size > this.maxCacheEntries) {
+            const oldestKey = this.byIdempotencyKey.keys().next().value;
+            if (!oldestKey) {
+                break;
+            }
+            this.byIdempotencyKey.delete(oldestKey);
+            this.cacheStats.evictions += 1;
+            this.emitCacheEvent('evict', oldestKey);
+        }
+
+        this.emitCacheEvent('set', idempotencyKey);
+    }
+
+    private emitCacheEvent(type: AnalysisCacheEvent['type'], key: string): void {
+        this.onCacheEvent?.({
+            type,
+            key,
+            size: this.byIdempotencyKey.size,
+        });
+    }
+
     private buildIdempotencyKey(trackId: string, promptVersion: string): string {
         return `${trackId}:${promptVersion}`;
     }
