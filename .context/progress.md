@@ -111,6 +111,8 @@
 
 ## 2026-02-27 Progress Update
 
+- [x] Console dashboard data-flow cleanup: removed `DashboardView` fallback telemetry prop path from workspace wiring, deleted unused default telemetry types, and refreshed dashboard UI tests to assert API values win with no legacy hardcoded metrics.
+
 - Added cadence governance updates: TODO dated-entry outcomes refreshed, readiness scorecard weekly update appended, execution index cadence table added, and roadmap autopilot now emits due-date reminders into the unfinished task build plan.
 - [x] **Delivery Phase 5: AI Integration** (Completed resilient track analysis service rebuild with deterministic fingerprint/idempotency keys, bounded retry/fallback, TTL+LRU cache controls, and queue outcome mapping.)
 - [x] **Delivery Phase 5: AI Integration** (Repaired and expanded verification harness in `tests/unit/ai-analysis-service.test.ts` + `tests/integration/analysis-queue.test.ts` for normalization, cache behavior, and degraded/failed outcomes.)

@@ -8,6 +8,8 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 ## Recent Decisions
 
+- Removed legacy `DashboardView` telemetry prop wiring so dashboard cards are sourced exclusively from status API responses, and aligned dashboard UI tests with API-driven alert/metric rendering.
+
 - Added cadence governance updates: TODO dated-entry outcomes refreshed, readiness scorecard weekly update appended, execution index cadence table added, and roadmap autopilot now emits due-date reminders into the unfinished task build plan.
 
 - Standardized phase naming contracts across planning artifacts: `Delivery Phase N` for delivery context and `Workflow Phase N` for workflow context, plus namespace-required packet/build-plan metadata.
