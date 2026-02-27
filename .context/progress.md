@@ -63,3 +63,4 @@
 - [x] Tracked issue hygiene hardening: split TI-007/TI-008/TI-009 collisions, reassigned security tasks to TI-039/TI-040/TI-041, and added a one-header validation check.
 
 - [x] Phase 5 foundation: implemented `AnalysisService` (normalization, retry with fallback, idempotency) and queue processor with unit/integration tests.
+- [x] Phase 5 mood normalization refactor: explicit alias mapping + energy-based fallback policy, with unit coverage for alias/missing/unknown mood scenarios.

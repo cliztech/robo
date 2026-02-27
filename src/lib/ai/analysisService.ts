@@ -47,14 +47,20 @@ export interface AnalysisServiceOptions {
     onRetry?: (attempt: number, error: unknown) => void;
 }
 
+// Canonical moods persisted in track intelligence records.
+// Non-canonical/unknown model output should not be forced to a fixed default;
+// fallback selection is decided at call sites (typically derived from energy).
 const SUPPORTED_MOODS: TrackMood[] = ['calm', 'chill', 'energetic', 'intense', 'uplifting'];
 
 function clamp01(value: number): number {
     return Math.max(0, Math.min(1, value));
 }
 
-function normalizeMood(mood?: string): TrackMood {
-    if (!mood) return 'chill';
+// Alias table maps known model vocabulary to canonical moods.
+// Unknown free-text values intentionally return undefined so callers can
+// apply explicit fallback policy (e.g., infer from energy thresholds).
+function normalizeMood(mood?: string): TrackMood | undefined {
+    if (!mood) return undefined;
     const normalized = mood.trim().toLowerCase();
     if (SUPPORTED_MOODS.includes(normalized as TrackMood)) {
         return normalized as TrackMood;
@@ -64,7 +70,7 @@ function normalizeMood(mood?: string): TrackMood {
     if (['happy', 'bright', 'positive'].includes(normalized)) return 'uplifting';
     if (['dance', 'party', 'club'].includes(normalized)) return 'energetic';
     if (['aggressive', 'heavy'].includes(normalized)) return 'intense';
-    return 'chill';
+    return undefined;
 }
 
 function inferMoodFromEnergy(energy: number): TrackMood {
@@ -164,7 +170,8 @@ export class AnalysisService {
         attempts: number
     ): TrackIntelligenceRecord {
         const energy = clamp01(typeof raw.energy === 'number' ? raw.energy : inferEnergyFallback(input));
-        const mood = normalizeMood(raw.mood) ?? inferMoodFromEnergy(energy);
+        const mappedMood = normalizeMood(raw.mood);
+        const mood = mappedMood ? mappedMood : inferMoodFromEnergy(energy);
         const genreConfidence = clamp01(typeof raw.genreConfidence === 'number' ? raw.genreConfidence : input.genre ? 0.6 : 0.3);
 
         return {

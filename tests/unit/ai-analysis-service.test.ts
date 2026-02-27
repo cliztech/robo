@@ -94,4 +94,75 @@ describe('AnalysisService', () => {
         expect(second.status).toBe('skipped');
         expect(adapter.analyzeTrack).toHaveBeenCalledTimes(1);
     });
+
+    it('maps recognized mood aliases to canonical moods', async () => {
+        const adapter = {
+            analyzeTrack: vi.fn().mockResolvedValue({
+                energy: 0.25,
+                mood: 'ambient',
+                era: '1990s',
+                genreConfidence: 0.7,
+            }),
+        };
+
+        const service = new AnalysisService({
+            adapter,
+            promptVersion: 'v5.4',
+        });
+
+        const result = await service.analyze({
+            trackId: 'track-004',
+            title: 'Cloud Drift',
+            artist: 'Signal Sea',
+        });
+
+        expect(result.record.mood).toBe('calm');
+    });
+
+    it('derives mood from energy when mood is missing', async () => {
+        const adapter = {
+            analyzeTrack: vi.fn().mockResolvedValue({
+                energy: 0.9,
+                era: '2020s',
+                genreConfidence: 0.6,
+            }),
+        };
+
+        const service = new AnalysisService({
+            adapter,
+            promptVersion: 'v5.5',
+        });
+
+        const result = await service.analyze({
+            trackId: 'track-005',
+            title: 'Voltage',
+            artist: 'Arc Runner',
+        });
+
+        expect(result.record.mood).toBe('intense');
+    });
+
+    it('derives mood from energy for unknown free-text mood values', async () => {
+        const adapter = {
+            analyzeTrack: vi.fn().mockResolvedValue({
+                energy: 0.22,
+                mood: 'mysterious',
+                era: '1980s',
+                genreConfidence: 0.4,
+            }),
+        };
+
+        const service = new AnalysisService({
+            adapter,
+            promptVersion: 'v5.6',
+        });
+
+        const result = await service.analyze({
+            trackId: 'track-006',
+            title: 'Deep Night',
+            artist: 'Noir FM',
+        });
+
+        expect(result.record.mood).toBe('calm');
+    });
 });
