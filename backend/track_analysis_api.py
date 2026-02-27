@@ -1,11 +1,8 @@
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel
-from fastapi.responses import JSONResponse
-from pydantic import ValidationError
+"""Compatibility metadata for legacy track-analysis endpoint.
 
-from backend.ai.contracts.track_analysis import TrackAnalysisRequest, TrackAnalysisResult
-from backend.security.auth import verify_api_key
-from backend.track_analysis_service import TrackAnalysisService
+Canonical endpoint: POST /api/v1/ai/track-analysis
+Legacy compatibility endpoint: POST /api/v1/ai/analyze-track
+"""
 
 router = APIRouter(prefix="/api/v1/ai", tags=["track-analysis"])
 
@@ -57,3 +54,8 @@ def analyze_track(
     except Exception as exc:
         envelope = TrackAnalysisEnvelope(status="failed", success=False, data=None, error=str(exc))
         return JSONResponse(status_code=500, content=envelope.model_dump())
+LEGACY_TRACK_ANALYSIS_DEPRECATION = "true"
+LEGACY_TRACK_ANALYSIS_WARNING = (
+    '299 - "Deprecated endpoint: use /api/v1/ai/track-analysis; '
+    '/api/v1/ai/analyze-track will be removed in a future release."'
+)

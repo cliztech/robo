@@ -7,6 +7,7 @@ Executing "Phase 6: Playlist Generation" hardening and preparing Phase 7 broadca
 Building the next unfinished execution plans from the roadmap queue, starting with P1 Security items (TI-039/TI-040/TI-041).
 
 ## Recent Decisions
+- Unified AI track-analysis routing on canonical `POST /api/v1/ai/track-analysis`, with deprecated `/api/v1/ai/analyze-track` compatibility alias sharing the same envelope + correlation-id behavior.
 - Hardened playlist generation infeasibility handling by removing hard-constraint fallback, emitting structured constraint diagnostics, and mapping API responses to HTTP 422 with envelope-level error details.
 
 - Hardened TI-039/TI-040/TI-041 tracked issue packets with explicit implementation scope, dependency checkpoints, runnable validation commands, evidence artifacts, and rollback procedures for sprint execution.
@@ -99,3 +100,12 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added streaming-gateway Icecast listener polling with `stream.listeners` NATS telemetry events, env-driven interval/failure thresholds, and degraded `system.health` alerts on consecutive failures.
 
 - [x] Phase 5 next slice: added deterministic analysis fingerprinting, structured execution status (`success`/`degraded`), and cache hit/miss telemetry in `src/lib/ai/analysisService.ts` with updated tests.
+
+## 2026-02-27 Phase 5 Completion Update
+- [x] Completed Phase 5 AI analysis hardening by resolving merge-corrupted analysis service/test artifacts and restoring deterministic behavior.
+- [x] Completed Story P5-05 verification harness for AI analysis (unit + integration coverage for normalization, retries/fallback, TTL/LRU cache, and queue outcome mapping).
+- [x] Captured latency baseline command path via focused Vitest suites (`tests/unit/ai-analysis-service.test.ts`, `tests/integration/analysis-queue.test.ts`) for repeatable regression checks.
+- [ ] Shift active implementation focus to Phase 6 playlist generation hardening and Phase 7 broadcasting handoff prep.
+
+- [x] Replaced merge-corrupted `src/lib/ai/analysisService.ts` with a single canonical implementation (normalized result/record types, single idempotency key strategy, unified LRU+TTL cache map, deterministic analyze flow, and queue outcome mapping).
+- [x] Refactored malformed AI analysis unit/integration suites into clean non-overlapping describe trees and public-contract queue assertions.
