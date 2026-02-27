@@ -49,6 +49,7 @@
 
 
 ## Recent Ops Updates
+- [x] Hardened AI analysis cache keys with deterministic input fingerprints and added unit/integration coverage for metadata-driven re-analysis behavior.
 - [x] Added caller-facing analysis outcomes (`success`/`degraded`/`failed`) with queue mapping + test coverage updates.
 - [x] Phase 1 workflow orchestration blueprint hardened with explicit metadata contracts, graph transitions/retry terminal states, policy profile matrix, and verification criteria; unfinished-task links now point to concrete section anchors.
 - [x] Security automation hardening: re-enabled CodeQL, removed unsupported defaults, and added high/critical gate + RB-023 triage flow.

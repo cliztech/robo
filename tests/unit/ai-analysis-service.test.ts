@@ -16,6 +16,8 @@ describe('AnalysisService', () => {
         const service = new AnalysisService({
             adapter,
             promptVersion: 'v5.1',
+            modelVersion: 'gpt-4o-mini-2026-02',
+            promptProfileVersion: 'analysis-profile-v1',
             now: () => new Date('2026-02-26T12:00:00.000Z'),
         });
 
@@ -28,6 +30,14 @@ describe('AnalysisService', () => {
         });
 
         expect(result.status).toBe('analyzed');
+        expect(result.record.source).toBe('ai');
+        expect(result.record.energy).toBe(1);
+        expect(result.record.mood).toBe('energetic');
+        expect(result.record.genreConfidence).toBe(0);
+        expect(result.record.confidence).toBe(0.5);
+        expect(result.record.modelVersion).toBe('gpt-4o-mini-2026-02');
+        expect(result.record.promptProfileVersion).toBe('analysis-profile-v1');
+        expect(result.record.analyzedAt).toBe('2026-02-26T12:00:00.000Z');
         expect(result.outcome).toBe('success');
         expect(result.source).toBe('ai');
         expect(result.record).not.toBeNull();
@@ -103,6 +113,41 @@ describe('AnalysisService', () => {
         expect(adapter.analyzeTrack).toHaveBeenCalledTimes(1);
     });
 
+    it('re-analyzes when normalized metadata changes', async () => {
+        const adapter = {
+            analyzeTrack: vi.fn().mockResolvedValue({
+                energy: 0.5,
+                mood: 'chill',
+                era: '2000s',
+                genreConfidence: 0.8,
+            }),
+        };
+
+        const service = new AnalysisService({
+            adapter,
+            promptVersion: 'v5.3',
+            modelVersion: 'gpt-4o',
+            promptProfileVersion: 'analysis-profile-v2',
+        });
+
+        const first = await service.analyze({
+            trackId: 'track-003',
+            title: 'Loopback',
+            artist: 'Node City',
+            genre: 'house',
+        });
+
+        const second = await service.analyze({
+            trackId: 'track-003',
+            title: 'Loopback',
+            artist: 'Node City',
+            genre: 'techno',
+        });
+
+        expect(first.status).toBe('analyzed');
+        expect(second.status).toBe('analyzed');
+        expect(first.record.idempotencyKey).not.toBe(second.record.idempotencyKey);
+        expect(adapter.analyzeTrack).toHaveBeenCalledTimes(2);
     it('evicts least recently used entry when maxCacheEntries is exceeded', async () => {
         const adapter = {
             analyzeTrack: vi
