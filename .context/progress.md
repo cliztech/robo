@@ -90,6 +90,7 @@
 - [x] Tracked issue hygiene hardening: split TI-007/TI-008/TI-009 collisions, reassigned security tasks to TI-039/TI-040/TI-041, and added a one-header validation check.
 
 - [x] Phase 5 foundation: implemented `AnalysisService` (normalization, retry with fallback, idempotency) and queue processor with unit/integration tests.
+- [x] Track analysis API envelope hardening: added `status` contract field and deterministic success/degraded/failed HTTP mapping with test coverage.
 
 - [x] Phase 5 closure: backend `AIInferenceService` now resolves prompt profile versions from config, emits cache hit/miss telemetry, returns structured status (`success`/`degraded`), and includes fallback behavior under timeout with verification coverage.
 - Completed shared canonical track-analysis contract extraction (`backend/ai/contracts/track_analysis.py`) and aligned service/API/tests with temporary legacy adapter removal criteria for Phase 5 story P5-05.
