@@ -15,6 +15,7 @@ describe('AnalysisService', () => {
 
         const service = new AnalysisService({
             adapter,
+            modelVersion: 'gpt-4o-mini-2026-02-15',
             promptProfile: {
                 promptTemplate: 'analyze track prompt',
                 promptProfileVersion: 'v5.1',
@@ -50,6 +51,10 @@ describe('AnalysisService', () => {
         expect(result.record.mood).toBe('energetic');
         expect(result.record.genreConfidence).toBe(0);
         expect(result.record.confidence).toBe(0.5);
+        expect(result.record.modelVersion).toBe('gpt-4o-mini-2026-02-15');
+        expect(result.record.fingerprint.modelVersion).toBe('gpt-4o-mini-2026-02-15');
+        expect(result.record.fingerprint.promptProfileVersion).toBe('v5.1');
+        expect(result.record.fingerprint.trackContentHash).toHaveLength(64);
         expect(result.record.rationale).toBe('Model output was incomplete; deterministic fallback normalization was applied.');
         expect(result.record.tempo_bucket).toBe('mid');
         expect(result.record.normalizationReasonCode).toBe('missing_required_fields');
@@ -76,6 +81,8 @@ describe('AnalysisService', () => {
 
         const service = new AnalysisService({
             adapter,
+            modelVersion: 'gpt-4o-mini-2026-02-15',
+            promptVersion: 'v5.2',
             promptProfile: {
                 promptTemplate: 'analyze track prompt',
                 promptProfileVersion: 'v5.2',
@@ -178,6 +185,8 @@ describe('AnalysisService', () => {
 
         const service = new AnalysisService({
             adapter,
+            modelVersion: 'gpt-4o-mini-2026-02-15',
+            promptVersion: 'v5.3',
             promptProfile: {
                 promptTemplate: 'analyze track prompt',
                 promptProfileVersion: 'v5.3',
@@ -685,5 +694,100 @@ describe('AnalysisService', () => {
             confidence: 0.76,
             normalizationReasonCode: 'missing_required_fields',
         });
+    });
+
+    it('invalidates cache when metadata changes but trackId stays the same', async () => {
+        const adapter = {
+            analyzeTrack: vi.fn().mockResolvedValue({ energy: 0.5, mood: 'chill', era: '2000s', genreConfidence: 0.8 }),
+        };
+
+        const service = new AnalysisService({
+            adapter,
+            modelVersion: 'gpt-4o-mini-2026-02-15',
+            promptVersion: 'v5.3',
+        });
+
+        const first = await service.analyze({
+            trackId: 'track-004',
+            title: 'Loopback',
+            artist: 'Node City',
+            genre: 'house',
+            bpm: 120,
+            durationSeconds: 180,
+        });
+
+        const second = await service.analyze({
+            trackId: 'track-004',
+            title: 'Loopback (Radio Edit)',
+            artist: 'Node City',
+            genre: 'house',
+            bpm: 120,
+            durationSeconds: 180,
+        });
+
+        expect(first.status).toBe('analyzed');
+        expect(second.status).toBe('analyzed');
+        expect(first.record.idempotencyKey).not.toBe(second.record.idempotencyKey);
+        expect(adapter.analyzeTrack).toHaveBeenCalledTimes(2);
+    });
+
+    it('invalidates cache when model version changes', async () => {
+        const adapter = {
+            analyzeTrack: vi.fn().mockResolvedValue({ energy: 0.5, mood: 'chill', era: '2000s', genreConfidence: 0.8 }),
+        };
+
+        const input = {
+            trackId: 'track-005',
+            title: 'Loopback',
+            artist: 'Node City',
+        };
+
+        const serviceV1 = new AnalysisService({
+            adapter,
+            modelVersion: 'gpt-4o-mini-2026-02-15',
+            promptVersion: 'v5.3',
+        });
+
+        const serviceV2 = new AnalysisService({
+            adapter,
+            modelVersion: 'gpt-4o-mini-2026-03-01',
+            promptVersion: 'v5.3',
+        });
+
+        const first = await serviceV1.analyze(input);
+        const second = await serviceV2.analyze(input);
+
+        expect(first.record.idempotencyKey).not.toBe(second.record.idempotencyKey);
+        expect(adapter.analyzeTrack).toHaveBeenCalledTimes(2);
+    });
+
+    it('invalidates cache when prompt profile version changes', async () => {
+        const adapter = {
+            analyzeTrack: vi.fn().mockResolvedValue({ energy: 0.5, mood: 'chill', era: '2000s', genreConfidence: 0.8 }),
+        };
+
+        const input = {
+            trackId: 'track-006',
+            title: 'Loopback',
+            artist: 'Node City',
+        };
+
+        const serviceV1 = new AnalysisService({
+            adapter,
+            modelVersion: 'gpt-4o-mini-2026-02-15',
+            promptVersion: 'v5.3',
+        });
+
+        const serviceV2 = new AnalysisService({
+            adapter,
+            modelVersion: 'gpt-4o-mini-2026-02-15',
+            promptVersion: 'v5.4',
+        });
+
+        const first = await serviceV1.analyze(input);
+        const second = await serviceV2.analyze(input);
+
+        expect(first.record.idempotencyKey).not.toBe(second.record.idempotencyKey);
+        expect(adapter.analyzeTrack).toHaveBeenCalledTimes(2);
     });
 });

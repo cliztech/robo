@@ -15,6 +15,7 @@ describe('processAnalysisQueue', () => {
 
         const service = new AnalysisService({
             adapter,
+            modelVersion: 'gpt-4o-mini-2026-02-15',
             promptProfile: {
                 promptTemplate: 'queue prompt',
                 promptProfileVersion: 'v5.4',

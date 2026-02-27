@@ -6,6 +6,7 @@ Executing "Phase 6: Playlist Generation" hardening and preparing Phase 7 broadca
 Building the next unfinished execution plans from the roadmap queue, starting with P1 Security items (TI-039/TI-040/TI-041).
 
 ## Recent Decisions
+- Refactored `AnalysisService` idempotency fingerprinting to hash canonicalized track metadata + model/prompt versions with observability fields and cache-invalidation test coverage.
 - Updated AnalysisService idempotency to SHA-256 fingerprints over normalized track metadata + version dimensions (prompt/model/profile) with cache behavior tests for metadata/version churn.
 - Updated AnalysisService idempotency to fingerprint normalized metadata + model/prompt profile versions, with cache invalidation coverage for metadata mutations.
 - Roadmap hygiene alignment completed: `TODO.md` TI-001 checkbox now mirrors TI-001 `Status: Closed`, and weekly reconciliation rules were added to operations docs.
