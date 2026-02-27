@@ -140,3 +140,8 @@
 - [x] Added privileged-action fail guard for unexpected `PRIV_ACTION_EXECUTED` outcomes.
 - [x] Added artifact-producing wrapper for smoke logs/report/hashes under `artifacts/security/*`.
 - [x] Updated operations command and artifact docs with pre-release invocation and required signatures.
+
+## 2026-02-27 Console Workspace Layout Delivery
+- [x] Implemented console workspace dock layout model with explicit panel visibility/position/split/tab-stack contracts.
+- [x] Delivered dock-grid workspace controls for built-in presets and custom local presets.
+- [x] Added lock mode to disable drag operations during live use, plus keyboard reliability actions for restore-default and lock toggle.
