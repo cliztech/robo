@@ -139,3 +139,9 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Wired smoke checks to TI-002 role deny expectations, TI-003 timeout/reauth contract variables, and TI-039 privileged action catalog IDs through startup contract validation.
 - Added mandatory artifact outputs under `artifacts/security/logs`, `artifacts/security/reports`, and `artifacts/security/hashes`.
 - Updated operations docs with exact pre-release invocation and pass/fail signatures.
+
+## 2026-02-27 Dashboard Accessibility Update
+
+- Implemented semantic dashboard landmarks in `src/components/console/DashboardView.tsx` (`main` + labeled `section` regions for status cards, alert center, now playing, audio engine).
+- Added live region semantics for async states (`role="status"` for loading telemetry, `role="alert"` for status API failures).
+- Updated `tests/ui/dashboard-view.test.tsx` to assert landmark roles/labels, live-region behavior, and keyboard task-flow ordering.
