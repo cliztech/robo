@@ -427,7 +427,7 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
                 </div>
             ) : null}
             {error ? (
-                <div role="alert" aria-live="assertive" className="rounded-xl border border-red-900/70 bg-red-950/40 p-3 text-xs text-red-200">
+                <div role="alert" aria-live="assertive" aria-atomic="true" className="rounded-xl border border-red-900/70 bg-red-950/40 p-3 text-xs text-red-200">
                     Status API unavailable: {error}
                 </div>
             ) : null}
