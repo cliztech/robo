@@ -140,3 +140,5 @@
 - [x] Added privileged-action fail guard for unexpected `PRIV_ACTION_EXECUTED` outcomes.
 - [x] Added artifact-producing wrapper for smoke logs/report/hashes under `artifacts/security/*`.
 - [x] Updated operations command and artifact docs with pre-release invocation and required signatures.
+
+- [x] Status dashboard telemetry refactor: replaced hardcoded queue trend fixtures with live telemetry adapters, evaluator-driven alert transitions, repository lifecycle persistence (`resolved_at`/`last_seen_at`), and coverage for warning/critical + stale-rotation boundaries.
