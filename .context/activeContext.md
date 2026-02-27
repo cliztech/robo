@@ -143,6 +143,12 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Wired smoke checks to TI-002 role deny expectations, TI-003 timeout/reauth contract variables, and TI-039 privileged action catalog IDs through startup contract validation.
 - Added mandatory artifact outputs under `artifacts/security/logs`, `artifacts/security/reports`, and `artifacts/security/hashes`.
 - Updated operations docs with exact pre-release invocation and pass/fail signatures.
+
+## 2026-02-27 Console Layout Reliability Update
+- [x] Added typed dock-layout model (`src/lib/layout/types.ts`) covering panel visibility, panel position, split ratios, and tab-stack state.
+- [x] Replaced deck/studio workspace render path with a dock-grid container featuring preset switching (Broadcast/Mixing/Production/Minimal), drag swap, tabbed stack rendering, and keyboard operations.
+- [x] Added local preset persistence for built-in selection + user-defined custom presets using `localStorage`.
+- [x] Added lock/unlock guardrails for live operation plus restore-default action (`Ctrl+Shift+R`) and keyboard layout lock toggle (`Ctrl+L`/`F4`).
 - [x] Unified DashboardView dashboard UI test contract with injectable API dependency, canonical status type import path, stable test IDs, and alert-role error semantics for deterministic UI tests.
 
 ## 2026-02-27 Dashboard Accessibility Update
