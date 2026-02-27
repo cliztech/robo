@@ -338,7 +338,7 @@ export class AnalysisService {
         this.promptProfileVersion = options.promptProfileVersion;
         this.maxRetries = Math.max(0, options.maxRetries ?? 2);
         this.maxCacheEntries = Math.max(1, options.maxCacheEntries ?? 1000);
-        this.cacheTtlMs = options.cacheTtlMs;
+        this.cacheTtlMs = options.cacheTtlMs !== undefined && options.cacheTtlMs >= 0 ? options.cacheTtlMs : undefined;
         this.now = options.now ?? (() => new Date());
         this.onRetry = options.onRetry;
     }
