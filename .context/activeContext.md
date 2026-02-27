@@ -168,3 +168,5 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - [x] Removed duplicate alias declarations and consolidated a single canonical legacy alias mapping table.
 - [x] Added token reference guard script (`scripts/check_tokens.mjs`) and package script (`npm run check:tokens`) to fail unresolved `var(--*)` references.
 - [x] Updated `docs/ui/design_tokens_v1.md` with a required semantic token set for third-party skin authors.
+
+- Added `docs/operations/github_workflows_recommendations.md` with prioritized GitHub Actions additions (dependency-review, actionlint/policy, OSSF scorecard, stale/label routing, nightly matrix) to guide next CI hardening pass.
