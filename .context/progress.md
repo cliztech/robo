@@ -119,6 +119,7 @@
 
 - [x] Phase namespace hardening: planning/context artifacts now require explicit namespace (`delivery` or `workflow`) and generator output rejects missing namespace metadata.
 
+- [x] Closed TI-039: aligned action catalog enforcement hooks, audit export artifact contract (`.ndjson` + `.sha256` + `.linecount`), and verification checklist/dependency evidence requirements end-to-end with no undefined fields.
 - [x] P1 Security lane documentation hardened: `2026-02-25-next-unfinished-phase-build.md` now carries TI-039/TI-040/TI-041 state gates + dependency gates + evidence paths, and `TODO.md` mirrors order with explicit `ready`/`blocked`/`in-progress` tags.
 - [x] Sprint-state hygiene update: synchronized sprint-status epic/story states (including P1 security open items and D2 completed artifacts), added `last_reconciled`, and added weekly status parity checklist guidance.
 

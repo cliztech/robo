@@ -152,6 +152,45 @@ Escalation routing when signatures fail:
 - Handoff artifacts should link to verification artifacts when checks were run.
 
 
+## Security Audit Export Bundles (TI-039)
+
+High-risk action evidence must include immutable audit export bundles under:
+
+- `artifacts/security/audit_exports/<yyyy-mm-dd>/<batch_id>.ndjson`
+- `artifacts/security/audit_exports/<yyyy-mm-dd>/<batch_id>.sha256`
+- `artifacts/security/audit_exports/<yyyy-mm-dd>/<batch_id>.linecount`
+
+### Bundle contract (required)
+
+- `.ndjson` contains one audit event per line using TI-039 schema fields (`event_id`, `action_id`, `actor_principal`, `target_ref`, `before_hash_sha256`, `after_hash_sha256`, `approval_chain`, `decision`, `event_ts_utc`, `export_batch_id`).
+- `.sha256` stores detached SHA-256 digest(s) for the corresponding `.ndjson` export.
+- `.linecount` stores exact event-line count and `batch_id` to detect truncation.
+- All three files are mandatory evidence for high-risk action packets and verification reports.
+
+### Retention requirements
+
+- Keep TI-039 export bundles for **365 days hot** in repository-adjacent artifact storage.
+- Maintain **365 days cold** archive pointer metadata in `artifacts/security/reports/ti-039-immutable-audit-export.md`.
+- Never prune `.sha256` or `.linecount` while the paired `.ndjson` is retained.
+
+### Verification report checklist template (required IDs)
+
+`artifacts/security/reports/ti-039-immutable-audit-export.md` must include:
+
+```md
+## TI-039 Verification Checklist
+
+- [ ] CHK-TI039-01 action catalog complete
+- [ ] CHK-TI039-02 approver-role mapping verified
+- [ ] CHK-TI039-03 immutable export schema fields complete
+- [ ] CHK-TI039-04 digest + retention metadata attached
+
+## Dependency Evidence
+
+- [ ] DEP-TI039-01 TI-002 role model check recorded
+- [ ] DEP-TI039-02 TI-003 re-auth linkage recorded for ACT-DELETE/ACT-OVERRIDE
+- [ ] DEP-TI039-03 audit schema sign-off recorded
+```
 ## Security Audit Export Artifacts (TI-039)
 
 Exporter module: `backend/security/audit_export.py`

@@ -125,6 +125,7 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - [x] Replaced merge-corrupted `src/lib/ai/analysisService.ts` with a single canonical implementation (normalized result/record types, single idempotency key strategy, unified LRU+TTL cache map, deterministic analyze flow, and queue outcome mapping).
 - [x] Refactored malformed AI analysis unit/integration suites into clean non-overlapping describe trees and public-contract queue assertions.
 
+- Closed TI-039 documentation track by adding high-risk stage-gate approval-chain enforcement, immutable audit export bundle contract, and checklist/dependency evidence templates across operations docs.
 - Added dedicated P1 Security Lane execution section (TI-039/TI-040/TI-041) with explicit dependency gates, state checkboxes, owners/targets, and required evidence artifact paths; mirrored ordered state tags in `TODO.md`.
 - [x] Reconciled `docs/exec-plans/active/sprint-status.yaml` against `TODO.md` + `docs/exec-plans/active/sprint-telemetry.md`, added `last_reconciled`, and documented state-authority precedence + weekly parity check.
 
