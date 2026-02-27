@@ -26,7 +26,7 @@ export interface TrackIntelligenceRecord {
     confidence: number;
     source: 'ai' | 'fallback';
     attempts: number;
-    promptVersion: string;
+    promptProfileVersion: string;
     analyzedAt: string;
 }
 
@@ -36,12 +36,19 @@ export interface AnalysisResult {
 }
 
 export interface AnalysisAdapter {
-    analyzeTrack(input: TrackAnalysisInput, promptVersion: string): Promise<RawTrackAnalysis>;
+    analyzeTrack(input: TrackAnalysisInput, promptProfile: ResolvedPromptProfile): Promise<RawTrackAnalysis>;
 }
+
+export interface ResolvedPromptProfile {
+    promptTemplate: string;
+    promptProfileVersion: string;
+}
+
+export type PromptProfileResolver = (input: TrackAnalysisInput) => Promise<ResolvedPromptProfile> | ResolvedPromptProfile;
 
 export interface AnalysisServiceOptions {
     adapter: AnalysisAdapter;
-    promptVersion: string;
+    promptProfile: ResolvedPromptProfile | PromptProfileResolver;
     maxRetries?: number;
     now?: () => Date;
     onRetry?: (attempt: number, error: unknown) => void;
@@ -101,7 +108,7 @@ function createFallbackAnalysis(input: TrackAnalysisInput): RawTrackAnalysis {
 
 export class AnalysisService {
     private readonly adapter: AnalysisAdapter;
-    private readonly promptVersion: string;
+    private readonly promptProfile: ResolvedPromptProfile | PromptProfileResolver;
     private readonly maxRetries: number;
     private readonly now: () => Date;
     private readonly onRetry?: (attempt: number, error: unknown) => void;
@@ -109,7 +116,7 @@ export class AnalysisService {
 
     constructor(options: AnalysisServiceOptions) {
         this.adapter = options.adapter;
-        this.promptVersion = options.promptVersion;
+        this.promptProfile = options.promptProfile;
         this.maxRetries = options.maxRetries ?? 2;
         this.now = options.now ?? (() => new Date());
         this.onRetry = options.onRetry;
@@ -120,7 +127,9 @@ export class AnalysisService {
     }
 
     async analyze(input: TrackAnalysisInput): Promise<AnalysisResult> {
-        const idempotencyKey = this.buildIdempotencyKey(input.trackId, this.promptVersion);
+        const promptProfile = await this.resolvePromptProfile(input);
+        const promptProfileVersion = promptProfile.promptProfileVersion;
+        const idempotencyKey = this.buildIdempotencyKey(input.trackId, promptProfileVersion);
         const cached = this.byIdempotencyKey.get(idempotencyKey);
         if (cached) {
             return { status: 'skipped', record: cached };
@@ -132,12 +141,12 @@ export class AnalysisService {
         while (attempt <= this.maxRetries && !normalized) {
             attempt += 1;
             try {
-                const raw = await this.adapter.analyzeTrack(input, this.promptVersion);
-                normalized = this.normalize(raw, input, idempotencyKey, 'ai', attempt);
+                const raw = await this.adapter.analyzeTrack(input, promptProfile);
+                normalized = this.normalize(raw, input, idempotencyKey, 'ai', attempt, promptProfileVersion);
             } catch (error) {
                 if (attempt > this.maxRetries) {
                     const fallback = createFallbackAnalysis(input);
-                    normalized = this.normalize(fallback, input, idempotencyKey, 'fallback', attempt);
+                    normalized = this.normalize(fallback, input, idempotencyKey, 'fallback', attempt, promptProfileVersion);
                     break;
                 }
                 this.onRetry?.(attempt, error);
@@ -152,6 +161,13 @@ export class AnalysisService {
         return { status: 'analyzed', record: normalized };
     }
 
+    private async resolvePromptProfile(input: TrackAnalysisInput): Promise<ResolvedPromptProfile> {
+        if (typeof this.promptProfile === 'function') {
+            return await this.promptProfile(input);
+        }
+        return this.promptProfile;
+    }
+
     private buildIdempotencyKey(trackId: string, promptVersion: string): string {
         return `${trackId}:${promptVersion}`;
     }
@@ -161,7 +177,8 @@ export class AnalysisService {
         input: TrackAnalysisInput,
         idempotencyKey: string,
         source: 'ai' | 'fallback',
-        attempts: number
+        attempts: number,
+        promptProfileVersion: string
     ): TrackIntelligenceRecord {
         const energy = clamp01(typeof raw.energy === 'number' ? raw.energy : inferEnergyFallback(input));
         const mood = normalizeMood(raw.mood) ?? inferMoodFromEnergy(energy);
@@ -177,7 +194,7 @@ export class AnalysisService {
             confidence: clamp01((energy + genreConfidence) / 2),
             source,
             attempts,
-            promptVersion: this.promptVersion,
+            promptProfileVersion,
             analyzedAt: this.now().toISOString(),
         };
     }

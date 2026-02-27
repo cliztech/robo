@@ -22,6 +22,7 @@
 - [ ] **Phase 5: AI Integration** (OpenAI GPT-4o, Track Analysis, Mood Detection)
 - [x] **Phase 5: AI Integration** (OpenAI GPT-4o scaffolding with typed Track Analysis + Host Script APIs, guardrails, and UI integration paths)
 - [x] **Phase 5: AI Integration** (Track analysis API/service with deterministic scoring, mood/energy detection heuristics, and tests)
+- [x] **Phase 5: AI Integration** (Prompt profile resolver with deterministic defaults + stable profile versioning, wired into analysis service records)
 - [ ] **Phase 5: AI Integration** (OpenAI GPT-4o, Track Analysis, Mood Detection; execution slices P5-01..P5-05 defined)
 - [~] **Phase 5: AI Integration** (Track analysis service, retries/idempotency/fallback queue foundation complete; model API wiring pending)
 

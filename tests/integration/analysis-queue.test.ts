@@ -13,7 +13,10 @@ describe('processAnalysisQueue', () => {
 
         const service = new AnalysisService({
             adapter,
-            promptVersion: 'v5.4',
+            promptProfile: {
+                promptTemplate: 'queue prompt',
+                promptProfileVersion: 'v5.4',
+            },
         });
 
         const results = await processAnalysisQueue(
