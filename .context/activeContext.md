@@ -7,6 +7,8 @@ Executing "Phase 6: Playlist Generation" hardening and preparing Phase 7 broadca
 Building the next unfinished execution plans from the roadmap queue, starting with P1 Security items (TI-039/TI-040/TI-041).
 
 ## Recent Decisions
+
+- Standardized phase naming contracts across planning artifacts: `Delivery Phase N` for delivery context and `Workflow Phase N` for workflow context, plus namespace-required packet/build-plan metadata.
 - Unified AI track-analysis routing on canonical `POST /api/v1/ai/track-analysis`, with deprecated `/api/v1/ai/analyze-track` compatibility alias sharing the same envelope + correlation-id behavior.
 - Hardened playlist generation infeasibility handling by removing hard-constraint fallback, emitting structured constraint diagnostics, and mapping API responses to HTTP 422 with envelope-level error details.
 
@@ -36,6 +38,8 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 ## Recent Decisions
 
+- Standardized phase naming contracts across planning artifacts: `Delivery Phase N` for delivery context and `Workflow Phase N` for workflow context, plus namespace-required packet/build-plan metadata.
+
 - Completed shared canonical track-analysis contract extraction (`backend/ai/contracts/track_analysis.py`) and aligned service/API/tests with temporary legacy adapter removal criteria for Phase 5 story P5-05.
 - Added Phase 5 latency verification harness (`tests/perf/ai-analysis-latency.test.ts`) with JSON/Markdown artifacts and cache telemetry assertions for queue integration tests.
 - Added caller-facing analysis outcome classification (`success`/`degraded`/`failed`) in analysis service + queue mapping, with updated unit/integration coverage.
@@ -61,6 +65,8 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Consolidated AI track-analysis API surface on `/api/v1/ai/track-analysis`, removed duplicate router mounting, and aligned auth/tests to canonical API-key policy.
 
 ## Recent Decisions
+
+- Standardized phase naming contracts across planning artifacts: `Delivery Phase N` for delivery context and `Workflow Phase N` for workflow context, plus namespace-required packet/build-plan metadata.
 
 - Added runtime-validated analysis schema + deterministic degraded-normalization reason codes in `src/lib/ai/analysisService.ts`.
 - Expanded malformed-payload unit test coverage in `tests/unit/ai-analysis-service.test.ts` (missing keys, wrong types, empty strings).

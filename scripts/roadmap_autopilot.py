@@ -67,8 +67,32 @@ class QueueItem:
     line_number: int
     section: str
     phase: str
+    phase_namespace: str
     text: str
     kind: str
+
+
+VALID_PHASE_NAMESPACES = {"delivery", "workflow", "none"}
+
+
+def classify_phase_namespace(kind: str) -> str:
+    if kind == "todo":
+        return "delivery"
+    if kind == "workflow":
+        return "workflow"
+    return "none"
+
+
+def validate_phase_namespace(tasks: list[QueueItem]) -> None:
+    """Reject phase records missing an explicit namespace."""
+    for task in tasks:
+        if task.phase_namespace not in VALID_PHASE_NAMESPACES:
+            rel_source = task.source.relative_to(ROOT)
+            raise RuntimeError(
+                "build plan generation aborted: missing/invalid phase namespace "
+                f"for {rel_source}:{task.line_number} "
+                f"(phase='{task.phase}', namespace='{task.phase_namespace}')"
+            )
 
 
 def collect_open_tasks(markdown_path: Path) -> list[OpenTask]:
@@ -125,7 +149,7 @@ def render_queue(tasks: list[QueueItem], limit: int) -> str:
         rel_source = task.source.relative_to(ROOT)
         lines.append(
             f"{index:>2}. [{rel_source}:{task.line_number}] "
-            f"{task.phase} | {task.section} -> {task.text}"
+            f"{task.phase} [{task.phase_namespace}] | {task.section} -> {task.text}"
             f" ({task.kind})"
         )
 
@@ -183,6 +207,7 @@ def render_phase_summary(phase_totals: dict[str, int]) -> str:
 def write_build_plan(tasks: list[QueueItem], output_path: Path) -> None:
     """Write a markdown build plan grouped by phase from unfinished tasks."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    validate_phase_namespace(tasks)
 
     by_phase: dict[str, list[QueueItem]] = {}
     for task in tasks:
@@ -214,7 +239,9 @@ def write_build_plan(tasks: list[QueueItem], output_path: Path) -> None:
         for task in sorted(by_phase[phase], key=lambda item: (str(item.source), item.line_number)):
             rel_source = task.source.relative_to(ROOT)
             lines.append(
-                f"- [ ] `{rel_source}:{task.line_number}` ({task.kind}) {task.section} -> {task.text}"
+                f"- [ ] `{rel_source}:{task.line_number}` ({task.kind}) "
+                f"[phase_namespace={task.phase_namespace}] "
+                f"{task.section} -> {task.text}"
             )
         lines.append("")
 
@@ -338,6 +365,7 @@ def collect_workflow_actions(markdown_path: Path) -> list[QueueItem]:
                 line_number=line_number,
                 section=current_section,
                 phase=phase,
+                phase_namespace=classify_phase_namespace("workflow"),
                 text=normalized,
                 kind="workflow",
             )
@@ -363,6 +391,7 @@ def run_once(
                     line_number=task.line_number,
                     section=task.section,
                     phase=task.phase,
+                    phase_namespace=classify_phase_namespace("todo"),
                     text=task.text,
                     kind="todo",
                 )

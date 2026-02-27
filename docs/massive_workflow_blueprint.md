@@ -60,19 +60,19 @@ Create structured experiment cycles:
 
 ## 4) End-to-End Phase Plan
 
-## Phase 0 — Foundation and Guardrails
+## Workflow Phase 0 — Foundation and Guardrails
 - Canonical schema registry for schedules, prompts, autonomy profiles.
 - Preflight validation command integrated into launch flow.
 - Backup and restore checkpoints for every config mutation.
 
-## Phase 1 — Unified Workflow Orchestrator
+## Workflow Phase 1 — Unified Workflow Orchestrator
 - Define workflow graph with stage dependencies.
 - Introduce run metadata (`run_id`, `requested_by`, `risk_level`, `status`).
 - Add execution policy profiles (`manual`, `assisted`, `autonomous`).
 
 ### Data Contracts
 
-Phase 1 requires a normalized run metadata envelope persisted at run creation and updated at each stage transition.
+Workflow Phase 1 requires a normalized run metadata envelope persisted at run creation and updated at each stage transition.
 
 | Field | Type | Required | Constraints / Notes |
 | --- | --- | --- | --- |
@@ -145,30 +145,30 @@ Policy override rules:
 - `risk_level=high` always upgrades at least to `assisted` approval semantics even if profile is `autonomous`.
 - Profile change during a run is allowed only at stage boundaries and must emit override audit events.
 
-### Phase 1 Acceptance Criteria and Verification
+### Workflow Phase 1 Acceptance Criteria and Verification
 
 Acceptance criteria:
 1. Run metadata contract documented with required fields, types, constraints, and invariants.
 2. Workflow graph documented with canonical nodes, allowed transitions, retry classes, and terminal failures.
 3. Policy profile matrix defines approval gates, auto-execution limits, and rollback permissions for `manual`, `assisted`, and `autonomous`.
-4. All Phase 1 open items in `docs/exec-plans/active/unfinished-task-build-plan.md` deep-link to specific anchors in this document.
+4. All Workflow Phase 1 open items in `docs/exec-plans/active/unfinished-task-build-plan.md` deep-link to specific anchors in this document.
 
 Verification commands:
 - `python -m json.tool config/massive_workflow_program.json`
 - `python scripts/roadmap_autopilot.py --help`
-- `rg -n "phase-1-unified-workflow-orchestrator|data-contracts|workflow-graph-definition|policy-profiles|phase-1-acceptance-criteria-and-verification" docs/massive_workflow_blueprint.md docs/exec-plans/active/unfinished-task-build-plan.md`
+- `rg -n "phase-1-unified-workflow-orchestrator|data-contracts|workflow-graph-definition|policy-profiles|workflow-phase-1-acceptance-criteria-and-verification" docs/massive_workflow_blueprint.md docs/exec-plans/active/unfinished-task-build-plan.md`
 
-## Phase 2 — Quality and Safety Gates
+## Workflow Phase 2 — Quality and Safety Gates
 - Content checks (tone, banned terms, policy conformance).
 - Schedule checks (conflicts, inventory starvation, daypart drift).
 - Audio checks (loudness targets, clipping risk, ducking verification).
 
-## Phase 3 — Operational Intelligence
+## Workflow Phase 3 — Operational Intelligence
 - Structured telemetry store for run outcomes.
 - KPI dashboard definitions and alert thresholds.
 - Auto-generated postmortems for failed runs.
 
-## Phase 4 — Advanced Features and Scale
+## Workflow Phase 4 — Advanced Features and Scale
 - Multi-station profiles and profile bundle portability.
 - External trigger integrations (webhooks/API).
 - Simulation-at-scale for full-day what-if scenarios.
