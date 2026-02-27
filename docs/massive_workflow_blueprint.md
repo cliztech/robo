@@ -1,7 +1,7 @@
-# Massive Workflow Blueprint: RoboDJ Hyper-Automation Program
+# Massive Workflow Blueprint: DGN-DJ by DGNradio Hyper-Automation Program
 
 ## 1) Objective
-Build a full-stack, stage-gated operational workflow that transforms RoboDJ from a standalone automation runtime into a continuously improving "AI radio operations platform" with planning, execution, safety controls, observability, and growth loops.
+Build a full-stack, stage-gated operational workflow that transforms DGN-DJ by DGNradio (legacy alias: RoboDJ) from a standalone automation runtime into a continuously improving "AI radio operations platform" with planning, execution, safety controls, observability, and growth loops.
 
 ## 2) Outcome Targets
 - Reduce operator intervention for daily programming by 70%.
