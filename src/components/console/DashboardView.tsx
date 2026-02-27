@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState, type ElementType } from "react";
+import { useEffect, useId, useState, useMemo, type ElementType } from "react";
 import { motion } from "framer-motion";
 import {
   Activity,
@@ -12,6 +12,9 @@ import {
   Users,
   Wifi,
   Zap,
+  AlertTriangle,
+  CheckCircle2,
+  RefreshCw,
 } from "lucide-react";
 import { DegenEffectRack } from "@/components/audio/DegenEffectRack";
 import { DegenBeatGrid } from "@/components/audio/DegenBeatGrid";
@@ -21,29 +24,10 @@ import { DegenAIHost } from "@/components/ai/DegenAIHost";
 import { cn } from "@/lib/utils";
 import {
   type DashboardCardColor,
-  type DashboardTelemetry,
   mapSeverityToCardColor,
   mapSeverityToStatusTextClass,
   mapStatusToTrend,
 } from "./dashboard.types";
-import { useEffect, useId, useMemo, useState, type ElementType } from 'react';
-import { motion } from 'framer-motion';
-import {
-    Activity,
-    AlertTriangle,
-    CheckCircle2,
-    Gauge,
-    Minus,
-    RefreshCw,
-    Signal,
-    TrendingDown,
-    TrendingUp,
-} from 'lucide-react';
-import { DegenEffectRack } from '@/components/audio/DegenEffectRack';
-import { DegenBeatGrid } from '@/components/audio/DegenBeatGrid';
-import { DegenWaveform } from '@/components/audio/DegenWaveform';
-import { DegenScheduleTimeline } from '@/components/schedule/DegenScheduleTimeline';
-import { DegenAIHost } from '@/components/ai/DegenAIHost';
 import {
     acknowledgeDashboardAlert,
     fetchDashboardAlerts,
@@ -52,70 +36,6 @@ import {
     type AlertSeverity,
     type DashboardStatusResponse,
 } from '@/lib/status/dashboardClient';
-import { cn } from '@/lib/utils';
-
-export type AlertSeverity = 'info' | 'warning' | 'critical';
-
-export interface DashboardAlertItem {
-    alert_id: string;
-    severity: AlertSeverity;
-    title: string;
-    description: string;
-    created_at: string;
-    acknowledged: boolean;
-    acknowledged_at: string | null;
-}
-
-export interface DashboardStatusResponse {
-    service_health: {
-        status: 'healthy' | 'degraded' | 'offline';
-        reason: string;
-        observed_at: string;
-    };
-    queue_depth: {
-        current_depth: number;
-        trend: Array<{ timestamp: string; depth: number }>;
-        thresholds: { warning: number; critical: number };
-        state: AlertSeverity;
-    };
-    rotation: {
-        last_successful_rotation_at: string;
-        stale_after_minutes: number;
-        is_stale: boolean;
-        stale_reason: string | null;
-    };
-    alert_center: {
-        filters: AlertSeverity[];
-        items: DashboardAlertItem[];
-    };
-}
-
-export interface DashboardStatusApi {
-    fetchDashboardStatus: () => Promise<DashboardStatusResponse>;
-    acknowledgeAlert: (alertId: string) => Promise<DashboardAlertItem>;
-}
-
-async function parseError(response: Response): Promise<string> {
-    const payload = await response.json().catch(() => ({ detail: 'Unable to load dashboard status' }));
-    return payload.detail ?? 'Unable to load dashboard status';
-}
-
-const dashboardStatusApi: DashboardStatusApi = {
-    async fetchDashboardStatus() {
-        const response = await fetch('/api/v1/status/dashboard');
-        if (!response.ok) {
-            throw new Error(await parseError(response));
-        }
-        return (await response.json()) as DashboardStatusResponse;
-    },
-    async acknowledgeAlert(alertId: string) {
-        const response = await fetch(`/api/v1/status/dashboard/alerts/${alertId}/ack`, { method: 'POST' });
-        if (!response.ok) {
-            throw new Error(await parseError(response));
-        }
-        return (await response.json()) as DashboardAlertItem;
-    },
-};
 
 interface StatCardProps {
   label: string;
@@ -266,7 +186,7 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
   );
 }
 
-function deriveQueueSeverity(currentDepth: number, thresholds: DashboardStatusResponse['queue_depth']['thresholds']): AlertSeverity {
+function deriveQueueSeverity(currentDepth: number, thresholds: { warning: number; critical: number }): AlertSeverity {
     if (currentDepth >= thresholds.critical) {
         return 'critical';
     }
@@ -283,14 +203,7 @@ function formatTimestamp(value: string | null): string {
     return new Date(value).toLocaleString();
 }
 
-export function DashboardView({ telemetry, api = dashboardStatusApi }: { telemetry?: unknown; api?: DashboardStatusApi }) {
-    const [currentTime, setCurrentTime] = useState('');
-    const [status, setStatus] = useState<DashboardStatusResponse | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-
-    void telemetry;
-export function DashboardView({ telemetry: _telemetry }: { telemetry?: any }) {
+export function DashboardView({ telemetry }: { telemetry?: any }) {
     const [currentTime, setCurrentTime] = useState('');
     const [dashboardStatus, setDashboardStatus] = useState<DashboardStatusResponse | null>(null);
     const [alerts, setAlerts] = useState<AlertCenterItem[]>([]);
@@ -318,21 +231,6 @@ export function DashboardView({ telemetry: _telemetry }: { telemetry?: any }) {
 
     useEffect(() => {
         let mounted = true;
-        const load = async () => {
-            setIsLoading(true);
-            setError(null);
-            try {
-                const response = await api.fetchDashboardStatus();
-                if (mounted) {
-                    setStatus(response);
-                }
-            } catch (loadError) {
-                if (mounted) {
-                    setError(loadError instanceof Error ? loadError.message : 'Unable to load dashboard status');
-                }
-            } finally {
-                if (mounted) {
-                    setIsLoading(false);
         const abortController = new AbortController();
 
         const load = async () => {
@@ -344,15 +242,17 @@ export function DashboardView({ telemetry: _telemetry }: { telemetry?: any }) {
                     fetchDashboardStatus(abortController.signal),
                     fetchDashboardAlerts(undefined, abortController.signal),
                 ]);
-                setDashboardStatus(dashboard);
-                setAlerts(alertRows);
-            } catch (fetchError) {
-                if (abortController.signal.aborted) {
-                    return;
+                if (mounted) {
+                    setDashboardStatus(dashboard);
+                    setAlerts(alertRows);
                 }
-                setError(fetchError instanceof Error ? fetchError.message : 'Failed to load dashboard status');
+            } catch (fetchError) {
+                if (abortController.signal.aborted) return;
+                if (mounted) {
+                    setError(fetchError instanceof Error ? fetchError.message : 'Failed to load dashboard status');
+                }
             } finally {
-                if (!abortController.signal.aborted) {
+                if (mounted && !abortController.signal.aborted) {
                     setLoading(false);
                 }
             }
@@ -362,80 +262,8 @@ export function DashboardView({ telemetry: _telemetry }: { telemetry?: any }) {
 
         return () => {
             mounted = false;
+            abortController.abort();
         };
-    }, [api]);
-
-    const queueSeverity = useMemo(() => {
-        if (!status) {
-            return 'info';
-        }
-        return deriveQueueSeverity(status.queue_depth.current_depth, status.queue_depth.thresholds);
-    }, [status]);
-
-    const alertCounts = useMemo(() => {
-        const base = { info: 0, warning: 0, critical: 0 };
-        if (!status) {
-            return base;
-        }
-        for (const alert of status.alert_center.items) {
-            if (!alert.acknowledged) {
-                base[alert.severity] += 1;
-            }
-        }
-        return base;
-    }, [status]);
-
-    const handleAcknowledge = async (alertId: string) => {
-        if (!status) {
-            return;
-        }
-
-        const now = new Date().toISOString();
-        setStatus({
-            ...status,
-            alert_center: {
-                ...status.alert_center,
-                items: status.alert_center.items.map((item) =>
-                    item.alert_id === alertId ? { ...item, acknowledged: true, acknowledged_at: item.acknowledged_at ?? now } : item
-                ),
-            },
-        });
-
-        try {
-            const updated = await api.acknowledgeAlert(alertId);
-            setStatus((previous) => {
-                if (!previous) {
-                    return previous;
-                }
-                return {
-                    ...previous,
-                    alert_center: {
-                        ...previous.alert_center,
-                        items: previous.alert_center.items.map((item) => (item.alert_id === alertId ? updated : item)),
-                    },
-                };
-            });
-        } catch {
-            setError('Failed to acknowledge alert');
-        }
-    };
-
-    if (isLoading) {
-        return <div className="rounded-xl border border-zinc-800 p-4 text-sm text-zinc-400">Loading dashboard status…</div>;
-    }
-
-    if (error) {
-        return (
-            <div role="alert" className="rounded-xl border border-red-900/60 bg-red-950/30 p-4 text-sm text-red-300">
-                {error}
-            </div>
-        );
-    }
-
-    if (!status) {
-        return null;
-    }
-        return () => abortController.abort();
     }, [refreshTick]);
 
     const alertCounts = useMemo(() => {
@@ -485,10 +313,14 @@ export function DashboardView({ telemetry: _telemetry }: { telemetry?: any }) {
             : dashboardStatus?.service_health.status === 'degraded'
               ? 'orange'
               : 'red';
+    const queueSeverity = dashboardStatus
+        ? deriveQueueSeverity(dashboardStatus.queue_depth.current_depth, dashboardStatus.queue_depth.thresholds)
+        : 'info';
+
     const queueColor =
-        dashboardStatus?.queue_depth.state === 'critical'
+        queueSeverity === 'critical'
             ? 'red'
-            : dashboardStatus?.queue_depth.state === 'warning'
+            : queueSeverity === 'warning'
               ? 'orange'
               : 'lime';
     const rotationColor = dashboardStatus?.rotation.is_stale ? 'red' : 'lime';
@@ -502,7 +334,9 @@ export function DashboardView({ telemetry: _telemetry }: { telemetry?: any }) {
                     <h1 className="text-2xl font-black tracking-tight text-white">
                         Station <span className="text-lime-400">Overview</span>
                     </h1>
-                    <p className="text-[11px] text-zinc-500 mt-0.5">{status.service_health.reason}</p>
+                    <p className="text-[11px] text-zinc-500 mt-0.5">
+                        {dashboardStatus?.service_health.reason || 'Initializing...'}
+                    </p>
                     <p className="text-[11px] text-zinc-500 mt-0.5">
                         Live monitoring {error ? '· Status API degraded' : '· Status API connected'}
                     </p>
@@ -524,48 +358,6 @@ export function DashboardView({ telemetry: _telemetry }: { telemetry?: any }) {
             </div>
 
             <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
-                <StatCard label="Service" value={status.service_health.status.toUpperCase()} icon={Activity} trend="stable" />
-                <StatCard label="Queue Depth" value={status.queue_depth.current_depth} icon={Users} color={queueSeverity === 'critical' ? 'red' : queueSeverity === 'warning' ? 'orange' : 'purple'} trend="up" delay={0.05} />
-                <StatCard label="Warning Threshold" value={status.queue_depth.thresholds.warning} unit="jobs" icon={Gauge} color="cyan" trend="stable" delay={0.1} />
-                <StatCard label="Critical Threshold" value={status.queue_depth.thresholds.critical} unit="jobs" icon={Wifi} trend="stable" delay={0.15} />
-                <StatCard label="Stale After" value={status.rotation.stale_after_minutes} unit="min" icon={Zap} color="orange" trend={status.rotation.is_stale ? 'up' : 'stable'} delay={0.2} />
-            </div>
-
-            <div className="rounded-xl border border-zinc-800 p-4">
-                <div className="flex items-center justify-between text-xs text-zinc-400">
-                    <span data-testid="queue-depth-state">Queue severity: {queueSeverity}</span>
-                    <span>Last rotation: {formatTimestamp(status.rotation.last_successful_rotation_at)}</span>
-                </div>
-                <div className="mt-2 flex gap-4 text-xs">
-                    <span data-testid="severity-count-info">Info: {alertCounts.info}</span>
-                    <span data-testid="severity-count-warning">Warning: {alertCounts.warning}</span>
-                    <span data-testid="severity-count-critical">Critical: {alertCounts.critical}</span>
-                </div>
-            </div>
-
-            <SectionHeader>Alert Center</SectionHeader>
-            <div className="space-y-2">
-                {status.alert_center.items.map((item) => (
-                    <div key={item.alert_id} className={cn('rounded-lg border p-3', item.acknowledged ? 'opacity-60 border-zinc-800' : 'border-zinc-700')}>
-                        <div className="flex items-start justify-between gap-3">
-                            <div>
-                                <p className="text-sm font-semibold text-zinc-100">{item.title}</p>
-                                <p className="text-xs text-zinc-400">{item.description}</p>
-                                <p className="text-xs text-zinc-500" data-testid={`alert-ack-${item.alert_id}`}>
-                                    Ack at: {formatTimestamp(item.acknowledged_at)}
-                                </p>
-                            </div>
-                            <button
-                                type="button"
-                                className="rounded border border-zinc-700 px-2 py-1 text-xs text-zinc-200 disabled:opacity-40"
-                                onClick={() => handleAcknowledge(item.alert_id)}
-                                disabled={item.acknowledged}
-                            >
-                                Acknowledge
-                            </button>
-                        </div>
-                    </div>
-                ))}
                 <StatCard
                     label="Service Health"
                     value={dashboardStatus?.service_health.status ?? '--'}
@@ -657,6 +449,11 @@ export function DashboardView({ telemetry: _telemetry }: { telemetry?: any }) {
                                             <p className="text-sm font-medium text-zinc-100">{alert.title}</p>
                                         </div>
                                         <p className="text-xs text-zinc-400">{alert.description}</p>
+                                        {alert.acknowledged && (
+                                            <p className="text-[10px] text-zinc-500">
+                                                Ack at: {formatTimestamp(alert.acknowledged_at)}
+                                            </p>
+                                        )}
                                     </div>
                                     <button
                                         type="button"
@@ -673,176 +470,71 @@ export function DashboardView({ telemetry: _telemetry }: { telemetry?: any }) {
                 )}
             </div>
 
-export function DashboardView({ telemetry }: DashboardViewProps) {
-  const [currentTime, setCurrentTime] = useState("");
+            <SectionHeader>Now Playing</SectionHeader>
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_340px]">
+                <div className="space-y-4">
+                    <div className="glass-panel overflow-hidden">
+                        <div className="panel-header">
+                            <div className="flex items-center gap-2">
+                                <div
+                                    className="w-2 h-2 rounded-full bg-lime-500 animate-pulse"
+                                    style={{ boxShadow: '0 0 8px rgba(170,255,0,0.45)' }}
+                                />
+                                <span className="panel-header-title">Master Output</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Signal size={10} className="text-lime-500" />
+                                <span className="text-[9px] font-mono text-zinc-500">
+                                    AAC 320k
+                                </span>
+                            </div>
+                        </div>
+                        <div className="p-3">
+                            <DegenWaveform
+                                progress={0.42}
+                                duration={234}
+                                trackTitle="Neural Drift v2.1 - SynthKong"
+                                isPlaying
+                                cuePoints={[
+                                    { position: 0.12, label: 'CUE 1', color: '#ff6b00' },
+                                    { position: 0.68, label: 'DROP', color: '#bf00ff' },
+                                ]}
+                            />
+                        </div>
+                    </div>
+                    <SectionHeader>On-Air Schedule</SectionHeader>
+                    <DegenScheduleTimeline />
+                </div>
 
-  useEffect(() => {
-    const tick = () => {
-      setCurrentTime(
-        new Date().toLocaleTimeString(undefined, {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: false,
-        }),
-      );
-    };
+                <div className="space-y-4">
+                    <DegenAIHost className="glass-panel" />
+                </div>
+            </div>
 
-    tick();
-    const timer = setInterval(tick, 1000);
-    return () => clearInterval(timer);
-  }, []);
+            <SectionHeader>Audio Engine</SectionHeader>
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                <div className="glass-panel overflow-hidden">
+                    <div className="panel-header">
+                        <span className="panel-header-title">Beat Sequencer</span>
+                    </div>
+                    <div className="p-3">
+                        <DegenBeatGrid decks={4} steps={16} />
+                    </div>
+                </div>
 
-  return (
-    <div className="space-y-5">
-      <motion.div
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-end justify-between"
-      >
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-white">
-            Station <span className="text-lime-400">Overview</span>
-          </h1>
-          <p className="text-[11px] text-zinc-500 mt-0.5">
-            Live monitoring ·{" "}
-            <span
-              className={mapSeverityToStatusTextClass(
-                telemetry.aiLoad.severity,
-              )}
-            >
-              All systems {telemetry.aiLoad.status}
-            </span>
-          </p>
-        </div>
-        <div className="text-right">
-          <div className="text-lg font-mono font-bold text-zinc-300 tabular-nums tracking-wider">
-            {currentTime}
-          </div>
-          <div className="text-[9px] text-zinc-600 uppercase tracking-widest">
-            {telemetry.localTimeLabel}
-          </div>
-        </div>
-      </motion.div>
-
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
-        <StatCard
-          label="Uptime"
-          value={telemetry.uptime.value}
-          unit={telemetry.uptime.unit}
-          icon={Activity}
-          color={mapSeverityToCardColor(telemetry.uptime.severity)}
-          trend={mapStatusToTrend(telemetry.uptime.status)}
-          sparkline={telemetry.uptime.sparkline}
-        />
-        <StatCard
-          label="Listeners"
-          value={telemetry.listeners.value.toLocaleString()}
-          icon={Users}
-          color="purple"
-          trend={telemetry.listeners.trend}
-          sparkline={telemetry.listeners.sparkline}
-          delay={0.05}
-        />
-        <StatCard
-          label="Latency"
-          value={telemetry.latency.value}
-          unit={telemetry.latency.unit}
-          icon={Gauge}
-          color="cyan"
-          trend={telemetry.latency.trend}
-          sparkline={telemetry.latency.sparkline}
-          delay={0.1}
-        />
-        <StatCard
-          label="Stream"
-          value={telemetry.streamBitrate.value}
-          unit={telemetry.streamBitrate.unit}
-          icon={Wifi}
-          color={mapSeverityToCardColor(telemetry.streamBitrate.severity)}
-          trend={mapStatusToTrend(telemetry.streamBitrate.status)}
-          sparkline={telemetry.streamBitrate.sparkline}
-          delay={0.15}
-        />
-        <StatCard
-          label="AI Load"
-          value={telemetry.aiLoad.value}
-          unit={telemetry.aiLoad.unit}
-          icon={Zap}
-          color={mapSeverityToCardColor(telemetry.aiLoad.severity)}
-          trend={mapStatusToTrend(telemetry.aiLoad.status)}
-          sparkline={telemetry.aiLoad.sparkline}
-          delay={0.2}
-        />
-      </div>
-
-      <SectionHeader>Now Playing</SectionHeader>
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_340px]">
-        <div className="space-y-4">
-          <div className="glass-panel overflow-hidden">
-            <div className="panel-header">
-              <div className="flex items-center gap-2">
-                <div
-                  className="w-2 h-2 rounded-full bg-lime-500 animate-pulse"
-                  style={{ boxShadow: "0 0 8px rgba(170,255,0,0.45)" }}
+                <DegenEffectRack
+                    title="Master FX"
+                    deck="MST"
+                    isActive
+                    controls={[
+                        { key: 'reverb', label: 'Reverb', unit: '%' },
+                        { key: 'comp', label: 'Comp', unit: 'dB', max: 30 },
+                        { key: 'rate', label: 'Rate', unit: 'Hz', max: 20 },
+                        { key: 'limit', label: 'Limiter', unit: 'dB', max: 0 },
+                        { key: 'width', label: 'Stereo', unit: '%' },
+                    ]}
                 />
-                <span className="panel-header-title">Master Output</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Signal size={10} className="text-lime-500" />
-                <span className="text-[9px] font-mono text-zinc-500">
-                  AAC 320k
-                </span>
-              </div>
             </div>
-            <div className="p-3">
-              <DegenWaveform
-                progress={0.42}
-                duration={234}
-                trackTitle="Neural Drift v2.1 - SynthKong"
-                isPlaying
-                cuePoints={[
-                  { position: 0.12, label: "CUE 1", color: "#ff6b00" },
-                  { position: 0.68, label: "DROP", color: "#bf00ff" },
-                ]}
-              />
-            </div>
-          </div>
-          <SectionHeader>On-Air Schedule</SectionHeader>
-          <DegenScheduleTimeline />
         </div>
-
-        <div className="space-y-4">
-          <DegenAIHost className="glass-panel" />
-        </div>
-      </div>
-
-      <SectionHeader>Audio Engine</SectionHeader>
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <div className="glass-panel overflow-hidden">
-          <div className="panel-header">
-            <span className="panel-header-title">Beat Sequencer</span>
-          </div>
-          <div className="p-3">
-            <DegenBeatGrid decks={4} steps={16} />
-          </div>
-        </div>
-
-        <DegenEffectRack
-          title="Master FX"
-          deck="MST"
-          isActive
-          controls={[
-            { key: "reverb", label: "Reverb", unit: "%" },
-            { key: "comp", label: "Comp", unit: "dB", max: 30 },
-            { key: "rate", label: "Rate", unit: "Hz", max: 20 },
-            { key: "limit", label: "Limiter", unit: "dB", max: 0 },
-            { key: "width", label: "Stereo", unit: "%" },
-          ]}
-        />
-      </div>
-    </div>
-  );
+    );
 }
-
-export { deriveQueueSeverity };

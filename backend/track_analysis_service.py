@@ -14,51 +14,10 @@ from backend.ai.contracts.track_analysis import (
 )
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 logger = logging.getLogger(__name__)
-
-
-class TrackMetadata(BaseModel):
-    title: str = Field(min_length=1)
-    artist: str = Field(min_length=1)
-    album: str | None = None
-    duration_seconds: int = Field(ge=30)
-    genre_hint: str | None = None
-    year: int | None = Field(default=None, ge=1900, le=2100)
-
-
-class AudioFeatures(BaseModel):
-    bitrate_kbps: int | None = Field(default=None, ge=32, le=320)
-    sample_rate_hz: int | None = Field(default=None, ge=8000, le=192000)
-    channels: int | None = Field(default=None, ge=1, le=8)
-
-
-class TrackAnalysisRequest(BaseModel):
-    track_id: str = Field(min_length=1)
-    metadata: TrackMetadata
-    audio_features: AudioFeatures | None = None
-    model_version: str = Field(default="track-analysis-v1", min_length=1)
-    prompt_profile_version: str = Field(default="prompt-profile-v1", min_length=1)
-
-
-class TrackAnalysis(BaseModel):
-    genre: str
-    mood: str
-    energy_level: int = Field(ge=1, le=10)
-    danceability: int = Field(ge=1, le=10)
-    bpm_estimate: int = Field(ge=40, le=220)
-    vocal_style: str
-    best_for_time: list[str]
-    tags: list[str] = Field(default_factory=list)
-    confidence_score: float = Field(ge=0.0, le=1.0)
-    reasoning: str
-
-
-class TrackAnalysisResult(BaseModel):
-    track_id: str
-    analysis: TrackAnalysis
 
 
 class TrackAnalysisEnvelope(BaseModel):

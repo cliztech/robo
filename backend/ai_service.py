@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import hashlib
 import threading
 import time
@@ -259,7 +258,7 @@ class AIInferenceService:
                 metadata=None,
             )
             return result, latency_ms, cost_usd, "success"
-        except TimeoutError as exc:
+        except TimeoutError:
             self.circuit_breaker.on_failure()
             latency_ms = int((time.monotonic() - started) * 1000)
             fallback_result = self._build_fallback(mode)
