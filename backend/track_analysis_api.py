@@ -1,24 +1,11 @@
-from fastapi import APIRouter, Depends
+"""Compatibility metadata for legacy track-analysis endpoint.
 
-from backend.security.auth import verify_api_key
-from backend.track_analysis_service import (
-    TrackAnalysisEnvelope,
-    TrackAnalysisRequest,
-    TrackAnalysisService,
+Canonical endpoint: POST /api/v1/ai/track-analysis
+Legacy compatibility endpoint: POST /api/v1/ai/analyze-track
+"""
+
+LEGACY_TRACK_ANALYSIS_DEPRECATION = "true"
+LEGACY_TRACK_ANALYSIS_WARNING = (
+    '299 - "Deprecated endpoint: use /api/v1/ai/track-analysis; '
+    '/api/v1/ai/analyze-track will be removed in a future release."'
 )
-
-router = APIRouter(prefix="/api/v1/ai", tags=["track-analysis"])
-
-
-def get_track_analysis_service() -> TrackAnalysisService:
-    return TrackAnalysisService()
-
-
-@router.post("/analyze-track", response_model=TrackAnalysisEnvelope)
-def analyze_track(
-    request: TrackAnalysisRequest,
-    _: str = Depends(verify_api_key),
-    service: TrackAnalysisService = Depends(get_track_analysis_service),
-) -> TrackAnalysisEnvelope:
-    result = service.analyze(request)
-    return TrackAnalysisEnvelope(success=True, data=result, error=None)
