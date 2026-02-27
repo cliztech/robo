@@ -117,6 +117,7 @@
 
 - [x] Phase namespace hardening: planning/context artifacts now require explicit namespace (`delivery` or `workflow`) and generator output rejects missing namespace metadata.
 
+- [x] Completed TI-041 security smoke workflow: added `scripts/ci/security_smoke_check.mjs`, deterministic pass/fail markers, evidence artifact outputs, and release/security escalation routing documentation.
 - [x] TI-040 baseline delivered: `backend/security/config_crypto.py` added (AES-256-GCM envelopes + KID provenance), config read/write integration in scheduler/AI/validator paths, TI-040 docs evidence contract updates, and crypto regression tests (round-trip/wrong-key/nonce/schema-preserving).
 ## 2026-02-27 TI-041 Security Smoke Delivery
 

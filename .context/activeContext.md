@@ -99,7 +99,7 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - [ ] Sweep remaining deep docs/config script branding references (phase 2 rebrand pass).
 - [ ] Execute TI-039 packet (approval workflows + immutable audit export contract).
 - [ ] Execute TI-040 packet (config-at-rest encryption policy + operator workflow updates).
-- [ ] Execute TI-041 packet (security smoke script + expected signatures).
+- [x] Execute TI-041 packet (security smoke script + expected signatures).
 - [x] Regenerate unfinished-task build plan and publish the next phased build artifact for P1 Security.
 - [ ] Convert `docs/ui/gui_agent_team_review.md` into implementation stories mapped to GUI-001..GUI-030.
 - [x] Resume "Phase 5: AI Integration" (Implemented typed AI service contracts, guarded API routes, and UI wiring for host/persona flows).
