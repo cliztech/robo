@@ -16,10 +16,10 @@
 - [x] E6-S2: Predictive queue risk cards.
 - [x] E6-S3: Prompt variable diff + approval workflow.
 - [x] E6-S4: Decision trace panel.
-- [ ] E6-S5: Alert center remediation copy.
-- [ ] E6-S6: Timeline conflict detection hints.
-- [ ] E7-S1: Global keyboard map.
-- [ ] E7-S2: Reduced-motion alternatives.
+- [x] E6-S5: Alert center remediation copy.
+- [x] E6-S6: Timeline conflict detection hints.
+- [x] E7-S1: Global keyboard map.
+- [x] E7-S2: Reduced-motion alternatives.
 - [ ] E7-S3: Contrast audit pass.
 - [ ] E7-S4: Focus management consistency.
 - [ ] E7-S5: Performance budgets.

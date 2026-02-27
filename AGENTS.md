@@ -388,6 +388,16 @@ graph TB
   - Execute rollback procedures when post-deploy anomalies are detected
 - **Completion gate:** All release gates pass; deployment notes published
 
+#### 1d. Observability & Monitoring Agent (Sentinel)
+
+- **Role:** Provide comprehensive observability, telemetry, and health monitoring for all systems.
+- **Responsibilities:**
+  - Maintain the v1.3 health dashboard using Prometheus and Grafana.
+  - Provide smoke test monitoring for the staging environment (e.g., S-023).
+  - Monitor WebSocket connection health and system metrics (e.g., S-018).
+  - Offload monitoring responsibilities from the broader DevOps infrastructure.
+- **Completion gate:** Health dashboard is fully operational; key system metrics and connections are actively monitored.
+
 #### DevOps Team Boundaries
 
 - ✅ **Always:** Run validation commands before and after infrastructure changes; maintain pipeline-as-code
@@ -637,6 +647,16 @@ graph TB
   - Identify performance bottlenecks and recommend optimizations
   - Produce performance trend reports per release
 - **Completion gate:** All performance targets met; no critical regressions
+
+#### 6d. E2E Test Automation Agent (Cypress)
+
+- **Role:** Ensure end-to-end application stability, accessibility, and visual consistency.
+- **Responsibilities:**
+  - Build and maintain Playwright/Cypress E2E test suites for all current and future stories.
+  - Provide automated accessibility testing (e.g., WCAG Audit, S-019).
+  - Conduct visual regression testing and system load testing.
+  - Support unit QA efforts by validating end-to-end user flows.
+- **Completion gate:** E2E test suite passes; accessibility and visual audits completed with zero critical issues.
 
 #### QA Team Boundaries
 
