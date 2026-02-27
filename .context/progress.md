@@ -86,6 +86,8 @@
 - [x] Tracked issue hygiene hardening: split TI-007/TI-008/TI-009 collisions, reassigned security tasks to TI-039/TI-040/TI-041, and added a one-header validation check.
 
 - [x] Phase 5 foundation: implemented `AnalysisService` (normalization, retry with fallback, idempotency) and queue processor with unit/integration tests.
+
+- Completed shared canonical track-analysis contract extraction (`backend/ai/contracts/track_analysis.py`) and aligned service/API/tests with temporary legacy adapter removal criteria for Phase 5 story P5-05.
 - [x] Extended `backend/track_analysis_service.py` with fingerprint-based in-memory caching and structured cache hit/miss telemetry plus cache behavior tests.
 
 - [x] Playlist generation hardening: normalized artist-key comparisons in candidate and transition scoring with regression coverage.

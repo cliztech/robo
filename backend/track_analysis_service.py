@@ -5,6 +5,13 @@ import json
 import logging
 from dataclasses import dataclass
 
+from backend.ai.contracts.track_analysis import (
+    TrackAnalysis,
+    TrackAnalysisRequest,
+    TrackAnalysisResult,
+    TrackMood,
+    VocalStyle,
+)
 from typing import Literal
 
 from pydantic import BaseModel, Field

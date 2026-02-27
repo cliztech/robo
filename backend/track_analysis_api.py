@@ -10,6 +10,10 @@ from backend.track_analysis_service import TrackAnalysisService
 router = APIRouter(prefix="/api/v1/ai", tags=["track-analysis"])
 
 
+class TrackAnalysisEnvelope(BaseModel):
+    success: bool
+    data: TrackAnalysisResult | None
+    error: str | None
 _FAILED_STATUS_CODE_BY_EXCEPTION: dict[str, int] = {
     "TimeoutError": 504,
     "AITimeoutError": 504,
