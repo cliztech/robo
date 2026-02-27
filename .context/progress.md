@@ -118,6 +118,8 @@
 - [x] Test-suite hygiene: rebuilt `tests/unit/ai-analysis-service.test.ts` and `tests/integration/analysis-queue.test.ts` to remove duplicated partial blocks and align assertions with current queue contract boundaries.
 
 - [x] Phase namespace hardening: planning/context artifacts now require explicit namespace (`delivery` or `workflow`) and generator output rejects missing namespace metadata.
+
+- [x] P1 Security lane documentation hardened: `2026-02-25-next-unfinished-phase-build.md` now carries TI-039/TI-040/TI-041 state gates + dependency gates + evidence paths, and `TODO.md` mirrors order with explicit `ready`/`blocked`/`in-progress` tags.
 - [x] Sprint-state hygiene update: synchronized sprint-status epic/story states (including P1 security open items and D2 completed artifacts), added `last_reconciled`, and added weekly status parity checklist guidance.
 
 ## 2026-02-27 TI-040 Completion Update
