@@ -49,12 +49,17 @@
 
 
 ## Recent Ops Updates
+- [x] Hardened analysis idempotency keying with normalized-input/version fingerprint hashing and expanded unit/integration coverage for skip/reanalyze semantics.
+- [x] Hardened AI analysis cache keys with deterministic input fingerprints and added unit/integration coverage for metadata-driven re-analysis behavior.
+- [x] Added caller-facing analysis outcomes (`success`/`degraded`/`failed`) with queue mapping + test coverage updates.
+- [x] Phase 1 workflow orchestration blueprint hardened with explicit metadata contracts, graph transitions/retry terminal states, policy profile matrix, and verification criteria; unfinished-task links now point to concrete section anchors.
 - [x] Security automation hardening: re-enabled CodeQL, removed unsupported defaults, and added high/critical gate + RB-023 triage flow.
 - [x] Implemented release readiness gate automation (tests/config/security/docs) with consolidated artifact reporting and protected-branch ruleset sync.
 
 - [x] Runtime declaration hardening: added canonical runtime map, aligned top-level docs/context, and CI validation against package/pyproject manifests.
 - [x] Brand unification baseline: migrated top-level product/docs/workflows from legacy names to DGN-DJ Studio and aligned release artifact naming.
 - [x] Regenerated `docs/exec-plans/active/unfinished-task-build-plan.md`; phased backlog is now P1=3, Unphased=101.
+- [x] Normalized `docs/exec-plans/active/unfinished-task-build-plan.md` workflow citations to canonical `docs/massive_workflow_blueprint.md` and revalidated reference line coverage.
 - [x] Published next-phase build packet: `docs/exec-plans/active/2026-02-25-next-unfinished-phase-build.md` (TI-039 -> TI-040 -> TI-041).
 
 - [x] BMAD build/dev execution pass documented with reproducible command evidence in `docs/operations/plans/2026-02-25-bmad-build-dev.md` (including dev-environment limitation notes).
@@ -64,3 +69,6 @@
 
 - [x] Phase 5 foundation: implemented `AnalysisService` (normalization, retry with fallback, idempotency) and queue processor with unit/integration tests.
 - [x] Analysis cache hardening: introduced TTL-based invalidation and LRU entry bounds with unit tests covering expiry, eviction, and access-recency refresh behavior.
+- [x] Enhanced `AnalysisService` cache controls with max entry cap, TTL expiry, and observability stats/hooks; expanded unit coverage for eviction, TTL refresh, and cap stability.
+
+- [x] Updated `docs/massive_workflow_blueprint.md` branding to canonical `DGN-DJ by DGNradio`, with `RoboDJ` retained only as an explicit legacy alias in historical context.
