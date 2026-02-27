@@ -18,6 +18,7 @@ describe('console core surface visual regression by skin', () => {
       const mixerSurface = container.querySelector('.dj-area-mixer');
       const librarySurface = container.querySelector('.dj-area-library');
       const transportSurface = container.querySelector('[data-testid="degen-transport"]');
+      const transportSurface = container.querySelector('[aria-label="Playback position"]')?.closest('div.h-16');
 
       expect(deckSurfaces.map((surface) => surface.outerHTML)).toMatchSnapshot(`${skin}-decks`);
       expect(mixerSurface?.outerHTML).toMatchSnapshot(`${skin}-mixer`);

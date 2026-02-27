@@ -1,64 +1,59 @@
 :root {
   color-scheme: dark;
 
-  /* ── Degen Design Tokens ── Hard Dark & Acid Green ── */
-  --bg: 240 10% 2%;
-  /* Deep Obsidian */
-  --bg-elevated: 240 8% 4%;
-  --surface: 240 6% 7%;
-  --surface-2: 240 5% 10%;
-  --surface-3: 240 5% 15%;
-  --text: 210 20% 98%;
-  --text-muted: 210 10% 65%;
-  --text-dim: 210 10% 35%;
-  
-  /* Aether Sapphire — Rekordbox 7 Standard */
-  --accent: 207 98% 45%; 
-  /* #027de1 */
-  --accent-secondary: 207 81% 79%; 
-  /* #A1CFF5 - Sapphire Glow */
-  --accent-tertiary: 182 70% 38%; 
-  /* Deep Teal focus */
-  
-  --danger: 0 85% 60%;
-  --warning: 35 100% 50%;
-  
-  /* Hardware Surfaces */
-  --metal-bg: radial-gradient(circle at 50% 0%, hsla(0, 0%, 100%, 0.05) 0%, transparent 100%), #0A0A0B;
+  /* Base semantic color tokens (skin-agnostic contract). */
+  --color-bg: 240 10% 2%;
+  --color-bg-elevated: 240 8% 4%;
+  --color-surface: 240 6% 7%;
+  --color-surface-2: 240 5% 10%;
+  --color-surface-3: 240 5% 15%;
+  --color-text: 210 20% 98%;
+  --color-text-muted: 210 10% 65%;
+  --color-text-dim: 210 10% 35%;
+
+  --color-accent: 207 98% 45%;
+  --color-accent-2: 207 81% 79%;
+  --color-accent-3: 182 70% 38%;
+  --color-danger: 0 85% 60%;
+  --color-warning: 35 100% 50%;
+  --color-warning-hot: 25 100% 50%;
+  --color-danger-bright: 0 92% 66%;
+
+  --color-deck-a: var(--color-accent);
+  --color-deck-b: var(--color-accent-2);
+  --color-deck-mic: var(--color-accent-3);
+  --color-deck-aux: var(--color-warning);
+  --color-deck-master: 0 0% 100%;
+
+  --color-wave-a: var(--color-deck-a);
+  --color-wave-b: var(--color-deck-b);
+  --color-waveform-played-strong: var(--color-deck-a);
+  --color-waveform-played-mid: 207 98% 40%;
+  --color-waveform-played-low: 207 98% 25%;
+  --color-waveform-unplayed-strong: 0 0% 100%;
+  --color-waveform-cue-default: var(--color-warning-hot);
+  --color-waveform-cue-highlight: 288 100% 50%;
+  --color-waveform-cue-info: 217 91% 60%;
+
+  --color-control-border: 240 5% 15%;
+  --color-control-border-strong: 240 5% 25%;
+  --color-control-press: 240 10% 5%;
+  --color-control-active: var(--color-accent);
+  --color-control-focus: var(--color-accent);
+  --color-control-disabled: 240 5% 12%;
+
+  --color-grid-major: 0 0% 22%;
+  --color-grid-minor: 0 0% 12%;
+  --black-rgb: 0 0% 0%;
+
+  /* Hardware surfaces */
+  --metal-bg: radial-gradient(circle at 50% 0%, hsla(0, 0%, 100%, 0.05) 0%, transparent 100%), #0a0a0b;
   --noise-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-
-  /* Deck + waveform semantic color roles */
-  --deck-a: var(--accent);
-  --deck-b: var(--accent-secondary);
-  --deck-mic: var(--accent-tertiary);
-  --deck-aux: var(--warning);
-  --deck-master: 0 0% 100%;
-
-  --waveform-played-strong: var(--deck-a);
-  --waveform-played-mid: 207 98% 40%;
-  --waveform-played-low: 207 98% 25%;
-  --waveform-unplayed-strong: 0 0% 100%;
-  --waveform-cue-default: 25 100% 50%;
-  --waveform-cue-highlight: 288 100% 50%;
-  --waveform-cue-info: 217 91% 60%;
-
-  /* DJ control-state roles — Aether Theme adaptation */
-  --control-border: 240 5% 15%;
-  --control-border-strong: 240 5% 25%;
-  --control-press: 240 10% 5%;
-  --control-active: var(--accent);
-  --control-focus: var(--accent);
-  --control-disabled: 240 5% 12%;
-
-  /* Grid colors */
-  --grid-major: 0 0% 22%;
-  --grid-minor: 0 0% 12%;
 
   /* Transitions */
   --transition-fast: 100ms ease;
   --transition-base: 180ms ease;
   --transition-slow: 350ms cubic-bezier(0.23, 1, 0.32, 1);
-
 
   /* Glow tokens */
   --glow-accent: 0 0 20px hsla(82, 100%, 50%, 0.25),
@@ -69,14 +64,14 @@
     0 0 60px hsla(195, 100%, 50%, 0.08);
   --glow-danger: 0 0 20px hsla(0, 72%, 51%, 0.3),
     0 0 60px hsla(0, 72%, 51%, 0.1);
-  --glow-deck-a-soft: 0 0 8px hsla(var(--deck-a), 0.5);
-  --glow-deck-a-ring: 0 0 15px hsla(var(--deck-a), 0.12);
-  --glow-deck-a-playhead: 0 0 10px hsla(var(--deck-a), 0.6),
-    0 0 30px hsla(var(--deck-a), 0.15);
-  --glow-danger-soft: 0 0 10px hsla(var(--danger), 0.5);
-  --glow-danger-xs: 0 0 6px hsla(var(--danger), 0.15);
-  --glow-warning-xs: 0 0 6px hsla(var(--warning), 0.15);
-  --glow-waveform-cue: 0 0 10px hsla(var(--waveform-cue-default), 0.25);
+  --glow-deck-a-soft: 0 0 8px hsla(var(--color-deck-a), 0.5);
+  --glow-deck-a-ring: 0 0 15px hsla(var(--color-deck-a), 0.12);
+  --glow-deck-a-playhead: 0 0 10px hsla(var(--color-deck-a), 0.6),
+    0 0 30px hsla(var(--color-deck-a), 0.15);
+  --glow-danger-soft: 0 0 10px hsla(var(--color-danger), 0.5);
+  --glow-danger-xs: 0 0 6px hsla(var(--color-danger), 0.15);
+  --glow-warning-xs: 0 0 6px hsla(var(--color-warning), 0.15);
+  --glow-waveform-cue: 0 0 10px hsla(var(--color-waveform-cue-default), 0.25);
 
   /* Radii */
   --radius-xs: 3px;
@@ -93,7 +88,6 @@
   --space-5: 20px;
   --space-6: 24px;
   --space-8: 32px;
-
 
   /* Studio composition layout */
   --studio-grid-gap: var(--space-4);
@@ -120,63 +114,96 @@
   --glass-border: hsla(0, 0%, 100%, 0.06);
   --glass-blur: 16px;
 
-  /* Semantic aliases */
-  --color-bg: var(--bg);
-  --color-bg-elevated: var(--bg-elevated);
-  --color-surface: var(--surface);
-  --color-surface-2: var(--surface-2);
-  --color-surface-3: var(--surface-3);
-  --color-text: var(--text);
-  --color-text-muted: var(--text-muted);
-  --color-text-dim: var(--text-dim);
-  --color-accent: var(--accent);
-  --color-accent-2: var(--accent-secondary);
-  --color-accent-3: var(--accent-tertiary);
-  --color-danger: var(--danger);
-  --color-warning: var(--warning);
-  --color-deck-a: var(--deck-a);
-  --color-deck-b: var(--deck-b);
-  --color-grid-major: var(--grid-major);
-  --color-grid-minor: var(--grid-minor);
-  --color-wave-a: var(--wave-a);
-  --color-wave-b: var(--wave-b);
-  --color-control-border: var(--control-border);
-  --color-control-border-strong: var(--control-border-strong);
-  --color-control-press: var(--control-press);
-  --color-control-active: var(--control-active);
-  --color-control-focus: var(--control-focus);
-  --color-control-disabled: var(--control-disabled);
-  --color-warning-hot: var(--warning-hot);
-  --color-danger-bright: var(--danger-bright);
-  --color-deck-a: var(--deck-a);
-  --color-deck-b: var(--deck-b);
-  --color-deck-mic: var(--deck-mic);
-  --color-deck-aux: var(--deck-aux);
-  --color-deck-master: var(--deck-master);
-  --color-waveform-played-strong: var(--waveform-played-strong);
-  --color-waveform-played-mid: var(--waveform-played-mid);
-  --color-waveform-played-low: var(--waveform-played-low);
-  --color-waveform-unplayed-strong: var(--waveform-unplayed-strong);
-  --color-waveform-cue-default: var(--waveform-cue-default);
-  --color-waveform-cue-highlight: var(--waveform-cue-highlight);
-  --color-waveform-cue-info: var(--waveform-cue-info);
+  /* Canonical legacy alias mapping (single table). */
+  --bg: var(--color-bg);
+  --bg-elevated: var(--color-bg-elevated);
+  --surface: var(--color-surface);
+  --surface-2: var(--color-surface-2);
+  --surface-3: var(--color-surface-3);
+  --text: var(--color-text);
+  --text-muted: var(--color-text-muted);
+  --text-dim: var(--color-text-dim);
+  --accent: var(--color-accent);
+  --accent-secondary: var(--color-accent-2);
+  --accent-tertiary: var(--color-accent-3);
+  --danger: var(--color-danger);
+  --warning: var(--color-warning);
+  --warning-hot: var(--color-warning-hot);
+  --danger-bright: var(--color-danger-bright);
+  --deck-a: var(--color-deck-a);
+  --deck-b: var(--color-deck-b);
+  --deck-mic: var(--color-deck-mic);
+  --deck-aux: var(--color-deck-aux);
+  --deck-master: var(--color-deck-master);
+  --wave-a: var(--color-wave-a);
+  --wave-b: var(--color-wave-b);
+  --waveform-played-strong: var(--color-waveform-played-strong);
+  --waveform-played-mid: var(--color-waveform-played-mid);
+  --waveform-played-low: var(--color-waveform-played-low);
+  --waveform-unplayed-strong: var(--color-waveform-unplayed-strong);
+  --waveform-cue-default: var(--color-waveform-cue-default);
+  --waveform-cue-highlight: var(--color-waveform-cue-highlight);
+  --waveform-cue-info: var(--color-waveform-cue-info);
+  --control-border: var(--color-control-border);
+  --control-border-strong: var(--color-control-border-strong);
+  --control-press: var(--color-control-press);
+  --control-active: var(--color-control-active);
+  --control-focus: var(--color-control-focus);
+  --control-disabled: var(--color-control-disabled);
+  --grid-major: var(--color-grid-major);
+  --grid-minor: var(--color-grid-minor);
+}
+
+[data-skin='degen-dark'] {
+  color-scheme: dark;
+}
+
+[data-skin='degen-light'] {
+  color-scheme: light;
+  --color-bg: 0 0% 98%;
+  --color-bg-elevated: 0 0% 96%;
+  --color-surface: 0 0% 100%;
+  --color-surface-2: 0 0% 94%;
+  --color-surface-3: 0 0% 90%;
+  --color-text: 0 0% 10%;
+  --color-text-muted: 0 0% 40%;
+  --color-text-dim: 0 0% 55%;
+  --glass-bg: hsla(0, 0%, 100%, 0.7);
+  --glass-border: hsla(0, 0%, 0%, 0.08);
 }
 
 [data-theme='dark'] {
   color-scheme: dark;
 }
 
-
 [data-theme='light'] {
   color-scheme: light;
-  --bg: 0 0% 98%;
-  --bg-elevated: 0 0% 96%;
-  --surface: 0 0% 100%;
-  --surface-2: 0 0% 94%;
-  --surface-3: 0 0% 90%;
-  --text: 0 0% 10%;
-  --text-muted: 0 0% 40%;
-  --text-dim: 0 0% 55%;
+  --color-bg: 0 0% 98%;
+  --color-bg-elevated: 0 0% 96%;
+  --color-surface: 0 0% 100%;
+  --color-surface-2: 0 0% 94%;
+  --color-surface-3: 0 0% 90%;
+  --color-text: 0 0% 10%;
+  --color-text-muted: 0 0% 40%;
+  --color-text-dim: 0 0% 55%;
   --glass-bg: hsla(0, 0%, 100%, 0.7);
   --glass-border: hsla(0, 0%, 0%, 0.08);
+}
+
+[data-skin='aether'] {
+  --accent: 207 98% 45%;
+  --accent-secondary: 207 81% 79%;
+  --accent-tertiary: 182 70% 38%;
+}
+
+[data-skin='neon'] {
+  --accent: 165 100% 45%;
+  --accent-secondary: 191 100% 55%;
+  --accent-tertiary: 267 83% 60%;
+}
+
+[data-skin='sunset'] {
+  --accent: 20 100% 55%;
+  --accent-secondary: 340 90% 63%;
+  --accent-tertiary: 258 82% 65%;
 }
