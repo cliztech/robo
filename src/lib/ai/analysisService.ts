@@ -43,8 +43,30 @@ export interface AnalysisServiceOptions {
     adapter: AnalysisAdapter;
     promptVersion: string;
     maxRetries?: number;
+    maxCacheEntries?: number;
+    cacheTtlMs?: number;
     now?: () => Date;
     onRetry?: (attempt: number, error: unknown) => void;
+    onCacheEvent?: (event: AnalysisCacheEvent) => void;
+}
+
+export interface AnalysisCacheStats {
+    size: number;
+    hits: number;
+    misses: number;
+    evictions: number;
+    expirations: number;
+}
+
+export interface AnalysisCacheEntry {
+    record: TrackIntelligenceRecord;
+    cachedAtMs: number;
+}
+
+export interface AnalysisCacheEvent {
+    type: 'hit' | 'miss' | 'set' | 'evict' | 'expire';
+    key: string;
+    size: number;
 }
 
 const SUPPORTED_MOODS: TrackMood[] = ['calm', 'chill', 'energetic', 'intense', 'uplifting'];
@@ -103,25 +125,48 @@ export class AnalysisService {
     private readonly adapter: AnalysisAdapter;
     private readonly promptVersion: string;
     private readonly maxRetries: number;
+    private readonly maxCacheEntries: number;
+    private readonly cacheTtlMs?: number;
     private readonly now: () => Date;
     private readonly onRetry?: (attempt: number, error: unknown) => void;
-    private readonly byIdempotencyKey = new Map<string, TrackIntelligenceRecord>();
+    private readonly onCacheEvent?: (event: AnalysisCacheEvent) => void;
+    private readonly byIdempotencyKey = new Map<string, AnalysisCacheEntry>();
+    private readonly cacheStats = {
+        hits: 0,
+        misses: 0,
+        evictions: 0,
+        expirations: 0,
+    };
 
     constructor(options: AnalysisServiceOptions) {
         this.adapter = options.adapter;
         this.promptVersion = options.promptVersion;
         this.maxRetries = options.maxRetries ?? 2;
+        this.maxCacheEntries = Math.max(1, options.maxCacheEntries ?? 512);
+        this.cacheTtlMs =
+            typeof options.cacheTtlMs === 'number' && options.cacheTtlMs >= 0 ? options.cacheTtlMs : undefined;
         this.now = options.now ?? (() => new Date());
         this.onRetry = options.onRetry;
+        this.onCacheEvent = options.onCacheEvent;
     }
 
     getCacheSize(): number {
         return this.byIdempotencyKey.size;
     }
 
+    getCacheStats(): AnalysisCacheStats {
+        return {
+            size: this.byIdempotencyKey.size,
+            hits: this.cacheStats.hits,
+            misses: this.cacheStats.misses,
+            evictions: this.cacheStats.evictions,
+            expirations: this.cacheStats.expirations,
+        };
+    }
+
     async analyze(input: TrackAnalysisInput): Promise<AnalysisResult> {
         const idempotencyKey = this.buildIdempotencyKey(input.trackId, this.promptVersion);
-        const cached = this.byIdempotencyKey.get(idempotencyKey);
+        const cached = this.getCachedRecord(idempotencyKey);
         if (cached) {
             return { status: 'skipped', record: cached };
         }
@@ -148,8 +193,66 @@ export class AnalysisService {
             throw new Error('Analysis did not complete.');
         }
 
-        this.byIdempotencyKey.set(idempotencyKey, normalized);
+        this.cacheRecord(idempotencyKey, normalized);
         return { status: 'analyzed', record: normalized };
+    }
+
+    private getCachedRecord(idempotencyKey: string): TrackIntelligenceRecord | null {
+        const cached = this.byIdempotencyKey.get(idempotencyKey);
+        if (!cached) {
+            this.cacheStats.misses += 1;
+            this.emitCacheEvent('miss', idempotencyKey);
+            return null;
+        }
+
+        if (this.cacheTtlMs !== undefined) {
+            const ageMs = this.now().getTime() - cached.cachedAtMs;
+            if (ageMs > this.cacheTtlMs) {
+                this.byIdempotencyKey.delete(idempotencyKey);
+                this.cacheStats.expirations += 1;
+                this.cacheStats.misses += 1;
+                this.emitCacheEvent('expire', idempotencyKey);
+                this.emitCacheEvent('miss', idempotencyKey);
+                return null;
+            }
+        }
+
+        this.byIdempotencyKey.delete(idempotencyKey);
+        this.byIdempotencyKey.set(idempotencyKey, cached);
+        this.cacheStats.hits += 1;
+        this.emitCacheEvent('hit', idempotencyKey);
+        return cached.record;
+    }
+
+    private cacheRecord(idempotencyKey: string, record: TrackIntelligenceRecord): void {
+        if (this.byIdempotencyKey.has(idempotencyKey)) {
+            this.byIdempotencyKey.delete(idempotencyKey);
+        }
+
+        this.byIdempotencyKey.set(idempotencyKey, {
+            record,
+            cachedAtMs: this.now().getTime(),
+        });
+
+        while (this.byIdempotencyKey.size > this.maxCacheEntries) {
+            const oldestKey = this.byIdempotencyKey.keys().next().value;
+            if (!oldestKey) {
+                break;
+            }
+            this.byIdempotencyKey.delete(oldestKey);
+            this.cacheStats.evictions += 1;
+            this.emitCacheEvent('evict', oldestKey);
+        }
+
+        this.emitCacheEvent('set', idempotencyKey);
+    }
+
+    private emitCacheEvent(type: AnalysisCacheEvent['type'], key: string): void {
+        this.onCacheEvent?.({
+            type,
+            key,
+            size: this.byIdempotencyKey.size,
+        });
     }
 
     private buildIdempotencyKey(trackId: string, promptVersion: string): string {
