@@ -37,6 +37,8 @@ Executing "Phase 5: AI Integration" through a quick-dev next-phase plan that dec
 
 - Extended BMAD command normalization guidance to explicitly map `bmad build dev` to `bmad-bmm-quick-dev`.
 
+- Consolidated AI track-analysis API surface on `/api/v1/ai/track-analysis`, removed duplicate router mounting, and aligned auth/tests to canonical API-key policy.
+
 ## Next Atomic Steps
 - [ ] Keep tracked-issue coverage table in sync with status/ownership updates.
 - [x] Implement unified DJ studio surface layout for decks/studio route.

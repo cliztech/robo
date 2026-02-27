@@ -49,6 +49,7 @@
 
 
 ## Recent Ops Updates
+- [x] Canonicalized AI track-analysis endpoint to `/api/v1/ai/track-analysis`; removed duplicate route mounting and aligned auth + tests.
 - [x] Security automation hardening: re-enabled CodeQL, removed unsupported defaults, and added high/critical gate + RB-023 triage flow.
 - [x] Implemented release readiness gate automation (tests/config/security/docs) with consolidated artifact reporting and protected-branch ruleset sync.
 
