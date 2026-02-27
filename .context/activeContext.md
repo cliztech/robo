@@ -8,6 +8,8 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 ## Recent Decisions
 
+- Added cadence governance updates: TODO dated-entry outcomes refreshed, readiness scorecard weekly update appended, execution index cadence table added, and roadmap autopilot now emits due-date reminders into the unfinished task build plan.
+
 - Standardized phase naming contracts across planning artifacts: `Delivery Phase N` for delivery context and `Workflow Phase N` for workflow context, plus namespace-required packet/build-plan metadata.
 - Unified AI track-analysis routing on canonical `POST /api/v1/ai/track-analysis`, with deprecated `/api/v1/ai/analyze-track` compatibility alias sharing the same envelope + correlation-id behavior.
 - Hardened playlist generation infeasibility handling by removing hard-constraint fallback, emitting structured constraint diagnostics, and mapping API responses to HTTP 422 with envelope-level error details.

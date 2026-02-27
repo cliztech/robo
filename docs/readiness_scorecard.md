@@ -3,7 +3,7 @@
 **Version:** 2026.02
 **Owner:** Management Team (Project Coordinator)
 **Update cadence:** Weekly (metric refresh), monthly (weight/review recalibration)
-**Last refreshed (UTC):** 2026-02-24
+**Last refreshed (UTC):** 2026-02-27
 
 ## Purpose
 
@@ -50,6 +50,13 @@ This scorecard provides a versioned, repeatable way to track progress from roadm
     - A2.3 denylist enforcement proof pending (ETA 2026-02-27)
     - A3.2 pre-release security gate evidence pending (ETA 2026-02-28)
   - Next step: publish updated Track A execution evidence and re-evaluate Security & compliance score in next weekly refresh
+- Date (UTC): 2026-02-27
+  - Owner: Management Team (Project Coordinator)
+  - Changed metrics: weighted total remains `63%`; security blockers now mapped directly to TI-039/TI-040 implementation windows
+  - Blockers:
+    - TI-039 approval workflow implementation still open (target 2026-03-07)
+    - TI-040 config-at-rest encryption implementation still open (target 2026-03-10)
+  - Next step: complete weekly backlog hygiene reconciliation and publish deferred-item rationale in the cadence table
 
 ## Weekly update workflow
 
