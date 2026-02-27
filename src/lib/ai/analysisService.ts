@@ -170,8 +170,7 @@ export class AnalysisService {
         attempts: number
     ): TrackIntelligenceRecord {
         const energy = clamp01(typeof raw.energy === 'number' ? raw.energy : inferEnergyFallback(input));
-        const mappedMood = normalizeMood(raw.mood);
-        const mood = mappedMood ? mappedMood : inferMoodFromEnergy(energy);
+        const mood = normalizeMood(raw.mood) ?? inferMoodFromEnergy(energy);
         const genreConfidence = clamp01(typeof raw.genreConfidence === 'number' ? raw.genreConfidence : input.genre ? 0.6 : 0.3);
 
         return {
