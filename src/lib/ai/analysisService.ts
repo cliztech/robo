@@ -122,6 +122,15 @@ export class AnalysisService {
     }
 
     async analyze(input: TrackAnalysisInput): Promise<AnalysisResult> {
+        if (input.trackId.trim().length === 0) {
+            return {
+                status: 'analyzed',
+                outcome: 'failed',
+                source: 'fallback',
+                record: null,
+            };
+        }
+
         const idempotencyKey = this.buildIdempotencyKey(input.trackId, this.promptVersion);
         const cached = this.byIdempotencyKey.get(idempotencyKey);
         if (cached) {
