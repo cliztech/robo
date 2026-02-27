@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState, useMemo, type ElementType } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type ElementType } from "react";
 import { motion } from "framer-motion";
 import {
   Activity,
@@ -211,6 +211,8 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
     const [error, setError] = useState<string | null>(null);
     const [refreshTick, setRefreshTick] = useState(0);
     const [ackInFlight, setAckInFlight] = useState<Record<string, boolean>>({});
+    const inFlightAlertIdsRef = useRef(new Set<string>());
+    const previousAlertByIdRef = useRef<Record<string, AlertCenterItem | undefined>>({});
 
     useEffect(() => {
         const tick = () => {
@@ -277,16 +279,27 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
     const activeAlerts = useMemo(() => alerts.filter((item) => !item.acknowledged), [alerts]);
 
     const handleAcknowledge = async (alertId: string) => {
-        const previousAlerts = alerts;
+        if (inFlightAlertIdsRef.current.has(alertId)) {
+            return;
+        }
+
+        inFlightAlertIdsRef.current.add(alertId);
         const nowIso = new Date().toISOString();
 
         setAckInFlight((prev) => ({ ...prev, [alertId]: true }));
         setAlerts((prev) =>
-            prev.map((item) =>
-                item.alert_id === alertId
-                    ? { ...item, acknowledged: true, acknowledged_at: item.acknowledged_at ?? nowIso }
-                    : item
-            )
+            prev.map((item) => {
+                if (item.alert_id !== alertId) {
+                    return item;
+                }
+
+                previousAlertByIdRef.current[alertId] = item;
+                return {
+                    ...item,
+                    acknowledged: true,
+                    acknowledged_at: item.acknowledged_at ?? nowIso,
+                };
+            })
         );
 
         try {
@@ -295,9 +308,23 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
                 prev.map((item) => (item.alert_id === alertId ? acknowledgedAlert : item))
             );
         } catch {
-            setAlerts(previousAlerts);
+            const previousAlert = previousAlertByIdRef.current[alertId];
+            if (previousAlert) {
+                setAlerts((prev) =>
+                    prev.map((item) => (item.alert_id === alertId ? previousAlert : item))
+                );
+            }
         } finally {
-            setAckInFlight((prev) => ({ ...prev, [alertId]: false }));
+            delete previousAlertByIdRef.current[alertId];
+            inFlightAlertIdsRef.current.delete(alertId);
+            setAckInFlight((prev) => {
+                if (!prev[alertId]) {
+                    return prev;
+                }
+                const next = { ...prev };
+                delete next[alertId];
+                return next;
+            });
         }
     };
 
