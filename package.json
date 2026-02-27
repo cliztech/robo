@@ -10,7 +10,8 @@
         "test": "vitest run",
         "test:watch": "vitest",
         "test:ui": "vitest run",
-        "test:perf:analysis-latency": "vitest run tests/perf/ai-analysis-latency.test.ts"
+        "test:perf:analysis-latency": "vitest run tests/perf/ai-analysis-latency.test.ts",
+        "test:security": "node scripts/ci/security_smoke_check.mjs"
     },
     "dependencies": {
         "@google/adk": "^0.3.0",

@@ -27,6 +27,32 @@ When users issue short slash commands (for example, `/bmad build`) that are not 
 
 If no safe mapping is obvious, run `bmad-help` behavior and present nearest valid commands from `_bmad/_config/bmad-help.csv`.
 
+## Security smoke pre-release workflow (TI-041)
+
+Run this command set before release readiness sign-off.
+
+```bash
+# Full TI-041 matrix (authN/authZ/lockout/privileged-action block)
+pnpm test:security
+
+# Focused repro for privileged-action block controls (TI-039 + TI-040 dependencies)
+pnpm test:security -- --case privileged-action-block
+
+# Verify deterministic artifacts
+sha256sum artifacts/security/logs/ti-041-security-smoke.log
+cat artifacts/security/hashes/ti-041-smoke-output.sha256
+```
+
+Pass signature:
+- exit code `0`;
+- expected markers present in `artifacts/security/logs/ti-041-security-smoke.log`;
+- checklist `CHK-TI041-01..04` checked in `artifacts/security/reports/ti-041-smoke-matrix-report.md`;
+- log hash matches `artifacts/security/hashes/ti-041-smoke-output.sha256`.
+
+Failure routing:
+- Release gate: mark pre-release security gate **FAIL** in `PRE_RELEASE_CHECKLIST.md`.
+- Security incident routes: `RB-022` (unauthorized action/approval failure) and `RB-020` (encrypted-secret control failure) in `docs/runbooks/index.md`.
+
 ## 0) Fast start and repository sanity checks
 
 ```bash

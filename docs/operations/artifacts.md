@@ -86,6 +86,25 @@ Management Team can audit all artifacts, but ownership remains with the primary 
 - Cleanup must only delete files matching the naming standard in `.agent/` subdirectories.
 - Never delete artifacts referenced by active PRs, incident reports, or compliance audits.
 
+## TI-041 security smoke evidence contract
+
+Security smoke evidence for TI-041 is stored outside `.agent/` for release and incident consumers:
+
+- `artifacts/security/logs/ti-041-security-smoke.log`
+- `artifacts/security/reports/ti-041-smoke-matrix-report.md`
+- `artifacts/security/hashes/ti-041-smoke-output.sha256`
+
+Required signatures:
+
+- Log contains `SMK-AUTHN-01`, `SMK-AUTHZ-01`, `SMK-LOCKOUT-01`, `SMK-PRIV-01` rows with PASS marker sets.
+- Report must check all checklist IDs `CHK-TI041-01..04`.
+- Hash file must be a valid sha256 digest of `ti-041-security-smoke.log`.
+
+Escalation routing when signatures fail:
+
+- Release gate block in `PRE_RELEASE_CHECKLIST.md`.
+- Security/incident route via `docs/runbooks/index.md` (`RB-020`, `RB-022`) and `docs/reliability_incident_response.md`.
+
 ## Compliance Notes
 
 - Do not store secrets, API keys, or credentials in any artifact.

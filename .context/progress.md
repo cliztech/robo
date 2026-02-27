@@ -116,3 +116,5 @@
 - [x] Test-suite hygiene: rebuilt `tests/unit/ai-analysis-service.test.ts` and `tests/integration/analysis-queue.test.ts` to remove duplicated partial blocks and align assertions with current queue contract boundaries.
 
 - [x] Phase namespace hardening: planning/context artifacts now require explicit namespace (`delivery` or `workflow`) and generator output rejects missing namespace metadata.
+
+- [x] Completed TI-041 security smoke workflow: added `scripts/ci/security_smoke_check.mjs`, deterministic pass/fail markers, evidence artifact outputs, and release/security escalation routing documentation.
