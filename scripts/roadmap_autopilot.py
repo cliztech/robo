@@ -46,6 +46,12 @@ ACTION_TEXT_PATTERN = re.compile(
     r"validate|verify|write|restore)\b",
     re.IGNORECASE,
 )
+TI_REFERENCE_PATTERN = re.compile(r"\bTI-\d{3}\b", re.IGNORECASE)
+CANONICAL_TASK_KEY_PATTERN = re.compile(
+    r"\b(?:canonical[_ -]?task[_ -]?key|task[_ -]?key)\s*[:=]\s*([a-z0-9_.-]+)",
+    re.IGNORECASE,
+)
+NON_ALNUM_PATTERN = re.compile(r"[^a-z0-9]+")
 
 
 @dataclass(frozen=True)
@@ -93,6 +99,13 @@ def validate_phase_namespace(tasks: list[QueueItem]) -> None:
                 f"for {rel_source}:{task.line_number} "
                 f"(phase='{task.phase}', namespace='{task.phase_namespace}')"
             )
+@dataclass(frozen=True)
+class ReconciledSkip:
+    """Task excluded during state reconciliation."""
+
+    item: QueueItem
+    reason: str
+    matched_value: str
 
 
 def collect_open_tasks(markdown_path: Path) -> list[OpenTask]:
@@ -130,6 +143,116 @@ def collect_open_tasks(markdown_path: Path) -> list[OpenTask]:
             )
 
     return open_tasks
+
+
+def collect_closed_tasks(markdown_path: Path) -> list[OpenTask]:
+    """Collect checked markdown checklist items from a TODO board."""
+    if not markdown_path.exists():
+        return []
+
+    current_section = "(root)"
+    current_phase = "Unphased"
+    closed_tasks: list[OpenTask] = []
+
+    for line_number, raw_line in enumerate(
+        markdown_path.read_text(encoding="utf-8").splitlines(),
+        start=1,
+    ):
+        header_match = HEADER_PATTERN.match(raw_line)
+        if header_match:
+            current_section = header_match.group(2)
+            phase_match = PHASE_PATTERN.search(current_section)
+            current_phase = (
+                f"P{int(phase_match.group(1))}" if phase_match else "Unphased"
+            )
+            continue
+
+        task_match = CHECKBOX_PATTERN.match(raw_line)
+        if task_match and task_match.group("state").lower() == "x":
+            closed_tasks.append(
+                OpenTask(
+                    source=markdown_path,
+                    line_number=line_number,
+                    section=current_section,
+                    phase=current_phase,
+                    text=task_match.group("text"),
+                )
+            )
+
+    return closed_tasks
+
+
+def normalized_title_fingerprint(text: str) -> str:
+    lowered = text.lower()
+    without_links = re.sub(r"\[[^\]]+\]\([^\)]+\)", " ", lowered)
+    without_ti = TI_REFERENCE_PATTERN.sub(" ", without_links)
+    without_metadata = re.sub(r"\([^\)]*\)", " ", without_ti)
+    without_formatting = re.sub(r"[`*_#>]", " ", without_metadata)
+    collapsed = NON_ALNUM_PATTERN.sub(" ", without_formatting)
+    return " ".join(collapsed.split())
+
+
+def extract_ti_references(text: str) -> set[str]:
+    return {match.group(0).upper() for match in TI_REFERENCE_PATTERN.finditer(text)}
+
+
+def extract_canonical_task_keys(text: str) -> set[str]:
+    return {match.group(1).lower() for match in CANONICAL_TASK_KEY_PATTERN.finditer(text)}
+
+
+def reconcile_tasks(
+    tasks: list[QueueItem],
+    closed_tasks: list[OpenTask],
+) -> tuple[list[QueueItem], list[ReconciledSkip]]:
+    """Drop open queue rows already closed in TODO.md tracked issue checklist."""
+    closed_tis: set[str] = set()
+    closed_keys: set[str] = set()
+    closed_fingerprints: set[str] = set()
+
+    for item in closed_tasks:
+        ti_refs = extract_ti_references(item.text)
+        if not ti_refs and not extract_canonical_task_keys(item.text):
+            continue
+        closed_tis.update(ti_refs)
+        closed_keys.update(extract_canonical_task_keys(item.text))
+        fingerprint = normalized_title_fingerprint(item.text)
+        if fingerprint:
+            closed_fingerprints.add(fingerprint)
+
+    reconciled: list[QueueItem] = []
+    skipped: list[ReconciledSkip] = []
+
+    for item in tasks:
+        item_tis = extract_ti_references(item.text)
+        matched_ti = sorted(item_tis & closed_tis)
+        if matched_ti:
+            skipped.append(
+                ReconciledSkip(item=item, reason="closed_ti_reference", matched_value=matched_ti[0])
+            )
+            continue
+
+        item_keys = extract_canonical_task_keys(item.text)
+        matched_key = sorted(item_keys & closed_keys)
+        if matched_key:
+            skipped.append(
+                ReconciledSkip(item=item, reason="closed_canonical_task_key", matched_value=matched_key[0])
+            )
+            continue
+
+        item_fingerprint = normalized_title_fingerprint(item.text)
+        if item_fingerprint and item_fingerprint in closed_fingerprints:
+            skipped.append(
+                ReconciledSkip(
+                    item=item,
+                    reason="closed_title_fingerprint",
+                    matched_value=item_fingerprint,
+                )
+            )
+            continue
+
+        reconciled.append(item)
+
+    return reconciled, skipped
 
 
 def render_queue(tasks: list[QueueItem], limit: int) -> str:
@@ -204,7 +327,11 @@ def render_phase_summary(phase_totals: dict[str, int]) -> str:
 
 
 
-def write_build_plan(tasks: list[QueueItem], output_path: Path) -> None:
+def write_build_plan(
+    tasks: list[QueueItem],
+    output_path: Path,
+    skipped_tasks: list[ReconciledSkip] | None = None,
+) -> None:
     """Write a markdown build plan grouped by phase from unfinished tasks."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
     validate_phase_namespace(tasks)
@@ -226,6 +353,26 @@ def write_build_plan(tasks: list[QueueItem], output_path: Path) -> None:
     phase_totals = summarize_phases(tasks)
     lines.append(render_phase_summary(phase_totals))
     lines.append("")
+
+    skipped = skipped_tasks or []
+    lines.append(f"Reconciled/skipped tasks: **{len(skipped)}**.")
+    lines.append("")
+
+    if skipped:
+        lines.append("## Reconciled / Skipped")
+        lines.append("")
+        for entry in sorted(
+            skipped,
+            key=lambda item: (str(item.item.source), item.item.line_number),
+        ):
+            rel_source = entry.item.source.relative_to(ROOT)
+            lines.append(
+                "- `"
+                f"{rel_source}:{entry.item.line_number}` ({entry.item.kind}) "
+                f"{entry.item.section} -> {entry.item.text} "
+                f"[reason={entry.reason}; matched={entry.matched_value}]"
+            )
+        lines.append("")
 
     def sort_key(label: str) -> tuple[int, str]:
         match = PHASE_PATTERN.search(label)
@@ -383,6 +530,8 @@ def run_once(
     tasks: list[QueueItem] = []
     missing_files: list[Path] = []
 
+    closed_todo_tracked_tasks: list[OpenTask] = []
+
     for markdown_path in todo_files:
         if markdown_path.exists():
             tasks.extend(
@@ -397,6 +546,8 @@ def run_once(
                 )
                 for task in collect_open_tasks(markdown_path)
             )
+            if markdown_path.name == "TODO.md":
+                closed_todo_tracked_tasks.extend(collect_closed_tasks(markdown_path))
         else:
             missing_files.append(markdown_path)
 
@@ -407,6 +558,7 @@ def run_once(
             missing_files.append(markdown_path)
 
     tasks.sort(key=lambda item: (str(item.source), item.line_number))
+    tasks, skipped_tasks = reconcile_tasks(tasks, closed_todo_tracked_tasks)
 
     if missing_files:
         for missing in missing_files:
@@ -421,7 +573,7 @@ def run_once(
         except ValueError:
             print(f"error: build plan path outside project root: {build_plan}", file=sys.stderr)
             return 2
-        write_build_plan(tasks, output_path)
+        write_build_plan(tasks, output_path, skipped_tasks=skipped_tasks)
         rel_output = output_path.relative_to(ROOT)
         print(f"\nWrote build plan: {rel_output}")
 

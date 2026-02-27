@@ -68,12 +68,24 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 - Standardized phase naming contracts across planning artifacts: `Delivery Phase N` for delivery context and `Workflow Phase N` for workflow context, plus namespace-required packet/build-plan metadata.
 
+- Reconciled unfinished-task generation: closed TODO tracked issues now suppress duplicate roadmap backlog rows using TI-first matching with normalized-title fallback and auditable skip reporting.
 - Added runtime-validated analysis schema + deterministic degraded-normalization reason codes in `src/lib/ai/analysisService.ts`.
 - Expanded malformed-payload unit test coverage in `tests/unit/ai-analysis-service.test.ts` (missing keys, wrong types, empty strings).
 
 - Hardened `backend/playlist_service.py` artist handling with centralized normalization and normalized repeat/transition scoring.
 
 ## Next Atomic Steps
+
+### Phase 5 closure status
+
+- [x] Implement Story P5-01 (Typed Track Analysis Contract: runtime schema validation, deterministic normalization, and reason codes).
+- [x] Implement Story P5-02 (Deterministic Prompt Profile Resolver). Evidence: `src/lib/ai/analysisService.ts`, `tests/unit/ai-analysis-service.test.ts`.
+- [x] Implement Story P5-03 (Resilient AI Invocation Layer). Evidence: `src/lib/ai/analysisService.ts`, `tests/integration/analysis-queue.test.ts`.
+- [x] Implement Story P5-04 (Analysis Fingerprint Cache). Evidence: `src/lib/ai/analysisService.ts`, `tests/unit/ai-analysis-service.test.ts`.
+- [x] Implement Story P5-05 (Verification Harness + latency baseline). Evidence: `tests/perf/ai-analysis-latency.test.ts`, `tests/unit/ai-analysis-service.test.ts`, `tests/integration/analysis-queue.test.ts`.
+- Reconciliation rule: no open checkbox may conflict with a later completion statement in this file.
+
+### Open tracked issues and follow-on work
 
 - [ ] Keep tracked-issue coverage table in sync with status/ownership updates.
 - [x] Add AnalysisService cache controls (LRU cap + TTL) with operational cache metrics and hooks.
@@ -89,11 +101,6 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - [ ] Execute TI-040 packet (config-at-rest encryption policy + operator workflow updates).
 - [ ] Execute TI-041 packet (security smoke script + expected signatures).
 - [x] Regenerate unfinished-task build plan and publish the next phased build artifact for P1 Security.
-- [x] Implement Story P5-01 (Typed Track Analysis Contract: runtime schema validation, deterministic normalization, and reason codes).
-- [ ] Implement Story P5-02 (Deterministic Prompt Profile Resolver).
-- [ ] Implement Story P5-03 (Resilient AI Invocation Layer).
-- [ ] Implement Story P5-04 (Analysis Fingerprint Cache).
-- [ ] Implement Story P5-05 (Verification Harness + latency baseline).
 - [ ] Convert `docs/ui/gui_agent_team_review.md` into implementation stories mapped to GUI-001..GUI-030.
 - [x] Resume "Phase 5: AI Integration" (Implemented typed AI service contracts, guarded API routes, and UI wiring for host/persona flows).
 - [x] Resume "Phase 5: AI Integration" foundation (Implemented AI track analysis service + queue processor + tests).
