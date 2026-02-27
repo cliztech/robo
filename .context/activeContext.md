@@ -62,6 +62,7 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 ## Recent Decisions
 
+- Reconciled unfinished-task generation: closed TODO tracked issues now suppress duplicate roadmap backlog rows using TI-first matching with normalized-title fallback and auditable skip reporting.
 - Added runtime-validated analysis schema + deterministic degraded-normalization reason codes in `src/lib/ai/analysisService.ts`.
 - Expanded malformed-payload unit test coverage in `tests/unit/ai-analysis-service.test.ts` (missing keys, wrong types, empty strings).
 
