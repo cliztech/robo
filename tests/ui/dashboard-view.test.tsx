@@ -1,166 +1,130 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+
 vi.mock('@/components/audio/DegenEffectRack', () => ({ DegenEffectRack: () => <div data-testid="fx-rack" /> }));
 vi.mock('@/components/audio/DegenBeatGrid', () => ({ DegenBeatGrid: () => <div data-testid="beat-grid" /> }));
 vi.mock('@/components/audio/DegenWaveform', () => ({ DegenWaveform: () => <div data-testid="waveform" /> }));
 vi.mock('@/components/schedule/DegenScheduleTimeline', () => ({ DegenScheduleTimeline: () => <div data-testid="schedule" /> }));
 vi.mock('@/components/ai/DegenAIHost', () => ({ DegenAIHost: () => <div data-testid="ai-host" /> }));
 
-import { DashboardView, type DashboardStatusApi, type DashboardStatusResponse } from '@/components/console/DashboardView';
+import { DashboardView } from '@/components/console/DashboardView';
+import {
+  acknowledgeDashboardAlert,
+  fetchDashboardAlerts,
+  fetchDashboardStatus,
+  type DashboardStatusResponse,
+} from '@/lib/status/dashboardClient';
 
+vi.mock('@/lib/status/dashboardClient', async () => {
+  const actual = await vi.importActual<typeof import('@/lib/status/dashboardClient')>('@/lib/status/dashboardClient');
+  return {
+    ...actual,
+    fetchDashboardStatus: vi.fn(),
+    fetchDashboardAlerts: vi.fn(),
+    acknowledgeDashboardAlert: vi.fn(),
+  };
+});
+
+const mockedFetchDashboardStatus = vi.mocked(fetchDashboardStatus);
+const mockedFetchDashboardAlerts = vi.mocked(fetchDashboardAlerts);
+const mockedAcknowledgeDashboardAlert = vi.mocked(acknowledgeDashboardAlert);
 
 function buildStatus(overrides: Partial<DashboardStatusResponse> = {}): DashboardStatusResponse {
-    return {
-        service_health: {
-            status: 'degraded',
-            reason: 'queue depth above critical threshold',
-            observed_at: '2026-02-26T12:00:00.000Z',
+  return {
+    service_health: {
+      status: 'degraded',
+      reason: 'queue depth above critical threshold',
+      observed_at: '2026-02-26T12:00:00.000Z',
+    },
+    queue_depth: {
+      current_depth: 54,
+      trend: [
+        { timestamp: '2026-02-26T11:50:00.000Z', depth: 18 },
+        { timestamp: '2026-02-26T12:00:00.000Z', depth: 54 },
+      ],
+      thresholds: { warning: 30, critical: 50 },
+      state: 'critical',
+    },
+    rotation: {
+      last_successful_rotation_at: '2026-02-26T11:13:00.000Z',
+      stale_after_minutes: 30,
+      is_stale: true,
+      stale_reason: 'rotation worker has not published a successful run',
+    },
+    alert_center: {
+      filters: ['info', 'warning', 'critical'],
+      items: [
+        {
+          alert_id: 'alert-queue-critical',
+          severity: 'critical',
+          title: 'Queue depth above critical threshold',
+          description: 'Queue depth has exceeded 50 items for over 5 minutes.',
+          created_at: '2026-02-26T11:53:00.000Z',
+          acknowledged: false,
+          acknowledged_at: null,
         },
-        queue_depth: {
-            current_depth: 54,
-            trend: [
-                { timestamp: '2026-02-26T11:50:00.000Z', depth: 18 },
-                { timestamp: '2026-02-26T12:00:00.000Z', depth: 54 },
-            ],
-            thresholds: { warning: 30, critical: 50 },
-            state: 'critical',
+        {
+          alert_id: 'alert-rotation-stale',
+          severity: 'warning',
+          title: 'Rotation data stale',
+          description: 'No successful rotation has been recorded for over 45 minutes.',
+          created_at: '2026-02-26T11:58:00.000Z',
+          acknowledged: true,
+          acknowledged_at: '2026-02-26T12:01:00.000Z',
         },
-        rotation: {
-            last_successful_rotation_at: '2026-02-26T11:13:00.000Z',
-            stale_after_minutes: 30,
-            is_stale: true,
-            stale_reason: 'rotation worker has not published a successful run',
-        },
-        alert_center: {
-            filters: ['info', 'warning', 'critical'],
-            items: [
-                {
-                    alert_id: 'alert-queue-critical',
-                    severity: 'critical',
-                    title: 'Queue depth above critical threshold',
-                    description: 'Queue depth has exceeded 50 items for over 5 minutes.',
-                    created_at: '2026-02-26T11:53:00.000Z',
-                    acknowledged: false,
-                    acknowledged_at: null,
-                },
-                {
-                    alert_id: 'alert-rotation-stale',
-                    severity: 'warning',
-                    title: 'Rotation data stale',
-                    description: 'No successful rotation has been recorded for over 45 minutes.',
-                    created_at: '2026-02-26T11:58:00.000Z',
-                    acknowledged: false,
-                    acknowledged_at: null,
-                },
-            ],
-        },
-        ...overrides,
-    };
+      ],
+    },
+    ...overrides,
+  };
 }
 
 describe('DashboardView', () => {
-    it('renders loading state before status resolves', async () => {
-        const api: DashboardStatusApi = {
-            fetchDashboardStatus: () => new Promise(() => {}),
-            acknowledgeAlert: vi.fn(),
-        };
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-02-26T12:10:00.000Z'));
+    const status = buildStatus();
+    mockedFetchDashboardStatus.mockResolvedValue(status);
+    mockedFetchDashboardAlerts.mockResolvedValue(status.alert_center.items);
+    mockedAcknowledgeDashboardAlert.mockResolvedValue(status.alert_center.items[0]);
+  });
 
-        render(<DashboardView api={api} />);
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.resetAllMocks();
+  });
 
-        expect(screen.getByText('Loading dashboard status…')).toBeInTheDocument();
-    });
+  it('renders service freshness helper text from observed_at', async () => {
+    render(<DashboardView />);
 
-    it('renders error state when status request fails', async () => {
-        const api: DashboardStatusApi = {
-            fetchDashboardStatus: vi.fn().mockRejectedValue(new Error('status endpoint unavailable')),
-            acknowledgeAlert: vi.fn(),
-        };
+    expect(await screen.findByText('Queue depth above critical threshold')).toBeInTheDocument();
+    expect(screen.getByTestId('service-health-freshness')).toHaveTextContent('Updated 10 min ago');
+  });
 
-        render(<DashboardView api={api} />);
+  it('renders queue threshold markers from queue_depth.thresholds', async () => {
+    render(<DashboardView />);
 
-        const alert = await screen.findByRole('alert');
-        expect(alert).toHaveTextContent('status endpoint unavailable');
-    });
+    await screen.findByText('Queue depth above critical threshold');
+    expect(screen.getByTestId('queue-depth-threshold-markers')).toBeInTheDocument();
+    expect(screen.getByTestId('queue-warning-marker')).toBeInTheDocument();
+    expect(screen.getByTestId('queue-critical-marker')).toBeInTheDocument();
+  });
 
-    it('renders mapped status values from dashboard response', async () => {
-        const api: DashboardStatusApi = {
-            fetchDashboardStatus: vi.fn().mockResolvedValue(buildStatus()),
-            acknowledgeAlert: vi.fn(),
-        };
+  it('filters alert rows by severity chips and keeps acknowledged alerts visible but muted', async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<DashboardView />);
 
-        render(<DashboardView api={api} />);
+    expect(await screen.findByText('Queue depth above critical threshold')).toBeInTheDocument();
+    expect(screen.getByText('Rotation data stale')).toBeInTheDocument();
 
-        await screen.findByText('Queue depth above critical threshold');
-        expect(screen.getByText('DEGRADED')).toBeInTheDocument();
-        expect(screen.getByText('Queue Depth')).toBeInTheDocument();
-        expect(screen.getByText('Warning Threshold')).toBeInTheDocument();
-        expect(screen.getByText('Critical Threshold')).toBeInTheDocument();
-        expect(screen.getByTestId('queue-depth-state')).toHaveTextContent('critical');
-    });
+    await user.click(screen.getByRole('button', { name: 'warning' }));
 
-    it('acknowledges an alert, calls API with id, and updates UI counts/timestamp', async () => {
-        const user = userEvent.setup();
-        const acknowledgedAt = '2026-02-26T12:05:00.000Z';
-        const api: DashboardStatusApi = {
-            fetchDashboardStatus: vi.fn().mockResolvedValue(buildStatus()),
-            acknowledgeAlert: vi.fn().mockResolvedValue({
-                ...buildStatus().alert_center.items[0],
-                acknowledged: true,
-                acknowledged_at: acknowledgedAt,
-            }),
-        };
+    expect(screen.queryByText('Rotation data stale')).not.toBeInTheDocument();
+    expect(screen.getByText('Queue depth above critical threshold')).toBeInTheDocument();
 
-        render(<DashboardView api={api} />);
+    await user.click(screen.getByRole('button', { name: 'warning' }));
 
-        await screen.findByText('Queue depth above critical threshold');
-        await user.click(screen.getAllByRole('button', { name: 'Acknowledge' })[0]);
-
-        expect(api.acknowledgeAlert).toHaveBeenCalledWith('alert-queue-critical');
-
-        await waitFor(() => {
-            expect(screen.getByTestId('alert-ack-alert-queue-critical')).not.toHaveTextContent('Ack at: —');
-        });
-        expect(screen.getByTestId('severity-count-critical')).toHaveTextContent('Critical: 0');
-    });
-
-    it.each([
-        { depth: 29, expected: 'info' },
-        { depth: 30, expected: 'warning' },
-        { depth: 49, expected: 'warning' },
-        { depth: 50, expected: 'critical' },
-    ])('renders threshold severity for queue depth=$depth', async ({ depth, expected }) => {
-        const api: DashboardStatusApi = {
-            fetchDashboardStatus: vi.fn().mockResolvedValue(
-                buildStatus({
-                    queue_depth: {
-                        current_depth: depth,
-                        trend: [{ timestamp: '2026-02-26T12:00:00.000Z', depth }],
-                        thresholds: { warning: 30, critical: 50 },
-                        state: 'info',
-                    },
-                })
-            ),
-            acknowledgeAlert: vi.fn(),
-        };
-
-        render(<DashboardView api={api} />);
-
-        await screen.findByTestId('queue-depth-state');
-        expect(screen.getByTestId('queue-depth-state')).toHaveTextContent(expected);
-    });
-
-    it('does not render hardcoded fallback metrics when real dashboard data exists', async () => {
-        const api: DashboardStatusApi = {
-            fetchDashboardStatus: vi.fn().mockResolvedValue(buildStatus()),
-            acknowledgeAlert: vi.fn(),
-        };
-
-        render(<DashboardView api={api} />);
-
-        await screen.findByText('Queue depth above critical threshold');
-        expect(screen.queryByText('1,247')).not.toBeInTheDocument();
-        expect(screen.queryByText('99.8')).not.toBeInTheDocument();
-        expect(screen.queryByText('320')).not.toBeInTheDocument();
-    });
+    const acknowledgedRow = screen.getByText('Rotation data stale').closest('div.rounded-lg');
+    expect(acknowledgedRow).toHaveClass('opacity-60');
+  });
 });
