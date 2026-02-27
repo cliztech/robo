@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -55,12 +55,6 @@ class PlaylistGenerationResult(BaseModel):
     total_duration_seconds: int = Field(ge=0)
 
 
-class PlaylistResponseEnvelope(BaseModel):
-    success: bool
-    data: PlaylistGenerationResult | None
-    error: "PlaylistGenerationError" | None
-
-
 class PlaylistGenerationError(BaseModel):
     code: Literal["playlist_constraints_infeasible"]
     message: str
@@ -70,13 +64,19 @@ class PlaylistGenerationError(BaseModel):
     blocked_counts: dict[Literal["bpm_delta", "genre_run_length", "duration_target"], int]
 
 
+class PlaylistResponseEnvelope(BaseModel):
+    success: bool
+    data: PlaylistGenerationResult | None
+    error: PlaylistGenerationError | None
+
+
 @dataclass(frozen=True)
 class _TimeProfile:
-    preferred_genres: tuple[str, ...]
     target_energy: int
+    preferred_genres: frozenset[str]
 
 
-@dataclass(slots=True)
+@dataclass
 class _OptimizedTrack:
     track: TrackCandidate
     genre_lower: str
@@ -85,39 +85,26 @@ class _OptimizedTrack:
 
 
 TIME_OF_DAY_PROFILE: dict[int, _TimeProfile] = {
-    0: _TimeProfile(("ambient", "lofi", "chill"), 3),
-    1: _TimeProfile(("ambient", "lofi", "chill"), 3),
-    2: _TimeProfile(("ambient", "lofi", "chill"), 3),
-    3: _TimeProfile(("ambient", "lofi", "chill"), 3),
-    4: _TimeProfile(("ambient", "chill", "pop"), 4),
-    5: _TimeProfile(("chill", "pop", "indie"), 4),
-    6: _TimeProfile(("pop", "indie", "hip-hop"), 5),
-    7: _TimeProfile(("pop", "hip-hop", "rock"), 6),
-    8: _TimeProfile(("pop", "hip-hop", "rock"), 6),
-    9: _TimeProfile(("pop", "indie", "rock"), 6),
-    10: _TimeProfile(("pop", "indie", "house"), 6),
-    11: _TimeProfile(("house", "dance", "pop"), 7),
-    12: _TimeProfile(("house", "dance", "hip-hop"), 7),
-    13: _TimeProfile(("house", "dance", "hip-hop"), 7),
-    14: _TimeProfile(("house", "edm", "hip-hop"), 8),
-    15: _TimeProfile(("house", "edm", "rock"), 8),
-    16: _TimeProfile(("edm", "rock", "hip-hop"), 8),
-    17: _TimeProfile(("edm", "rock", "hip-hop"), 8),
-    18: _TimeProfile(("rock", "hip-hop", "dance"), 7),
-    19: _TimeProfile(("rock", "hip-hop", "dance"), 7),
-    20: _TimeProfile(("indie", "rock", "synthwave"), 6),
-    21: _TimeProfile(("indie", "synthwave", "chill"), 5),
-    22: _TimeProfile(("chill", "synthwave", "ambient"), 4),
-    23: _TimeProfile(("chill", "ambient", "lofi"), 4),
+    h: _TimeProfile(target_energy=5, preferred_genres=frozenset(["pop", "rock"]))
+    for h in range(24)
 }
+# Overlay specific profiles
+for h in range(6, 10):  # Morning
+    TIME_OF_DAY_PROFILE[h] = _TimeProfile(target_energy=7, preferred_genres=frozenset(["pop", "upbeat"]))
+for h in range(20, 24):  # Evening
+    TIME_OF_DAY_PROFILE[h] = _TimeProfile(target_energy=8, preferred_genres=frozenset(["dance", "electronic"]))
+for h in range(0, 5):  # Late Night
+    TIME_OF_DAY_PROFILE[h] = _TimeProfile(target_energy=4, preferred_genres=frozenset(["lofi", "ambient"]))
 
 
 class PlaylistGenerationService:
-    @staticmethod
-    def _normalize_artist(artist: str) -> str:
-        return artist.strip().casefold()
+    def __init__(self) -> None:
+        self._cache = {}
 
-    def generate(self, request: PlaylistGenerationRequest) -> PlaylistGenerationResult:
+    def _normalize_artist(self, artist: str) -> str:
+        return artist.strip().lower()
+
+    def generate_playlist(self, request: PlaylistGenerationRequest) -> PlaylistGenerationResult:
         # Pre-process tracks into optimized structures (O(N))
         remaining = [
             _OptimizedTrack(
