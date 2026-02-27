@@ -122,3 +122,5 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 - [x] Replaced merge-corrupted `src/lib/ai/analysisService.ts` with a single canonical implementation (normalized result/record types, single idempotency key strategy, unified LRU+TTL cache map, deterministic analyze flow, and queue outcome mapping).
 - [x] Refactored malformed AI analysis unit/integration suites into clean non-overlapping describe trees and public-contract queue assertions.
+
+- [x] Security P1 implementation: added approval-policy enforcement, immutable security audit export/manifest pipeline, config envelope crypto interceptors for schedules/prompt variables, and export CLI (`backend/security/export_audit_cli.py`).
