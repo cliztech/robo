@@ -39,6 +39,7 @@ Executing "Phase 5: AI Integration" through a quick-dev next-phase plan that dec
 
 ## Next Atomic Steps
 - [ ] Keep tracked-issue coverage table in sync with status/ownership updates.
+- [x] Add AnalysisService cache controls (LRU cap + TTL) with operational cache metrics and hooks.
 - [x] Implement unified DJ studio surface layout for decks/studio route.
 - [x] Add deterministic BMAD routing for GUI/music console agent-team phrases (including "agwnt" typo handling).
 - [ ] Verify `.context/` structure is complete.
