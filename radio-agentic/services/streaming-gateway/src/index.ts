@@ -4,6 +4,11 @@ import { mkEvent } from "../../../shared/src/events";
 import type { NowPlaying } from "../../../shared/src/types";
 import { FfmpegSupervisor, type StreamingHealthSnapshot } from "./ffmpegSupervisor";
 import { icecastUrl } from "./icecast";
+import {
+  buildIcecastStatsUrl,
+  resolveListenerPollingConfigFromEnv,
+  startListenerPolling,
+} from "./listeners";
 
 const NATS_URL = process.env.NATS_URL ?? "nats://nats:4222";
 const FIFO_PATH = process.env.AUDIO_FIFO ?? "/tmp/radio.pcm";
@@ -33,6 +38,14 @@ function log(event: string, payload: Record<string, unknown> = {}): void {
     }),
   );
 }
+const statsConfig = resolveListenerPollingConfigFromEnv();
+
+const INVALID_CREDENTIAL_PLACEHOLDERS = new Set([
+  "",
+  "__SET_IN_ENV__",
+  "hackme",
+  "changeme",
+]);
 
 function assertValidCredential(name: string, value: string): void {
   if (INVALID_CREDENTIAL_PLACEHOLDERS.has(value.trim().toLowerCase())) {
@@ -152,6 +165,24 @@ async function main() {
   });
 
   healthServer.listen(HEALTH_PORT, () => log("health_server_started", { port: HEALTH_PORT }));
+
+  const listenerPoller = startListenerPolling(bus, {
+    ...statsConfig,
+    statsUrl: buildIcecastStatsUrl(ICE_HOST, ICE_PORT, statsConfig.statsUrl),
+  });
+
+  const shutdown = async () => {
+    listenerPoller.stop();
+    await bus.close();
+  };
+
+  process.once("SIGINT", () => {
+    void shutdown().finally(() => process.exit(0));
+  });
+
+  process.once("SIGTERM", () => {
+    void shutdown().finally(() => process.exit(0));
+  });
 
   await bus.subscribe<NowPlaying>("now_playing", async (evt) => {
     const np = evt.data;
