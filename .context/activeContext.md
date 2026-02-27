@@ -71,3 +71,6 @@ Executing "Phase 5: AI Integration" through a quick-dev next-phase plan that dec
 - [x] Split mixed tracked-issue files and reassigned security tasks to dedicated TI IDs (TI-039/TI-040/TI-041) with reference updates.
 
 - [ ] Start Phase 7 implementation stories for Icecast streaming and metadata updates.
+
+
+- [x] Phase 5 next slice: added deterministic analysis fingerprinting, structured execution status (`success`/`degraded`), and cache hit/miss telemetry in `src/lib/ai/analysisService.ts` with updated tests.

@@ -20,7 +20,7 @@ export interface RawTrackAnalysis {
 
 export interface TrackIntelligenceRecord {
     trackId: string;
-    idempotencyKey: string;
+    fingerprint: string;
     energy: number;
     mood: TrackMood;
     era: string;
@@ -36,6 +36,8 @@ export interface TrackIntelligenceRecord {
 
 export interface AnalysisResult {
     status: 'analyzed' | 'skipped';
+    executionStatus: 'success' | 'degraded';
+    record: TrackIntelligenceRecord;
     outcome: 'success' | 'degraded' | 'failed';
     source: 'ai' | 'fallback';
     record: TrackIntelligenceRecord | null;
@@ -87,6 +89,11 @@ interface CacheEntry {
     record: TrackIntelligenceRecord;
     cachedAt: number;
     lastAccessAt: number;
+}
+
+export interface AnalysisTelemetry {
+    cacheHits: number;
+    cacheMisses: number;
 }
 
 const SUPPORTED_MOODS: TrackMood[] = ['calm', 'chill', 'energetic', 'intense', 'uplifting'];
@@ -192,6 +199,10 @@ export class AnalysisService {
     private readonly cacheTtlMs?: number;
     private readonly now: () => Date;
     private readonly onRetry?: (attempt: number, error: unknown) => void;
+    private readonly byFingerprint = new Map<string, TrackIntelligenceRecord>();
+    private readonly telemetry: AnalysisTelemetry = {
+        cacheHits: 0,
+        cacheMisses: 0,
     private readonly byIdempotencyKey = new Map<string, CacheEntry>();
     private readonly onCacheEvent?: (event: AnalysisCacheEvent) => void;
     private readonly byIdempotencyKey = new Map<string, AnalysisCacheEntry>();
@@ -220,7 +231,11 @@ export class AnalysisService {
     }
 
     getCacheSize(): number {
-        return this.byIdempotencyKey.size;
+        return this.byFingerprint.size;
+    }
+
+    getTelemetry(): AnalysisTelemetry {
+        return { ...this.telemetry };
     }
 
     getCacheStats(): AnalysisCacheStats {
@@ -234,6 +249,11 @@ export class AnalysisService {
     }
 
     async analyze(input: TrackAnalysisInput): Promise<AnalysisResult> {
+        const fingerprint = this.buildFingerprint(input, this.promptVersion);
+        const cached = this.byFingerprint.get(fingerprint);
+        if (cached) {
+            this.telemetry.cacheHits += 1;
+            return { status: 'skipped', executionStatus: 'success', record: cached };
         this.evictExpiredEntries();
 
         const idempotencyKey = this.buildIdempotencyKey(input.trackId, this.promptVersion);
@@ -266,6 +286,8 @@ export class AnalysisService {
             };
         }
 
+        this.telemetry.cacheMisses += 1;
+
         let attempt = 0;
         let normalized: TrackIntelligenceRecord | null = null;
         let source: 'ai' | 'fallback' = 'ai';
@@ -274,6 +296,11 @@ export class AnalysisService {
             attempt += 1;
             try {
                 const raw = await this.adapter.analyzeTrack(input, this.promptVersion);
+                normalized = this.normalize(raw, input, fingerprint, 'ai', attempt);
+            } catch (error) {
+                if (attempt > this.maxRetries) {
+                    const fallback = createFallbackAnalysis(input);
+                    normalized = this.normalize(fallback, input, fingerprint, 'fallback', attempt);
                 normalized = this.normalize(raw, input, idempotencyKey, versionProfile, 'ai', attempt);
             } catch (error) {
                 if (attempt > this.maxRetries) {
@@ -301,6 +328,26 @@ export class AnalysisService {
             };
         }
 
+        this.byFingerprint.set(fingerprint, normalized);
+        return {
+            status: 'analyzed',
+            executionStatus: normalized.source === 'ai' ? 'success' : 'degraded',
+            record: normalized,
+        };
+    }
+
+    private buildFingerprint(input: TrackAnalysisInput, promptVersion: string): string {
+        const stablePayload = [
+            input.trackId,
+            input.title.trim().toLowerCase(),
+            input.artist.trim().toLowerCase(),
+            (input.genre ?? '').trim().toLowerCase(),
+            String(input.bpm ?? ''),
+            String(input.durationSeconds ?? ''),
+            promptVersion,
+        ];
+
+        return stablePayload.join('|');
         const nowMs = this.now().getTime();
         this.byIdempotencyKey.set(idempotencyKey, {
             record: normalized,
@@ -498,6 +545,7 @@ export class AnalysisService {
     private normalize(
         raw: RawTrackAnalysis,
         input: TrackAnalysisInput,
+        fingerprint: string,
         idempotencyKey: string,
         versionProfile: AnalysisVersionProfile,
         source: 'ai' | 'fallback',
@@ -513,7 +561,7 @@ export class AnalysisService {
 
         return {
             trackId: input.trackId,
-            idempotencyKey,
+            fingerprint,
             energy,
             mood,
             era: normalizeEra(raw.era),

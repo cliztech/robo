@@ -30,7 +30,9 @@ describe('AnalysisService', () => {
         });
 
         expect(result.status).toBe('analyzed');
+        expect(result.executionStatus).toBe('success');
         expect(result.record.source).toBe('ai');
+        expect(result.record.fingerprint).toBe('track-001|neon wave|dgn|house|128||v5.1');
         expect(result.record.energy).toBe(1);
         expect(result.record.mood).toBe('energetic');
         expect(result.record.genreConfidence).toBe(0);
@@ -73,6 +75,11 @@ describe('AnalysisService', () => {
 
         expect(adapter.analyzeTrack).toHaveBeenCalledTimes(3);
         expect(onRetry).toHaveBeenCalledTimes(2);
+        expect(result.executionStatus).toBe('degraded');
+        expect(result.record.source).toBe('fallback');
+        expect(result.record.attempts).toBe(3);
+        expect(result.record.energy).toBe(0.82);
+        expect(result.record.mood).toBe('energetic');
         expect(result.outcome).toBe('degraded');
         expect(result.source).toBe('fallback');
         expect(result.record).not.toBeNull();
@@ -111,6 +118,10 @@ describe('AnalysisService', () => {
         expect(first.outcome).toBe('success');
         expect(second.outcome).toBe('success');
         expect(adapter.analyzeTrack).toHaveBeenCalledTimes(1);
+        expect(service.getTelemetry()).toEqual({
+            cacheHits: 1,
+            cacheMisses: 1,
+        });
     });
 
     it('re-analyzes after TTL expiry', async () => {
