@@ -35,6 +35,7 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 ## Recent Decisions
 
+- Completed shared canonical track-analysis contract extraction (`backend/ai/contracts/track_analysis.py`) and aligned service/API/tests with temporary legacy adapter removal criteria for Phase 5 story P5-05.
 - Added Phase 5 latency verification harness (`tests/perf/ai-analysis-latency.test.ts`) with JSON/Markdown artifacts and cache telemetry assertions for queue integration tests.
 - Added caller-facing analysis outcome classification (`success`/`degraded`/`failed`) in analysis service + queue mapping, with updated unit/integration coverage.
 - Upgraded `docs/massive_workflow_blueprint.md` Phase 1 with implementation-grade Data Contracts, Workflow Graph Definition, Policy Profiles, and acceptance/verification criteria; cross-linked unfinished Phase 1 tasks to section anchors.

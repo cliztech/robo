@@ -143,11 +143,11 @@ class TrackAnalysisService:
 
         analysis = TrackAnalysis(
             genre=genre,
-            mood=profile.mood,
+            mood=TrackMood(profile.mood),
             energy_level=energy_level,
             danceability=danceability,
             bpm_estimate=bpm_estimate,
-            vocal_style=vocal_style,
+            vocal_style=VocalStyle(vocal_style),
             best_for_time=best_for_time,
             tags=list(profile.tags),
             confidence_score=confidence,

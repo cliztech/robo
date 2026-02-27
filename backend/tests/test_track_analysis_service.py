@@ -1,4 +1,5 @@
-from backend.track_analysis_service import TrackAnalysisRequest, TrackAnalysisService
+from backend.ai.contracts.track_analysis import AnalysisStatus, TrackAnalysisRequest
+from backend.track_analysis_service import TrackAnalysisService
 
 
 def test_track_analysis_derives_profile_from_genre_hint() -> None:
@@ -41,6 +42,16 @@ def test_track_analysis_handles_missing_genre_hint() -> None:
     assert 1 <= result.analysis.energy_level <= 10
 
 
+def test_track_analysis_uses_canonical_contract_status() -> None:
+    service = TrackAnalysisService()
+    result = service.analyze(
+        TrackAnalysisRequest(
+            track_id="trk_status",
+            metadata={"title": "Pulse", "artist": "Unit", "duration_seconds": 180, "genre_hint": "edm"},
+        )
+    )
+
+    assert result.analysis.status is AnalysisStatus.SUCCESS
 def test_track_analysis_cache_hit_for_identical_requests() -> None:
     service = TrackAnalysisService()
     request = TrackAnalysisRequest(
