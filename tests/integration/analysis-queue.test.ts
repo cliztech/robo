@@ -4,6 +4,7 @@ import { AnalysisService, processAnalysisQueue } from '@/lib/ai/analysisService'
 
 describe('processAnalysisQueue', () => {
     it('processes queue items in order and preserves idempotent skips for same fingerprint', async () => {
+    it('skips identical input and re-analyzes when input mutates', async () => {
         const adapter = {
             analyzeTrack: vi
                 .fn()
@@ -15,19 +16,19 @@ describe('processAnalysisQueue', () => {
         const service = new AnalysisService({
             adapter,
             promptVersion: 'v5.4',
-            modelVersion: 'gpt-4o-mini-2026-02-01',
-            promptProfileVersion: 'profile-a',
+            modelVersion: 'gpt-4o-mini-2026-02',
+            promptProfileVersion: 'analysis-profile-v3',
         });
 
         const results = await processAnalysisQueue(
             [
                 {
                     id: 'job-1',
-                    input: { trackId: 'track-1', title: 'Alpha', artist: 'A' },
+                    input: { trackId: 'track-1', title: 'Alpha', artist: 'A', genre: 'house' },
                 },
                 {
                     id: 'job-2',
-                    input: { trackId: 'track-1', title: 'Alpha', artist: 'A' },
+                    input: { trackId: 'track-1', title: 'Alpha', artist: 'A', genre: 'house' },
                 },
                 {
                     id: 'job-2b',
@@ -35,7 +36,7 @@ describe('processAnalysisQueue', () => {
                 },
                 {
                     id: 'job-3',
-                    input: { trackId: 'track-2', title: 'Beta', artist: 'B' },
+                    input: { trackId: 'track-1', title: 'Alpha', artist: 'A', genre: 'techno' },
                 },
             ],
             service
@@ -46,6 +47,9 @@ describe('processAnalysisQueue', () => {
             { itemId: 'job-2', status: 'skipped', source: 'ai' },
             { itemId: 'job-2b', status: 'analyzed', source: 'ai' },
             { itemId: 'job-3', status: 'analyzed', source: 'ai' },
+            { itemId: 'job-1', status: 'analyzed', outcome: 'success', source: 'ai' },
+            { itemId: 'job-2', status: 'skipped', outcome: 'success', source: 'ai' },
+            { itemId: 'job-3', status: 'analyzed', outcome: 'success', source: 'ai' },
         ]);
         expect(adapter.analyzeTrack).toHaveBeenCalledTimes(3);
     });
@@ -89,5 +93,41 @@ describe('processAnalysisQueue', () => {
         const recordA = (await serviceA.analyze(input)).record;
         const recordB = (await serviceB.analyze(input)).record;
         expect(recordA.idempotencyKey).not.toEqual(recordB.idempotencyKey);
+    });
+
+    it('maps degraded and failed outcomes from service analysis', async () => {
+        const adapter = {
+            analyzeTrack: vi
+                .fn()
+                .mockRejectedValueOnce(new Error('timeout'))
+                .mockRejectedValueOnce(new Error('timeout'))
+                .mockRejectedValueOnce(new Error('timeout'))
+                .mockRejectedValueOnce(new Error('timeout')),
+        };
+
+        const service = new AnalysisService({
+            adapter,
+            promptVersion: 'v5.5',
+            maxRetries: 1,
+        });
+
+        const results = await processAnalysisQueue(
+            [
+                {
+                    id: 'job-1',
+                    input: { trackId: 'track-degraded', title: 'Gamma', artist: 'C', bpm: 128 },
+                },
+                {
+                    id: 'job-2',
+                    input: { trackId: ' ', title: 'Broken', artist: 'D', bpm: 128 },
+                },
+            ],
+            service
+        );
+
+        expect(results).toEqual([
+            { itemId: 'job-1', status: 'analyzed', outcome: 'degraded', source: 'fallback' },
+            { itemId: 'job-2', status: 'analyzed', outcome: 'failed', source: 'fallback' },
+        ]);
     });
 });
