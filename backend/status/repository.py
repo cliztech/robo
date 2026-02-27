@@ -99,8 +99,7 @@ class SQLiteStatusAlertRepository:
                 connection.execute(
                     f"""
                     UPDATE status_alerts
-                    SET resolved_at = ?,
-                        acknowledged = CASE WHEN acknowledged = 0 THEN 0 ELSE acknowledged END
+                    SET resolved_at = ?
                     WHERE resolved_at IS NULL
                       AND alert_id NOT IN ({placeholders})
                     """,
