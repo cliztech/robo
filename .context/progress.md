@@ -116,3 +116,8 @@
 - [x] Test-suite hygiene: rebuilt `tests/unit/ai-analysis-service.test.ts` and `tests/integration/analysis-queue.test.ts` to remove duplicated partial blocks and align assertions with current queue contract boundaries.
 
 - [x] Phase namespace hardening: planning/context artifacts now require explicit namespace (`delivery` or `workflow`) and generator output rejects missing namespace metadata.
+
+## 2026-02-27 TI-040 Completion Update
+- [x] Added value-level encryption envelope validation for high-risk fields (`openai_api_key`, `tts_api_key`, `webhook_auth_token`, `stream_fallback_password`, `remote_ingest_secret`) in `config/validate_config.py`.
+- [x] Added deterministic encryption evidence emission (`--encryption-evidence`) to support `before_hash_sha256`/`after_hash_sha256` audit trails.
+- [x] Updated `CONFIG_VALIDATION.md`, `docs/operations/artifacts.md`, and TI-040 tracked issue docs with provenance, rotation, rollback, and operator evidence contract requirements aligned to TI-039 exports.

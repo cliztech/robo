@@ -122,3 +122,7 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 - [x] Replaced merge-corrupted `src/lib/ai/analysisService.ts` with a single canonical implementation (normalized result/record types, single idempotency key strategy, unified LRU+TTL cache map, deterministic analyze flow, and queue outcome mapping).
 - [x] Refactored malformed AI analysis unit/integration suites into clean non-overlapping describe trees and public-contract queue assertions.
+
+## 2026-02-27 TI-040 execution update
+- Implemented validator-side encryption envelope enforcement for TI-040 sensitive keys in `config/validate_config.py` with deterministic evidence hash output (`--encryption-evidence`).
+- Updated operator workflow docs for key provenance, <=90-day rotation evidence, rollback behavior on decryption failure, and TI-039 hash/audit export compatibility.
