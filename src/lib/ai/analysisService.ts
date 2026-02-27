@@ -83,6 +83,12 @@ interface AnalysisVersionProfile {
     promptProfileVersion: string;
 }
 
+interface CacheEntry {
+    record: TrackIntelligenceRecord;
+    cachedAt: number;
+    lastAccessAt: number;
+}
+
 const SUPPORTED_MOODS: TrackMood[] = ['calm', 'chill', 'energetic', 'intense', 'uplifting'];
 
 function clamp01(value: number): number {
@@ -186,6 +192,7 @@ export class AnalysisService {
     private readonly cacheTtlMs?: number;
     private readonly now: () => Date;
     private readonly onRetry?: (attempt: number, error: unknown) => void;
+    private readonly byIdempotencyKey = new Map<string, CacheEntry>();
     private readonly onCacheEvent?: (event: AnalysisCacheEvent) => void;
     private readonly byIdempotencyKey = new Map<string, AnalysisCacheEntry>();
     private readonly cacheStats = {
@@ -202,6 +209,8 @@ export class AnalysisService {
         this.promptProfileVersion = options.promptProfileVersion;
         this.resolveVersionProfile = options.resolveVersionProfile;
         this.maxRetries = options.maxRetries ?? 2;
+        this.maxCacheEntries = options.maxCacheEntries ?? Number.POSITIVE_INFINITY;
+        this.cacheTtlMs = options.cacheTtlMs;
         this.maxCacheEntries = Math.max(1, options.maxCacheEntries ?? 512);
         this.cacheTtlMs =
             typeof options.cacheTtlMs === 'number' && options.cacheTtlMs >= 0 ? options.cacheTtlMs : undefined;
@@ -225,6 +234,9 @@ export class AnalysisService {
     }
 
     async analyze(input: TrackAnalysisInput): Promise<AnalysisResult> {
+        this.evictExpiredEntries();
+
+        const idempotencyKey = this.buildIdempotencyKey(input.trackId, this.promptVersion);
         const idempotencyKey = this.buildFingerprintKey(input);
         const versionProfile = this.resolveVersionProfile?.(input) ?? {
             modelVersion: this.modelVersion ?? 'unknown-model',
@@ -244,6 +256,8 @@ export class AnalysisService {
         const idempotencyKey = this.buildIdempotencyKey(input.trackId, this.promptVersion);
         const cached = this.getCachedRecord(idempotencyKey);
         if (cached) {
+            cached.lastAccessAt = this.now().getTime();
+            return { status: 'skipped', record: cached.record };
             return {
                 status: 'skipped',
                 outcome: cached.source === 'ai' ? 'success' : 'degraded',
@@ -287,6 +301,13 @@ export class AnalysisService {
             };
         }
 
+        const nowMs = this.now().getTime();
+        this.byIdempotencyKey.set(idempotencyKey, {
+            record: normalized,
+            cachedAt: nowMs,
+            lastAccessAt: nowMs,
+        });
+        this.enforceCacheBounds();
         this.cacheRecord(idempotencyKey, normalized);
         return { status: 'analyzed', record: normalized };
         this.byIdempotencyKey.set(idempotencyKey, normalized);
@@ -419,6 +440,45 @@ export class AnalysisService {
         this.emitCacheEvent('set', idempotencyKey);
     }
 
+    private evictExpiredEntries(): void {
+        if (typeof this.cacheTtlMs !== 'number' || this.cacheTtlMs < 0) {
+            return;
+        }
+
+        const nowMs = this.now().getTime();
+        for (const [key, entry] of this.byIdempotencyKey.entries()) {
+            if (nowMs - entry.cachedAt > this.cacheTtlMs) {
+                this.byIdempotencyKey.delete(key);
+            }
+        }
+    }
+
+    private enforceCacheBounds(): void {
+        if (!Number.isFinite(this.maxCacheEntries) || this.maxCacheEntries < 0) {
+            return;
+        }
+
+        while (this.byIdempotencyKey.size > this.maxCacheEntries) {
+            let lruKey: string | null = null;
+            let lruAccess = Number.POSITIVE_INFINITY;
+
+            for (const [key, entry] of this.byIdempotencyKey.entries()) {
+                if (entry.lastAccessAt < lruAccess) {
+                    lruAccess = entry.lastAccessAt;
+                    lruKey = key;
+                }
+            }
+
+            if (!lruKey) {
+                break;
+            }
+
+            this.byIdempotencyKey.delete(lruKey);
+        }
+    }
+
+    private buildIdempotencyKey(trackId: string, promptVersion: string): string {
+        return `${trackId}:${promptVersion}`;
     private emitCacheEvent(type: AnalysisCacheEvent['type'], key: string): void {
         this.onCacheEvent?.({
             type,

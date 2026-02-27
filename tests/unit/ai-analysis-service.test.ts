@@ -113,6 +113,91 @@ describe('AnalysisService', () => {
         expect(adapter.analyzeTrack).toHaveBeenCalledTimes(1);
     });
 
+    it('re-analyzes after TTL expiry', async () => {
+        const adapter = {
+            analyzeTrack: vi
+                .fn()
+                .mockResolvedValueOnce({ energy: 0.4, mood: 'chill', era: '2010s', genreConfidence: 0.5 })
+                .mockResolvedValueOnce({ energy: 0.7, mood: 'energetic', era: '2020s', genreConfidence: 0.8 }),
+        };
+
+        let nowMs = new Date('2026-02-26T12:00:00.000Z').getTime();
+        const service = new AnalysisService({
+            adapter,
+            promptVersion: 'v5.4',
+            cacheTtlMs: 1000,
+            now: () => new Date(nowMs),
+        });
+
+        const input = { trackId: 'track-ttl', title: 'Clock Drift', artist: 'DGN' };
+
+        const first = await service.analyze(input);
+        nowMs += 500;
+        const second = await service.analyze(input);
+        nowMs += 1100;
+        const third = await service.analyze(input);
+
+        expect(first.status).toBe('analyzed');
+        expect(second.status).toBe('skipped');
+        expect(third.status).toBe('analyzed');
+        expect(adapter.analyzeTrack).toHaveBeenCalledTimes(2);
+    });
+
+    it('evicts least recently used entry when cache exceeds max entries', async () => {
+        const adapter = {
+            analyzeTrack: vi.fn().mockResolvedValue({ energy: 0.5, mood: 'chill', era: '2000s', genreConfidence: 0.6 }),
+        };
+
+        let nowMs = new Date('2026-02-26T12:00:00.000Z').getTime();
+        const service = new AnalysisService({
+            adapter,
+            promptVersion: 'v5.5',
+            maxCacheEntries: 2,
+            now: () => new Date(nowMs),
+        });
+
+        await service.analyze({ trackId: 'track-a', title: 'A', artist: 'A' });
+        nowMs += 1;
+        await service.analyze({ trackId: 'track-b', title: 'B', artist: 'B' });
+        nowMs += 1;
+        await service.analyze({ trackId: 'track-a', title: 'A', artist: 'A' }); // refresh access recency
+        nowMs += 1;
+        await service.analyze({ trackId: 'track-c', title: 'C', artist: 'C' });
+        nowMs += 1;
+        const bResult = await service.analyze({ trackId: 'track-b', title: 'B', artist: 'B' });
+
+        expect(service.getCacheSize()).toBe(2);
+        expect(bResult.status).toBe('analyzed');
+        expect(adapter.analyzeTrack).toHaveBeenCalledTimes(4);
+    });
+
+    it('updates access metadata on cache hit to protect hot entries from eviction', async () => {
+        const adapter = {
+            analyzeTrack: vi.fn().mockResolvedValue({ energy: 0.5, mood: 'chill', era: '2000s', genreConfidence: 0.6 }),
+        };
+
+        let nowMs = new Date('2026-02-26T12:00:00.000Z').getTime();
+        const service = new AnalysisService({
+            adapter,
+            promptVersion: 'v5.6',
+            maxCacheEntries: 2,
+            now: () => new Date(nowMs),
+        });
+
+        await service.analyze({ trackId: 'track-old', title: 'Old', artist: 'O' });
+        nowMs += 1;
+        await service.analyze({ trackId: 'track-hot', title: 'Hot', artist: 'H' });
+        nowMs += 1;
+        const hit = await service.analyze({ trackId: 'track-old', title: 'Old', artist: 'O' });
+        nowMs += 1;
+        await service.analyze({ trackId: 'track-new', title: 'New', artist: 'N' });
+        nowMs += 1;
+        const hotAfterEviction = await service.analyze({ trackId: 'track-hot', title: 'Hot', artist: 'H' });
+        const oldAfterEviction = await service.analyze({ trackId: 'track-old', title: 'Old', artist: 'O' });
+
+        expect(hit.status).toBe('skipped');
+        expect(hotAfterEviction.status).toBe('analyzed');
+        expect(oldAfterEviction.status).toBe('analyzed');
     it('reanalyzes when metadata changes for the same trackId', async () => {
         const adapter = {
             analyzeTrack: vi
