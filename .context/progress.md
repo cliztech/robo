@@ -35,6 +35,8 @@
 
 ## Recent Completed Work
 
+- [x] Hardened dashboard alert acknowledgement mutation flow to use per-alert rollback snapshots, in-flight dedupe by alert ID, and functional updates for all ack-path state writes.
+- [x] Added targeted dashboard UI tests for concurrent sibling acknowledgements (one success, one failure) and duplicate-click in-flight dedupe behavior.
 - Added Delivery Phase 8 dashboard automated coverage for loading/error/success states, alert acknowledge interaction, threshold boundary rendering, and fallback-metric regression in `tests/ui/dashboard-view.test.tsx`.
 - [x] Hardened dashboard state typing via `src/components/console/dashboard.types.ts` and wired typed telemetry into `DashboardView`/`ConsoleWorkspaceView` with exhaustive status/severity mappers.
 - [x] Dashboard status UI data layer now consumes `/api/v1/status/dashboard*` endpoints with typed client contracts and optimistic alert acknowledgements.
