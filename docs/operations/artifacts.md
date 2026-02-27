@@ -110,3 +110,60 @@ Escalation routing when signatures fail:
 - Do not store secrets, API keys, or credentials in any artifact.
 - Verification artifacts should contain command outputs or summaries sufficient for reproducibility.
 - Handoff artifacts should link to verification artifacts when checks were run.
+
+
+## Security Audit Export Artifacts (TI-039)
+
+Exporter module: `backend/security/audit_export.py`
+
+Produced artifacts (immutable batch set):
+- `artifacts/security/audit_exports/<yyyy-mm-dd>/<batch_id>.ndjson`
+- `artifacts/security/audit_exports/<yyyy-mm-dd>/<batch_id>.sha256`
+- `artifacts/security/audit_exports/<yyyy-mm-dd>/<batch_id>.manifest.json` (includes line count + digest metadata)
+
+`/api/v1/autonomy-policy/audit-events/export` returns concrete paths and digest for handoff evidence.
+## TI-040 Security Artifacts (Config Encryption)
+
+For TI-040 config-at-rest encryption work, store artifacts in the following canonical paths:
+
+- `artifacts/security/hashes/ti-040-config-before-after.sha256`
+  - SHA256 pairs for `config/schedules.json` and `config/prompt_variables.json` before and after value-level encryption edits.
+- `artifacts/security/reports/ti-040-high-risk-field-inventory.md`
+  - Checklist evidence (`CHK-TI040-01` .. `CHK-TI040-04`), mapped fields, and envelope compliance details.
+- `artifacts/security/logs/ti-040-config-encryption.log`
+  - Command transcript for encryption/decryption validation runs and failure classifications.
+
+Recommended command bundle to capture in the log:
+
+```bash
+python -m json.tool config/schedules.json > /tmp/schedules.validated.json
+python -m json.tool config/prompt_variables.json > /tmp/prompt_variables.validated.json
+python config/validate_config.py
+python -m pytest backend/tests/test_config_crypto.py
+sha256sum config/schedules.json config/prompt_variables.json > artifacts/security/hashes/ti-040-config-before-after.sha256
+```
+## TI-041 Security Smoke Artifacts
+
+Security smoke execution (`pnpm test:security`) must emit and retain:
+
+- `artifacts/security/logs/ti-041-security-smoke.log`
+- `artifacts/security/reports/ti-041-smoke-matrix-report.md`
+- `artifacts/security/hashes/ti-041-smoke-output.sha256`
+
+### Pass/Fail Signatures in Artifact Evidence
+
+Pass evidence requires all of the following:
+
+- log includes `AUTHN_DENIED_EXPECTED`
+- log includes `AUTHZ_DENIED_EXPECTED`
+- log includes both `LOCKOUT_TRIGGERED` and `LOCKOUT_WINDOW_ACTIVE`
+- log includes `PRIV_ACTION_BLOCKED`
+- log does **not** include `PRIV_ACTION_EXECUTED`
+- smoke command exits `0`
+
+Fail evidence is any one of:
+
+- missing one or more required markers
+- presence of `PRIV_ACTION_EXECUTED`
+- non-zero command exit status
+- contract check failure before scenario execution
