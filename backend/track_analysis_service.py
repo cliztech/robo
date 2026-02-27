@@ -5,6 +5,8 @@ import json
 import logging
 from dataclasses import dataclass
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -53,6 +55,7 @@ class TrackAnalysisResult(BaseModel):
 
 
 class TrackAnalysisEnvelope(BaseModel):
+    status: Literal["success", "degraded", "failed"]
     success: bool
     data: TrackAnalysisResult | None
     error: str | None
