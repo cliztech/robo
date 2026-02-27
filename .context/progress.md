@@ -140,3 +140,7 @@
 - [x] Added privileged-action fail guard for unexpected `PRIV_ACTION_EXECUTED` outcomes.
 - [x] Added artifact-producing wrapper for smoke logs/report/hashes under `artifacts/security/*`.
 - [x] Updated operations command and artifact docs with pre-release invocation and required signatures.
+
+## 2026-02-27 Skill Intake Update
+- [x] Ran `skill-installer` against `https://github.com/blacksiders/SkillPointer.git` and verified installer rejection due to missing `SKILL.md` in selected skill directory.
+- [x] Captured installation constraint and follow-up action: require a Codex-skill-compatible repo/path before retry.

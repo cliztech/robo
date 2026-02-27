@@ -139,3 +139,8 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Wired smoke checks to TI-002 role deny expectations, TI-003 timeout/reauth contract variables, and TI-039 privileged action catalog IDs through startup contract validation.
 - Added mandatory artifact outputs under `artifacts/security/logs`, `artifacts/security/reports`, and `artifacts/security/hashes`.
 - Updated operations docs with exact pre-release invocation and pass/fail signatures.
+
+## 2026-02-27 Skill Intake Update
+- Evaluated user-provided repository `https://github.com/blacksiders/SkillPointer.git` via the `skill-installer` workflow.
+- Installation is blocked because the repository does not expose a Codex skill root (`SKILL.md` missing), so it cannot be installed as-is.
+- Next step: request a Codex-skill-compatible path/repo from the user (or a `SKILL.md`-based wrapper) before retrying installation.
