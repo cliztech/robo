@@ -7,9 +7,10 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query, HTTPException
+from fastapi import APIRouter, Depends, Header, Query, HTTPException
 from fastapi.responses import HTMLResponse
 
+from backend.security.approval_policy import ActionId, ApprovalPolicyError, parse_approval_chain
 from backend.security.auth import verify_api_key
 from .autonomy_policy import (
     AutonomyPolicy,
@@ -124,10 +125,11 @@ def read_policy(
 @router.put("", response_model=AutonomyPolicy)
 def write_policy(
     payload: AutonomyPolicy,
+    approval_chain: str = Header(default="[]", alias="X-Approval-Chain"),
     service: AutonomyPolicyService = Depends(get_policy_service),
 ) -> AutonomyPolicy:
     try:
-        return service.update_policy(payload)
+        return service.update_policy(payload, approval_chain=parse_approval_chain(approval_chain))
     except PolicyValidationError as error:
         raise HTTPException(
             status_code=422,
@@ -138,6 +140,8 @@ def write_policy(
                 ],
             },
         ) from error
+    except ApprovalPolicyError as error:
+        raise HTTPException(status_code=403, detail={"message": str(error)}) from error
 
 
 @router.get("/effective")
@@ -158,19 +162,48 @@ def get_mode_definitions():
 def create_audit_event(
     decision_type: DecisionType,
     origin: DecisionOrigin,
+    action_id: ActionId = Query(default=ActionId.ACT_OVERRIDE),
+    target_ref: str = Query(default="autonomy-policy"),
     show_id: Optional[str] = Query(default=None),
     timeslot_id: Optional[str] = Query(default=None),
     notes: Optional[str] = Query(default=None),
+    actor_principal: str = Header(default="unknown", alias="X-Actor-Principal"),
+    approval_chain: str = Header(default="[]", alias="X-Approval-Chain"),
     service: AutonomyPolicyService = Depends(get_policy_service),
 ) -> PolicyAuditEvent:
-    return service.record_audit_event(
-        decision_type=decision_type,
-        origin=origin,
-        show_id=show_id,
-        timeslot_id=timeslot_id,
-        notes=notes,
-    )
+    try:
+        return service.record_audit_event(
+            decision_type=decision_type,
+            origin=origin,
+            action_id=action_id,
+            actor_principal=actor_principal,
+            target_ref=target_ref,
+            approval_chain=parse_approval_chain(approval_chain),
+            show_id=show_id,
+            timeslot_id=timeslot_id,
+            notes=notes,
+        )
+    except ApprovalPolicyError as error:
+        raise HTTPException(status_code=403, detail={"message": str(error)}) from error
 
+
+
+
+@router.post("/audit-events/export")
+def export_audit_events(
+    limit: int = Query(default=1000, ge=1, le=10000),
+    batch_id: Optional[str] = Query(default=None),
+    service: AutonomyPolicyService = Depends(get_policy_service),
+):
+    result = service.export_audit_events(limit=limit, batch_id=batch_id)
+    return {
+        "batch_id": result.batch_id,
+        "line_count": result.line_count,
+        "ndjson_path": str(result.ndjson_path),
+        "sha256_path": str(result.sha256_path),
+        "manifest_path": str(result.manifest_path),
+        "digest_sha256": result.digest_sha256,
+    }
 
 @router.get("/audit-events", response_model=list[PolicyAuditEvent])
 def get_audit_events(

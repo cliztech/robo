@@ -1,5 +1,7 @@
 # RoboDJ TODO List
 
+> **State authority:** When execution artifacts disagree, `docs/exec-plans/active/sprint-status.yaml` is the canonical state for epic/story status, and this checklist must be reconciled to match it during weekly hygiene.
+
 This checklist converts the current product-readiness plan into a practical execution queue.
 
 
@@ -9,6 +11,7 @@ Use the roadmap helper to continuously surface the next open tasks while you wor
 
 - `python scripts/roadmap_autopilot.py --limit 10`
 - `python scripts/roadmap_autopilot.py --loop --interval 60 --limit 10`
+- `python scripts/roadmap_autopilot.py --limit 25 --build-plan docs/exec-plans/active/unfinished-task-build-plan.md` (regenerates unfinished queue + dated cadence due-date reminders)
 
 ## P0 — Foundations (Start Here)
 
@@ -65,11 +68,15 @@ Use the roadmap helper to continuously surface the next open tasks while you wor
 ## Tracking Cadence
 
 - [ ] Weekly: update readiness percentages by category ([TI-035](docs/exec-plans/active/tracked-issues/TI-035.md)).
-- [ ] Weekly backlog hygiene review owner/date: Project Coordinator — every Friday (next review: 2026-02-27) ([TI-036](docs/exec-plans/active/tracked-issues/TI-036.md)).
+- [ ] Weekly backlog hygiene review owner/date: Project Coordinator — every Friday (next review: 2026-03-01) ([TI-036](docs/exec-plans/active/tracked-issues/TI-036.md)).
 - Status sync note: For closed tracked issues, `TODO.md` checkbox state must mirror each TI `Status` field during weekly hygiene reconciliation.
 - [ ] Bi-weekly: remove blocked items or split oversized tasks ([TI-037](docs/exec-plans/active/tracked-issues/TI-037.md)).
 - [ ] Monthly: reassess roadmap variation (Security-first, UX-first, Scale-first, Balanced) ([TI-038](docs/exec-plans/active/tracked-issues/TI-038.md)).
-- [ ] 2026-02-24 (Owner: Management Team — Project Coordinator): Weekly readiness metric refresh posted in `docs/readiness_scorecard.md` (next due: 2026-03-03).
-- [ ] 2026-02-27 (Owner: Management Team — Project Coordinator): Weekly backlog hygiene review completed and stale-track escalations logged per `docs/operations/execution_index.md`.
+- [x] 2026-02-24 (Owner: Management Team — Project Coordinator): Weekly readiness metric refresh posted in `docs/readiness_scorecard.md` (Outcome: completed 2026-02-27 with refreshed weighted score + blocker status; next due 2026-03-03).
+- [ ] 2026-03-01 (Owner: Management Team — Project Coordinator): Weekly backlog hygiene review + stale-track escalation log posted in `docs/operations/execution_index.md` (Outcome: 2026-02-27 window formally deferred due to Phase 5 stabilization priority; defer rationale logged in execution index cadence table).
 - [ ] 2026-03-10 (Owner: Planner Agent): Bi-weekly blocked-item pruning complete (remove blocked items or split oversized tasks).
 - [ ] 2026-03-31 (Owner: Management Team — Sprint Planner): Monthly roadmap-variant reassessment recorded (Security-first / UX-first / Scale-first / Balanced).
+
+### Sprint-close guardrail
+
+- No sprint may be closed unless all dated cadence items within the sprint window are either marked complete or formally deferred with explicit rationale, owner, and replacement due date.

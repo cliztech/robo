@@ -22,7 +22,15 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
 from pathlib import Path
+import sys
 from typing import Iterable, Optional
+
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from backend.security.approval_policy import ActionId, parse_approval_chain, require_approval
 
 DEFAULT_DB_PATH = Path(__file__).resolve().parents[1] / "memory_service.db"
 TOKEN_RE = re.compile(r"[a-z0-9']+")
@@ -439,6 +447,7 @@ def _build_parser() -> argparse.ArgumentParser:
     reset = sub.add_parser("reset", help="Reset memory by scope")
     reset.add_argument("--scope", required=True, choices=["show", "day", "week", "all"])
     reset.add_argument("--show-id")
+    reset.add_argument("--approval-chain", default="[]", help="JSON array of TI-039 approvals")
 
     return parser
 
@@ -492,6 +501,7 @@ def main() -> int:
             print(json.dumps(result.__dict__, indent=2))
 
         elif args.command == "reset":
+            require_approval(ActionId.ACT_DELETE, parse_approval_chain(args.approval_chain))
             print(json.dumps(service.reset_memory(scope=args.scope, show_id=args.show_id), indent=2))
 
         return 0
