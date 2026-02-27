@@ -100,7 +100,7 @@ class InMemoryAnalysisCacheStore(AnalysisCacheStore):
         cached = self._cache.get(fingerprint)
         if cached is None:
             return None
-        return TrackAnalysisResult.model_validate(cached.model_dump(mode="json"))
+        return cached.model_copy(deep=True)
 
     def set(self, fingerprint: str, result: TrackAnalysisResult) -> None:
         self._cache[fingerprint] = TrackAnalysisResult.model_validate(result.model_dump(mode="json"))
