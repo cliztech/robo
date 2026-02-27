@@ -140,3 +140,9 @@
 - [x] Added privileged-action fail guard for unexpected `PRIV_ACTION_EXECUTED` outcomes.
 - [x] Added artifact-producing wrapper for smoke logs/report/hashes under `artifacts/security/*`.
 - [x] Updated operations command and artifact docs with pre-release invocation and required signatures.
+
+## 2026-02-27 Design Token Contract Update
+- [x] Token system normalized around semantic `--color-*` roles in `src/styles/tokens.css`.
+- [x] Added `[data-skin='degen-dark']` and `[data-skin='degen-light']` overrides for skin-specific color changes.
+- [x] Added unresolved CSS variable validation in `scripts/check_tokens.mjs` with `npm run check:tokens`.
+- [x] Published third-party skin required token set and lint contract in `docs/ui/design_tokens_v1.md`.

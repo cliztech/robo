@@ -139,3 +139,9 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Wired smoke checks to TI-002 role deny expectations, TI-003 timeout/reauth contract variables, and TI-039 privileged action catalog IDs through startup contract validation.
 - Added mandatory artifact outputs under `artifacts/security/logs`, `artifacts/security/reports`, and `artifacts/security/hashes`.
 - Updated operations docs with exact pre-release invocation and pass/fail signatures.
+
+## 2026-02-27 Token Contract Hardening Update
+- [x] Refactored `src/styles/tokens.css` into base semantic `--color-*` tokens with skin-only overrides in `[data-skin='degen-dark']` and `[data-skin='degen-light']`.
+- [x] Removed duplicate alias declarations and consolidated a single canonical legacy alias mapping table.
+- [x] Added token reference guard script (`scripts/check_tokens.mjs`) and package script (`npm run check:tokens`) to fail unresolved `var(--*)` references.
+- [x] Updated `docs/ui/design_tokens_v1.md` with a required semantic token set for third-party skin authors.
