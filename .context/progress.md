@@ -22,9 +22,11 @@
 - [x] **GUI Prompt Review + Agent Team Plan** (Requirements + execution plan documented in `docs/ui/gui_agent_team_review.md`)
 - [x] **Visionary Architect Migration** (Adopting structured context files)
 - [x] Unified DJ Studio surface composition integrated for `decks` + `studio` workspace modes.
-- [ ] **Phase 5: AI Integration** (OpenAI GPT-4o, Track Analysis, Mood Detection)
+- [x] **Phase 5: AI Integration** (OpenAI GPT-4o, Track Analysis, Mood Detection)
 - [x] **Phase 5: AI Integration** (OpenAI GPT-4o scaffolding with typed Track Analysis + Host Script APIs, guardrails, and UI integration paths)
 - [x] **Phase 5: AI Integration** (Track analysis API/service with deterministic scoring, mood/energy detection heuristics, and tests)
+- [x] **Phase 5: AI Integration** (OpenAI GPT-4o, Track Analysis, Mood Detection; execution slices P5-01..P5-05 delivered)
+- [x] **Phase 5: AI Integration** (Track analysis service now includes deterministic prompt profile resolution, invocation status mapping, fingerprint cache, and latency verification harness)
 - [x] **Phase 5: AI Integration** (Analysis fingerprint cache + structured execution status + telemetry counters implemented and validated in unit/integration tests)
 - [ ] **Phase 5: AI Integration** (OpenAI GPT-4o, Track Analysis, Mood Detection; execution slices P5-01..P5-05 defined)
 - [~] **Phase 5: AI Integration** (Track analysis service, retries/idempotency/fallback queue foundation complete; model API wiring pending)
@@ -87,6 +89,7 @@
 
 - [x] Phase 5 foundation: implemented `AnalysisService` (normalization, retry with fallback, idempotency) and queue processor with unit/integration tests.
 
+- [x] Phase 5 closure: backend `AIInferenceService` now resolves prompt profile versions from config, emits cache hit/miss telemetry, returns structured status (`success`/`degraded`), and includes fallback behavior under timeout with verification coverage.
 - Completed shared canonical track-analysis contract extraction (`backend/ai/contracts/track_analysis.py`) and aligned service/API/tests with temporary legacy adapter removal criteria for Phase 5 story P5-05.
 - [x] Extended `backend/track_analysis_service.py` with fingerprint-based in-memory caching and structured cache hit/miss telemetry plus cache behavior tests.
 

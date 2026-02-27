@@ -9,7 +9,6 @@ from backend.ai_service import (
     AICircuitBreaker,
     AICircuitOpenError,
     AIInferenceService,
-    AITimeoutError,
     HostScriptRequest,
 )
 from backend.app import app
@@ -54,12 +53,32 @@ def test_track_analysis_contract_success() -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["success"] is True
+    assert body["status"] == "success"
     assert body["correlation_id"] == "corr-track-001"
     assert body["data"]["track_id"] == "legacy-corr-track-001"
     assert body["data"]["analysis"]["genre"] == "synthwave"
     assert body["data"]["analysis"]["status"] == AnalysisStatus.SUCCESS.value
     assert isinstance(body["latency_ms"], int)
     assert body["cost_usd"] >= 0
+    assert body["prompt_profile_version"]
+
+
+def test_track_analysis_cache_hit() -> None:
+    service = AIInferenceService(timeout_seconds=0.1)
+    request = TrackAnalysisRequest(
+        title="Neon Skyline",
+        artist="Bytewave",
+        genre="Synthwave",
+        bpm=118,
+        duration_seconds=245,
+        notes="night drive",
+    )
+
+    _, _, _, first_cache_hit, _, _ = service.analyze_track(request, correlation_id="c1")
+    _, _, _, second_cache_hit, _, _ = service.analyze_track(request, correlation_id="c2")
+
+    assert first_cache_hit is False
+    assert second_cache_hit is True
 
 
 def test_host_script_contract_validation_error() -> None:
@@ -78,7 +97,7 @@ def test_host_script_contract_validation_error() -> None:
     assert response.status_code == 422
 
 
-def test_timeout_failure_handling() -> None:
+def test_timeout_returns_degraded_fallback() -> None:
     service = AIInferenceService(timeout_seconds=0.001)
 
     def _slow_invoke(*_args, **_kwargs):
@@ -97,12 +116,13 @@ def test_timeout_failure_handling() -> None:
         voice="bass",
     )
 
-    try:
-        service.generate_host_script(request, correlation_id="timeout-1")
-    except AITimeoutError as exc:
-        assert "timed out" in str(exc)
-    else:
-        raise AssertionError("expected timeout exception")
+    result, _latency_ms, cost_usd, status, _prompt_profile_version = service.generate_host_script(
+        request,
+        correlation_id="timeout-1",
+    )
+    assert status == "degraded"
+    assert cost_usd == 0.0
+    assert "fallback" in result.safety_flags
 
 
 def test_circuit_breaker_blocks_after_failure() -> None:
