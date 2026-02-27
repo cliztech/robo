@@ -189,3 +189,21 @@
   --glass-bg: hsla(0, 0%, 100%, 0.7);
   --glass-border: hsla(0, 0%, 0%, 0.08);
 }
+
+[data-skin='aether'] {
+  --accent: 207 98% 45%;
+  --accent-secondary: 207 81% 79%;
+  --accent-tertiary: 182 70% 38%;
+}
+
+[data-skin='neon'] {
+  --accent: 165 100% 45%;
+  --accent-secondary: 191 100% 55%;
+  --accent-tertiary: 267 83% 60%;
+}
+
+[data-skin='sunset'] {
+  --accent: 20 100% 55%;
+  --accent-secondary: 340 90% 63%;
+  --accent-tertiary: 258 82% 65%;
+}

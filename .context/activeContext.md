@@ -143,6 +143,11 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added mandatory artifact outputs under `artifacts/security/logs`, `artifacts/security/reports`, and `artifacts/security/hashes`.
 - Updated operations docs with exact pre-release invocation and pass/fail signatures.
 
+## 2026-02-27 Theme Preferences Delivery Update
+
+- Added a versioned UI theme-preferences layer (`themeMode` + `activeSkinId`) with migration-safe localStorage payload handling.
+- Wired app-wide theme provider + first-paint bootstrap script to resolve system theme and set `<html data-theme>` / `<html data-skin>` before hydration.
+- Added DJ console topbar theme settings (mode, skin, preview, reset) and UI tests for preference persistence and html attribute application.
 ## 2026-02-27 UI Skin Token Update
 - Added token-driven studio skin utility classes and refactored console shell/mixer/deck surfaces to consume semantic control/deck/status roles; added per-theme visual snapshot coverage for deck, mixer, library, and transport core surfaces.
 ## 2026-02-27 Token Contract Hardening Update

@@ -1,10 +1,13 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Activity, AlertTriangle, Disc3, Radio } from 'lucide-react';
+import { Activity, AlertTriangle, Disc3, Palette, Radio, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CONSOLE_NAV_ITEMS } from '@/components/console/consoleNav';
 import type { ConsoleViewMode } from '@/components/console/types';
+import { THEME_SKINS, type ThemeMode } from '@/lib/theme/themeStore';
+import { useThemePreferences } from '@/lib/theme/ThemeProvider';
 
 interface ConsoleTopbarProps {
     currentView: ConsoleViewMode;
@@ -12,10 +15,37 @@ interface ConsoleTopbarProps {
     onToggleOnAir: () => void;
 }
 
+const THEME_OPTIONS: Array<{ value: ThemeMode; label: string }> = [
+    { value: 'system', label: 'System' },
+    { value: 'dark', label: 'Dark' },
+    { value: 'light', label: 'Light' },
+];
+
+const SKIN_PREVIEW_CLASSES: Record<string, string> = {
+    aether: 'from-[#027de1] via-[#00bfff] to-[#9f7aea]',
+    neon: 'from-[#00ffaa] via-[#00b3ff] to-[#7c3aed]',
+    sunset: 'from-[#ff8a00] via-[#ff4d6d] to-[#7f5af0]',
+};
+
 export function ConsoleTopbar({ currentView, isOnAir, onToggleOnAir }: ConsoleTopbarProps) {
+    const [isThemePanelOpen, setThemePanelOpen] = useState(false);
     const activeView = CONSOLE_NAV_ITEMS.find((item) => item.view === currentView)?.label ?? currentView;
+    const {
+        themeMode,
+        activeSkinId,
+        resolvedTheme,
+        setThemeMode,
+        setActiveSkinId,
+        resetThemePreferences,
+    } = useThemePreferences();
+
+    const previewClass = useMemo(
+        () => SKIN_PREVIEW_CLASSES[activeSkinId] ?? SKIN_PREVIEW_CLASSES.aether,
+        [activeSkinId]
+    );
 
     return (
+        <header className="h-11 bg-[#050608] border-b border-white/[0.08] flex items-center justify-between px-5 shrink-0 z-10 relative">
         <header className="h-11 skin-panel border-b flex items-center justify-between px-5 shrink-0 z-10">
             <div className="flex items-center gap-4 min-w-0">
                 <div className="flex items-center gap-2">

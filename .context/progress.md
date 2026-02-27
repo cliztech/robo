@@ -143,6 +143,12 @@
 - [x] Added artifact-producing wrapper for smoke logs/report/hashes under `artifacts/security/*`.
 - [x] Updated operations command and artifact docs with pre-release invocation and required signatures.
 
+## 2026-02-27 Theme Preferences Delivery
+
+- [x] Implemented `src/lib/theme/themeStore.ts` with versioned persistence, defaults, and mode resolution helpers.
+- [x] Added `ThemeProvider` + root layout bootstrap script to prevent incorrect first-paint theme flashes.
+- [x] Extended `ConsoleTopbar` with theme mode + skin controls, preview, and reset-to-default.
+- [x] Added `tests/ui/theme-preferences.test.tsx` to cover load/save persistence and `<html>` theme/skin attribute application.
 ## 2026-02-27 UI Skin Token Update
 - [x] Studio skin-token hardening completed for ConsoleLayout/Topbar, DJStudioSurface deck accents, and DegenMixer channel/control states; added `tests/ui/console-skin-visual.test.tsx` snapshot coverage for dark/light skins.
 ## 2026-02-27 Design Token Contract Update
