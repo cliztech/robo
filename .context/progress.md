@@ -116,3 +116,11 @@
 - [x] Test-suite hygiene: rebuilt `tests/unit/ai-analysis-service.test.ts` and `tests/integration/analysis-queue.test.ts` to remove duplicated partial blocks and align assertions with current queue contract boundaries.
 
 - [x] Phase namespace hardening: planning/context artifacts now require explicit namespace (`delivery` or `workflow`) and generator output rejects missing namespace metadata.
+
+## 2026-02-27 TI-041 Security Smoke Delivery
+
+- [x] Added root `test:security` script mapped to deterministic wrapper execution.
+- [x] Implemented scenario markers for `SMK-AUTHN-01`, `SMK-AUTHZ-01`, `SMK-LOCKOUT-01`, `SMK-PRIV-01` with non-zero exit on mismatch.
+- [x] Added privileged-action fail guard for unexpected `PRIV_ACTION_EXECUTED` outcomes.
+- [x] Added artifact-producing wrapper for smoke logs/report/hashes under `artifacts/security/*`.
+- [x] Updated operations command and artifact docs with pre-release invocation and required signatures.
