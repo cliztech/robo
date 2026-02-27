@@ -140,3 +140,10 @@
 - [x] Added privileged-action fail guard for unexpected `PRIV_ACTION_EXECUTED` outcomes.
 - [x] Added artifact-producing wrapper for smoke logs/report/hashes under `artifacts/security/*`.
 - [x] Updated operations command and artifact docs with pre-release invocation and required signatures.
+
+## 2026-02-27 Theme Preferences Delivery
+
+- [x] Implemented `src/lib/theme/themeStore.ts` with versioned persistence, defaults, and mode resolution helpers.
+- [x] Added `ThemeProvider` + root layout bootstrap script to prevent incorrect first-paint theme flashes.
+- [x] Extended `ConsoleTopbar` with theme mode + skin controls, preview, and reset-to-default.
+- [x] Added `tests/ui/theme-preferences.test.tsx` to cover load/save persistence and `<html>` theme/skin attribute application.

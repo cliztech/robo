@@ -1,10 +1,13 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Activity, AlertTriangle, Disc3, Radio } from 'lucide-react';
+import { Activity, AlertTriangle, Disc3, Palette, Radio, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CONSOLE_NAV_ITEMS } from '@/components/console/consoleNav';
 import type { ConsoleViewMode } from '@/components/console/types';
+import { THEME_SKINS, type ThemeMode } from '@/lib/theme/themeStore';
+import { useThemePreferences } from '@/lib/theme/ThemeProvider';
 
 interface ConsoleTopbarProps {
     currentView: ConsoleViewMode;
@@ -12,11 +15,37 @@ interface ConsoleTopbarProps {
     onToggleOnAir: () => void;
 }
 
+const THEME_OPTIONS: Array<{ value: ThemeMode; label: string }> = [
+    { value: 'system', label: 'System' },
+    { value: 'dark', label: 'Dark' },
+    { value: 'light', label: 'Light' },
+];
+
+const SKIN_PREVIEW_CLASSES: Record<string, string> = {
+    aether: 'from-[#027de1] via-[#00bfff] to-[#9f7aea]',
+    neon: 'from-[#00ffaa] via-[#00b3ff] to-[#7c3aed]',
+    sunset: 'from-[#ff8a00] via-[#ff4d6d] to-[#7f5af0]',
+};
+
 export function ConsoleTopbar({ currentView, isOnAir, onToggleOnAir }: ConsoleTopbarProps) {
+    const [isThemePanelOpen, setThemePanelOpen] = useState(false);
     const activeView = CONSOLE_NAV_ITEMS.find((item) => item.view === currentView)?.label ?? currentView;
+    const {
+        themeMode,
+        activeSkinId,
+        resolvedTheme,
+        setThemeMode,
+        setActiveSkinId,
+        resetThemePreferences,
+    } = useThemePreferences();
+
+    const previewClass = useMemo(
+        () => SKIN_PREVIEW_CLASSES[activeSkinId] ?? SKIN_PREVIEW_CLASSES.aether,
+        [activeSkinId]
+    );
 
     return (
-        <header className="h-11 bg-[#050608] border-b border-white/[0.08] flex items-center justify-between px-5 shrink-0 z-10">
+        <header className="h-11 bg-[#050608] border-b border-white/[0.08] flex items-center justify-between px-5 shrink-0 z-10 relative">
             <div className="flex items-center gap-4 min-w-0">
                 <div className="flex items-center gap-2">
                     <Disc3 size={11} className="text-cyan-300/80" />
@@ -36,6 +65,71 @@ export function ConsoleTopbar({ currentView, isOnAir, onToggleOnAir }: ConsoleTo
             </div>
 
             <div className="flex items-center gap-3">
+                <div className="relative">
+                    <button
+                        type="button"
+                        aria-label="Open theme settings"
+                        aria-expanded={isThemePanelOpen}
+                        onClick={() => setThemePanelOpen((open) => !open)}
+                        className="relative p-1.5 text-zinc-500 hover:text-zinc-300 transition-colors"
+                    >
+                        <Palette size={13} />
+                    </button>
+
+                    {isThemePanelOpen ? (
+                        <div className="absolute right-0 top-8 w-72 rounded-lg border border-white/10 bg-[#090b0f] p-3 shadow-xl">
+                            <div className="mb-3">
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Theme</p>
+                                <select
+                                    aria-label="Theme mode"
+                                    value={themeMode}
+                                    onChange={(event) => setThemeMode(event.target.value as ThemeMode)}
+                                    className="mt-1 w-full rounded border border-white/10 bg-black/40 px-2 py-1 text-[11px] text-zinc-100"
+                                >
+                                    {THEME_OPTIONS.map((option) => (
+                                        <option key={option.value} value={option.value}>
+                                            {option.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="mb-3">
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-400">Skin</p>
+                                <select
+                                    aria-label="Skin selector"
+                                    value={activeSkinId}
+                                    onChange={(event) => setActiveSkinId(event.target.value)}
+                                    className="mt-1 w-full rounded border border-white/10 bg-black/40 px-2 py-1 text-[11px] text-zinc-100"
+                                >
+                                    {THEME_SKINS.map((skin) => (
+                                        <option key={skin.id} value={skin.id}>
+                                            {skin.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="mb-3 rounded border border-white/10 p-2">
+                                <p className="text-[10px] text-zinc-500">Preview</p>
+                                <div className={cn('mt-1 h-7 rounded bg-gradient-to-r', previewClass)} />
+                                <p className="mt-1 text-[10px] text-zinc-400">
+                                    Active: {resolvedTheme} / {activeSkinId}
+                                </p>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={resetThemePreferences}
+                                className="flex items-center gap-1 rounded border border-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.12em] text-zinc-300 hover:text-white"
+                            >
+                                <RotateCcw size={10} />
+                                Reset defaults
+                            </button>
+                        </div>
+                    ) : null}
+                </div>
+
                 <button className="relative p-1.5 text-zinc-500 hover:text-zinc-400 transition-colors">
                     <AlertTriangle size={13} />
                     <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-lime-400 rounded-full" />
