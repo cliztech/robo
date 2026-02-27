@@ -155,7 +155,7 @@ describe('dashboard status proxy route handlers', () => {
     );
 
     const response = await postAck(new NextRequest('http://localhost/api/v1/status/dashboard/alerts/alert%2F1/ack', { method: 'POST' }), {
-      params: Promise.resolve({ alertId: 'alert/1' }),
+      params: { alertId: 'alert/1' },
     });
 
     expect(response.status).toBe(200);
