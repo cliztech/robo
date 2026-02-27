@@ -8,6 +8,9 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 ## Recent Decisions
 
+- Hardened `DashboardView.handleAcknowledge` with per-alert rollback snapshots, duplicate in-flight request gating, and fully functional state updates to prevent stale-closure regressions under concurrent acknowledgements.
+- Replaced dashboard UI acknowledge tests with targeted concurrency coverage that validates mixed success/failure sibling acknowledgements preserve successful optimistic commits.
+
 - Added cadence governance updates: TODO dated-entry outcomes refreshed, readiness scorecard weekly update appended, execution index cadence table added, and roadmap autopilot now emits due-date reminders into the unfinished task build plan.
 
 - Standardized phase naming contracts across planning artifacts: `Delivery Phase N` for delivery context and `Workflow Phase N` for workflow context, plus namespace-required packet/build-plan metadata.
@@ -145,3 +148,10 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added a versioned UI theme-preferences layer (`themeMode` + `activeSkinId`) with migration-safe localStorage payload handling.
 - Wired app-wide theme provider + first-paint bootstrap script to resolve system theme and set `<html data-theme>` / `<html data-skin>` before hydration.
 - Added DJ console topbar theme settings (mode, skin, preview, reset) and UI tests for preference persistence and html attribute application.
+## 2026-02-27 UI Skin Token Update
+- Added token-driven studio skin utility classes and refactored console shell/mixer/deck surfaces to consume semantic control/deck/status roles; added per-theme visual snapshot coverage for deck, mixer, library, and transport core surfaces.
+## 2026-02-27 Token Contract Hardening Update
+- [x] Refactored `src/styles/tokens.css` into base semantic `--color-*` tokens with skin-only overrides in `[data-skin='degen-dark']` and `[data-skin='degen-light']`.
+- [x] Removed duplicate alias declarations and consolidated a single canonical legacy alias mapping table.
+- [x] Added token reference guard script (`scripts/check_tokens.mjs`) and package script (`npm run check:tokens`) to fail unresolved `var(--*)` references.
+- [x] Updated `docs/ui/design_tokens_v1.md` with a required semantic token set for third-party skin authors.
