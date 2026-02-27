@@ -140,3 +140,11 @@
 - [x] Added privileged-action fail guard for unexpected `PRIV_ACTION_EXECUTED` outcomes.
 - [x] Added artifact-producing wrapper for smoke logs/report/hashes under `artifacts/security/*`.
 - [x] Updated operations command and artifact docs with pre-release invocation and required signatures.
+
+## 2026-02-27 Dashboard Status Route-Proxy Completion
+
+- [x] Canonical integration path enforced via same-origin Next.js API proxy routes under `src/app/api/v1/status/dashboard/*`.
+- [x] Backend proxy auth policy implemented (Supabase session required; bearer token + `X-User-Id` forwarded).
+- [x] Error-envelope normalization implemented for non-2xx backend responses.
+- [x] Integration test coverage added for auth/error propagation and JSON shape compatibility with `DashboardStatusResponse`.
+- [x] Deployment assumptions documented for backend URL resolution and proxy behavior.

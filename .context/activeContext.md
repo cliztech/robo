@@ -139,3 +139,10 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Wired smoke checks to TI-002 role deny expectations, TI-003 timeout/reauth contract variables, and TI-039 privileged action catalog IDs through startup contract validation.
 - Added mandatory artifact outputs under `artifacts/security/logs`, `artifacts/security/reports`, and `artifacts/security/hashes`.
 - Updated operations docs with exact pre-release invocation and pass/fail signatures.
+
+## 2026-02-27 Dashboard Status Proxy Integration Update
+
+- Selected canonical integration path: Next.js `src/app/api/v1/status/dashboard/*` route-handler proxy to backend service.
+- Added authenticated proxy handlers for dashboard summary, alerts list, and alert acknowledgement with normalized error envelopes (`{ status, detail, code? }`).
+- Added integration tests covering auth enforcement, backend error propagation, route proxy behavior, and `DashboardStatusResponse`-compatible payload handling.
+- Documented deployment/runtime assumptions for proxy env configuration and auth forwarding in `docs/dashboard_status_ui_mapping.md`.
