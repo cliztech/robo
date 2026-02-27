@@ -99,3 +99,6 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added streaming-gateway Icecast listener polling with `stream.listeners` NATS telemetry events, env-driven interval/failure thresholds, and degraded `system.health` alerts on consecutive failures.
 
 - [x] Phase 5 next slice: added deterministic analysis fingerprinting, structured execution status (`success`/`degraded`), and cache hit/miss telemetry in `src/lib/ai/analysisService.ts` with updated tests.
+
+
+- [x] Replaced merge-corrupted `src/lib/ai/analysisService.ts` with a single canonical implementation (normalized result/record types, single idempotency key strategy, unified LRU+TTL cache map, deterministic analyze flow, and queue outcome mapping).
