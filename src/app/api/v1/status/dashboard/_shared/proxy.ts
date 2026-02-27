@@ -72,7 +72,7 @@ export async function proxyDashboardRequest(request: NextRequest, path: string, 
       ...(init?.headers ?? {}),
     },
     cache: 'no-store',
-    body: init?.body,
+    body: init?.body ?? request.body,
   });
 
   const contentType = upstreamResponse.headers.get('content-type') ?? '';
