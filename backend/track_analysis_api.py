@@ -43,6 +43,6 @@ def analyze_track(
     except (ValidationError, ValueError, TypeError) as exc:
         return TrackAnalysisEnvelope(status="degraded", success=True, data=None, error=str(exc))
     except Exception as exc:  # noqa: BLE001
-        status_code = _FAILED_STATUS_CODE_BY_EXCEPTION.get(type(exc).__name__, 500)
+        status_code = _FAILED_STATUS_CODE_BY_EXCEPTION.get(type(exc), 500)
         envelope = TrackAnalysisEnvelope(status="failed", success=False, data=None, error=str(exc))
         return JSONResponse(status_code=status_code, content=envelope.model_dump())
