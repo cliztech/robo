@@ -146,6 +146,13 @@
 - [x] Added artifact-producing wrapper for smoke logs/report/hashes under `artifacts/security/*`.
 - [x] Updated operations command and artifact docs with pre-release invocation and required signatures.
 
+## 2026-02-27 Dashboard Status Route-Proxy Completion
+
+- [x] Canonical integration path enforced via same-origin Next.js API proxy routes under `src/app/api/v1/status/dashboard/*`.
+- [x] Backend proxy auth policy implemented (Supabase session required; bearer token + `X-User-Id` forwarded).
+- [x] Error-envelope normalization implemented for non-2xx backend responses.
+- [x] Integration test coverage added for auth/error propagation and JSON shape compatibility with `DashboardStatusResponse`.
+- [x] Deployment assumptions documented for backend URL resolution and proxy behavior.
 ## 2026-02-27 Mixxx Benchmarking Update
 - [x] Completed external reference intake from `mixxxdj/mixxx` and documented subsystem analog mapping in `docs/references/mixxx_adoption_blueprint.md`.
 - [x] Defined 30/60/90 execution framing for applying Mixxx-derived reliability patterns to DGN-DJ without direct source reuse.

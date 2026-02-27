@@ -145,6 +145,12 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added mandatory artifact outputs under `artifacts/security/logs`, `artifacts/security/reports`, and `artifacts/security/hashes`.
 - Updated operations docs with exact pre-release invocation and pass/fail signatures.
 
+## 2026-02-27 Dashboard Status Proxy Integration Update
+
+- Selected canonical integration path: Next.js `src/app/api/v1/status/dashboard/*` route-handler proxy to backend service.
+- Added authenticated proxy handlers for dashboard summary, alerts list, and alert acknowledgement with normalized error envelopes (`{ status, detail, code? }`).
+- Added integration tests covering auth enforcement, backend error propagation, route proxy behavior, and `DashboardStatusResponse`-compatible payload handling.
+- Documented deployment/runtime assumptions for proxy env configuration and auth forwarding in `docs/dashboard_status_ui_mapping.md`.
 ## 2026-02-27 Mixxx Reference Intake Update
 - [x] Cloned `mixxxdj/mixxx` into local workspace for architecture benchmarking and pattern extraction.
 - [x] Added `docs/references/mixxx_adoption_blueprint.md` to map DGN-DJ priorities to Mixxx subsystem patterns (audio engine, broadcast reliability, analysis throughput, controller UX).
