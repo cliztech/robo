@@ -43,8 +43,16 @@ export interface AnalysisServiceOptions {
     adapter: AnalysisAdapter;
     promptVersion: string;
     maxRetries?: number;
+    maxCacheEntries?: number;
+    cacheTtlMs?: number;
     now?: () => Date;
     onRetry?: (attempt: number, error: unknown) => void;
+}
+
+interface CacheEntry {
+    record: TrackIntelligenceRecord;
+    cachedAt: number;
+    lastAccessAt: number;
 }
 
 const SUPPORTED_MOODS: TrackMood[] = ['calm', 'chill', 'energetic', 'intense', 'uplifting'];
@@ -103,14 +111,18 @@ export class AnalysisService {
     private readonly adapter: AnalysisAdapter;
     private readonly promptVersion: string;
     private readonly maxRetries: number;
+    private readonly maxCacheEntries: number;
+    private readonly cacheTtlMs?: number;
     private readonly now: () => Date;
     private readonly onRetry?: (attempt: number, error: unknown) => void;
-    private readonly byIdempotencyKey = new Map<string, TrackIntelligenceRecord>();
+    private readonly byIdempotencyKey = new Map<string, CacheEntry>();
 
     constructor(options: AnalysisServiceOptions) {
         this.adapter = options.adapter;
         this.promptVersion = options.promptVersion;
         this.maxRetries = options.maxRetries ?? 2;
+        this.maxCacheEntries = options.maxCacheEntries ?? Number.POSITIVE_INFINITY;
+        this.cacheTtlMs = options.cacheTtlMs;
         this.now = options.now ?? (() => new Date());
         this.onRetry = options.onRetry;
     }
@@ -120,10 +132,13 @@ export class AnalysisService {
     }
 
     async analyze(input: TrackAnalysisInput): Promise<AnalysisResult> {
+        this.evictExpiredEntries();
+
         const idempotencyKey = this.buildIdempotencyKey(input.trackId, this.promptVersion);
         const cached = this.byIdempotencyKey.get(idempotencyKey);
         if (cached) {
-            return { status: 'skipped', record: cached };
+            cached.lastAccessAt = this.now().getTime();
+            return { status: 'skipped', record: cached.record };
         }
 
         let attempt = 0;
@@ -148,8 +163,51 @@ export class AnalysisService {
             throw new Error('Analysis did not complete.');
         }
 
-        this.byIdempotencyKey.set(idempotencyKey, normalized);
+        const nowMs = this.now().getTime();
+        this.byIdempotencyKey.set(idempotencyKey, {
+            record: normalized,
+            cachedAt: nowMs,
+            lastAccessAt: nowMs,
+        });
+        this.enforceCacheBounds();
         return { status: 'analyzed', record: normalized };
+    }
+
+    private evictExpiredEntries(): void {
+        if (typeof this.cacheTtlMs !== 'number' || this.cacheTtlMs < 0) {
+            return;
+        }
+
+        const nowMs = this.now().getTime();
+        for (const [key, entry] of this.byIdempotencyKey.entries()) {
+            if (nowMs - entry.cachedAt > this.cacheTtlMs) {
+                this.byIdempotencyKey.delete(key);
+            }
+        }
+    }
+
+    private enforceCacheBounds(): void {
+        if (!Number.isFinite(this.maxCacheEntries) || this.maxCacheEntries < 0) {
+            return;
+        }
+
+        while (this.byIdempotencyKey.size > this.maxCacheEntries) {
+            let lruKey: string | null = null;
+            let lruAccess = Number.POSITIVE_INFINITY;
+
+            for (const [key, entry] of this.byIdempotencyKey.entries()) {
+                if (entry.lastAccessAt < lruAccess) {
+                    lruAccess = entry.lastAccessAt;
+                    lruKey = key;
+                }
+            }
+
+            if (!lruKey) {
+                break;
+            }
+
+            this.byIdempotencyKey.delete(lruKey);
+        }
     }
 
     private buildIdempotencyKey(trackId: string, promptVersion: string): string {
