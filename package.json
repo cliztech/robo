@@ -8,6 +8,7 @@
         "start": "next start",
         "lint": "next lint",
         "test": "vitest run",
+        "test:security": "node tests/security/smoke-runner.mjs",
         "test:watch": "vitest",
         "test:ui": "vitest run",
         "test:perf:analysis-latency": "vitest run tests/perf/ai-analysis-latency.test.ts"

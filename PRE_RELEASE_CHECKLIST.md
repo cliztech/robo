@@ -270,6 +270,15 @@ When launching via `DGN-DJ_Launcher.bat`, startup now runs config validation bef
 | Key-rotation/env-only secret readiness |  |  | SecOps Compliance Agent |  |
 | Artifact review/sign-off completeness |  |  | Release Manager Agent + SecOps Compliance Agent |  |
 
+- [ ] **PASS/FAIL:** TI-041 deterministic security smoke matrix is green.
+  - Commands:
+    - `pnpm test:security -- --case authn-invalid-password`
+    - `pnpm test:security -- --case authz-role-deny`
+    - `pnpm test:security -- --case lockout-threshold`
+    - `pnpm test:security -- --case privileged-action-block`
+  - Pass criteria: all four commands exit 0 and emit expected TI-041 markers.
+  - Fail criteria: any command exits non-zero or is missing the required marker output.
+
 - [ ] **PASS/FAIL:** Security gate sign-off recorded.
   - Required signers: **Release Manager Agent** and **SecOps Compliance Agent**
   - Pass criteria: all rows in the sign-off record are completed with PASS and UTC timestamps before release candidate creation.
