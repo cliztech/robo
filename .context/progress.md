@@ -140,3 +140,9 @@
 - [x] Added privileged-action fail guard for unexpected `PRIV_ACTION_EXECUTED` outcomes.
 - [x] Added artifact-producing wrapper for smoke logs/report/hashes under `artifacts/security/*`.
 - [x] Updated operations command and artifact docs with pre-release invocation and required signatures.
+
+## 2026-02-27 Dashboard Queue Severity Precedence Update
+- [x] Updated `DashboardView` queue severity resolution to prioritize API-provided `queue_depth.state` with threshold fallback only for missing/malformed state.
+- [x] Added unit coverage in `tests/ui/dashboard-view.test.tsx` to verify API state precedence and fallback behavior.
+- [x] Documented queue-depth severity precedence in `docs/dashboard_status_ui_mapping.md`.
+
