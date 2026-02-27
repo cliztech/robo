@@ -27,6 +27,7 @@
 - [~] **Phase 5: AI Integration** (Track analysis service, retries/idempotency/fallback queue foundation complete; model API wiring pending)
 
 ## Recent Completed Work
+- [x] Dashboard status UI data layer now consumes `/api/v1/status/dashboard*` endpoints with typed client contracts and optimistic alert acknowledgements.
 - [x] Phase 5 verification hardening: cache hit/miss telemetry exposed in `AnalysisService`, integration assertions added, and latency artifact harness added.
 - [x] Refactored AI analysis idempotency key derivation to deterministic fingerprint hashing (content/model/prompt) and added cache invalidation tests.
 - [x] Introduced typed global studio state with deck/mixer/FX domains using Zustand.
