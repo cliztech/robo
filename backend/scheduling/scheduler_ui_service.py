@@ -8,6 +8,8 @@ from pathlib import Path
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
+from backend.security.approval_policy import ActionId, ApprovalRecord, require_approval
+
 from .observability import emit_scheduler_event
 from .schedule_conflict_detection import detect_schedule_conflicts
 from .scheduler_models import (
@@ -72,7 +74,13 @@ class SchedulerUiService:
         self._cached_ui_state = state
         return state
 
-    def update_schedules(self, schedules: list[ScheduleRecord]) -> SchedulerUiState:
+    def update_schedules(
+        self,
+        schedules: list[ScheduleRecord],
+        *,
+        approval_chain: list[ApprovalRecord] | None = None,
+    ) -> SchedulerUiState:
+        require_approval(ActionId.ACT_CONFIG_EDIT, approval_chain or [])
         envelope = ScheduleEnvelope(schema_version=2, schedules=schedules)
         self._validate_schema(envelope)
 
@@ -87,8 +95,14 @@ class SchedulerUiService:
         # to refresh the data on next read. The file write above changes mtime.
         return SchedulerUiState(schedule_file=envelope, timeline_blocks=timeline, conflicts=[])
 
-    def publish_schedules(self, schedules: list[ScheduleRecord]) -> dict[str, object]:
-        ui_state = self.update_schedules(schedules)
+    def publish_schedules(
+        self,
+        schedules: list[ScheduleRecord],
+        *,
+        approval_chain: list[ApprovalRecord] | None = None,
+    ) -> dict[str, object]:
+        require_approval(ActionId.ACT_PUBLISH, approval_chain or [])
+        ui_state = self.update_schedules(schedules, approval_chain=approval_chain)
         return {
             "status": "published",
             "published_at": datetime.now(tz=ZoneInfo("UTC")).isoformat(),

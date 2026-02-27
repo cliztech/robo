@@ -122,3 +122,7 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 - [x] Replaced merge-corrupted `src/lib/ai/analysisService.ts` with a single canonical implementation (normalized result/record types, single idempotency key strategy, unified LRU+TTL cache map, deterministic analyze flow, and queue outcome mapping).
 - [x] Refactored malformed AI analysis unit/integration suites into clean non-overlapping describe trees and public-contract queue assertions.
+
+
+## 2026-02-27 TI-039 Enforcement Update
+- TI-039 security policy enforcement completed: approval catalog module added, scheduler/autonomy/config-script high-risk hooks now deny without required approver roles, and audit export path landed with integrity manifests.

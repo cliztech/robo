@@ -91,3 +91,15 @@ Management Team can audit all artifacts, but ownership remains with the primary 
 - Do not store secrets, API keys, or credentials in any artifact.
 - Verification artifacts should contain command outputs or summaries sufficient for reproducibility.
 - Handoff artifacts should link to verification artifacts when checks were run.
+
+
+## Security Audit Export Artifacts (TI-039)
+
+Exporter module: `backend/security/audit_export.py`
+
+Produced artifacts (immutable batch set):
+- `artifacts/security/audit_exports/<yyyy-mm-dd>/<batch_id>.ndjson`
+- `artifacts/security/audit_exports/<yyyy-mm-dd>/<batch_id>.sha256`
+- `artifacts/security/audit_exports/<yyyy-mm-dd>/<batch_id>.manifest.json` (includes line count + digest metadata)
+
+`/api/v1/autonomy-policy/audit-events/export` returns concrete paths and digest for handoff evidence.
