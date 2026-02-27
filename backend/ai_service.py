@@ -138,6 +138,7 @@ class AIInferenceService:
         self.circuit_breaker = circuit_breaker or AICircuitBreaker()
         self._analysis_cache: dict[str, TrackAnalysisResult] = {}
         self._cache_lock = threading.Lock()
+        self._max_cache_size = 1000
 
     def _resolve_prompt_profile(self) -> tuple[str, str]:
         config_path = os.path.join(os.getcwd(), "config", "prompt_variables.json")
