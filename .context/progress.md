@@ -69,6 +69,7 @@
 - [x] Tracked issue hygiene hardening: split TI-007/TI-008/TI-009 collisions, reassigned security tasks to TI-039/TI-040/TI-041, and added a one-header validation check.
 
 - [x] Phase 5 foundation: implemented `AnalysisService` (normalization, retry with fallback, idempotency) and queue processor with unit/integration tests.
+- [x] Phase 5 P5-01 hardening: added runtime-validated analysis normalization (`rationale`, deterministic `confidence`, optional `tempo_bucket`) plus degraded reason codes and malformed-payload tests.
 - [x] Phase 5 mood normalization refactor: explicit alias mapping + energy-based fallback policy, with unit coverage for alias/missing/unknown mood scenarios.
 - [x] Analysis cache hardening: introduced TTL-based invalidation and LRU entry bounds with unit tests covering expiry, eviction, and access-recency refresh behavior.
 - [x] Enhanced `AnalysisService` cache controls with max entry cap, TTL expiry, and observability stats/hooks; expanded unit coverage for eviction, TTL refresh, and cap stability.

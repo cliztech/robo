@@ -16,7 +16,18 @@ export interface RawTrackAnalysis {
     mood?: string;
     era?: string;
     genreConfidence?: number;
+    rationale?: string;
+    tempo_bucket?: string;
 }
+
+export type NormalizationReasonCode =
+    | 'none'
+    | 'invalid_payload'
+    | 'missing_required_fields'
+    | 'invalid_field_types'
+    | 'empty_string_fields';
+
+export type TempoBucket = 'slow' | 'mid' | 'fast';
 
 export interface TrackIntelligenceRecord {
     trackId: string;
@@ -25,7 +36,10 @@ export interface TrackIntelligenceRecord {
     mood: TrackMood;
     era: string;
     genreConfidence: number;
+    rationale: string;
+    tempo_bucket?: TempoBucket;
     confidence: number;
+    normalizationReasonCode: NormalizationReasonCode;
     source: 'ai' | 'fallback';
     attempts: number;
     promptProfileVersion: string;
@@ -109,6 +123,30 @@ export interface AnalysisTelemetry {
 // Non-canonical/unknown model output should not be forced to a fixed default;
 // fallback selection is decided at call sites (typically derived from energy).
 const SUPPORTED_MOODS: TrackMood[] = ['calm', 'chill', 'energetic', 'intense', 'uplifting'];
+const SUPPORTED_TEMPO_BUCKETS: TempoBucket[] = ['slow', 'mid', 'fast'];
+const DEFAULT_RATIONALE = 'Model output was incomplete; deterministic fallback normalization was applied.';
+
+type ValidationIssue = 'missing_required_fields' | 'invalid_field_types' | 'empty_string_fields';
+
+interface ParsedAnalysisSchema {
+    energy?: number;
+    mood?: string;
+    era?: string;
+    genreConfidence?: number;
+    rationale?: string;
+    tempo_bucket?: TempoBucket;
+}
+
+interface NormalizedAnalysisView {
+    energy: number;
+    mood: TrackMood;
+    era: string;
+    genreConfidence: number;
+    rationale: string;
+    tempo_bucket?: TempoBucket;
+    confidence: number;
+    normalizationReasonCode: NormalizationReasonCode;
+}
 
 function clamp01(value: number): number {
     return Math.max(0, Math.min(1, value));
@@ -153,6 +191,141 @@ function normalizeEra(era?: string): string {
     return clean.length > 0 ? clean : 'unknown';
 }
 
+function inferTempoBucket(input: TrackAnalysisInput): TempoBucket | undefined {
+    if (typeof input.bpm !== 'number') return undefined;
+    if (input.bpm < 100) return 'slow';
+    if (input.bpm <= 130) return 'mid';
+    return 'fast';
+}
+
+function normalizeTempoBucket(value?: string): TempoBucket | undefined {
+    if (!value) return undefined;
+    const normalized = value.trim().toLowerCase();
+    if (SUPPORTED_TEMPO_BUCKETS.includes(normalized as TempoBucket)) {
+        return normalized as TempoBucket;
+    }
+    return undefined;
+}
+
+function asNonEmptyString(value: unknown): string | undefined {
+    if (typeof value !== 'string') return undefined;
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function resolveNormalizationReason(issues: Set<ValidationIssue>, payloadInvalid: boolean): NormalizationReasonCode {
+    if (payloadInvalid) return 'invalid_payload';
+    if (issues.has('missing_required_fields')) return 'missing_required_fields';
+    if (issues.has('invalid_field_types')) return 'invalid_field_types';
+    if (issues.has('empty_string_fields')) return 'empty_string_fields';
+    return 'none';
+}
+
+function parseRawTrackAnalysis(raw: unknown): { parsed: ParsedAnalysisSchema; reasonCode: NormalizationReasonCode } {
+    if (!raw || typeof raw !== 'object') {
+        return { parsed: {}, reasonCode: 'invalid_payload' };
+    }
+
+    const source = raw as Record<string, unknown>;
+    const parsed: ParsedAnalysisSchema = {};
+    const issues = new Set<ValidationIssue>();
+
+    if ('energy' in source) {
+        if (typeof source.energy === 'number' && Number.isFinite(source.energy)) {
+            parsed.energy = source.energy;
+        } else {
+            issues.add('invalid_field_types');
+        }
+    }
+
+    if ('mood' in source) {
+        if (typeof source.mood === 'string') {
+            const mood = asNonEmptyString(source.mood);
+            if (mood) {
+                parsed.mood = mood;
+            } else {
+                issues.add('empty_string_fields');
+                issues.add('missing_required_fields');
+            }
+        } else {
+            issues.add('invalid_field_types');
+        }
+    } else {
+        issues.add('missing_required_fields');
+    }
+
+    if ('era' in source) {
+        if (typeof source.era === 'string') {
+            const era = asNonEmptyString(source.era);
+            if (era) {
+                parsed.era = era;
+            } else {
+                issues.add('empty_string_fields');
+            }
+        } else {
+            issues.add('invalid_field_types');
+        }
+    }
+
+    if ('genreConfidence' in source) {
+        if (typeof source.genreConfidence === 'number' && Number.isFinite(source.genreConfidence)) {
+            parsed.genreConfidence = source.genreConfidence;
+        } else {
+            issues.add('invalid_field_types');
+        }
+    }
+
+    if ('rationale' in source) {
+        if (typeof source.rationale === 'string') {
+            const rationale = asNonEmptyString(source.rationale);
+            if (rationale) {
+                parsed.rationale = rationale;
+            } else {
+                issues.add('empty_string_fields');
+                issues.add('missing_required_fields');
+            }
+        } else {
+            issues.add('invalid_field_types');
+        }
+    } else {
+        issues.add('missing_required_fields');
+    }
+
+    if ('tempo_bucket' in source) {
+        if (typeof source.tempo_bucket === 'string') {
+            const tempoBucket = normalizeTempoBucket(source.tempo_bucket);
+            if (tempoBucket) {
+                parsed.tempo_bucket = tempoBucket;
+            } else {
+                issues.add('invalid_field_types');
+            }
+        } else {
+            issues.add('invalid_field_types');
+        }
+    }
+
+    return { parsed, reasonCode: resolveNormalizationReason(issues, false) };
+}
+
+export function validateAndNormalizeAnalysis(raw: unknown, input: TrackAnalysisInput): NormalizedAnalysisView {
+    const { parsed, reasonCode } = parseRawTrackAnalysis(raw);
+    const energy = clamp01(typeof parsed.energy === 'number' ? parsed.energy : inferEnergyFallback(input));
+    const mood = normalizeMood(parsed.mood) ?? inferMoodFromEnergy(energy);
+    const genreConfidence = clamp01(typeof parsed.genreConfidence === 'number' ? parsed.genreConfidence : input.genre ? 0.6 : 0.3);
+    const rationale = parsed.rationale ?? DEFAULT_RATIONALE;
+    const tempo_bucket = parsed.tempo_bucket ?? inferTempoBucket(input);
+    const confidence = clamp01(Math.round(((energy + genreConfidence) / 2) * 10000) / 10000);
+
+    return {
+        energy,
+        mood,
+        era: normalizeEra(parsed.era),
+        genreConfidence,
+        rationale,
+        tempo_bucket,
+        confidence,
+        normalizationReasonCode: reasonCode,
+    };
 function normalizeText(value?: string): string {
     return (value ?? '').trim().toLowerCase();
 }
@@ -181,6 +354,8 @@ function createFallbackAnalysis(input: TrackAnalysisInput): RawTrackAnalysis {
         mood: inferMoodFromEnergy(energy),
         era: 'unknown',
         genreConfidence: input.genre ? 0.6 : 0.3,
+        rationale: DEFAULT_RATIONALE,
+        tempo_bucket: inferTempoBucket(input),
     };
 }
 
@@ -585,6 +760,19 @@ export class AnalysisService {
         attempts: number,
         promptProfileVersion: string
     ): TrackIntelligenceRecord {
+        const normalized = validateAndNormalizeAnalysis(raw, input);
+
+        return {
+            trackId: input.trackId,
+            idempotencyKey,
+            energy: normalized.energy,
+            mood: normalized.mood,
+            era: normalized.era,
+            genreConfidence: normalized.genreConfidence,
+            rationale: normalized.rationale,
+            tempo_bucket: normalized.tempo_bucket,
+            confidence: normalized.confidence,
+            normalizationReasonCode: normalized.normalizationReasonCode,
         attempts: number
     ): TrackIntelligenceRecord | null {
         if (input.trackId.trim().length === 0) {
