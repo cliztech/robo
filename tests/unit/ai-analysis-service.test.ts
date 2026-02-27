@@ -28,12 +28,15 @@ describe('AnalysisService', () => {
         });
 
         expect(result.status).toBe('analyzed');
-        expect(result.record.source).toBe('ai');
-        expect(result.record.energy).toBe(1);
-        expect(result.record.mood).toBe('energetic');
-        expect(result.record.genreConfidence).toBe(0);
-        expect(result.record.confidence).toBe(0.5);
-        expect(result.record.analyzedAt).toBe('2026-02-26T12:00:00.000Z');
+        expect(result.outcome).toBe('success');
+        expect(result.source).toBe('ai');
+        expect(result.record).not.toBeNull();
+        expect(result.record!.source).toBe('ai');
+        expect(result.record!.energy).toBe(1);
+        expect(result.record!.mood).toBe('energetic');
+        expect(result.record!.genreConfidence).toBe(0);
+        expect(result.record!.confidence).toBe(0.5);
+        expect(result.record!.analyzedAt).toBe('2026-02-26T12:00:00.000Z');
     });
 
     it('retries and then uses fallback when adapter repeatedly fails', async () => {
@@ -60,10 +63,13 @@ describe('AnalysisService', () => {
 
         expect(adapter.analyzeTrack).toHaveBeenCalledTimes(3);
         expect(onRetry).toHaveBeenCalledTimes(2);
-        expect(result.record.source).toBe('fallback');
-        expect(result.record.attempts).toBe(3);
-        expect(result.record.energy).toBe(0.82);
-        expect(result.record.mood).toBe('energetic');
+        expect(result.outcome).toBe('degraded');
+        expect(result.source).toBe('fallback');
+        expect(result.record).not.toBeNull();
+        expect(result.record!.source).toBe('fallback');
+        expect(result.record!.attempts).toBe(3);
+        expect(result.record!.energy).toBe(0.82);
+        expect(result.record!.mood).toBe('energetic');
     });
 
     it('returns skipped status for existing idempotency key', async () => {
@@ -92,6 +98,31 @@ describe('AnalysisService', () => {
 
         expect(first.status).toBe('analyzed');
         expect(second.status).toBe('skipped');
+        expect(first.outcome).toBe('success');
+        expect(second.outcome).toBe('success');
         expect(adapter.analyzeTrack).toHaveBeenCalledTimes(1);
+    });
+
+    it('returns failed outcome when neither AI nor fallback can normalize a valid record', async () => {
+        const adapter = {
+            analyzeTrack: vi.fn().mockRejectedValue(new Error('provider unavailable')),
+        };
+
+        const service = new AnalysisService({
+            adapter,
+            promptVersion: 'v5.5',
+            maxRetries: 1,
+        });
+
+        const result = await service.analyze({
+            trackId: '   ',
+            title: 'Untitled',
+            artist: 'Unknown',
+        });
+
+        expect(result.status).toBe('analyzed');
+        expect(result.outcome).toBe('failed');
+        expect(result.source).toBe('fallback');
+        expect(result.record).toBeNull();
     });
 });
