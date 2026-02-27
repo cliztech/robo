@@ -49,6 +49,8 @@
 
 
 ## Recent Ops Updates
+- [x] Added caller-facing analysis outcomes (`success`/`degraded`/`failed`) with queue mapping + test coverage updates.
+- [x] Phase 1 workflow orchestration blueprint hardened with explicit metadata contracts, graph transitions/retry terminal states, policy profile matrix, and verification criteria; unfinished-task links now point to concrete section anchors.
 - [x] Security automation hardening: re-enabled CodeQL, removed unsupported defaults, and added high/critical gate + RB-023 triage flow.
 - [x] Implemented release readiness gate automation (tests/config/security/docs) with consolidated artifact reporting and protected-branch ruleset sync.
 
@@ -64,3 +66,5 @@
 
 - [x] Phase 5 foundation: implemented `AnalysisService` (normalization, retry with fallback, idempotency) and queue processor with unit/integration tests.
 - [x] Enhanced `AnalysisService` cache controls with max entry cap, TTL expiry, and observability stats/hooks; expanded unit coverage for eviction, TTL refresh, and cap stability.
+
+- [x] Updated `docs/massive_workflow_blueprint.md` branding to canonical `DGN-DJ by DGNradio`, with `RoboDJ` retained only as an explicit legacy alias in historical context.
