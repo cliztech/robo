@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { AnalysisService, processAnalysisQueue } from '@/lib/ai/analysisService';
 
 describe('processAnalysisQueue', () => {
-    it('processes queue items in order and preserves idempotent skips', async () => {
+    it('skips identical input and re-analyzes when input mutates', async () => {
         const adapter = {
             analyzeTrack: vi
                 .fn()
@@ -14,21 +14,23 @@ describe('processAnalysisQueue', () => {
         const service = new AnalysisService({
             adapter,
             promptVersion: 'v5.4',
+            modelVersion: 'gpt-4o-mini-2026-02',
+            promptProfileVersion: 'analysis-profile-v3',
         });
 
         const results = await processAnalysisQueue(
             [
                 {
                     id: 'job-1',
-                    input: { trackId: 'track-1', title: 'Alpha', artist: 'A' },
+                    input: { trackId: 'track-1', title: 'Alpha', artist: 'A', genre: 'house' },
                 },
                 {
                     id: 'job-2',
-                    input: { trackId: 'track-1', title: 'Alpha', artist: 'A' },
+                    input: { trackId: 'track-1', title: 'Alpha', artist: 'A', genre: 'house' },
                 },
                 {
                     id: 'job-3',
-                    input: { trackId: 'track-2', title: 'Beta', artist: 'B' },
+                    input: { trackId: 'track-1', title: 'Alpha', artist: 'A', genre: 'techno' },
                 },
             ],
             service

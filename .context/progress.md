@@ -49,6 +49,7 @@
 
 
 ## Recent Ops Updates
+- [x] Hardened AI analysis cache keys with deterministic input fingerprints and added unit/integration coverage for metadata-driven re-analysis behavior.
 - [x] Security automation hardening: re-enabled CodeQL, removed unsupported defaults, and added high/critical gate + RB-023 triage flow.
 - [x] Implemented release readiness gate automation (tests/config/security/docs) with consolidated artifact reporting and protected-branch ruleset sync.
 
