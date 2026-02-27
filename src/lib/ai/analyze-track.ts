@@ -100,7 +100,7 @@ export async function analyzeTrack(options: AnalyzeTrackOptions): Promise<{
     // Call OpenAI
     const startTime = Date.now()
     const result = await generateObject({
-      model: openai(AI_CONFIG.models.analysis),
+      model: openai(AI_CONFIG.models.analysis) as any,
       schema: TrackAnalysisSchema,
       prompt: `Analyze this music track and provide detailed classification:
 

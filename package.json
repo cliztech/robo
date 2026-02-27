@@ -23,7 +23,11 @@
         "react": "^18",
         "react-dom": "^18",
         "tailwind-merge": "^2.3.0",
-        "zustand": "^4.5.7"
+        "zustand": "^4.5.7",
+        "ai": "^3.4.33",
+        "@ai-sdk/openai": "^1.3.22",
+        "p-queue": "^8.0.1",
+        "@supabase/ssr": "^0.5.2"
     },
     "devDependencies": {
         "@testing-library/dom": "^10.4.0",
@@ -59,7 +63,8 @@
     "test:watch": "vitest",
     "test:ui": "vitest run",
     "test:perf:analysis-latency": "vitest run tests/perf/ai-analysis-latency.test.ts",
-    "test:security": "node scripts/security/run-security-smoke-wrapper.mjs"
+    "test:security": "node scripts/ci/security_smoke_check.mjs",
+    "check:tokens": "node scripts/check_tokens.mjs"
   },
   "dependencies": {
     "@google/adk": "^0.3.0",
