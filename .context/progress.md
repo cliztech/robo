@@ -106,6 +106,7 @@
 - [x] Updated `docs/massive_workflow_blueprint.md` branding to canonical `DGN-DJ by DGNradio`, with `RoboDJ` retained only as an explicit legacy alias in historical context.
 
 ## 2026-02-27 Progress Update
+- [x] Hardened `scripts/roadmap_autopilot.py` reconciliation: closed TODO TI references now exclude matching roadmap backlog rows (TI-first, normalized-title fallback), added audit-friendly "Reconciled / Skipped" output, and regenerated unfinished-task build plan with TI-007/TI-008/TI-009 removed from open backlog.
 - [x] **Phase 5: AI Integration** (Completed resilient track analysis service rebuild with deterministic fingerprint/idempotency keys, bounded retry/fallback, TTL+LRU cache controls, and queue outcome mapping.)
 - [x] **Phase 5: AI Integration** (Repaired and expanded verification harness in `tests/unit/ai-analysis-service.test.ts` + `tests/integration/analysis-queue.test.ts` for normalization, cache behavior, and degraded/failed outcomes.)
 - [x] **Phase 5: AI Integration** (Validation baseline established through targeted vitest runs for AI analysis unit/integration suites.)
