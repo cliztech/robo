@@ -28,6 +28,7 @@ export interface TrackIntelligenceRecord {
     confidence: number;
     source: 'ai' | 'fallback';
     attempts: number;
+    promptProfileVersion: string;
     modelVersion: string;
     promptProfileVersion: string;
     promptVersion: string;
@@ -44,11 +45,19 @@ export interface AnalysisResult {
 }
 
 export interface AnalysisAdapter {
-    analyzeTrack(input: TrackAnalysisInput, promptVersion: string): Promise<RawTrackAnalysis>;
+    analyzeTrack(input: TrackAnalysisInput, promptProfile: ResolvedPromptProfile): Promise<RawTrackAnalysis>;
 }
+
+export interface ResolvedPromptProfile {
+    promptTemplate: string;
+    promptProfileVersion: string;
+}
+
+export type PromptProfileResolver = (input: TrackAnalysisInput) => Promise<ResolvedPromptProfile> | ResolvedPromptProfile;
 
 export interface AnalysisServiceOptions {
     adapter: AnalysisAdapter;
+    promptProfile: ResolvedPromptProfile | PromptProfileResolver;
     promptVersion: string;
     modelVersion?: string;
     promptProfileVersion?: string;
@@ -194,6 +203,7 @@ function buildFingerprint(payload: Record<string, number | string | null>): stri
 
 export class AnalysisService {
     private readonly adapter: AnalysisAdapter;
+    private readonly promptProfile: ResolvedPromptProfile | PromptProfileResolver;
     private readonly promptVersion: string;
     private readonly modelVersion: string;
     private readonly promptProfileVersion: string;
@@ -221,6 +231,7 @@ export class AnalysisService {
 
     constructor(options: AnalysisServiceOptions) {
         this.adapter = options.adapter;
+        this.promptProfile = options.promptProfile;
         this.promptVersion = options.promptVersion;
         this.modelVersion = options.modelVersion;
         this.promptProfileVersion = options.promptProfileVersion;
@@ -255,6 +266,9 @@ export class AnalysisService {
     }
 
     async analyze(input: TrackAnalysisInput): Promise<AnalysisResult> {
+        const promptProfile = await this.resolvePromptProfile(input);
+        const promptProfileVersion = promptProfile.promptProfileVersion;
+        const idempotencyKey = this.buildIdempotencyKey(input.trackId, promptProfileVersion);
         const fingerprint = this.buildFingerprint(input, this.promptVersion);
         const cached = this.byFingerprint.get(fingerprint);
         if (cached) {
@@ -301,6 +315,12 @@ export class AnalysisService {
         while (attempt <= this.maxRetries && !normalized) {
             attempt += 1;
             try {
+                const raw = await this.adapter.analyzeTrack(input, promptProfile);
+                normalized = this.normalize(raw, input, idempotencyKey, 'ai', attempt, promptProfileVersion);
+            } catch (error) {
+                if (attempt > this.maxRetries) {
+                    const fallback = createFallbackAnalysis(input);
+                    normalized = this.normalize(fallback, input, idempotencyKey, 'fallback', attempt, promptProfileVersion);
                 const raw = await this.adapter.analyzeTrack(input, this.promptVersion);
                 normalized = this.normalize(raw, input, fingerprint, 'ai', attempt);
             } catch (error) {
@@ -530,6 +550,13 @@ export class AnalysisService {
         }
     }
 
+    private async resolvePromptProfile(input: TrackAnalysisInput): Promise<ResolvedPromptProfile> {
+        if (typeof this.promptProfile === 'function') {
+            return await this.promptProfile(input);
+        }
+        return this.promptProfile;
+    }
+
     private buildIdempotencyKey(trackId: string, promptVersion: string): string {
         return `${trackId}:${promptVersion}`;
     private emitCacheEvent(type: AnalysisCacheEvent['type'], key: string): void {
@@ -555,6 +582,9 @@ export class AnalysisService {
         idempotencyKey: string,
         versionProfile: AnalysisVersionProfile,
         source: 'ai' | 'fallback',
+        attempts: number,
+        promptProfileVersion: string
+    ): TrackIntelligenceRecord {
         attempts: number
     ): TrackIntelligenceRecord | null {
         if (input.trackId.trim().length === 0) {
