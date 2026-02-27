@@ -87,3 +87,61 @@ def test_generate_playlist_returns_envelope():
     assert len(body["data"]["entries"]) == 2
     assert body["data"]["total_duration_seconds"] == 370
     assert body["data"]["entries"][0]["selection_reason"]
+
+
+def test_generate_playlist_returns_422_on_infeasible_constraints():
+    app.dependency_overrides[get_playlist_service] = lambda: _StubService()
+    client = TestClient(app)
+    payload = {
+        "tracks": [
+            {
+                "id": "a",
+                "title": "Alpha",
+                "artist": "One",
+                "genre": "house",
+                "mood": "energetic",
+                "energy": 7,
+                "bpm": 100,
+                "duration_seconds": 180,
+            },
+            {
+                "id": "b",
+                "title": "Beta",
+                "artist": "Two",
+                "genre": "house",
+                "mood": "energetic",
+                "energy": 8,
+                "bpm": 132,
+                "duration_seconds": 190,
+            },
+            {
+                "id": "c",
+                "title": "Gamma",
+                "artist": "Three",
+                "genre": "house",
+                "mood": "energetic",
+                "energy": 9,
+                "bpm": 145,
+                "duration_seconds": 200,
+            },
+        ],
+        "desired_count": 3,
+        "max_bpm_delta": 10,
+        "max_consecutive_same_genre": 1,
+    }
+
+    try:
+        response = client.post(
+            "/api/v1/ai/generate-playlist",
+            json=payload,
+            headers={"X-API-Key": TEST_API_KEY},
+        )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 422
+    body = response.json()
+    assert body["success"] is False
+    assert body["data"] is None
+    assert body["error"]["code"] == "playlist_constraints_infeasible"
+    assert set(body["error"]["blocked_constraints"]) >= {"bpm_delta", "genre_run_length"}

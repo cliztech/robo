@@ -58,7 +58,16 @@ class PlaylistGenerationResult(BaseModel):
 class PlaylistResponseEnvelope(BaseModel):
     success: bool
     data: PlaylistGenerationResult | None
-    error: str | None
+    error: "PlaylistGenerationError" | None
+
+
+class PlaylistGenerationError(BaseModel):
+    code: Literal["playlist_constraints_infeasible"]
+    message: str
+    slot: int = Field(ge=0)
+    generated_entries: int = Field(ge=0)
+    blocked_constraints: list[Literal["bpm_delta", "genre_run_length", "duration_target"]]
+    blocked_counts: dict[Literal["bpm_delta", "genre_run_length", "duration_target"], int]
 
 
 @dataclass(frozen=True)
@@ -72,6 +81,7 @@ class _OptimizedTrack:
     track: TrackCandidate
     genre_lower: str
     mood_lower: str
+    artist_norm: str
 
 
 TIME_OF_DAY_PROFILE: dict[int, _TimeProfile] = {
@@ -103,10 +113,19 @@ TIME_OF_DAY_PROFILE: dict[int, _TimeProfile] = {
 
 
 class PlaylistGenerationService:
+    @staticmethod
+    def _normalize_artist(artist: str) -> str:
+        return artist.strip().casefold()
+
     def generate(self, request: PlaylistGenerationRequest) -> PlaylistGenerationResult:
         # Pre-process tracks into optimized structures (O(N))
         remaining = [
-            _OptimizedTrack(track=t, genre_lower=t.genre.lower(), mood_lower=t.mood.lower())
+            _OptimizedTrack(
+                track=t,
+                genre_lower=t.genre.lower(),
+                mood_lower=t.mood.lower(),
+                artist_norm=self._normalize_artist(t.artist),
+            )
             for t in request.tracks
         ]
         output: list[PlaylistEntry] = []
@@ -124,19 +143,46 @@ class PlaylistGenerationService:
             prev_mood_lower = previous_track.mood.lower() if previous_track else None
             prev_genre_lower = previous_track.genre.lower() if previous_track else None
 
-            recent_artists = {entry.artist for entry in output[-request.avoid_recent_artist_window :]}
+            recent_artists = {
+                self._normalize_artist(entry.artist) for entry in output[-request.avoid_recent_artist_window :]
+            }
 
-            hard_filtered = [
-                candidate
-                for candidate in remaining
-                if self._passes_hard_constraints(request, output, previous_track, candidate)
-            ]
-            candidate_pool = hard_filtered if hard_filtered else remaining
+            hard_filtered: list[_OptimizedTrack] = []
+            blocked_counts: dict[Literal["bpm_delta", "genre_run_length", "duration_target"], int] = {
+                "bpm_delta": 0,
+                "genre_run_length": 0,
+                "duration_target": 0,
+            }
+            for candidate in remaining:
+                failed_constraints = self._hard_constraint_failures(request, output, previous_track, candidate)
+                if not failed_constraints:
+                    hard_filtered.append(candidate)
+                    continue
+                for failed_constraint in failed_constraints:
+                    blocked_counts[failed_constraint] += 1
+
+            if not hard_filtered:
+                blocked_constraints = [
+                    constraint for constraint, count in blocked_counts.items() if count > 0
+                ]
+                raise PlaylistConstraintsInfeasibleError(
+                    error=PlaylistGenerationError(
+                        code="playlist_constraints_infeasible",
+                        message=(
+                            f"No candidate satisfies hard constraints at slot {slot}; "
+                            f"generated {len(output)} of {request.desired_count} requested entries"
+                        ),
+                        slot=slot,
+                        generated_entries=len(output),
+                        blocked_constraints=blocked_constraints,
+                        blocked_counts=blocked_counts,
+                    )
+                )
 
             # Optimized: Use max() instead of sorted() since we only need the top candidate.
             # This reduces complexity from O(N log N) to O(N) per slot.
             chosen = max(
-                candidate_pool,
+                hard_filtered,
                 key=lambda candidate: self._candidate_score(
                     candidate=candidate,
                     previous_track=previous_track,
@@ -176,15 +222,17 @@ class PlaylistGenerationService:
             total_duration_seconds=sum(entry.duration_seconds for entry in output),
         )
 
-    def _passes_hard_constraints(
+    def _hard_constraint_failures(
         self,
         request: PlaylistGenerationRequest,
         output: list[PlaylistEntry],
         previous_track: PlaylistEntry | None,
         candidate: _OptimizedTrack,
-    ) -> bool:
+    ) -> list[Literal["bpm_delta", "genre_run_length", "duration_target"]]:
+        failures: list[Literal["bpm_delta", "genre_run_length", "duration_target"]] = []
+
         if previous_track is not None and abs(previous_track.bpm - candidate.track.bpm) > request.max_bpm_delta:
-            return False
+            failures.append("bpm_delta")
 
         if output:
             run_length = 0
@@ -194,7 +242,7 @@ class PlaylistGenerationService:
                 else:
                     break
             if run_length >= request.max_consecutive_same_genre:
-                return False
+                failures.append("genre_run_length")
 
         if request.target_duration_seconds is not None:
             accumulated = sum(entry.duration_seconds for entry in output)
@@ -202,9 +250,10 @@ class PlaylistGenerationService:
             projected = accumulated + candidate.track.duration_seconds
             min_future = (remaining_slots - 1) * 30
             if projected + min_future > request.target_duration_seconds:
-                return False
+                failures.append("duration_target")
 
-        return True
+        return failures
+
 
     def _target_energy_for_slot(self, request: PlaylistGenerationRequest, slot: int) -> int:
         base = TIME_OF_DAY_PROFILE[request.start_hour].target_energy
@@ -238,7 +287,7 @@ class PlaylistGenerationService:
         elif candidate.genre_lower in profile.preferred_genres:
             score += 0.35
 
-        if candidate.track.artist in recent_artists:
+        if candidate.artist_norm in recent_artists:
             score -= 0.6
 
         if previous_track is not None:
@@ -259,7 +308,8 @@ class PlaylistGenerationService:
         p_mood = prev_mood_lower if prev_mood_lower is not None else previous.mood.lower()
         mood_score = 1.0 if p_mood == current.mood_lower else 0.65
 
-        artist_score = 0.0 if previous.artist == current.track.artist else 1.0
+        previous_artist_norm = self._normalize_artist(previous.artist)
+        artist_score = 0.0 if previous_artist_norm == current.artist_norm else 1.0
 
         p_genre = prev_genre_lower if prev_genre_lower is not None else previous.genre.lower()
         genre_score = 1.0 if p_genre == current.genre_lower else 0.75
@@ -295,3 +345,9 @@ class PlaylistGenerationService:
                 penalties += abs(delta) - 2
 
         return max(0.0, round(1 - (penalties / (len(entries) * 4)), 3))
+
+
+class PlaylistConstraintsInfeasibleError(Exception):
+    def __init__(self, error: PlaylistGenerationError) -> None:
+        super().__init__(error.message)
+        self.error = error
