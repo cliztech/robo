@@ -8,6 +8,7 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 ## Recent Decisions
 
+- Added Phase 8 dashboard automated coverage for loading/error/success states, alert acknowledge interaction, threshold boundary rendering, and fallback-metric regression in `tests/ui/dashboard-view.test.tsx`.
 - Strengthened DJ console dashboard type boundaries with `dashboard.types.ts`, typed telemetry props, and exhaustive severity/status mapping utilities to remove implicit UI string handling.
 - Refactored streaming-gateway FFmpeg lifecycle into a supervisor with jittered backoff restarts, degraded-mode thresholding, health endpoints, heartbeat events, and signal-aware shutdown.
 - Refactored `AnalysisService` idempotency fingerprinting to hash canonicalized track metadata + model/prompt versions with observability fields and cache-invalidation test coverage.
