@@ -122,3 +122,10 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 - [x] Replaced merge-corrupted `src/lib/ai/analysisService.ts` with a single canonical implementation (normalized result/record types, single idempotency key strategy, unified LRU+TTL cache map, deterministic analyze flow, and queue outcome mapping).
 - [x] Refactored malformed AI analysis unit/integration suites into clean non-overlapping describe trees and public-contract queue assertions.
+
+## 2026-02-27 TI-041 Execution Update
+
+- Added deterministic `test:security` runner + wrapper (`pnpm test:security`) with scenario-level marker enforcement for `SMK-AUTHN-01`, `SMK-AUTHZ-01`, `SMK-LOCKOUT-01`, and `SMK-PRIV-01`.
+- Wired smoke checks to TI-002 role deny expectations, TI-003 timeout/reauth contract variables, and TI-039 privileged action catalog IDs through startup contract validation.
+- Added mandatory artifact outputs under `artifacts/security/logs`, `artifacts/security/reports`, and `artifacts/security/hashes`.
+- Updated operations docs with exact pre-release invocation and pass/fail signatures.
