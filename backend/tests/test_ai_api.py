@@ -1,13 +1,38 @@
+import os
+from unittest import mock
+
+import pytest
 from fastapi.testclient import TestClient
 
+from backend.ai.contracts.track_analysis import AnalysisStatus, TrackAnalysisRequest
 from backend.ai_service import (
     AICircuitBreaker,
     AICircuitOpenError,
     AIInferenceService,
     HostScriptRequest,
-    TrackAnalysisRequest,
 )
 from backend.app import app
+
+TEST_API_KEY = "valid_api_key_for_testing"
+
+
+@pytest.fixture(autouse=True)
+def mock_env_api_key():
+    with mock.patch.dict(
+        os.environ,
+        {"ROBODJ_SECRET_KEY": TEST_API_KEY, "ROBODJ_SCHEDULER_API_KEY": TEST_API_KEY},
+        clear=False,
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def clear_auth_cache():
+    from backend.security.auth import _get_secret_key
+
+    _get_secret_key.cache_clear()
+    yield
+    _get_secret_key.cache_clear()
 
 
 def test_track_analysis_contract_success() -> None:
@@ -22,7 +47,7 @@ def test_track_analysis_contract_success() -> None:
             "duration_seconds": 245,
             "notes": "night drive",
         },
-        headers={"X-Correlation-ID": "corr-track-001"},
+        headers={"X-Correlation-ID": "corr-track-001", "X-API-Key": TEST_API_KEY},
     )
 
     assert response.status_code == 200
@@ -30,7 +55,9 @@ def test_track_analysis_contract_success() -> None:
     assert body["success"] is True
     assert body["status"] == "success"
     assert body["correlation_id"] == "corr-track-001"
-    assert body["data"]["mood"] in {"uplifting", "moody", "chill", "energetic", "dark"}
+    assert body["data"]["track_id"] == "legacy-corr-track-001"
+    assert body["data"]["analysis"]["genre"] == "synthwave"
+    assert body["data"]["analysis"]["status"] == AnalysisStatus.SUCCESS.value
     assert isinstance(body["latency_ms"], int)
     assert body["cost_usd"] >= 0
     assert body["prompt_profile_version"]
@@ -107,12 +134,9 @@ def test_circuit_breaker_blocks_after_failure() -> None:
 
     service._invoke_model = _raise  # type: ignore[method-assign]
     request = TrackAnalysisRequest(
-        title="A",
-        artist="B",
-        genre="C",
-        bpm=100,
-        duration_seconds=120,
-        notes="n",
+        track_id="cb-track",
+        metadata={"title": "A", "artist": "B", "genre_hint": "C", "duration_seconds": 120},
+        audio_features={"bpm": 100},
     )
 
     try:

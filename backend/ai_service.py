@@ -10,34 +10,17 @@ from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from dataclasses import dataclass
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
+
+from backend.ai.contracts.track_analysis import (
+    TrackAnalysis,
+    TrackAnalysisRequest,
+    TrackAnalysisResult,
+    TrackMood,
+    VocalStyle,
+)
 
 logger = logging.getLogger(__name__)
-
-
-class TrackAnalysisRequest(BaseModel):
-    title: str = Field(min_length=1, max_length=160)
-    artist: str = Field(min_length=1, max_length=160)
-    genre: str = Field(min_length=1, max_length=80)
-    bpm: int = Field(ge=50, le=220)
-    duration_seconds: int = Field(ge=30, le=1800)
-    notes: str = Field(default="", max_length=800)
-
-    @field_validator("title", "artist", "genre", mode="before")
-    @classmethod
-    def _strip_required(cls, value: str) -> str:
-        cleaned = str(value).strip()
-        if not cleaned:
-            raise ValueError("value cannot be empty")
-        return cleaned
-
-
-class TrackAnalysisResult(BaseModel):
-    mood: Literal["uplifting", "moody", "chill", "energetic", "dark"]
-    energy_score: int = Field(ge=1, le=10)
-    talkover_windows_seconds: list[int]
-    transition_tags: list[str]
-    rationale: str = Field(min_length=1, max_length=400)
 
 
 class HostScriptRequest(BaseModel):
@@ -71,6 +54,33 @@ class _GuardrailPrompts:
     host_script: str
 
 
+
+
+class LegacyAITrackAnalysisRequest(BaseModel):
+    """Temporary compatibility input for /api/v1/ai/track-analysis.
+
+    TODO(phase-5-story-P5-05): Remove this adapter after all clients send
+    canonical TrackAnalysisRequest payloads with track_id + metadata fields.
+    """
+
+    title: str = Field(min_length=1, max_length=160)
+    artist: str = Field(min_length=1, max_length=160)
+    genre: str = Field(min_length=1, max_length=80)
+    bpm: int = Field(ge=50, le=220)
+    duration_seconds: int = Field(ge=30, le=1800)
+    notes: str = Field(default="", max_length=800)
+
+    def to_canonical(self, correlation_id: str) -> TrackAnalysisRequest:
+        return TrackAnalysisRequest(
+            track_id=f"legacy-{correlation_id}",
+            metadata={
+                "title": self.title.strip(),
+                "artist": self.artist.strip(),
+                "duration_seconds": self.duration_seconds,
+                "genre_hint": self.genre.strip(),
+            },
+            audio_features={"bpm": self.bpm},
+        )
 PROMPTS = _GuardrailPrompts(
     track_analysis=(
         "You are a broadcast-safe track analysis model. Return compact JSON with fields: "
@@ -290,15 +300,28 @@ class AIInferenceService:
     def _invoke_model(self, mode: Literal["track_analysis", "host_script"], request: BaseModel):
         if mode == "track_analysis":
             payload = request.model_dump()
-            energy_base = min(10, max(1, round(payload["bpm"] / 20)))
-            mood = "chill" if payload["bpm"] < 95 else "energetic" if payload["bpm"] > 125 else "uplifting"
-            talkover = [8, max(10, payload["duration_seconds"] // 3)]
+            metadata = payload["metadata"]
+            audio = payload.get("audio_features") or {}
+            bpm = audio.get("bpm") or 120
+            energy_base = min(10, max(1, round(bpm / 20)))
+            mood = TrackMood.CHILL if bpm < 95 else TrackMood.ENERGETIC if bpm > 125 else TrackMood.UPLIFTING
+            talkover = [8, max(10, metadata["duration_seconds"] // 3)]
             return TrackAnalysisResult(
-                mood=mood,
-                energy_score=energy_base,
-                talkover_windows_seconds=talkover,
-                transition_tags=[payload["genre"].lower(), mood],
-                rationale=f"{PROMPTS.track_analysis[:60]}...",
+                track_id=payload["track_id"],
+                analysis=TrackAnalysis(
+                    genre=(metadata.get("genre_hint") or "pop").lower(),
+                    mood=mood,
+                    energy_level=energy_base,
+                    danceability=max(1, min(10, energy_base + 1)),
+                    bpm_estimate=bpm,
+                    vocal_style=VocalStyle.MIXED,
+                    best_for_time=["afternoon", "evening"] if energy_base >= 7 else ["morning", "afternoon"],
+                    tags=[(metadata.get("genre_hint") or "pop").lower(), mood.value],
+                    confidence_score=0.82,
+                    reasoning=(
+                        f"{PROMPTS.track_analysis[:60]}... talkover_windows_seconds={talkover}"
+                    ),
+                ),
             )
 
         req = request.model_dump()
