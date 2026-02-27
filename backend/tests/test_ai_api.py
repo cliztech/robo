@@ -5,12 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from backend.ai.contracts.track_analysis import AnalysisStatus, TrackAnalysisRequest
-from backend.ai_service import (
-    AICircuitBreaker,
-    AICircuitOpenError,
-    AIInferenceService,
-    HostScriptRequest,
-)
+from backend.ai_service import AICircuitBreaker, AICircuitOpenError, AIInferenceService, HostScriptRequest
 from backend.app import app
 
 TEST_API_KEY = "valid_api_key_for_testing"
@@ -55,6 +50,7 @@ def test_track_analysis_contract_success() -> None:
     assert body["success"] is True
     assert body["status"] == "success"
     assert body["correlation_id"] == "corr-track-001"
+    assert response.headers["X-Correlation-ID"] == "corr-track-001"
     assert body["data"]["track_id"] == "legacy-corr-track-001"
     assert body["data"]["analysis"]["genre"] == "synthwave"
     assert body["data"]["analysis"]["status"] == AnalysisStatus.SUCCESS.value
@@ -66,12 +62,14 @@ def test_track_analysis_contract_success() -> None:
 def test_track_analysis_cache_hit() -> None:
     service = AIInferenceService(timeout_seconds=0.1)
     request = TrackAnalysisRequest(
-        title="Neon Skyline",
-        artist="Bytewave",
-        genre="Synthwave",
-        bpm=118,
-        duration_seconds=245,
-        notes="night drive",
+        track_id="trk-cache-001",
+        metadata={
+            "title": "Neon Skyline",
+            "artist": "Bytewave",
+            "genre_hint": "Synthwave",
+            "duration_seconds": 245,
+        },
+        audio_features={"bpm": 118},
     )
 
     _, _, _, first_cache_hit, _, _ = service.analyze_track(request, correlation_id="c1")

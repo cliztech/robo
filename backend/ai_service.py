@@ -6,6 +6,7 @@ import os
 import hashlib
 import threading
 import time
+from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from dataclasses import dataclass
 from typing import Any, Literal
@@ -289,11 +290,20 @@ class AIInferenceService:
     def _build_fallback(self, mode: Literal["track_analysis", "host_script"]) -> TrackAnalysisResult | HostScriptResult:
         if mode == "track_analysis":
             return TrackAnalysisResult(
-                mood="chill",
-                energy_score=5,
-                talkover_windows_seconds=[8, 16],
-                transition_tags=["fallback"],
-                rationale="Fallback analysis used after timeout.",
+                track_id="fallback-track",
+                analysis=TrackAnalysis(
+                    genre="unknown",
+                    mood=TrackMood.CHILL,
+                    energy_level=5,
+                    danceability=5,
+                    bpm_estimate=100,
+                    vocal_style=VocalStyle.MIXED,
+                    best_for_time=["afternoon"],
+                    tags=["fallback"],
+                    confidence_score=0.1,
+                    reasoning="Fallback analysis used after timeout.",
+                    status="error",
+                ),
             )
         return HostScriptResult(script="We're back with more music after this break.", safety_flags=["fallback"])
 
