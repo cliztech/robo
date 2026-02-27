@@ -145,6 +145,7 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added mandatory artifact outputs under `artifacts/security/logs`, `artifacts/security/reports`, and `artifacts/security/hashes`.
 - Updated operations docs with exact pre-release invocation and pass/fail signatures.
 
+- Refactored backend status dashboard to consume live telemetry inputs via injected `StatusTelemetryProvider`, added deterministic queue/rotation evaluators with persisted lifecycle reconciliation in `status_alerts.db`, and expanded API tests for severity transitions + stale-boundary behavior.
 ## 2026-02-27 Dashboard Status Proxy Integration Update
 
 - Selected canonical integration path: Next.js `src/app/api/v1/status/dashboard/*` route-handler proxy to backend service.
