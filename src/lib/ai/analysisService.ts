@@ -123,7 +123,8 @@ function normalizeFingerprintInput(input: TrackAnalysisInput): Record<string, nu
 }
 
 function buildFingerprint(payload: Record<string, number | string | null>): string {
-    const canonical = JSON.stringify(payload);
+    const canonicalPayload = Object.fromEntries(Object.entries(payload).sort());
+    const canonical = JSON.stringify(canonicalPayload);
     return createHash('sha256').update(canonical).digest('hex');
 }
 
