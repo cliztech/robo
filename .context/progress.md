@@ -146,6 +146,11 @@
 - [x] Added artifact-producing wrapper for smoke logs/report/hashes under `artifacts/security/*`.
 - [x] Updated operations command and artifact docs with pre-release invocation and required signatures.
 
+## 2026-02-27 Dashboard Queue Severity Precedence Update
+- [x] Updated `DashboardView` queue severity resolution to prioritize API-provided `queue_depth.state` with threshold fallback only for missing/malformed state.
+- [x] Added unit coverage in `tests/ui/dashboard-view.test.tsx` to verify API state precedence and fallback behavior.
+- [x] Documented queue-depth severity precedence in `docs/dashboard_status_ui_mapping.md`.
+
 ## 2026-02-27 Dashboard Testability Update
 - [x] Console dashboard UI hardening: added API dependency injection hooks, exported status types for tests, and standardized dashboard loading/error/test-id semantics for `tests/ui/dashboard-view.test.tsx`.
 - [x] Status dashboard telemetry refactor: replaced hardcoded queue trend fixtures with live telemetry adapters, evaluator-driven alert transitions, repository lifecycle persistence (`resolved_at`/`last_seen_at`), and coverage for warning/critical + stale-rotation boundaries.

@@ -19,10 +19,11 @@ This spec maps the extended `/api/v1/status/dashboard` contract into React dashb
 
 - `queue_depth.trend[]` maps to a compact sparkline.
 - `queue_depth.thresholds.warning` and `.critical` map to horizontal threshold rules.
-- `queue_depth.state` controls chart accent and card border tone:
+- `queue_depth.state` is the primary severity source for chart accent and card border tone:
   - `info` neutral/green
   - `warning` amber
   - `critical` red
+- If `queue_depth.state` is missing or malformed, derive severity from `queue_depth.current_depth` against `queue_depth.thresholds.warning` and `.critical`.
 - `queue_depth.current_depth` is shown as the primary numeric KPI.
 
 ## 3) Last Successful Rotation + Stale Warning

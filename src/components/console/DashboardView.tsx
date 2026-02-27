@@ -216,6 +216,20 @@ function deriveQueueSeverity(currentDepth: number, thresholds: { warning: number
     return 'info';
 }
 
+function isAlertSeverity(value: unknown): value is AlertSeverity {
+    return value === 'info' || value === 'warning' || value === 'critical';
+}
+
+export function resolveQueueDepthSeverity(
+    queueDepth: DashboardStatusResponse['queue_depth']
+): AlertSeverity {
+    if (isAlertSeverity(queueDepth.state)) {
+        return queueDepth.state;
+    }
+
+    return deriveQueueSeverity(queueDepth.current_depth, queueDepth.thresholds);
+}
+
 function formatTimestamp(value: string | null): string {
     if (!value) {
         return '—';
@@ -371,7 +385,7 @@ export function DashboardView() {
               ? 'orange'
               : 'red';
     const queueSeverity = dashboardStatus
-        ? deriveQueueSeverity(dashboardStatus.queue_depth.current_depth, dashboardStatus.queue_depth.thresholds)
+        ? resolveQueueDepthSeverity(dashboardStatus.queue_depth)
         : 'info';
 
     const queueColor =
