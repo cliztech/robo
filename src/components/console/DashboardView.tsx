@@ -214,8 +214,7 @@ function formatTimestamp(value: string | null): string {
     return new Date(value).toLocaleString();
 }
 
-export function DashboardView({ telemetry, api }: DashboardViewProps) {
-    void telemetry;
+export function DashboardView({ api }: DashboardViewProps) {
     const dashboardApi = useMemo<DashboardStatusApi>(() => ({
         fetchDashboardStatus: api?.fetchDashboardStatus ?? fetchDashboardStatus,
         fetchDashboardAlerts: api?.fetchDashboardAlerts ?? fetchDashboardAlerts,
