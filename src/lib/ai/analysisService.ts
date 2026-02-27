@@ -125,6 +125,27 @@ function normalizeEra(era?: string): string {
     return clean.length > 0 ? clean : 'unknown';
 }
 
+function normalizeText(value?: string): string {
+    return (value ?? '').trim().toLowerCase();
+}
+
+function normalizeOptionalNumber(value?: number): string {
+    return typeof value === 'number' && Number.isFinite(value) ? `${value}` : '';
+}
+
+function buildAnalysisInputCanonicalPayload(input: TrackAnalysisInput): string {
+    const normalized = {
+        trackId: normalizeText(input.trackId),
+        title: normalizeText(input.title),
+        artist: normalizeText(input.artist),
+        genre: normalizeText(input.genre),
+        bpm: normalizeOptionalNumber(input.bpm),
+        durationSeconds: normalizeOptionalNumber(input.durationSeconds),
+    };
+
+    return JSON.stringify(normalized);
+}
+
 function createFallbackAnalysis(input: TrackAnalysisInput): RawTrackAnalysis {
     const energy = inferEnergyFallback(input);
     return {
@@ -155,6 +176,8 @@ function buildFingerprint(payload: Record<string, number | string | null>): stri
 export class AnalysisService {
     private readonly adapter: AnalysisAdapter;
     private readonly promptVersion: string;
+    private readonly modelVersion: string;
+    private readonly promptProfileVersion: string;
     private readonly modelVersion?: string;
     private readonly promptProfileVersion?: string;
     private readonly resolveVersionProfile?: (input: TrackAnalysisInput) => AnalysisVersionProfile;
@@ -202,6 +225,7 @@ export class AnalysisService {
     }
 
     async analyze(input: TrackAnalysisInput): Promise<AnalysisResult> {
+        const idempotencyKey = this.buildFingerprintKey(input);
         const versionProfile = this.resolveVersionProfile?.(input) ?? {
             modelVersion: this.modelVersion ?? 'unknown-model',
             promptProfileVersion: this.promptProfileVersion ?? this.promptVersion,
@@ -324,6 +348,19 @@ export class AnalysisService {
         this.emitCacheEvent('set', idempotencyKey);
     }
 
+    private buildFingerprintKey(input: TrackAnalysisInput): string {
+        const payload = JSON.stringify({
+            analysisInput: buildAnalysisInputCanonicalPayload(input),
+            versions: {
+                promptVersion: this.promptVersion,
+                modelVersion: this.modelVersion,
+                promptProfileVersion: this.promptProfileVersion,
+            },
+        });
+
+        const hash = createHash('sha256').update(payload).digest('hex');
+        const debugPrefix = normalizeText(input.trackId).slice(0, 24) || 'unknown-track';
+        return `analysis:${debugPrefix}:${hash}`;
     private emitCacheEvent(type: AnalysisCacheEvent['type'], key: string): void {
         this.onCacheEvent?.({
             type,

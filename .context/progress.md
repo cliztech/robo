@@ -49,6 +49,7 @@
 
 
 ## Recent Ops Updates
+- [x] Hardened analysis idempotency keying with normalized-input/version fingerprint hashing and expanded unit/integration coverage for skip/reanalyze semantics.
 - [x] Hardened AI analysis cache keys with deterministic input fingerprints and added unit/integration coverage for metadata-driven re-analysis behavior.
 - [x] Added caller-facing analysis outcomes (`success`/`degraded`/`failed`) with queue mapping + test coverage updates.
 - [x] Phase 1 workflow orchestration blueprint hardened with explicit metadata contracts, graph transitions/retry terminal states, policy profile matrix, and verification criteria; unfinished-task links now point to concrete section anchors.

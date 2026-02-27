@@ -113,6 +113,12 @@ describe('AnalysisService', () => {
         expect(adapter.analyzeTrack).toHaveBeenCalledTimes(1);
     });
 
+    it('reanalyzes when metadata changes for the same trackId', async () => {
+        const adapter = {
+            analyzeTrack: vi
+                .fn()
+                .mockResolvedValueOnce({ energy: 0.5, mood: 'chill', era: '2000s', genreConfidence: 0.8 })
+                .mockResolvedValueOnce({ energy: 0.75, mood: 'uplifting', era: '2010s', genreConfidence: 0.9 }),
     it('re-analyzes when normalized metadata changes', async () => {
         const adapter = {
             analyzeTrack: vi.fn().mockResolvedValue({
@@ -126,6 +132,23 @@ describe('AnalysisService', () => {
         const service = new AnalysisService({
             adapter,
             promptVersion: 'v5.3',
+            modelVersion: 'gpt-4o-mini-2026-02-01',
+            promptProfileVersion: 'profile-1',
+        });
+
+        const first = await service.analyze({
+            trackId: 'track-004',
+            title: 'Neon Loop',
+            artist: 'Node City',
+            genre: 'House',
+            bpm: 124,
+        });
+        const second = await service.analyze({
+            trackId: 'track-004',
+            title: 'Neon Loop (Radio Edit)',
+            artist: 'Node City',
+            genre: 'House',
+            bpm: 124,
             modelVersion: 'gpt-4o',
             promptProfileVersion: 'analysis-profile-v2',
         });
@@ -146,6 +169,47 @@ describe('AnalysisService', () => {
 
         expect(first.status).toBe('analyzed');
         expect(second.status).toBe('analyzed');
+        expect(first.record.idempotencyKey).not.toEqual(second.record.idempotencyKey);
+        expect(adapter.analyzeTrack).toHaveBeenCalledTimes(2);
+    });
+
+    it('reanalyzes when a version dimension changes', async () => {
+        const input = {
+            trackId: 'track-005',
+            title: 'Versioned Track',
+            artist: 'DGN',
+            genre: 'electronic',
+            bpm: 128,
+            durationSeconds: 210,
+        };
+
+        const adapterOne = {
+            analyzeTrack: vi.fn().mockResolvedValue({ energy: 0.62, mood: 'chill', era: '2020s', genreConfidence: 0.75 }),
+        };
+        const adapterTwo = {
+            analyzeTrack: vi.fn().mockResolvedValue({ energy: 0.62, mood: 'chill', era: '2020s', genreConfidence: 0.75 }),
+        };
+
+        const serviceV1 = new AnalysisService({
+            adapter: adapterOne,
+            promptVersion: 'v5.3',
+            modelVersion: 'gpt-4o-mini-2026-02-01',
+            promptProfileVersion: 'profile-1',
+        });
+
+        const serviceV2 = new AnalysisService({
+            adapter: adapterTwo,
+            promptVersion: 'v5.3',
+            modelVersion: 'gpt-4o-mini-2026-02-15',
+            promptProfileVersion: 'profile-1',
+        });
+
+        const first = await serviceV1.analyze(input);
+        const second = await serviceV2.analyze(input);
+
+        expect(first.status).toBe('analyzed');
+        expect(second.status).toBe('analyzed');
+        expect(first.record.idempotencyKey).not.toEqual(second.record.idempotencyKey);
         expect(first.record.idempotencyKey).not.toBe(second.record.idempotencyKey);
         expect(adapter.analyzeTrack).toHaveBeenCalledTimes(2);
     it('evicts least recently used entry when maxCacheEntries is exceeded', async () => {
