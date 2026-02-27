@@ -173,3 +173,13 @@ The command fails if required BMAD config files are missing, if `_bmad/bmm/confi
 
 - This playbook governs execution behavior for roadmap-to-task translation.
 - If this playbook conflicts with higher-priority repository instructions, follow precedence rules in `AGENTS.md`.
+
+
+## 7) TI-039 Approval Enforcement Hook
+
+- High-risk actions (`ACT-PUBLISH`, `ACT-DELETE`, `ACT-OVERRIDE`, `ACT-KEY-ROTATION`, `ACT-CONFIG-EDIT`) are enforced through `backend/security/approval_policy.py`.
+- Backend entry points must parse approval chains and call `require_approval(...)` before mutation or destructive operations.
+- Current concrete hooks:
+  - `backend/scheduling/scheduler_ui_api.py` + `backend/scheduling/scheduler_ui_service.py` for publish/config writes.
+  - `backend/scheduling/api.py` + `backend/scheduling/autonomy_service.py` for autonomy policy updates and audit event writes.
+  - `config/scripts/memory_service.py reset` for delete operations.
