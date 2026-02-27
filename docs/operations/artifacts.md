@@ -11,6 +11,13 @@ All operational artifacts live under `.agent/` at the repository root:
 - `.agent/subagent_runs/` — raw structured logs/results from delegated runs
 - `.agent/verification/` — validation evidence, check outputs, and compliance confirmations
 
+Security task artifacts additionally live under `artifacts/security/`:
+
+- `artifacts/security/logs/` — command output logs (`ti-040-config-encryption.log`)
+- `artifacts/security/reports/` — operator-facing evidence contracts and sign-off docs
+- `artifacts/security/hashes/` — deterministic hash captures (`before_hash_sha256`, `after_hash_sha256`)
+- `artifacts/security/audit_exports/` — TI-039 immutable export bundles and detached digests
+
 ## File Naming Standard
 
 Use this filename format for all artifacts:
@@ -77,6 +84,39 @@ Include these top-level keys:
 | `verification` | Verifier Agent | Record checks, results, and pass/fail evidence |
 
 Management Team can audit all artifacts, but ownership remains with the primary role above.
+
+## TI-040 Encryption Evidence Contract (operator-facing)
+
+For TI-040 high-risk field protection, every config change touching sensitive values must produce:
+
+1. **Validation log** (`artifacts/security/logs/ti-040-config-encryption.log`)
+   - Must include output from `python config/validate_config.py --encryption-evidence`.
+   - Must include one `ENCRYPTION_EVIDENCE` line per encrypted sensitive value.
+2. **Provenance + rotation report** (`artifacts/security/reports/ti-040-high-risk-field-inventory.md`)
+   - Required fields per `kid`:
+     - `key_registry_ref`
+     - `creation_ticket`
+     - `rotation_ticket`
+     - `approver_principal`
+     - `rotation_interval_days` (must be `<=90`)
+     - `export_enabled` (must be `false`)
+3. **Rollback hash pair** (`artifacts/security/hashes/ti-040-config-before-after.sha256`)
+   - Must include TI-039-compatible entries:
+     - `before_hash_sha256=<hex>`
+     - `after_hash_sha256=<hex>`
+   - Hashes are computed over canonicalized JSON envelope payloads (`json.dumps(..., sort_keys=True, separators=(',', ':'))`).
+
+### Failure-handling requirements
+
+- If decryption fails at runtime, operators restore from latest known-good encrypted backup only.
+- Evidence report must record `failure_reason`, `restored_backup_ref`, `before_hash_sha256`, `after_hash_sha256`, and `decision_ts_utc`.
+- Any TI-040 rollback event that touched protected values must be exportable via TI-039 immutable audit format with an `ACT-CONFIG-EDIT` action and approval chain.
+
+### Redaction and audit compatibility (TI-039 alignment)
+
+- Never log raw `ciphertext_b64`, `nonce_b64`, `tag_b64`, or plaintext secrets in artifacts.
+- `kid` may be logged for provenance, but secret material and decrypted payloads are prohibited.
+- Audit exports must preserve hash integrity fields (`before_hash_sha256`, `after_hash_sha256`) and approval metadata.
 
 ## Retention & Cleanup Policy
 
