@@ -26,22 +26,22 @@ interface ChannelStripProps {
 
 function ChannelStrip({ channel, gain, eq, telemetryLevel, telemetryPeak, onGainChange, onEQChange }: ChannelStripProps) {
   return (
-    <div className="flex flex-col items-center gap-2 w-16 group relative">
-      <div className="absolute inset-0 bg-white/[0.02] rounded-md -z-10 opacity-0 group-hover:opacity-100 transition-opacity" />
-      <div className="flex flex-col items-center gap-1.5 pt-2 pb-1 w-full border-b border-white/[0.04]">
-        <div className="text-[9px] font-black uppercase tracking-wider mb-1 px-1.5 py-0.5 rounded-sm" style={{ color: channel.color, backgroundColor: `${channel.color}15` }}>
+    <div className="dj-channel-strip flex flex-col items-center gap-2 w-16 group relative" data-channel-id={channel.id} data-channel-type={channel.type}>
+      <div className="absolute inset-0 skin-panel-muted rounded-md -z-10 opacity-0 group-hover:opacity-100 transition-opacity" />
+      <div className="flex flex-col items-center gap-1.5 pt-2 pb-1 w-full border-b border-[hsla(var(--color-text),0.08)]">
+        <div className="dj-channel-label text-[9px] font-black uppercase tracking-wider mb-1 px-1.5 py-0.5 rounded-sm">
           {channel.label}
         </div>
-        <DegenKnob value={eq.hi} onChange={(v) => onEQChange('hi', v)} label="HI" size={28} color={channel.color} />
-        <DegenKnob value={eq.mid} onChange={(v) => onEQChange('mid', v)} label="MID" size={28} color={channel.color} />
-        <DegenKnob value={eq.low} onChange={(v) => onEQChange('low', v)} label="LOW" size={28} color={channel.color} />
+        <DegenKnob value={eq.hi} onChange={(v) => onEQChange('hi', v)} label="HI" size={28} color="hsl(var(--channel-tone-hsl))" />
+        <DegenKnob value={eq.mid} onChange={(v) => onEQChange('mid', v)} label="MID" size={28} color="hsl(var(--channel-tone-hsl))" />
+        <DegenKnob value={eq.low} onChange={(v) => onEQChange('low', v)} label="LOW" size={28} color="hsl(var(--channel-tone-hsl))" />
       </div>
 
       <div className="flex gap-2 h-32 items-stretch">
         <div className="h-full pt-1 pb-1">
           <DegenVUMeter level={telemetryLevel} peak={telemetryPeak} size="md" />
         </div>
-        <div className="relative w-8 h-full bg-black/40 rounded-sm border border-white/[0.06] shadow-inner">
+        <div className="relative w-8 h-full bg-[hsla(var(--color-bg),0.5)] rounded-sm border border-[hsla(var(--color-text),0.12)] shadow-inner">
           <input
             type="range"
             min={0}
@@ -53,7 +53,7 @@ function ChannelStrip({ channel, gain, eq, telemetryLevel, telemetryPeak, onGain
             aria-label={`${channel.label} volume`}
           />
           <div className="absolute left-0 right-0 h-8 -ml-[1px] -mr-[1px] z-10" style={{ bottom: `${gain}%`, transform: 'translateY(50%)' }}>
-            <div className="w-full h-full rounded-[1px] bg-zinc-700 border border-white/20" />
+            <div className="w-full h-full rounded-[1px] skin-control" />
           </div>
         </div>
       </div>
@@ -79,7 +79,7 @@ export function DegenMixer({ channels = DEFAULT_MIXER_CHANNELS, telemetry, class
     <div className={cn('glass-panel overflow-hidden', className)}>
       <div className="panel-header">
         <span className="panel-header-title">Mixer Console</span>
-        <span className="text-[8px] font-mono text-zinc-600">{channels.length} CH</span>
+        <span className="text-[8px] font-mono text-[hsl(var(--color-text-muted))]">{channels.length} CH</span>
       </div>
 
       <div className="flex gap-1.5 p-3 overflow-x-auto custom-scrollbar items-start">
@@ -101,8 +101,8 @@ export function DegenMixer({ channels = DEFAULT_MIXER_CHANNELS, telemetry, class
         })}
       </div>
 
-      <div className="px-4 pb-3 pt-1 border-t border-white/[0.03]">
-        <span className="text-[7px] font-black uppercase tracking-widest text-zinc-600">Crossfader</span>
+      <div className="px-4 pb-3 pt-1 border-t border-[hsla(var(--color-text),0.06)]">
+        <span className="text-[7px] font-black uppercase tracking-widest text-[hsl(var(--color-text-muted))]">Crossfader</span>
         <input
           type="range"
           min={0}
