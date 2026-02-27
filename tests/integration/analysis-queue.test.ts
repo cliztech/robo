@@ -37,10 +37,46 @@ describe('processAnalysisQueue', () => {
         );
 
         expect(results).toEqual([
-            { itemId: 'job-1', status: 'analyzed', source: 'ai' },
-            { itemId: 'job-2', status: 'skipped', source: 'ai' },
-            { itemId: 'job-3', status: 'analyzed', source: 'ai' },
+            { itemId: 'job-1', status: 'analyzed', outcome: 'success', source: 'ai' },
+            { itemId: 'job-2', status: 'skipped', outcome: 'success', source: 'ai' },
+            { itemId: 'job-3', status: 'analyzed', outcome: 'success', source: 'ai' },
         ]);
         expect(adapter.analyzeTrack).toHaveBeenCalledTimes(2);
+    });
+
+    it('maps degraded and failed outcomes from service analysis', async () => {
+        const adapter = {
+            analyzeTrack: vi
+                .fn()
+                .mockRejectedValueOnce(new Error('timeout'))
+                .mockRejectedValueOnce(new Error('timeout'))
+                .mockRejectedValueOnce(new Error('timeout'))
+                .mockRejectedValueOnce(new Error('timeout')),
+        };
+
+        const service = new AnalysisService({
+            adapter,
+            promptVersion: 'v5.5',
+            maxRetries: 1,
+        });
+
+        const results = await processAnalysisQueue(
+            [
+                {
+                    id: 'job-1',
+                    input: { trackId: 'track-degraded', title: 'Gamma', artist: 'C', bpm: 128 },
+                },
+                {
+                    id: 'job-2',
+                    input: { trackId: ' ', title: 'Broken', artist: 'D', bpm: 128 },
+                },
+            ],
+            service
+        );
+
+        expect(results).toEqual([
+            { itemId: 'job-1', status: 'analyzed', outcome: 'degraded', source: 'fallback' },
+            { itemId: 'job-2', status: 'analyzed', outcome: 'failed', source: 'fallback' },
+        ]);
     });
 });
