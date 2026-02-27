@@ -112,3 +112,28 @@ python config/validate_config.py
 python -m pytest backend/tests/test_config_crypto.py
 sha256sum config/schedules.json config/prompt_variables.json > artifacts/security/hashes/ti-040-config-before-after.sha256
 ```
+## TI-041 Security Smoke Artifacts
+
+Security smoke execution (`pnpm test:security`) must emit and retain:
+
+- `artifacts/security/logs/ti-041-security-smoke.log`
+- `artifacts/security/reports/ti-041-smoke-matrix-report.md`
+- `artifacts/security/hashes/ti-041-smoke-output.sha256`
+
+### Pass/Fail Signatures in Artifact Evidence
+
+Pass evidence requires all of the following:
+
+- log includes `AUTHN_DENIED_EXPECTED`
+- log includes `AUTHZ_DENIED_EXPECTED`
+- log includes both `LOCKOUT_TRIGGERED` and `LOCKOUT_WINDOW_ACTIVE`
+- log includes `PRIV_ACTION_BLOCKED`
+- log does **not** include `PRIV_ACTION_EXECUTED`
+- smoke command exits `0`
+
+Fail evidence is any one of:
+
+- missing one or more required markers
+- presence of `PRIV_ACTION_EXECUTED`
+- non-zero command exit status
+- contract check failure before scenario execution
