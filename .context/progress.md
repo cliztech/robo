@@ -208,6 +208,11 @@
 
 - [x] Documented recommended GitHub workflow additions in `docs/operations/github_workflows_recommendations.md` with phased rollout order centered on security posture and CI control-plane reliability.
 
+## 2026-02-28 CI Security Severity Policy Update
+- [x] Removed permissive `continue-on-error` handling for `pip-audit`, Python SAST, and `npm audit` by moving to explicit policy evaluation.
+- [x] Added branch-aware severity gating (release-enforced vs feature report-only) and explicit blocking thresholds.
+- [x] Ensured upload of security JSON reports as workflow artifacts even when scans or gate checks fail.
+- [x] Updated `PRE_RELEASE_CHECKLIST.md` and `SECURITY.md` with CI security gate requirements to avoid policy drift.
 ## 2026-02-28 Documentation + Branding Drift Guardrails
 - [x] Removed duplicated README title/overview blocks and fixed documentation index numbering sequence.
 - [x] Updated architecture ownership wording in README to match current root Next.js app + backend services split.
