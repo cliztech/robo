@@ -199,3 +199,8 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - [x] Updated `docs/ui/design_tokens_v1.md` with a required semantic token set for third-party skin authors.
 
 - Added `docs/operations/github_workflows_recommendations.md` with prioritized GitHub Actions additions (dependency-review, actionlint/policy, OSSF scorecard, stale/label routing, nightly matrix) to guide next CI hardening pass.
+
+## 2026-02-28 CI Security Gate Hardening
+- Enforced branch-aware severity gates in `.github/workflows/ci.yml` for `pip-audit`, Python SAST, and `npm audit` without `continue-on-error` bypasses.
+- Preserved always-on security report artifact generation for observability in pass/fail paths.
+- Added policy alignment notes to `PRE_RELEASE_CHECKLIST.md` and `SECURITY.md` to keep release/security docs synchronized with CI behavior.
