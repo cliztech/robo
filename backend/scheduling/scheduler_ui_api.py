@@ -41,7 +41,7 @@ def _approval_context_from_request(request: Request) -> ApprovalContext:
     actor_id = request.headers.get("X-Actor-Id", "api-key-actor")
     actor_roles = {
         role.strip().lower()
-        for role in request.headers.get("X-Actor-Roles", "admin").split(",")
+        for role in request.headers.get("X-Actor-Roles", "").split(",")
         if role.strip()
     }
     approvals_header = request.headers.get("X-Approval-Chain", "[]")
