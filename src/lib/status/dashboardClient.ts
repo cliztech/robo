@@ -55,8 +55,10 @@ export interface DashboardStatusResponse {
 
 async function parseJson<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    const body = await response.json().catch(() => ({} as { detail?: string }));
-    throw new Error(body.detail ?? `Request failed: ${response.status}`);
+    const body = await response
+      .json()
+      .catch(() => ({} as { detail?: string; error?: string; message?: string }));
+    throw new Error(body.detail ?? body.error ?? body.message ?? `Request failed: ${response.status}`);
   }
 
   return (await response.json()) as T;

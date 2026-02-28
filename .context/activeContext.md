@@ -8,6 +8,15 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 ## Recent Decisions
 
+- Enforced tracked-issue one-to-one file structure: TI-007/TI-008/TI-009 now each contain exactly one issue header/status block (v1.2 scheduler UI), Track A security remains canonical in TI-039/TI-040/TI-041, and roadmap autopilot now fails on multi-header tracked-issue files.
+- Prioritized dashboard queue severity precedence: UI now treats `queue_depth.state` as authoritative and only falls back to threshold derivation when state is absent/malformed; added focused unit coverage and UI mapping docs update.
+- Added Phase 8-inspired DJ console style pass: denser hardware panel treatment, deck-specific orange/cyan accents, and topbar session timer chip for high-density operator readability.
+- Removed legacy `DashboardView` telemetry prop wiring so dashboard cards are sourced exclusively from status API responses, and aligned dashboard UI tests with API-driven alert/metric rendering.
+- Hardened `DashboardView.handleAcknowledge` with per-alert rollback snapshots, duplicate in-flight request gating, and fully functional state updates to prevent stale-closure regressions under concurrent acknowledgements.
+- Replaced dashboard UI acknowledge tests with targeted concurrency coverage that validates mixed success/failure sibling acknowledgements preserve successful optimistic commits.
+
+- Added cadence governance updates: TODO dated-entry outcomes refreshed, readiness scorecard weekly update appended, execution index cadence table added, and roadmap autopilot now emits due-date reminders into the unfinished task build plan.
+
 - Standardized phase naming contracts across planning artifacts: `Delivery Phase N` for delivery context and `Workflow Phase N` for workflow context, plus namespace-required packet/build-plan metadata.
 - Unified AI track-analysis routing on canonical `POST /api/v1/ai/track-analysis`, with deprecated `/api/v1/ai/analyze-track` compatibility alias sharing the same envelope + correlation-id behavior.
 - Hardened playlist generation infeasibility handling by removing hard-constraint fallback, emitting structured constraint diagnostics, and mapping API responses to HTTP 422 with envelope-level error details.
@@ -99,7 +108,7 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - [ ] Sweep remaining deep docs/config script branding references (phase 2 rebrand pass).
 - [ ] Execute TI-039 packet (approval workflows + immutable audit export contract).
 - [ ] Execute TI-040 packet (config-at-rest encryption policy + operator workflow updates).
-- [ ] Execute TI-041 packet (security smoke script + expected signatures).
+- [x] Execute TI-041 packet (security smoke script + expected signatures).
 - [x] Regenerate unfinished-task build plan and publish the next phased build artifact for P1 Security.
 - [ ] Convert `docs/ui/gui_agent_team_review.md` into implementation stories mapped to GUI-001..GUI-030.
 - [x] Resume "Phase 5: AI Integration" (Implemented typed AI service contracts, guarded API routes, and UI wiring for host/persona flows).
@@ -124,3 +133,69 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - [x] Refactored malformed AI analysis unit/integration suites into clean non-overlapping describe trees and public-contract queue assertions.
 
 - [x] Security P1 implementation: added approval-policy enforcement, immutable security audit export/manifest pipeline, config envelope crypto interceptors for schedules/prompt variables, and export CLI (`backend/security/export_audit_cli.py`).
+- [x] Added deterministic TI-041 security smoke runner (`pnpm test:security -- --case <id>`) with explicit scenario markers, CLI case routing, and policy fixtures sourced from role matrix + env contract boundaries.
+- Closed TI-039 documentation track by adding high-risk stage-gate approval-chain enforcement, immutable audit export bundle contract, and checklist/dependency evidence templates across operations docs.
+- Added dedicated P1 Security Lane execution section (TI-039/TI-040/TI-041) with explicit dependency gates, state checkboxes, owners/targets, and required evidence artifact paths; mirrored ordered state tags in `TODO.md`.
+- [x] Reconciled `docs/exec-plans/active/sprint-status.yaml` against `TODO.md` + `docs/exec-plans/active/sprint-telemetry.md`, added `last_reconciled`, and documented state-authority precedence + weekly parity check.
+
+
+## 2026-02-27 TI-039 Enforcement Update
+- TI-039 security policy enforcement completed: approval catalog module added, scheduler/autonomy/config-script high-risk hooks now deny without required approver roles, and audit export path landed with integrity manifests.
+- Implemented TI-040 config crypto module with AES-256-GCM envelope serialization, TI-004 KID provenance + previous-key compatibility, read/write path integration for schedules/prompt variables, and fail-closed decrypt classification with dedicated tests.
+## 2026-02-27 TI-041 Execution Update
+
+- Added deterministic `test:security` runner + wrapper (`pnpm test:security`) with scenario-level marker enforcement for `SMK-AUTHN-01`, `SMK-AUTHZ-01`, `SMK-LOCKOUT-01`, and `SMK-PRIV-01`.
+- Wired smoke checks to TI-002 role deny expectations, TI-003 timeout/reauth contract variables, and TI-039 privileged action catalog IDs through startup contract validation.
+- Added mandatory artifact outputs under `artifacts/security/logs`, `artifacts/security/reports`, and `artifacts/security/hashes`.
+- Updated operations docs with exact pre-release invocation and pass/fail signatures.
+
+## 2026-02-27 Dashboard Status UI Mapping Update
+- [x] Implemented dashboard service freshness helper text (`Updated X min ago`) from `service_health.observed_at`.
+- [x] Added queue-depth threshold marker visualization sourced from `queue_depth.thresholds`.
+- [x] Added alert-center severity filter chips from `alert_center.filters` with client-side filtering and acknowledged-alert muted retention.
+- [x] Routed alert-center state through new notifications state module (`src/features/notifications/notifications.store.ts`).
+- [x] Extended dashboard UI tests to cover freshness text and severity filter behavior.
+## 2026-02-27 Build Stabilization Update
+- [x] Restored root build execution by resolving malformed `package.json` duplication, repairing TypeScript syntax defects (`promptProfileResolver`, `tests/ui/setup.tsx`), and replacing broken UI imports in `TrackAnalyzer`.
+- [x] Added required runtime dependencies (`ai`, `@ai-sdk/openai`, `p-queue`, `@supabase/ssr`) and validated `npm run build` passes end-to-end.
+## 2026-02-27 Dashboard Testability Update
+- [x] Updated dashboard console testability contract: `DashboardView` now exports `DashboardStatusApi`/`DashboardStatusResponse`, supports injected dashboard API methods, and aligns loading/error/test-id expectations with UI tests.
+- Refactored backend status dashboard to consume live telemetry inputs via injected `StatusTelemetryProvider`, added deterministic queue/rotation evaluators with persisted lifecycle reconciliation in `status_alerts.db`, and expanded API tests for severity transitions + stale-boundary behavior.
+## 2026-02-27 Dashboard Status Proxy Integration Update
+
+- Selected canonical integration path: Next.js `src/app/api/v1/status/dashboard/*` route-handler proxy to backend service.
+- Added authenticated proxy handlers for dashboard summary, alerts list, and alert acknowledgement with normalized error envelopes (`{ status, detail, code? }`).
+- Added integration tests covering auth enforcement, backend error propagation, route proxy behavior, and `DashboardStatusResponse`-compatible payload handling.
+- Documented deployment/runtime assumptions for proxy env configuration and auth forwarding in `docs/dashboard_status_ui_mapping.md`.
+## 2026-02-27 Mixxx Reference Intake Update
+- [x] Cloned `mixxxdj/mixxx` into local workspace for architecture benchmarking and pattern extraction.
+- [x] Added `docs/references/mixxx_adoption_blueprint.md` to map DGN-DJ priorities to Mixxx subsystem patterns (audio engine, broadcast reliability, analysis throughput, controller UX).
+- [x] Captured licensing guardrail: pattern-level adoption only, no direct GPL source import without explicit legal review.
+## 2026-02-27 UI Skin Token Update
+- Added token-driven studio skin utility classes and refactored console shell/mixer/deck surfaces to consume semantic control/deck/status roles; added per-theme visual snapshot coverage for deck, mixer, library, and transport core surfaces.
+## 2026-02-27 Console Layout Reliability Update
+- [x] Added typed dock-layout model (`src/lib/layout/types.ts`) covering panel visibility, panel position, split ratios, and tab-stack state.
+- [x] Replaced deck/studio workspace render path with a dock-grid container featuring preset switching (Broadcast/Mixing/Production/Minimal), drag swap, tabbed stack rendering, and keyboard operations.
+- [x] Added local preset persistence for built-in selection + user-defined custom presets using `localStorage`.
+- [x] Added lock/unlock guardrails for live operation plus restore-default action (`Ctrl+Shift+R`) and keyboard layout lock toggle (`Ctrl+L`/`F4`).
+- [x] Unified DashboardView dashboard UI test contract with injectable API dependency, canonical status type import path, stable test IDs, and alert-role error semantics for deterministic UI tests.
+
+## 2026-02-27 Dashboard Accessibility Update
+
+- Implemented semantic dashboard landmarks in `src/components/console/DashboardView.tsx` (`main` + labeled `section` regions for status cards, alert center, now playing, audio engine).
+- Added live region semantics for async states (`role="status"` for loading telemetry, `role="alert"` for status API failures).
+- Updated `tests/ui/dashboard-view.test.tsx` to assert landmark roles/labels, live-region behavior, and keyboard task-flow ordering.
+## 2026-02-27 Theme Preferences Delivery Update
+
+- Added a versioned UI theme-preferences layer (`themeMode` + `activeSkinId`) with migration-safe localStorage payload handling.
+- Wired app-wide theme provider + first-paint bootstrap script to resolve system theme and set `<html data-theme>` / `<html data-skin>` before hydration.
+- Added DJ console topbar theme settings (mode, skin, preview, reset) and UI tests for preference persistence and html attribute application.
+## 2026-02-27 UI Skin Token Update
+- Added token-driven studio skin utility classes and refactored console shell/mixer/deck surfaces to consume semantic control/deck/status roles; added per-theme visual snapshot coverage for deck, mixer, library, and transport core surfaces.
+## 2026-02-27 Token Contract Hardening Update
+- [x] Refactored `src/styles/tokens.css` into base semantic `--color-*` tokens with skin-only overrides in `[data-skin='degen-dark']` and `[data-skin='degen-light']`.
+- [x] Removed duplicate alias declarations and consolidated a single canonical legacy alias mapping table.
+- [x] Added token reference guard script (`scripts/check_tokens.mjs`) and package script (`npm run check:tokens`) to fail unresolved `var(--*)` references.
+- [x] Updated `docs/ui/design_tokens_v1.md` with a required semantic token set for third-party skin authors.
+
+- Added `docs/operations/github_workflows_recommendations.md` with prioritized GitHub Actions additions (dependency-review, actionlint/policy, OSSF scorecard, stale/label routing, nightly matrix) to guide next CI hardening pass.

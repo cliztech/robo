@@ -6,6 +6,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
+from backend.security.approval_policy import ApprovalPolicyError, parse_approval_chain
 from backend.security.auth import get_scheduler_api_key
 from backend.security.approval_policy import ApprovalContext, ApprovalPolicyError, ApprovalRecord
 
@@ -76,6 +77,9 @@ def write_scheduler_state(
     try:
         return service.update_schedules(payload.schedules, approval_context=_approval_context_from_request(request))
     except ValueError as exc:
+        approval_chain = parse_approval_chain([entry.model_dump() for entry in payload.approval_chain])
+        return service.update_schedules(payload.schedules, approval_chain=approval_chain)
+    except (ValueError, ApprovalPolicyError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except ApprovalPolicyError as exc:
         raise HTTPException(status_code=403, detail=str(exc)) from exc
@@ -96,8 +100,9 @@ def publish_scheduler_state(
     service: SchedulerUiService = Depends(get_scheduler_service),
 ):
     try:
-        return service.publish_schedules(payload.schedules, approval_context=_approval_context_from_request(request))
-    except ValueError as exc:
+        approval_chain = parse_approval_chain([entry.model_dump() for entry in payload.approval_chain])
+        return service.publish_schedules(payload.schedules, approval_chain=approval_chain)
+    except (ValueError, ApprovalPolicyError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except ApprovalPolicyError as exc:
         raise HTTPException(status_code=403, detail=str(exc)) from exc

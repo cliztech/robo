@@ -47,11 +47,20 @@ ACTION_TEXT_PATTERN = re.compile(
     re.IGNORECASE,
 )
 TI_REFERENCE_PATTERN = re.compile(r"\bTI-\d{3}\b", re.IGNORECASE)
+TRACKED_ISSUE_HEADER_PATTERN = re.compile(r"^#\s+TI-\d{3}\b", re.IGNORECASE)
+TRACKED_ISSUE_STATUS_PATTERN = re.compile(r"^-\s+\*\*Status:\*\*", re.IGNORECASE)
 CANONICAL_TASK_KEY_PATTERN = re.compile(
     r"\b(?:canonical[_ -]?task[_ -]?key|task[_ -]?key)\s*[:=]\s*([a-z0-9_.-]+)",
     re.IGNORECASE,
 )
 NON_ALNUM_PATTERN = re.compile(r"[^a-z0-9]+")
+TRACKED_ISSUES_DIR = ROOT / "docs" / "exec-plans" / "active" / "tracked-issues"
+DUE_ENTRY_PATTERN = re.compile(
+    r"^\s*[-*]\s+\[(?P<state>[ xX])\]\s+"
+    r"(?P<date>\d{4}-\d{2}-\d{2})\s+"
+    r"\(Owner:\s*(?P<owner>[^\)]+)\):\s*"
+    r"(?P<summary>.*\S)\s*$"
+)
 
 
 @dataclass(frozen=True)
@@ -106,6 +115,45 @@ class ReconciledSkip:
     item: QueueItem
     reason: str
     matched_value: str
+
+
+@dataclass(frozen=True)
+class DueReminder:
+    """Date-based cadence reminder extracted from TODO.md tracking lines."""
+
+    date: dt.date
+    owner: str
+    summary: str
+    state: str
+    is_overdue: bool
+
+
+def collect_due_reminders(todo_path: Path, today: dt.date) -> list[DueReminder]:
+    """Collect date-based TODO cadence reminders with overdue classification."""
+    if not todo_path.exists():
+        return []
+
+    reminders: list[DueReminder] = []
+    for raw_line in todo_path.read_text(encoding="utf-8").splitlines():
+        match = DUE_ENTRY_PATTERN.match(raw_line)
+        if not match:
+            continue
+
+        due_date = dt.date.fromisoformat(match.group("date"))
+        state = match.group("state").lower()
+        is_complete = state == "x"
+        reminders.append(
+            DueReminder(
+                date=due_date,
+                owner=match.group("owner").strip(),
+                summary=match.group("summary").strip(),
+                state="complete" if is_complete else "open",
+                is_overdue=(not is_complete and due_date < today),
+            )
+        )
+
+    reminders.sort(key=lambda item: (item.date, item.owner, item.summary))
+    return reminders
 
 
 def collect_open_tasks(markdown_path: Path) -> list[OpenTask]:
@@ -198,6 +246,31 @@ def extract_ti_references(text: str) -> set[str]:
 
 def extract_canonical_task_keys(text: str) -> set[str]:
     return {match.group(1).lower() for match in CANONICAL_TASK_KEY_PATTERN.finditer(text)}
+
+
+def validate_tracked_issue_files(tracked_issues_dir: Path = TRACKED_ISSUES_DIR) -> None:
+    """Fail fast when tracked-issue docs break one-issue-per-file structure."""
+    if not tracked_issues_dir.exists():
+        return
+
+    violations: list[str] = []
+    for issue_path in sorted(tracked_issues_dir.glob("TI-*.md")):
+        text = issue_path.read_text(encoding="utf-8")
+        lines = text.splitlines()
+        header_count = sum(1 for line in lines if TRACKED_ISSUE_HEADER_PATTERN.match(line.strip()))
+        status_count = sum(1 for line in lines if TRACKED_ISSUE_STATUS_PATTERN.match(line.strip()))
+
+        if header_count != 1 or status_count != 1:
+            rel_path = issue_path.relative_to(ROOT)
+            violations.append(
+                f"- {rel_path}: expected 1 TI header + 1 status block, "
+                f"found header_count={header_count}, status_count={status_count}"
+            )
+
+    if violations:
+        raise RuntimeError(
+            "tracked issue structure validation failed:\n" + "\n".join(violations)
+        )
 
 
 def reconcile_tasks(
@@ -331,6 +404,7 @@ def write_build_plan(
     tasks: list[QueueItem],
     output_path: Path,
     skipped_tasks: list[ReconciledSkip] | None = None,
+    due_reminders: list[DueReminder] | None = None,
 ) -> None:
     """Write a markdown build plan grouped by phase from unfinished tasks."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -355,8 +429,24 @@ def write_build_plan(
     lines.append("")
 
     skipped = skipped_tasks or []
+    reminders = due_reminders or []
     lines.append(f"Reconciled/skipped tasks: **{len(skipped)}**.")
     lines.append("")
+
+    if reminders:
+        overdue_count = sum(1 for item in reminders if item.is_overdue)
+        lines.append("## Cadence Due-Date Reminders")
+        lines.append("")
+        lines.append(
+            f"Total dated reminders: **{len(reminders)}** · Overdue open reminders: **{overdue_count}**."
+        )
+        lines.append("")
+        for reminder in reminders:
+            status = "done" if reminder.state == "complete" else ("overdue" if reminder.is_overdue else "upcoming")
+            lines.append(
+                f"- {reminder.date.isoformat()} | {status} | Owner: {reminder.owner} | {reminder.summary}"
+            )
+        lines.append("")
 
     if skipped:
         lines.append("## Reconciled / Skipped")
@@ -527,6 +617,8 @@ def run_once(
     limit: int,
     build_plan: str = "",
 ) -> int:
+    validate_tracked_issue_files()
+
     tasks: list[QueueItem] = []
     missing_files: list[Path] = []
 
@@ -567,13 +659,20 @@ def run_once(
     print(render_queue(tasks, limit=limit))
 
     if build_plan:
+        reminder_source = next((path for path in todo_files if path.name == "TODO.md"), ROOT / "TODO.md")
+        due_reminders = collect_due_reminders(reminder_source, today=dt.datetime.now(dt.timezone.utc).date())
         output_path = (ROOT / build_plan).resolve()
         try:
             output_path.relative_to(ROOT)
         except ValueError:
             print(f"error: build plan path outside project root: {build_plan}", file=sys.stderr)
             return 2
-        write_build_plan(tasks, output_path, skipped_tasks=skipped_tasks)
+        write_build_plan(
+            tasks,
+            output_path,
+            skipped_tasks=skipped_tasks,
+            due_reminders=due_reminders,
+        )
         rel_output = output_path.relative_to(ROOT)
         print(f"\nWrote build plan: {rel_output}")
 
