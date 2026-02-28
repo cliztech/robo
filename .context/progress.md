@@ -35,6 +35,8 @@
 
 ## Recent Completed Work
 
+- [x] Hardened dashboard alert acknowledgement mutation flow to use per-alert rollback snapshots, in-flight dedupe by alert ID, and functional updates for all ack-path state writes.
+- [x] Added targeted dashboard UI tests for concurrent sibling acknowledgements (one success, one failure) and duplicate-click in-flight dedupe behavior.
 - Added Delivery Phase 8 dashboard automated coverage for loading/error/success states, alert acknowledge interaction, threshold boundary rendering, and fallback-metric regression in `tests/ui/dashboard-view.test.tsx`.
 - [x] Hardened dashboard state typing via `src/components/console/dashboard.types.ts` and wired typed telemetry into `DashboardView`/`ConsoleWorkspaceView` with exhaustive status/severity mappers.
 - [x] Dashboard status UI data layer now consumes `/api/v1/status/dashboard*` endpoints with typed client contracts and optimistic alert acknowledgements.
@@ -111,6 +113,9 @@
 
 ## 2026-02-27 Progress Update
 
+- Added Phase 8-inspired DJ console style pass: denser hardware panel treatment, deck-specific orange/cyan accents, and topbar session timer chip for high-density operator readability.
+- [x] Console dashboard data-flow cleanup: removed `DashboardView` fallback telemetry prop path from workspace wiring, deleted unused default telemetry types, and refreshed dashboard UI tests to assert API values win with no legacy hardcoded metrics.
+
 - Added cadence governance updates: TODO dated-entry outcomes refreshed, readiness scorecard weekly update appended, execution index cadence table added, and roadmap autopilot now emits due-date reminders into the unfinished task build plan.
 - [x] **Delivery Phase 5: AI Integration** (Completed resilient track analysis service rebuild with deterministic fingerprint/idempotency keys, bounded retry/fallback, TTL+LRU cache controls, and queue outcome mapping.)
 - [x] **Delivery Phase 5: AI Integration** (Repaired and expanded verification harness in `tests/unit/ai-analysis-service.test.ts` + `tests/integration/analysis-queue.test.ts` for normalization, cache behavior, and degraded/failed outcomes.)
@@ -144,3 +149,53 @@
 ## 2026-02-27 Skill Intake Update
 - [x] Ran `skill-installer` against `https://github.com/blacksiders/SkillPointer.git` and verified installer rejection due to missing `SKILL.md` in selected skill directory.
 - [x] Captured installation constraint and follow-up action: require a Codex-skill-compatible repo/path before retry.
+## 2026-02-27 Build Stabilization Update
+- [x] Fixed malformed `package.json` JSON structure and refreshed lockfile via `npm install` to unblock package scripts.
+- [x] Repaired build-blocking TS issues in `src/components/ai/TrackAnalyzer.tsx`, `src/lib/ai/promptProfileResolver.ts`, `src/lib/supabase/server.ts`, and `tests/ui/setup.tsx`.
+- [x] Replaced merge-corrupted `src/lib/ai/analysisService.ts` with a compile-safe canonical implementation and confirmed full `npm run build` success.
+## 2026-02-27 Dashboard Queue Severity Precedence Update
+- [x] Updated `DashboardView` queue severity resolution to prioritize API-provided `queue_depth.state` with threshold fallback only for missing/malformed state.
+- [x] Added unit coverage in `tests/ui/dashboard-view.test.tsx` to verify API state precedence and fallback behavior.
+- [x] Documented queue-depth severity precedence in `docs/dashboard_status_ui_mapping.md`.
+
+## 2026-02-27 Dashboard Testability Update
+- [x] Console dashboard UI hardening: added API dependency injection hooks, exported status types for tests, and standardized dashboard loading/error/test-id semantics for `tests/ui/dashboard-view.test.tsx`.
+- [x] Status dashboard telemetry refactor: replaced hardcoded queue trend fixtures with live telemetry adapters, evaluator-driven alert transitions, repository lifecycle persistence (`resolved_at`/`last_seen_at`), and coverage for warning/critical + stale-rotation boundaries.
+## 2026-02-27 Dashboard Status Route-Proxy Completion
+
+- [x] Canonical integration path enforced via same-origin Next.js API proxy routes under `src/app/api/v1/status/dashboard/*`.
+- [x] Backend proxy auth policy implemented (Supabase session required; bearer token + `X-User-Id` forwarded).
+- [x] Error-envelope normalization implemented for non-2xx backend responses.
+- [x] Integration test coverage added for auth/error propagation and JSON shape compatibility with `DashboardStatusResponse`.
+- [x] Deployment assumptions documented for backend URL resolution and proxy behavior.
+## 2026-02-27 Mixxx Benchmarking Update
+- [x] Completed external reference intake from `mixxxdj/mixxx` and documented subsystem analog mapping in `docs/references/mixxx_adoption_blueprint.md`.
+- [x] Defined 30/60/90 execution framing for applying Mixxx-derived reliability patterns to DGN-DJ without direct source reuse.
+- [x] Added clean-room licensing guardrails to prevent accidental GPL code-path contamination.
+- Added skin-pack foundation: manifest schema/contracts, sandboxed loader with fallback + token-gap detection, Skin Manager panel (import/preview/activate/deactivate/delete), and UI spec documentation.
+## 2026-02-27 UI Skin Token Update
+- [x] Studio skin-token hardening completed for ConsoleLayout/Topbar, DJStudioSurface deck accents, and DegenMixer channel/control states; added `tests/ui/console-skin-visual.test.tsx` snapshot coverage for dark/light skins.
+## 2026-02-27 Console Workspace Layout Delivery
+- [x] Implemented console workspace dock layout model with explicit panel visibility/position/split/tab-stack contracts.
+- [x] Delivered dock-grid workspace controls for built-in presets and custom local presets.
+- [x] Added lock mode to disable drag operations during live use, plus keyboard reliability actions for restore-default and lock toggle.
+## 2026-02-27 Dashboard Accessibility Structure
+
+- [x] Added semantic landmarks and `aria-labelledby` region wiring for DashboardView primary operator sections (status cards, alert center, now playing, audio engine).
+- [x] Added async accessibility semantics: `role="status"` loading telemetry state and `role="alert"` error state.
+- [x] Refreshed dashboard UI tests to validate landmark presence, live-region roles, and keyboard task-flow tab order.
+## 2026-02-27 Theme Preferences Delivery
+
+- [x] Implemented `src/lib/theme/themeStore.ts` with versioned persistence, defaults, and mode resolution helpers.
+- [x] Added `ThemeProvider` + root layout bootstrap script to prevent incorrect first-paint theme flashes.
+- [x] Extended `ConsoleTopbar` with theme mode + skin controls, preview, and reset-to-default.
+- [x] Added `tests/ui/theme-preferences.test.tsx` to cover load/save persistence and `<html>` theme/skin attribute application.
+## 2026-02-27 UI Skin Token Update
+- [x] Studio skin-token hardening completed for ConsoleLayout/Topbar, DJStudioSurface deck accents, and DegenMixer channel/control states; added `tests/ui/console-skin-visual.test.tsx` snapshot coverage for dark/light skins.
+## 2026-02-27 Design Token Contract Update
+- [x] Token system normalized around semantic `--color-*` roles in `src/styles/tokens.css`.
+- [x] Added `[data-skin='degen-dark']` and `[data-skin='degen-light']` overrides for skin-specific color changes.
+- [x] Added unresolved CSS variable validation in `scripts/check_tokens.mjs` with `npm run check:tokens`.
+- [x] Published third-party skin required token set and lint contract in `docs/ui/design_tokens_v1.md`.
+
+- [x] Documented recommended GitHub workflow additions in `docs/operations/github_workflows_recommendations.md` with phased rollout order centered on security posture and CI control-plane reliability.

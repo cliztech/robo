@@ -113,4 +113,3 @@ export function createPromptProfileResolver(options: PromptProfileResolverOption
         return resolvePromptProfile(config);
     };
 }
-}
