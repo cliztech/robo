@@ -9,6 +9,10 @@ from pathlib import Path
 from typing import List, Optional
 from uuid import uuid4
 
+from backend.security.approval_policy import ApprovalContext, ApprovalRecord, enforce_action_approval
+from backend.security.audit_export import append_audit_record
+from backend.security.config_crypto import config_hash
+
 from pydantic import ValidationError
 
 from backend.security.approval_policy import ActionId, ApprovalRecord, require_approval
@@ -50,8 +54,10 @@ class AutonomyPolicyService:
         self.policy_path = policy_path
         self.audit_log_path = audit_log_path
         self.event_log_path = Path("config/logs/scheduler_events.jsonl")
+        self.security_audit_log_path = Path("config/logs/security_audit.ndjson")
         self.policy_path.parent.mkdir(parents=True, exist_ok=True)
         self.audit_log_path.parent.mkdir(parents=True, exist_ok=True)
+        self.security_audit_log_path.parent.mkdir(parents=True, exist_ok=True)
         self._cached_policy: Optional[AutonomyPolicy] = None
         self._last_mtime: Optional[float] = None
 
@@ -193,9 +199,11 @@ class AutonomyPolicyService:
                 event_log_path=self.event_log_path,
             )
 
+        before_hash = config_hash(self.policy_path.read_text(encoding="utf-8")) if self.policy_path.exists() else config_hash("")
+        serialized_payload = payload.model_dump_json(indent=2)
         try:
             self.policy_path.write_text(
-                payload.model_dump_json(indent=2),
+                serialized_payload,
                 encoding="utf-8",
             )
         except OSError:
@@ -214,6 +222,27 @@ class AutonomyPolicyService:
                     event_log_path=self.event_log_path,
                 )
             raise
+
+        append_audit_record(
+            self.security_audit_log_path,
+            {
+                "event_id": str(uuid4()),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "action": "ACT-UPDATE-AUTONOMY-POLICY",
+                "actor_id": context.actor_id,
+                "result": "success",
+                "before_sha256": before_hash,
+                "after_sha256": config_hash(serialized_payload),
+                "approvals": [
+                    {
+                        "approver_id": approval.approver_id,
+                        "approver_roles": sorted(approval.approver_roles),
+                        "reason": approval.reason,
+                    }
+                    for approval in context.approvals
+                ],
+            },
+        )
 
         # Proactively update cache after successful write
         self._cached_policy = payload

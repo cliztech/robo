@@ -6,6 +6,7 @@ import hashlib
 import threading
 import time
 from pathlib import Path
+import os
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from dataclasses import dataclass
 from typing import Any, Literal
@@ -20,9 +21,12 @@ from backend.ai.contracts.track_analysis import (
     VocalStyle,
 )
 
+from backend.security.config_crypto import EnvelopeKey, serialize_json, transform_sensitive_values
 from backend.security.config_crypto import ConfigCryptoError, load_config_json
 
 logger = logging.getLogger(__name__)
+
+HIGH_RISK_PROMPT_KEYS = {"api_key", "auth_token", "password", "secret", "access_token"}
 
 
 class HostScriptRequest(BaseModel):
@@ -153,6 +157,8 @@ class AIInferenceService:
         self._max_cache_size = 1000
 
     def _resolve_prompt_profile(self) -> tuple[str, str]:
+        payload = self._load_prompt_variables()
+        if payload is None:
         config_path = Path(__file__).parent.parent / "config" / "prompt_variables.json"
         try:
             payload = load_config_json(config_path)
@@ -169,6 +175,45 @@ class AIInferenceService:
         }
         serialized = json.dumps(deterministic_payload, sort_keys=True, separators=(",", ":"))
         return version, serialized
+
+    def _resolve_crypto_key(self) -> EnvelopeKey | None:
+        raw = os.getenv("ROBODJ_CONFIG_CRYPTO_KEY", "").strip()
+        kid = os.getenv("ROBODJ_CONFIG_CRYPTO_KID", "local-dev")
+        if not raw:
+            return None
+        try:
+            key_bytes = raw.encode("utf-8")
+            if len(key_bytes) not in (16, 24, 32):
+                return None
+            return EnvelopeKey(kid=kid, key_bytes=key_bytes)
+        except Exception:
+            return None
+
+    def _load_prompt_variables(self) -> dict[str, Any] | None:
+        config_path = Path(__file__).parent.parent / "config" / "prompt_variables.json"
+        try:
+            payload = json.loads(config_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return None
+
+        crypto_key = self._resolve_crypto_key()
+        return transform_sensitive_values(
+            payload,
+            sensitive_keys=HIGH_RISK_PROMPT_KEYS,
+            encode=False,
+            key_lookup={crypto_key.kid: crypto_key} if crypto_key else {},
+        )
+
+    def save_prompt_variables(self, payload: dict[str, Any]) -> None:
+        config_path = Path(__file__).parent.parent / "config" / "prompt_variables.json"
+        crypto_key = self._resolve_crypto_key()
+        transformed = transform_sensitive_values(
+            payload,
+            sensitive_keys=HIGH_RISK_PROMPT_KEYS,
+            encode=True,
+            key=crypto_key,
+        )
+        config_path.write_text(serialize_json(transformed), encoding="utf-8")
 
     def _compute_fingerprint(
         self,
