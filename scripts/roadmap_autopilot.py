@@ -54,6 +54,7 @@ CANONICAL_TASK_KEY_PATTERN = re.compile(
     re.IGNORECASE,
 )
 NON_ALNUM_PATTERN = re.compile(r"[^a-z0-9]+")
+TRACKED_ISSUES_DIR = ROOT / "docs" / "exec-plans" / "active" / "tracked-issues"
 DUE_ENTRY_PATTERN = re.compile(
     r"^\s*[-*]\s+\[(?P<state>[ xX])\]\s+"
     r"(?P<date>\d{4}-\d{2}-\d{2})\s+"
