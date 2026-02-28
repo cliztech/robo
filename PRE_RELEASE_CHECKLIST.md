@@ -297,3 +297,16 @@ When launching via `DGN-DJ_Launcher.bat`, startup now runs config validation bef
 
 - **Checklist owner:** ____________________
 - **Sign-off (name + date/time):** ____________________
+
+## CI security severity gate verification (required)
+
+- [ ] **PASS/FAIL:** Branch-aware CI security policy is in effect.
+  - Release-enforced refs: `main`, `release/*`, and PRs targeting those refs.
+  - Feature refs: report-only mode with warnings.
+- [ ] **PASS/FAIL:** Release-enforced refs block on:
+  - `npm audit` high/critical vulnerabilities.
+  - Python SAST (`bandit`) HIGH severity findings.
+  - `pip-audit` high/critical findings, or unscored vulnerabilities.
+- [ ] **PASS/FAIL:** Security report artifacts are uploaded for every run (including failed gates).
+  - Expected artifacts: `pip-audit.json`, `python-sast-bandit.json`, `npm-audit.json`.
+- [ ] **PASS/FAIL:** Failure behavior has been simulated with intentionally vulnerable dependencies and documented in release evidence.

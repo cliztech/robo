@@ -2,9 +2,9 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [main, work]
+    branches: [main, work, 'release/**']
   pull_request:
-    branches: [main]
+    branches: [main, 'release/**']
 
 permissions:
   contents: read
@@ -58,7 +58,6 @@ jobs:
 
       - name: Lint (ESLint)
         run: npm run lint
-        continue-on-error: true
 
       - name: Build (Next.js)
         run: npm run build
@@ -106,6 +105,9 @@ jobs:
           print('✅ JSON shape checks passed.')
           PY
 
+      - name: Validate documentation consistency
+        run: python scripts/ci/check_docs_consistency.py
+
   # ── Security ───────────────────────────────────────────────
   security:
     name: Security — Dependency Audit + Secret Scan
@@ -114,6 +116,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Derive branch security policy
+        id: policy
+        run: |
+          ENFORCE=false
+          REASON="feature/non-release ref"
+          if [[ "${GITHUB_REF}" == refs/heads/main ]] || [[ "${GITHUB_REF}" == refs/heads/release/* ]] || [[ "${GITHUB_BASE_REF}" == main ]] || [[ "${GITHUB_BASE_REF}" == release/* ]]; then
+            ENFORCE=true
+            REASON="release gate (main/release branch)"
+          fi
+
+          echo "enforce=${ENFORCE}" >> "$GITHUB_OUTPUT"
+          echo "reason=${REASON}" >> "$GITHUB_OUTPUT"
+          echo "Security gate enforcement: ${ENFORCE} (${REASON})"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -129,20 +145,158 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pip-audit ruff
+          pip install pip-audit ruff bandit
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Python dependency audit (pip-audit)
-        run: pip-audit --strict --desc on
-        continue-on-error: true
+      - name: Install Node.js dependencies
+        run: npm ci
 
-      - name: Python SAST (ruff/bandit rules)
-        run: ruff check backend/ --select S --output-format=github
-        continue-on-error: true
+      - name: Python dependency audit report (pip-audit)
+        id: pip_audit
+        run: |
+          mkdir -p security-reports
+          set +e
+          pip-audit --format json --output security-reports/pip-audit.json --desc on
+          EXIT_CODE=$?
+          set -e
 
-      - name: Node.js dependency audit
-        run: npm audit --audit-level=high
-        continue-on-error: true
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          report = Path('security-reports/pip-audit.json')
+          data = json.loads(report.read_text(encoding='utf-8')) if report.exists() else {}
+
+          deps = data.get('dependencies', []) if isinstance(data, dict) else []
+          total = 0
+          high_critical = 0
+          unknown = 0
+
+          for dep in deps:
+              for vuln in dep.get('vulns', []):
+                  total += 1
+                  sev = str(vuln.get('severity', '')).upper()
+                  if sev in {'HIGH', 'CRITICAL'}:
+                      high_critical += 1
+                  elif not sev:
+                      unknown += 1
+
+          with open(Path.cwd() / '.pip_audit_metrics', 'w', encoding='utf-8') as fh:
+              fh.write(f"total={total}\n")
+              fh.write(f"high_critical={high_critical}\n")
+              fh.write(f"unknown={unknown}\n")
+          PY
+
+          source .pip_audit_metrics
+          echo "exit_code=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
+          echo "total=${total}" >> "$GITHUB_OUTPUT"
+          echo "high_critical=${high_critical}" >> "$GITHUB_OUTPUT"
+          echo "unknown=${unknown}" >> "$GITHUB_OUTPUT"
+
+      - name: Python SAST report (bandit)
+        id: python_sast
+        run: |
+          mkdir -p security-reports
+          set +e
+          bandit -r backend -f json -o security-reports/python-sast-bandit.json
+          EXIT_CODE=$?
+          set -e
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          data = json.loads(Path('security-reports/python-sast-bandit.json').read_text(encoding='utf-8'))
+          results = data.get('results', []) if isinstance(data, dict) else []
+          high = sum(1 for issue in results if str(issue.get('issue_severity', '')).upper() == 'HIGH')
+          medium = sum(1 for issue in results if str(issue.get('issue_severity', '')).upper() == 'MEDIUM')
+          low = sum(1 for issue in results if str(issue.get('issue_severity', '')).upper() == 'LOW')
+
+          with open(Path.cwd() / '.bandit_metrics', 'w', encoding='utf-8') as fh:
+              fh.write(f"high={high}\n")
+              fh.write(f"medium={medium}\n")
+              fh.write(f"low={low}\n")
+          PY
+
+          source .bandit_metrics
+          echo "exit_code=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
+          echo "high=${high}" >> "$GITHUB_OUTPUT"
+          echo "medium=${medium}" >> "$GITHUB_OUTPUT"
+          echo "low=${low}" >> "$GITHUB_OUTPUT"
+
+      - name: Node.js dependency audit report
+        id: npm_audit
+        run: |
+          mkdir -p security-reports
+          set +e
+          npm audit --json --audit-level=high > security-reports/npm-audit.json
+          EXIT_CODE=$?
+          set -e
+
+          node - <<'NODE'
+          const fs = require('fs');
+          const data = JSON.parse(fs.readFileSync('security-reports/npm-audit.json', 'utf-8'));
+          const vuln = (data.metadata && data.metadata.vulnerabilities) || {};
+          const high = Number(vuln.high || 0);
+          const critical = Number(vuln.critical || 0);
+          const moderate = Number(vuln.moderate || 0);
+          const low = Number(vuln.low || 0);
+          fs.writeFileSync('.npm_audit_metrics', `high=${high}\ncritical=${critical}\nmoderate=${moderate}\nlow=${low}\n`);
+          NODE
+
+          source .npm_audit_metrics
+          echo "exit_code=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
+          echo "high=${high}" >> "$GITHUB_OUTPUT"
+          echo "critical=${critical}" >> "$GITHUB_OUTPUT"
+          echo "moderate=${moderate}" >> "$GITHUB_OUTPUT"
+          echo "low=${low}" >> "$GITHUB_OUTPUT"
 
       - name: Secret scan
         run: python scripts/check_no_secrets.py
+
+      - name: Enforce security severity gate
+        if: always()
+        run: |
+          echo "Policy: ${{ steps.policy.outputs.reason }}"
+          echo "pip-audit total=${{ steps.pip_audit.outputs.total }}, high_critical=${{ steps.pip_audit.outputs.high_critical }}, unknown=${{ steps.pip_audit.outputs.unknown }}"
+          echo "bandit high=${{ steps.python_sast.outputs.high }}, medium=${{ steps.python_sast.outputs.medium }}, low=${{ steps.python_sast.outputs.low }}"
+          echo "npm audit high=${{ steps.npm_audit.outputs.high }}, critical=${{ steps.npm_audit.outputs.critical }}"
+
+          if [[ "${{ steps.policy.outputs.enforce }}" != "true" ]]; then
+            echo "::warning::Security findings are report-only on non-release refs."
+            exit 0
+          fi
+
+          FAIL=0
+
+          if (( ${{ steps.npm_audit.outputs.high }} + ${{ steps.npm_audit.outputs.critical }} > 0 )); then
+            echo "::error::npm audit reported high/critical vulnerabilities on a release branch."
+            FAIL=1
+          fi
+
+          if (( ${{ steps.python_sast.outputs.high }} > 0 )); then
+            echo "::error::Bandit reported HIGH severity findings on a release branch."
+            FAIL=1
+          fi
+
+          if (( ${{ steps.pip_audit.outputs.high_critical }} > 0 )); then
+            echo "::error::pip-audit reported high/critical vulnerabilities on a release branch."
+            FAIL=1
+          elif (( ${{ steps.pip_audit.outputs.unknown }} > 0 )) && (( ${{ steps.pip_audit.outputs.total }} > 0 )); then
+            echo "::error::pip-audit reported vulnerabilities without severity metadata; release policy treats unscored findings as blocking."
+            FAIL=1
+          fi
+
+          exit $FAIL
+
+      - name: Upload security reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-reports-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            security-reports/pip-audit.json
+            security-reports/python-sast-bandit.json
+            security-reports/npm-audit.json
+          if-no-files-found: warn
+          retention-days: 14
