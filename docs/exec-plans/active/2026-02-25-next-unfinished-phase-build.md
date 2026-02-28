@@ -17,6 +17,36 @@ The generated unfinished-task queue now shows only **3 phased items**, all in **
 3. **TI-041** — security smoke script (authN/authZ + lockout checks)  
    File: `docs/exec-plans/active/tracked-issues/TI-041.md`
 
+## P1 Security Lane
+
+Execution lane source of truth for TI-039 → TI-040 → TI-041. Do not close `done` until the required evidence artifacts exist at the referenced paths.
+
+- [ ] **TI-039 — per-action approval workflows + immutable audit export** (`in-progress`)
+  - Tracking issue: [`docs/exec-plans/active/tracked-issues/TI-039.md`](docs/exec-plans/active/tracked-issues/TI-039.md)
+  - Owner: **Security Architect**
+  - Target date: **2026-03-03**
+  - State gates: [x] ready · [x] in-progress · [ ] done
+  - Required evidence before `done`: `artifacts/security/logs/ti-039-approval-enforcement.log`, `artifacts/security/reports/ti-039-immutable-audit-export.md`, `artifacts/security/audit_exports/<yyyy-mm-dd>/<batch_id>.sha256`
+
+- [ ] **TI-040 — config-at-rest encryption for high-risk JSON fields** (`ready`)
+  - Tracking issue: [`docs/exec-plans/active/tracked-issues/TI-040.md`](docs/exec-plans/active/tracked-issues/TI-040.md)
+  - Owner: **Security Engineer**
+  - Target date: **2026-03-05**
+  - State gates: [x] ready · [ ] in-progress · [ ] done
+  - Required evidence before `done`: `artifacts/security/logs/ti-040-config-encryption.log`, `artifacts/security/reports/ti-040-high-risk-field-inventory.md`, `artifacts/security/hashes/ti-040-config-before-after.sha256`
+
+- [ ] **TI-041 — security smoke script (authN/authZ + lockout + privileged action checks)** (`blocked`)
+  - Tracking issue: [`docs/exec-plans/active/tracked-issues/TI-041.md`](docs/exec-plans/active/tracked-issues/TI-041.md)
+  - Owner: **QA Engineer**
+  - Target date: **2026-03-07**
+  - State gates: [ ] ready · [ ] in-progress · [ ] done
+  - Required evidence before `done`: `artifacts/security/logs/ti-041-security-smoke.log`, `artifacts/security/reports/ti-041-smoke-matrix-report.md`, `artifacts/security/hashes/ti-041-smoke-output.sha256`
+
+### Dependency gates (explicit)
+
+- **Gate G1 (TI-039 → TI-041 privileged-action checks):** TI-039 action catalog + immutable audit export outputs must be present before TI-041 can execute `SMK-PRIV-01` privileged-action blocking checks.
+- **Gate G2 (TI-040 → TI-041 authz tests):** TI-040 encrypted-field inventory/envelope coverage must be complete before TI-041 can finalize authz denial scenarios for encrypted-field mutation attempts.
+
 ## Dependency logic
 
 - **TI-039 first**: approval/audit policy defines security events that later checks must validate.
@@ -36,9 +66,9 @@ The generated unfinished-task queue now shows only **3 phased items**, all in **
 - Update operator runbook references for rotation + restore behavior.
 
 ### Packet C — TI-041
-- Define smoke script checks for authN failure, authZ denial, lockout trigger, and privileged action blocking.
-- Add expected pass/fail signatures and incident escalation mapping.
-- Attach command examples and output evidence requirements.
+- Implement smoke script checks for authN failure, authZ denial, lockout trigger, and privileged action blocking via `pnpm test:security`.
+- Define deterministic pass/fail signatures, artifact paths, and TI-039/TI-040 control markers.
+- Attach command examples and escalation mapping to release/security incident gates (`PRE_RELEASE_CHECKLIST.md`, `docs/runbooks/index.md`, `docs/reliability_incident_response.md`).
 
 ## Verification gates
 
