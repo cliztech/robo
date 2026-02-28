@@ -3,9 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "scripts": {
+    "test": "NODE_ENV=test tsx --test src/index.test.ts"
+  },
   "dependencies": {
     "express": "^4.21.2",
     "nats": "^2.29.1",
     "ws": "^8.18.1"
+  },
+  "devDependencies": {
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
   }
 }
