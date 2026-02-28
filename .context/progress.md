@@ -214,3 +214,20 @@
 - [x] Replaced piecemeal pip install commands in `.github/workflows/ci.yml` backend/security jobs with `pip install -r backend/requirements.lock`.
 - [x] Documented identical local setup path in `README.md` and added lockfile refresh command.
 - [x] Validated clean-environment installation from lockfile and ran `pytest backend/tests -q` (blocked by existing repository syntax errors unrelated to dependency-manifest changes).
+## 2026-02-28 Runtime Policy Normalization
+- [x] Selected Option B policy (semver ranges in manifests + semver-aware validator compatibility checks).
+- [x] Updated canonical runtime map semver semantics for express and nats.
+- [x] Extended runtime validator to perform normalized semver interval compatibility checks and scan all service manifests.
+- [x] Restored valid root manifest JSON to ensure runtime validation executes cleanly.
+
+## 2026-02-28 CI Security Severity Policy Update
+- [x] Removed permissive `continue-on-error` handling for `pip-audit`, Python SAST, and `npm audit` by moving to explicit policy evaluation.
+- [x] Added branch-aware severity gating (release-enforced vs feature report-only) and explicit blocking thresholds.
+- [x] Ensured upload of security JSON reports as workflow artifacts even when scans or gate checks fail.
+- [x] Updated `PRE_RELEASE_CHECKLIST.md` and `SECURITY.md` with CI security gate requirements to avoid policy drift.
+## 2026-02-28 Documentation + Branding Drift Guardrails
+- [x] Removed duplicated README title/overview blocks and fixed documentation index numbering sequence.
+- [x] Updated architecture ownership wording in README to match current root Next.js app + backend services split.
+- [x] Refreshed TECH_STACK.md runtime/framework/tooling entries to current versions (including Next.js 15.5.10).
+- [x] Replaced backend operator-facing legacy RoboDJ naming in startup error text and FastAPI title with DGN-DJ branding.
+- [x] Added docs consistency check execution to CI and strengthened `scripts/ci/check_docs_consistency.py` with README title/index validation.

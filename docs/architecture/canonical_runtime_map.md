@@ -41,8 +41,8 @@ This document is the canonical declaration of runtime entrypoints, owned subproj
   "typescript_root": "^5",
   "typescript_dj_console": "^5.6.2",
   "vite": "^5.4.8",
-  "express": "4.21.2",
-  "nats": "2.29.1"
+  "express": "^4.21.2",
+  "nats": "^2.29.1"
 }
 ```
 
