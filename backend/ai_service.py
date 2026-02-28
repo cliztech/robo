@@ -176,10 +176,13 @@ class AIInferenceService:
         kid = os.getenv("ROBODJ_CONFIG_CRYPTO_KID", "local-dev")
         if not raw:
             return None
-        key_bytes = raw.encode("utf-8")
-        if len(key_bytes) not in (16, 24, 32):
+        try:
+            key_bytes = raw.encode("utf-8")
+            if len(key_bytes) not in (16, 24, 32):
+                return None
+            return EnvelopeKey(kid=kid, key_bytes=key_bytes)
+        except Exception:
             return None
-        return EnvelopeKey(kid=kid, key_bytes=key_bytes)
 
     def _load_prompt_variables(self) -> dict[str, Any] | None:
         config_path = Path(__file__).parent.parent / "config" / "prompt_variables.json"
