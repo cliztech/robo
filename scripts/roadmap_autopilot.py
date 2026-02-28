@@ -47,6 +47,8 @@ ACTION_TEXT_PATTERN = re.compile(
     re.IGNORECASE,
 )
 TI_REFERENCE_PATTERN = re.compile(r"\bTI-\d{3}\b", re.IGNORECASE)
+TRACKED_ISSUE_HEADER_PATTERN = re.compile(r"^#\s+TI-\d{3}\b", re.IGNORECASE)
+TRACKED_ISSUE_STATUS_PATTERN = re.compile(r"^-\s+\*\*Status:\*\*", re.IGNORECASE)
 CANONICAL_TASK_KEY_PATTERN = re.compile(
     r"\b(?:canonical[_ -]?task[_ -]?key|task[_ -]?key)\s*[:=]\s*([a-z0-9_.-]+)",
     re.IGNORECASE,
@@ -243,6 +245,31 @@ def extract_ti_references(text: str) -> set[str]:
 
 def extract_canonical_task_keys(text: str) -> set[str]:
     return {match.group(1).lower() for match in CANONICAL_TASK_KEY_PATTERN.finditer(text)}
+
+
+def validate_tracked_issue_files(tracked_issues_dir: Path = TRACKED_ISSUES_DIR) -> None:
+    """Fail fast when tracked-issue docs break one-issue-per-file structure."""
+    if not tracked_issues_dir.exists():
+        return
+
+    violations: list[str] = []
+    for issue_path in sorted(tracked_issues_dir.glob("TI-*.md")):
+        text = issue_path.read_text(encoding="utf-8")
+        lines = text.splitlines()
+        header_count = sum(1 for line in lines if TRACKED_ISSUE_HEADER_PATTERN.match(line.strip()))
+        status_count = sum(1 for line in lines if TRACKED_ISSUE_STATUS_PATTERN.match(line.strip()))
+
+        if header_count != 1 or status_count != 1:
+            rel_path = issue_path.relative_to(ROOT)
+            violations.append(
+                f"- {rel_path}: expected 1 TI header + 1 status block, "
+                f"found header_count={header_count}, status_count={status_count}"
+            )
+
+    if violations:
+        raise RuntimeError(
+            "tracked issue structure validation failed:\n" + "\n".join(violations)
+        )
 
 
 def reconcile_tasks(
@@ -589,6 +616,8 @@ def run_once(
     limit: int,
     build_plan: str = "",
 ) -> int:
+    validate_tracked_issue_files()
+
     tasks: list[QueueItem] = []
     missing_files: list[Path] = []
 

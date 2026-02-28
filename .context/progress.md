@@ -112,6 +112,7 @@
 - [x] Updated `docs/massive_workflow_blueprint.md` branding to canonical `DGN-DJ by DGNradio`, with `RoboDJ` retained only as an explicit legacy alias in historical context.
 
 ## 2026-02-27 Progress Update
+- [x] Tracked-issue hygiene hardening follow-up: split TI-007/TI-008/TI-009 into single-header/single-status docs, restored v1.2 scheduler UI ID mapping, and added strict tracked-issue structure validation in `scripts/roadmap_autopilot.py`.
 
 - Added Phase 8-inspired DJ console style pass: denser hardware panel treatment, deck-specific orange/cyan accents, and topbar session timer chip for high-density operator readability.
 - [x] Console dashboard data-flow cleanup: removed `DashboardView` fallback telemetry prop path from workspace wiring, deleted unused default telemetry types, and refreshed dashboard UI tests to assert API values win with no legacy hardcoded metrics.

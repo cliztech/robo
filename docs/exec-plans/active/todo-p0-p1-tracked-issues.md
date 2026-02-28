@@ -23,6 +23,9 @@ This index tracks all currently unchecked items from `TODO.md` under:
 
 | ID | Title | Owner Role | Effort | Status | Issue File |
 | --- | --- | --- | --- | --- | --- |
+| TI-007 | v1.2 UI: drag/drop weekly timeline on normalized schedule contracts | UI Engineer | L | Closed | [`TI-007.md`](tracked-issues/TI-007.md) |
+| TI-008 | v1.2 UI: inline conflict rendering and resolution actions | UI Engineer | M | Closed | [`TI-008.md`](tracked-issues/TI-008.md) |
+| TI-009 | v1.2 UI: keyboard parity for timeline edit and conflict resolution | Accessibility Engineer | M | Closed | [`TI-009.md`](tracked-issues/TI-009.md) |
 | TI-007 | v1.2 UI: drag/drop weekly timeline on normalized schedule contracts | UI Engineer | L | In Progress | [`TI-007.md`](tracked-issues/TI-007.md) |
 | TI-008 | v1.2 UI: inline conflict rendering and resolution actions | UI Engineer | M | Open | [`TI-008.md`](tracked-issues/TI-008.md) |
 | TI-009 | v1.2 UI: keyboard parity for timeline edit and conflict resolution | Accessibility Engineer | M | Open | [`TI-009.md`](tracked-issues/TI-009.md) |
