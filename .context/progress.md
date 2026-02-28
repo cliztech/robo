@@ -213,3 +213,9 @@
 - [x] Added branch-aware severity gating (release-enforced vs feature report-only) and explicit blocking thresholds.
 - [x] Ensured upload of security JSON reports as workflow artifacts even when scans or gate checks fail.
 - [x] Updated `PRE_RELEASE_CHECKLIST.md` and `SECURITY.md` with CI security gate requirements to avoid policy drift.
+## 2026-02-28 Documentation + Branding Drift Guardrails
+- [x] Removed duplicated README title/overview blocks and fixed documentation index numbering sequence.
+- [x] Updated architecture ownership wording in README to match current root Next.js app + backend services split.
+- [x] Refreshed TECH_STACK.md runtime/framework/tooling entries to current versions (including Next.js 15.5.10).
+- [x] Replaced backend operator-facing legacy RoboDJ naming in startup error text and FastAPI title with DGN-DJ branding.
+- [x] Added docs consistency check execution to CI and strengthened `scripts/ci/check_docs_consistency.py` with README title/index validation.

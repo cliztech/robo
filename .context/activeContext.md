@@ -204,3 +204,8 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Enforced branch-aware severity gates in `.github/workflows/ci.yml` for `pip-audit`, Python SAST, and `npm audit` without `continue-on-error` bypasses.
 - Preserved always-on security report artifact generation for observability in pass/fail paths.
 - Added policy alignment notes to `PRE_RELEASE_CHECKLIST.md` and `SECURITY.md` to keep release/security docs synchronized with CI behavior.
+## 2026-02-28 Documentation + Branding Consistency Update
+- Updated README to remove duplicated title/overview lines, corrected documentation index numbering, and aligned architecture ownership language to root Next.js app plus backend services.
+- Updated TECH_STACK.md to reflect current runtime/framework/tooling versions (Node 20.x, Next.js 15.5.10, React 18, Vitest 4.x, FastAPI/Python backend context).
+- Rebranded backend operator-facing startup/title strings from legacy RoboDJ naming to DGN-DJ naming.
+- Expanded CI docs consistency gate by wiring `scripts/ci/check_docs_consistency.py` into `.github/workflows/ci.yml` and adding README structure checks.

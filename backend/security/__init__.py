@@ -1,3 +1,3 @@
-"""Security helper utilities for RoboDJ backend services."""
+"""Security helper utilities for DGN-DJ backend services."""
 
 __all__ = []
