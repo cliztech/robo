@@ -200,6 +200,11 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 - Added `docs/operations/github_workflows_recommendations.md` with prioritized GitHub Actions additions (dependency-review, actionlint/policy, OSSF scorecard, stale/label routing, nightly matrix) to guide next CI hardening pass.
 
+## 2026-02-28 OneDrive Mixxx Discovery Update
+- Attempted repository-adjacent filesystem discovery for OneDrive and Mixxx directories under `/workspace`, `/mnt`, and `/home`; no mounted OneDrive path or standalone Mixxx source directory is currently available in this environment.
+- Confirmed the only Mixxx foundation artifact available locally is `docs/references/mixxx_adoption_blueprint.md`, which remains the canonical clean-room reference for subsystem benchmarking and roadmap seeding.
+- Next step: if a OneDrive mount is required, expose it in the workspace runtime (or provide a direct path) so the discovery pipeline can ingest actual Mixxx assets.
+
 ## 2026-02-28 Backend Dependency Manifest Alignment
 
 - Added canonical backend dependency manifests: `backend/requirements.in` (human-edited source) and `backend/requirements.lock` (compiled lock with transitive pins).

@@ -208,6 +208,11 @@
 
 - [x] Documented recommended GitHub workflow additions in `docs/operations/github_workflows_recommendations.md` with phased rollout order centered on security posture and CI control-plane reliability.
 
+## 2026-02-28 OneDrive Mixxx Discovery
+- [x] Ran filesystem discovery for `OneDrive` and `Mixxx` directory names across `/workspace`, `/mnt`, and `/home`; no candidate directories were found in the current runtime.
+- [x] Verified local fallback foundation document exists at `docs/references/mixxx_adoption_blueprint.md`.
+- [x] Captured blocker: OneDrive is not mounted in this container, so external Mixxx folder intake cannot proceed without an exposed path.
+
 ## 2026-02-28 Dependency Spec + CI Install Unification
 - [x] Created `backend/requirements.in` as the canonical backend dependency source including runtime (`fastapi`, `pydantic`, `cryptography`, `sqlalchemy`, `alembic`, `uvicorn`) and backend CI/security tooling (`pytest`, `httpx`, `ruff`, `pip-audit`).
 - [x] Compiled and committed `backend/requirements.lock` with pinned transitive dependencies using `pip-compile`.
