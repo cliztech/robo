@@ -207,6 +207,11 @@
 - [x] Published third-party skin required token set and lint contract in `docs/ui/design_tokens_v1.md`.
 
 - [x] Documented recommended GitHub workflow additions in `docs/operations/github_workflows_recommendations.md` with phased rollout order centered on security posture and CI control-plane reliability.
+## 2026-02-28 Runtime Policy Normalization
+- [x] Selected Option B policy (semver ranges in manifests + semver-aware validator compatibility checks).
+- [x] Updated canonical runtime map semver semantics for express and nats.
+- [x] Extended runtime validator to perform normalized semver interval compatibility checks and scan all service manifests.
+- [x] Restored valid root manifest JSON to ensure runtime validation executes cleanly.
 
 ## 2026-02-28 CI Security Severity Policy Update
 - [x] Removed permissive `continue-on-error` handling for `pip-audit`, Python SAST, and `npm audit` by moving to explicit policy evaluation.

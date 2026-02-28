@@ -199,6 +199,10 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - [x] Updated `docs/ui/design_tokens_v1.md` with a required semantic token set for third-party skin authors.
 
 - Added `docs/operations/github_workflows_recommendations.md` with prioritized GitHub Actions additions (dependency-review, actionlint/policy, OSSF scorecard, stale/label routing, nightly matrix) to guide next CI hardening pass.
+## 2026-02-28 Runtime Policy Normalization Update
+- Adopted semver-range runtime policy (Option B) for canonical runtime mapping, aligning express/nats canonical values with workspace manifests.
+- Upgraded `scripts/validate_runtime_versions.py` to semver-aware compatibility checks and expanded service manifest coverage for `radio-agentic/services/*`.
+- Repaired malformed root `package.json` merge artifact to restore deterministic manifest parsing for runtime validation.
 
 ## 2026-02-28 CI Security Gate Hardening
 - Enforced branch-aware severity gates in `.github/workflows/ci.yml` for `pip-audit`, Python SAST, and `npm audit` without `continue-on-error` bypasses.
