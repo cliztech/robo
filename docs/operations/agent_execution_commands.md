@@ -27,6 +27,15 @@ When users issue short slash commands (for example, `/bmad build`) that are not 
 
 If no safe mapping is obvious, run `bmad-help` behavior and present nearest valid commands from `_bmad/_config/bmad-help.csv`.
 
+## Security smoke command signature (TI-041 canonical)
+
+Use this exact command form for CI/release security smoke verification:
+
+```bash
+pnpm test:security -- --case <authn-invalid-password|authz-role-deny|lockout-threshold|privileged-action-block>
+```
+
+This command signature must remain byte-for-byte aligned with `docs/exec-plans/active/tracked-issues/TI-041.md`.
 ## Security smoke pre-release workflow (TI-041)
 
 Run this command set before release readiness sign-off.
