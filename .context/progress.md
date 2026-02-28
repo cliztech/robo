@@ -207,3 +207,9 @@
 - [x] Published third-party skin required token set and lint contract in `docs/ui/design_tokens_v1.md`.
 
 - [x] Documented recommended GitHub workflow additions in `docs/operations/github_workflows_recommendations.md` with phased rollout order centered on security posture and CI control-plane reliability.
+
+## 2026-02-28 OneDrive Mixxx Discovery
+- [x] Ran filesystem discovery for `OneDrive` and `Mixxx` directory names across `/workspace`, `/mnt`, and `/home`; no candidate directories were found in the current runtime.
+- [x] Verified local fallback foundation document exists at `docs/references/mixxx_adoption_blueprint.md`.
+- [x] Captured blocker: OneDrive is not mounted in this container, so external Mixxx folder intake cannot proceed without an exposed path.
+
