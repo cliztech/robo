@@ -207,3 +207,10 @@
 - [x] Published third-party skin required token set and lint contract in `docs/ui/design_tokens_v1.md`.
 
 - [x] Documented recommended GitHub workflow additions in `docs/operations/github_workflows_recommendations.md` with phased rollout order centered on security posture and CI control-plane reliability.
+
+## 2026-02-28 Documentation + Branding Drift Guardrails
+- [x] Removed duplicated README title/overview blocks and fixed documentation index numbering sequence.
+- [x] Updated architecture ownership wording in README to match current root Next.js app + backend services split.
+- [x] Refreshed TECH_STACK.md runtime/framework/tooling entries to current versions (including Next.js 15.5.10).
+- [x] Replaced backend operator-facing legacy RoboDJ naming in startup error text and FastAPI title with DGN-DJ branding.
+- [x] Added docs consistency check execution to CI and strengthened `scripts/ci/check_docs_consistency.py` with README title/index validation.

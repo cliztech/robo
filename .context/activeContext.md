@@ -199,3 +199,9 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - [x] Updated `docs/ui/design_tokens_v1.md` with a required semantic token set for third-party skin authors.
 
 - Added `docs/operations/github_workflows_recommendations.md` with prioritized GitHub Actions additions (dependency-review, actionlint/policy, OSSF scorecard, stale/label routing, nightly matrix) to guide next CI hardening pass.
+
+## 2026-02-28 Documentation + Branding Consistency Update
+- Updated README to remove duplicated title/overview lines, corrected documentation index numbering, and aligned architecture ownership language to root Next.js app plus backend services.
+- Updated TECH_STACK.md to reflect current runtime/framework/tooling versions (Node 20.x, Next.js 15.5.10, React 18, Vitest 4.x, FastAPI/Python backend context).
+- Rebranded backend operator-facing startup/title strings from legacy RoboDJ naming to DGN-DJ naming.
+- Expanded CI docs consistency gate by wiring `scripts/ci/check_docs_consistency.py` into `.github/workflows/ci.yml` and adding README structure checks.
