@@ -27,6 +27,41 @@ When users issue short slash commands (for example, `/bmad build`) that are not 
 
 If no safe mapping is obvious, run `bmad-help` behavior and present nearest valid commands from `_bmad/_config/bmad-help.csv`.
 
+## Security smoke command signature (TI-041 canonical)
+
+Use this exact command form for CI/release security smoke verification:
+
+```bash
+pnpm test:security -- --case <authn-invalid-password|authz-role-deny|lockout-threshold|privileged-action-block>
+```
+
+This command signature must remain byte-for-byte aligned with `docs/exec-plans/active/tracked-issues/TI-041.md`.
+## Security smoke pre-release workflow (TI-041)
+
+Run this command set before release readiness sign-off.
+
+```bash
+# Full TI-041 matrix (authN/authZ/lockout/privileged-action block)
+pnpm test:security
+
+# Focused repro for privileged-action block controls (TI-039 + TI-040 dependencies)
+pnpm test:security -- --case privileged-action-block
+
+# Verify deterministic artifacts
+sha256sum artifacts/security/logs/ti-041-security-smoke.log
+cat artifacts/security/hashes/ti-041-smoke-output.sha256
+```
+
+Pass signature:
+- exit code `0`;
+- expected markers present in `artifacts/security/logs/ti-041-security-smoke.log`;
+- checklist `CHK-TI041-01..04` checked in `artifacts/security/reports/ti-041-smoke-matrix-report.md`;
+- log hash matches `artifacts/security/hashes/ti-041-smoke-output.sha256`.
+
+Failure routing:
+- Release gate: mark pre-release security gate **FAIL** in `PRE_RELEASE_CHECKLIST.md`.
+- Security incident routes: `RB-022` (unauthorized action/approval failure) and `RB-020` (encrypted-secret control failure) in `docs/runbooks/index.md`.
+
 ## 0) Fast start and repository sanity checks
 
 ```bash
@@ -471,3 +506,38 @@ Optional PR checks:
 gh pr checks <pr-number>
 gh pr view <pr-number> --json state,reviewDecision
 ```
+
+## 8) TI-041 pre-release security smoke invocation
+
+Run this command from repository root before release cut:
+
+```bash
+pnpm test:security
+```
+
+Optional single-scenario runs:
+
+```bash
+pnpm test:security -- --case authn-invalid-password
+pnpm test:security -- --case authz-role-deny
+pnpm test:security -- --case lockout-threshold
+pnpm test:security -- --case privileged-action-block
+```
+
+Expected pass signatures:
+
+- Process exit code: `0`
+- Output markers include:
+  - `AUTHN_DENIED_EXPECTED`
+  - `AUTHZ_DENIED_EXPECTED`
+  - `LOCKOUT_TRIGGERED`
+  - `LOCKOUT_WINDOW_ACTIVE`
+  - `PRIV_ACTION_BLOCKED`
+- Output must **not** include `PRIV_ACTION_EXECUTED`
+
+Expected fail signatures:
+
+- Non-zero exit code.
+- Any required marker is missing.
+- `PRIV_ACTION_EXECUTED` appears in output.
+- Contract validation fails for TI-002/TI-003/TI-039 references.

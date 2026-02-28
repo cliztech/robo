@@ -1,19 +1,25 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
-from backend.security.auth import verify_api_key
 
+from backend.security.auth import verify_api_key
+from backend.status.evaluators import (
+    StatusThresholds,
+    derive_queue_state,
+    evaluate_queue_depth_alert,
+    evaluate_rotation_alert,
+)
 from backend.status.models import AlertCenterItem, AlertSeverity
 from backend.status.repository import SQLiteStatusAlertRepository, StatusAlertRepository
+from backend.status.telemetry import FileStatusTelemetryProvider, StatusTelemetryProvider
 
-router = APIRouter(prefix="/api/v1/status", tags=["status"])
 router = APIRouter(prefix="/api/v1/status", tags=["status"], dependencies=[Depends(verify_api_key)])
 
 
@@ -65,68 +71,88 @@ class DashboardStatusResponse(BaseModel):
     alert_center: AlertCenter
 
 
-def _default_alerts() -> list[AlertCenterItem]:
-    return [
-        AlertCenterItem(
-            alert_id="alert-queue-critical",
-            severity=AlertSeverity.critical,
-            title="Queue depth above critical threshold",
-            description="Queue depth has exceeded 50 items for over 5 minutes.",
-            created_at=datetime.now(timezone.utc) - timedelta(minutes=7),
-        ),
-        AlertCenterItem(
-            alert_id="alert-rotation-stale",
-            severity=AlertSeverity.warning,
-            title="Rotation data stale",
-            description="No successful rotation has been recorded for over 45 minutes.",
-            created_at=datetime.now(timezone.utc) - timedelta(minutes=2),
-        ),
-    ]
-
-
 @lru_cache
 def get_alert_repository() -> StatusAlertRepository:
     return SQLiteStatusAlertRepository(
         db_path=Path("config/logs/status_alerts.db"),
-        default_alerts=_default_alerts(),
+        default_alerts=[],
     )
+
+
+@lru_cache
+def get_status_telemetry_provider() -> StatusTelemetryProvider:
+    return FileStatusTelemetryProvider(telemetry_path=Path("config/logs/status_telemetry.json"))
+
+
+def get_status_thresholds() -> StatusThresholds:
+    return StatusThresholds()
 
 
 @router.get("/dashboard", response_model=DashboardStatusResponse)
 def read_dashboard_status(
     repository: StatusAlertRepository = Depends(get_alert_repository),
+    telemetry_provider: StatusTelemetryProvider = Depends(get_status_telemetry_provider),
+    thresholds: StatusThresholds = Depends(get_status_thresholds),
 ) -> DashboardStatusResponse:
-    now = datetime.now(timezone.utc)
-    trend = [
-        QueueTrendPoint(timestamp=now - timedelta(minutes=10), depth=18),
-        QueueTrendPoint(timestamp=now - timedelta(minutes=8), depth=25),
-        QueueTrendPoint(timestamp=now - timedelta(minutes=6), depth=31),
-        QueueTrendPoint(timestamp=now - timedelta(minutes=4), depth=42),
-        QueueTrendPoint(timestamp=now - timedelta(minutes=2), depth=56),
-        QueueTrendPoint(timestamp=now, depth=54),
-    ]
+    queue_snapshot = telemetry_provider.read_queue_depth()
+    rotation_snapshot = telemetry_provider.read_rotation()
+    service_health_snapshot = telemetry_provider.read_service_health()
 
-    last_rotation = now - timedelta(minutes=47)
-    stale_after = 30
-    is_stale = (now - last_rotation) > timedelta(minutes=stale_after)
+    observed_at = max(
+        queue_snapshot.observed_at,
+        rotation_snapshot.last_successful_rotation_at,
+        service_health_snapshot.observed_at,
+    )
+    queue_alert = evaluate_queue_depth_alert(
+        current_depth=queue_snapshot.current_depth,
+        observed_at=queue_snapshot.observed_at,
+        thresholds=thresholds,
+    )
+    rotation_alert = evaluate_rotation_alert(
+        last_successful_rotation_at=rotation_snapshot.last_successful_rotation_at,
+        observed_at=observed_at,
+        thresholds=thresholds,
+    )
+    active_alerts = [alert for alert in [queue_alert, rotation_alert] if alert is not None]
+    repository.reconcile_alerts(active_alerts, observed_at=observed_at)
+
+    queue_state = derive_queue_state(queue_snapshot.current_depth, thresholds)
+    is_rotation_stale = rotation_alert is not None
+    stale_reason = (
+        "rotation worker has not published a successful run" if is_rotation_stale else None
+    )
+
+    service_health_status = ServiceHealth(service_health_snapshot.status)
+    reason = service_health_snapshot.reason
+    if queue_state == AlertSeverity.critical and service_health_status == ServiceHealth.healthy:
+        service_health_status = ServiceHealth.degraded
+        reason = "queue depth above critical threshold"
 
     return DashboardStatusResponse(
         service_health=ServiceHealthCard(
-            status=ServiceHealth.degraded,
-            reason="queue depth above critical threshold",
-            observed_at=now,
+            status=service_health_status,
+            reason=reason,
+            observed_at=service_health_snapshot.observed_at,
         ),
         queue_depth=QueueDepthTrend(
-            current_depth=trend[-1].depth,
-            trend=trend,
-            thresholds=ThresholdBand(warning=30, critical=50),
-            state=AlertSeverity.critical,
+            current_depth=queue_snapshot.current_depth,
+            trend=[
+                QueueTrendPoint(
+                    timestamp=queue_snapshot.observed_at,
+                    depth=queue_snapshot.current_depth,
+                )
+            ],
+            thresholds=ThresholdBand(
+                warning=thresholds.queue_warning,
+                critical=thresholds.queue_critical,
+            ),
+            state=queue_state,
         ),
         rotation=RotationStatus(
-            last_successful_rotation_at=last_rotation,
-            stale_after_minutes=stale_after,
-            is_stale=is_stale,
-            stale_reason="rotation worker has not published a successful run",
+            last_successful_rotation_at=rotation_snapshot.last_successful_rotation_at,
+            stale_after_minutes=thresholds.rotation_stale_after_minutes,
+            is_stale=is_rotation_stale,
+            stale_reason=stale_reason,
         ),
         alert_center=AlertCenter(items=repository.list_alerts()),
     )

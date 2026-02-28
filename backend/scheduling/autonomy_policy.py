@@ -146,6 +146,15 @@ class DecisionOrigin(str, Enum):
 
 class PolicyAuditEvent(BaseModel):
     event_id: str
+    action_id: str
+    actor_principal: str
+    target_ref: str
+    before_hash_sha256: str
+    after_hash_sha256: str
+    approval_chain: list[dict[str, str]] = Field(default_factory=list)
+    decision: Literal["approved", "denied"]
+    event_ts_utc: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    export_batch_id: Optional[str] = None
     timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     decision_type: DecisionType
     origin: DecisionOrigin

@@ -314,5 +314,15 @@ class SchedulerUiState(BaseModel):
     conflicts: list[ScheduleConflict]
 
 
+
+
+class ApprovalChainEntry(BaseModel):
+    principal: str = Field(min_length=1)
+    role: str = Field(min_length=1)
+    approved_at_utc: str = Field(min_length=1)
+
+
 class SchedulerUiStateUpdate(BaseModel):
     schedules: list[ScheduleRecord]
+    actor_principal: str | None = None
+    approval_chain: list[ApprovalChainEntry] = Field(default_factory=list)

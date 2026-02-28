@@ -2,10 +2,7 @@
 
 import { useState } from 'react'
 import { Sparkles, Loader2, CheckCircle2, XCircle } from 'lucide-react'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
+import { Button } from '@/components/primitives/button'
 
 interface TrackAnalyzerProps {
   stationId: string
@@ -24,7 +21,7 @@ export function TrackAnalyzer({ stationId, trackCount, analyzedCount, onComplete
   } | null>(null)
 
   const unanalyzed = trackCount - analyzedCount
-  const progressPercent = (analyzedCount / trackCount) * 100
+  const progressPercent = trackCount > 0 ? (analyzedCount / trackCount) * 100 : 0
 
   const handleAnalyze = async () => {
     setAnalyzing(true)
@@ -44,7 +41,7 @@ export function TrackAnalyzer({ stationId, trackCount, analyzedCount, onComplete
       setResults(data)
       setCurrentTrack(null)
       onComplete?.()
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Batch analysis error:', error)
     } finally {
       setAnalyzing(false)
@@ -64,11 +61,15 @@ export function TrackAnalyzer({ stationId, trackCount, analyzedCount, onComplete
           </p>
         </div>
 
-        <Badge variant={unanalyzed > 0 ? 'default' : 'secondary'}>{unanalyzed} pending</Badge>
+        <span className="rounded border border-zinc-700 bg-zinc-800 px-2 py-1 text-xs text-zinc-200">
+          {unanalyzed} pending
+        </span>
       </div>
 
       <div className="space-y-2">
-        <Progress value={progressPercent} className="h-2" />
+        <div className="h-2 w-full overflow-hidden rounded bg-zinc-800">
+          <div className="h-full bg-teal-500 transition-all" style={{ width: `${progressPercent}%` }} />
+        </div>
         <p className="text-right text-xs text-zinc-500">{progressPercent.toFixed(0)}% complete</p>
       </div>
 
@@ -91,21 +92,19 @@ export function TrackAnalyzer({ stationId, trackCount, analyzedCount, onComplete
       {analyzing && currentTrack && <p className="text-center text-sm text-zinc-400">Analyzing: {currentTrack}</p>}
 
       {results && (
-        <Alert>
-          <AlertDescription className="space-y-2">
+        <div className="space-y-2 rounded border border-zinc-700 bg-zinc-800/70 p-3 text-sm text-zinc-100">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-teal-500" />
+            <span>{results.successful} successfully analyzed</span>
+          </div>
+          {results.failed > 0 && (
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-teal-500" />
-              <span>{results.successful} successfully analyzed</span>
+              <XCircle className="h-4 w-4 text-red-500" />
+              <span>{results.failed} failed</span>
             </div>
-            {results.failed > 0 && (
-              <div className="flex items-center gap-2">
-                <XCircle className="h-4 w-4 text-red-500" />
-                <span>{results.failed} failed</span>
-              </div>
-            )}
-            <p className="text-xs text-zinc-500">Total cost: ${results.totalCost.toFixed(4)}</p>
-          </AlertDescription>
-        </Alert>
+          )}
+          <p className="text-xs text-zinc-500">Total cost: ${results.totalCost.toFixed(4)}</p>
+        </div>
       )}
     </div>
   )

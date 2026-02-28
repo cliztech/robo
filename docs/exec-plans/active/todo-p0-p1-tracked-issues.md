@@ -26,6 +26,9 @@ This index tracks all currently unchecked items from `TODO.md` under:
 | TI-007 | v1.2 UI: drag/drop weekly timeline on normalized schedule contracts | UI Engineer | L | Closed | [`TI-007.md`](tracked-issues/TI-007.md) |
 | TI-008 | v1.2 UI: inline conflict rendering and resolution actions | UI Engineer | M | Closed | [`TI-008.md`](tracked-issues/TI-008.md) |
 | TI-009 | v1.2 UI: keyboard parity for timeline edit and conflict resolution | Accessibility Engineer | M | Closed | [`TI-009.md`](tracked-issues/TI-009.md) |
+| TI-007 | v1.2 UI: drag/drop weekly timeline on normalized schedule contracts | UI Engineer | L | In Progress | [`TI-007.md`](tracked-issues/TI-007.md) |
+| TI-008 | v1.2 UI: inline conflict rendering and resolution actions | UI Engineer | M | Open | [`TI-008.md`](tracked-issues/TI-008.md) |
+| TI-009 | v1.2 UI: keyboard parity for timeline edit and conflict resolution | Accessibility Engineer | M | Open | [`TI-009.md`](tracked-issues/TI-009.md) |
 
 ## Coverage check (Track A/B/C/D indexing)
 
@@ -90,4 +93,5 @@ Requirement: each `PRODUCT_READINESS_PLAN.md` Track A/B/C/D task is indexed by e
 - Track B: 8/8 tasks mapped once.
 - Track C: 9/9 tasks mapped once.
 - Track D: 8/8 tasks mapped once.
-- Total: 33/33 tasks mapped one-to-one (`TI-002`…`TI-034`), with no duplicates and no gaps.
+- Total: 33/33 tasks mapped one-to-one (`TI-002`…`TI-006`, `TI-010`…`TI-034`, `TI-039`…`TI-041`).
+- Mapping gaps (`TI-007`…`TI-009`, `TI-035`…`TI-038`) are intentional because those IDs are reserved for scheduler UI scope and non-P0/P1 tracked-issue ranges.

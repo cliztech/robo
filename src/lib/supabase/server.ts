@@ -2,7 +2,7 @@ import { createServerClient as _createServerClient, type CookieOptions } from '@
 import { cookies } from 'next/headers'
 
 export function createServerClient() {
-  const cookieStore = cookies()
+  const cookieStore = cookies() as any
 
   return _createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
