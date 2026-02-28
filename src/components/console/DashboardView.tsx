@@ -30,6 +30,15 @@ import {
   acknowledgeDashboardAlert,
   fetchDashboardAlerts,
   fetchDashboardStatus,
+  type AlertSeverity,
+  type DashboardStatusResponse,
+} from "@/lib/status/dashboardClient";
+import {
+  createNotificationsState,
+  getFilteredNotificationAlerts,
+  setNotificationAlerts,
+  toggleNotificationSeverity,
+} from "@/features/notifications/notifications.store";
   type AlertCenterItem,
   type AlertSeverity,
   type DashboardStatusResponse,
@@ -231,10 +240,24 @@ export function resolveQueueDepthSeverity(
 }
 
 function formatTimestamp(value: string | null): string {
-    if (!value) {
-        return '—';
-    }
-    return new Date(value).toLocaleString();
+  if (!value) {
+    return "—";
+  }
+  return new Date(value).toLocaleString();
+}
+
+function formatFreshnessMinutes(value: string | null): string {
+  if (!value) {
+    return "Updated —";
+  }
+
+  const observedAt = new Date(value).getTime();
+  if (Number.isNaN(observedAt)) {
+    return "Updated —";
+  }
+
+  const elapsedMinutes = Math.max(0, Math.floor((Date.now() - observedAt) / 60_000));
+  return `Updated ${elapsedMinutes} min ago`;
 }
 
 interface DashboardViewProps {
@@ -246,7 +269,7 @@ export function DashboardView({ telemetry, api = defaultDashboardViewApi }: Dash
 export function DashboardView() {
     const [currentTime, setCurrentTime] = useState('');
     const [dashboardStatus, setDashboardStatus] = useState<DashboardStatusResponse | null>(null);
-    const [alerts, setAlerts] = useState<AlertCenterItem[]>([]);
+    const [notifications, setNotifications] = useState(createNotificationsState());
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [refreshTick, setRefreshTick] = useState(0);
@@ -288,6 +311,7 @@ export function DashboardView() {
                 ]);
                 if (mounted) {
                     setDashboardStatus(dashboard);
+                    setNotifications(setNotificationAlerts(createNotificationsState(dashboard.alert_center), alertRows));
                     setAlerts(alertRows ?? dashboard.alert_center.items);
                 }
             } catch (fetchError) {
@@ -313,15 +337,40 @@ export function DashboardView() {
 
     const alertCounts = useMemo(() => {
         const counts: Record<AlertSeverity, number> = { critical: 0, warning: 0, info: 0 };
-        for (const alert of alerts) {
+        for (const alert of notifications.alerts) {
             counts[alert.severity] += 1;
         }
         return counts;
-    }, [alerts]);
+    }, [notifications.alerts]);
 
-    const activeAlerts = useMemo(() => alerts.filter((item) => !item.acknowledged), [alerts]);
+    const filteredAlerts = useMemo(() => getFilteredNotificationAlerts(notifications), [notifications]);
+    const activeAlerts = useMemo(
+      () => notifications.alerts.filter((item) => !item.acknowledged),
+      [notifications.alerts]
+    );
 
     const handleAcknowledge = async (alertId: string) => {
+        const previousAlerts = notifications.alerts;
+        const nowIso = new Date().toISOString();
+
+        setAckInFlight((prev) => ({ ...prev, [alertId]: true }));
+        setNotifications((prev) => setNotificationAlerts(
+          prev,
+          prev.alerts.map((item) =>
+                item.alert_id === alertId
+                    ? { ...item, acknowledged: true, acknowledged_at: item.acknowledged_at ?? nowIso }
+                    : item
+            )
+        ));
+
+        try {
+            const acknowledgedAlert = await acknowledgeDashboardAlert(alertId);
+            setNotifications((prev) => setNotificationAlerts(
+              prev,
+              prev.alerts.map((item) => (item.alert_id === alertId ? acknowledgedAlert : item))
+            ));
+        } catch {
+            setNotifications((prev) => setNotificationAlerts(prev, previousAlerts));
         if (inFlightAlertIdsRef.current.has(alertId)) {
             return;
         }
@@ -397,6 +446,21 @@ export function DashboardView() {
     const rotationColor = dashboardStatus?.rotation.is_stale ? 'red' : 'lime';
     const alertCenterColor = activeAlerts.length > 0 ? 'orange' : 'lime';
     const queueSparkline = dashboardStatus?.queue_depth.trend.map((point) => point.depth);
+    const queueScaleMax = dashboardStatus
+      ? Math.max(
+          dashboardStatus.queue_depth.current_depth,
+          dashboardStatus.queue_depth.thresholds.warning,
+          dashboardStatus.queue_depth.thresholds.critical,
+          ...dashboardStatus.queue_depth.trend.map((item) => item.depth),
+          1
+        )
+      : 1;
+    const warningMarkerLeft = dashboardStatus
+      ? (dashboardStatus.queue_depth.thresholds.warning / queueScaleMax) * 100
+      : 0;
+    const criticalMarkerLeft = dashboardStatus
+      ? (dashboardStatus.queue_depth.thresholds.critical / queueScaleMax) * 100
+      : 0;
     const statusCardsHeadingId = 'dashboard-status-cards-heading';
     const alertCenterHeadingId = 'dashboard-alert-center-heading';
     const nowPlayingHeadingId = 'dashboard-now-playing-heading';
@@ -414,6 +478,9 @@ export function DashboardView() {
                     </p>
                     <p className="text-[11px] text-zinc-500 mt-0.5">
                         Live monitoring {error ? '· Status API degraded' : '· Status API connected'}
+                    </p>
+                    <p className="text-[11px] text-zinc-500 mt-0.5" data-testid="service-health-freshness">
+                        {formatFreshnessMinutes(dashboardStatus?.service_health.observed_at ?? null)}
                     </p>
                 </div>
                 <div className="text-right">
@@ -491,7 +558,7 @@ export function DashboardView() {
                 />
                 <StatCard
                     label="Alert Center"
-                    value={`${activeAlerts.length}/${alerts.length}`}
+                    value={`${activeAlerts.length}/${notifications.alerts.length}`}
                     unit="active/total"
                     icon={CheckCircle2}
                     color={alertCenterColor}
@@ -505,6 +572,24 @@ export function DashboardView() {
                 <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-3 text-xs text-zinc-400">
                     Queue state: <span data-testid="queue-depth-state" className={cn("font-semibold uppercase", mapSeverityToStatusTextClass(queueSeverity))}>{queueSeverity}</span>
                 </div>
+            ) : null}
+
+            {dashboardStatus ? (
+              <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3" data-testid="queue-depth-threshold-markers">
+                <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-wider text-zinc-500">
+                  <span>Queue threshold markers</span>
+                  <span>{dashboardStatus.queue_depth.current_depth} current</span>
+                </div>
+                <div className="relative h-2 rounded bg-zinc-800">
+                  <div className="absolute inset-y-0 left-0 rounded bg-lime-500/40" style={{ width: `${(dashboardStatus.queue_depth.current_depth / queueScaleMax) * 100}%` }} />
+                  <div className="absolute inset-y-[-4px] w-px bg-amber-400" style={{ left: `${warningMarkerLeft}%` }} data-testid="queue-warning-marker" />
+                  <div className="absolute inset-y-[-4px] w-px bg-red-400" style={{ left: `${criticalMarkerLeft}%` }} data-testid="queue-critical-marker" />
+                </div>
+                <div className="mt-1 flex justify-between text-[10px] text-zinc-500">
+                  <span>Warning {dashboardStatus.queue_depth.thresholds.warning}</span>
+                  <span>Critical {dashboardStatus.queue_depth.thresholds.critical}</span>
+                </div>
+              </div>
             ) : null}
 
             {loading ? (
@@ -539,6 +624,25 @@ export function DashboardView() {
                         <span data-testid="severity-count-info">Info: {alertCounts.info}</span>
                     </div>
                 </div>
+                <div className="flex flex-wrap gap-2">
+                    {dashboardStatus?.alert_center.filters.map((severity) => {
+                        const selected = notifications.selectedSeverities.includes(severity);
+                        return (
+                          <button
+                            key={severity}
+                            type="button"
+                            onClick={() => setNotifications((prev) => toggleNotificationSeverity(prev, severity))}
+                            className={cn(
+                              "rounded-full border px-2 py-1 text-[10px] uppercase",
+                              selected ? severityTone[severity] : "border-zinc-700 text-zinc-500"
+                            )}
+                          >
+                            {severity}
+                          </button>
+                        );
+                    })}
+                </div>
+                {filteredAlerts.length === 0 ? (
                 <div className="text-xs text-zinc-500" data-testid="queue-depth-state">
                     {queueSeverity}
                 </div>
@@ -546,7 +650,7 @@ export function DashboardView() {
                     <div className="text-xs text-zinc-500">No alerts in timeline.</div>
                 ) : (
                     <div className="space-y-2">
-                        {alerts.map((alert) => (
+                        {filteredAlerts.map((alert) => (
                             <div
                                 key={alert.alert_id}
                                 className={cn(

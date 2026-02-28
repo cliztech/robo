@@ -146,6 +146,12 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added mandatory artifact outputs under `artifacts/security/logs`, `artifacts/security/reports`, and `artifacts/security/hashes`.
 - Updated operations docs with exact pre-release invocation and pass/fail signatures.
 
+## 2026-02-27 Dashboard Status UI Mapping Update
+- [x] Implemented dashboard service freshness helper text (`Updated X min ago`) from `service_health.observed_at`.
+- [x] Added queue-depth threshold marker visualization sourced from `queue_depth.thresholds`.
+- [x] Added alert-center severity filter chips from `alert_center.filters` with client-side filtering and acknowledged-alert muted retention.
+- [x] Routed alert-center state through new notifications state module (`src/features/notifications/notifications.store.ts`).
+- [x] Extended dashboard UI tests to cover freshness text and severity filter behavior.
 ## 2026-02-27 Build Stabilization Update
 - [x] Restored root build execution by resolving malformed `package.json` duplication, repairing TypeScript syntax defects (`promptProfileResolver`, `tests/ui/setup.tsx`), and replacing broken UI imports in `TrackAnalyzer`.
 - [x] Added required runtime dependencies (`ai`, `@ai-sdk/openai`, `p-queue`, `@supabase/ssr`) and validated `npm run build` passes end-to-end.
