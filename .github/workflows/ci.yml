@@ -28,9 +28,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install fastapi uvicorn httpx pytest ruff
-          pip install alembic sqlalchemy
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install -r backend/requirements.lock
 
       - name: Lint (ruff)
         run: ruff check backend/ --output-format=github
@@ -145,6 +143,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
+          pip install -r backend/requirements.lock
           pip install pip-audit ruff bandit
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 

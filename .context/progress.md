@@ -207,6 +207,13 @@
 - [x] Published third-party skin required token set and lint contract in `docs/ui/design_tokens_v1.md`.
 
 - [x] Documented recommended GitHub workflow additions in `docs/operations/github_workflows_recommendations.md` with phased rollout order centered on security posture and CI control-plane reliability.
+
+## 2026-02-28 Dependency Spec + CI Install Unification
+- [x] Created `backend/requirements.in` as the canonical backend dependency source including runtime (`fastapi`, `pydantic`, `cryptography`, `sqlalchemy`, `alembic`, `uvicorn`) and backend CI/security tooling (`pytest`, `httpx`, `ruff`, `pip-audit`).
+- [x] Compiled and committed `backend/requirements.lock` with pinned transitive dependencies using `pip-compile`.
+- [x] Replaced piecemeal pip install commands in `.github/workflows/ci.yml` backend/security jobs with `pip install -r backend/requirements.lock`.
+- [x] Documented identical local setup path in `README.md` and added lockfile refresh command.
+- [x] Validated clean-environment installation from lockfile and ran `pytest backend/tests -q` (blocked by existing repository syntax errors unrelated to dependency-manifest changes).
 ## 2026-02-28 Runtime Policy Normalization
 - [x] Selected Option B policy (semver ranges in manifests + semver-aware validator compatibility checks).
 - [x] Updated canonical runtime map semver semantics for express and nats.
