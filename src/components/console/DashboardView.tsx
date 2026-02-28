@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useState, useMemo, type ElementType } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type ElementType } from "react";
 import { motion } from "framer-motion";
 import {
   Activity,
@@ -9,9 +9,6 @@ import {
   Signal,
   TrendingDown,
   TrendingUp,
-  Users,
-  Wifi,
-  Zap,
   AlertTriangle,
   CheckCircle2,
   RefreshCw,
@@ -22,6 +19,7 @@ import { DegenWaveform } from "@/components/audio/DegenWaveform";
 import { DegenScheduleTimeline } from "@/components/schedule/DegenScheduleTimeline";
 import { DegenAIHost } from "@/components/ai/DegenAIHost";
 import { cn } from "@/lib/utils";
+import { type DashboardCardColor } from "./dashboard.types";
 import {
   type DashboardCardColor,
   mapSeverityToCardColor,
@@ -29,13 +27,44 @@ import {
   mapStatusToTrend,
 } from "./dashboard.types";
 import {
-    acknowledgeDashboardAlert,
-    fetchDashboardAlerts,
-    fetchDashboardStatus,
-    type AlertCenterItem,
-    type AlertSeverity,
-    type DashboardStatusResponse,
-} from '@/lib/status/dashboardClient';
+  acknowledgeDashboardAlert,
+  fetchDashboardAlerts,
+  fetchDashboardStatus,
+  type AlertSeverity,
+  type DashboardStatusResponse,
+} from "@/lib/status/dashboardClient";
+import {
+  createNotificationsState,
+  getFilteredNotificationAlerts,
+  setNotificationAlerts,
+  toggleNotificationSeverity,
+} from "@/features/notifications/notifications.store";
+  type AlertCenterItem,
+  type AlertSeverity,
+  type DashboardStatusResponse,
+} from "@/lib/status/dashboardClient";
+
+export interface DashboardViewApi {
+  fetchDashboardStatus: (signal?: AbortSignal) => Promise<DashboardStatusResponse>;
+  fetchDashboardAlerts: (
+    severity?: AlertSeverity,
+    signal?: AbortSignal,
+  ) => Promise<AlertCenterItem[]>;
+  acknowledgeDashboardAlert: (
+    alertId: string,
+    signal?: AbortSignal,
+  ) => Promise<AlertCenterItem>;
+}
+
+interface DashboardViewProps {
+  telemetry?: unknown;
+  api?: Partial<DashboardStatusApi>;
+}
+const defaultDashboardViewApi: DashboardViewApi = {
+  fetchDashboardStatus,
+  fetchDashboardAlerts,
+  acknowledgeDashboardAlert,
+};
 
 interface StatCardProps {
   label: string;
@@ -196,21 +225,57 @@ function deriveQueueSeverity(currentDepth: number, thresholds: { warning: number
     return 'info';
 }
 
-function formatTimestamp(value: string | null): string {
-    if (!value) {
-        return '—';
-    }
-    return new Date(value).toLocaleString();
+function isAlertSeverity(value: unknown): value is AlertSeverity {
+    return value === 'info' || value === 'warning' || value === 'critical';
 }
 
-export function DashboardView({ telemetry }: { telemetry?: any }) {
+export function resolveQueueDepthSeverity(
+    queueDepth: DashboardStatusResponse['queue_depth']
+): AlertSeverity {
+    if (isAlertSeverity(queueDepth.state)) {
+        return queueDepth.state;
+    }
+
+    return deriveQueueSeverity(queueDepth.current_depth, queueDepth.thresholds);
+}
+
+function formatTimestamp(value: string | null): string {
+  if (!value) {
+    return "—";
+  }
+  return new Date(value).toLocaleString();
+}
+
+function formatFreshnessMinutes(value: string | null): string {
+  if (!value) {
+    return "Updated —";
+  }
+
+  const observedAt = new Date(value).getTime();
+  if (Number.isNaN(observedAt)) {
+    return "Updated —";
+  }
+
+  const elapsedMinutes = Math.max(0, Math.floor((Date.now() - observedAt) / 60_000));
+  return `Updated ${elapsedMinutes} min ago`;
+}
+
+interface DashboardViewProps {
+    telemetry?: any;
+    api?: DashboardViewApi;
+}
+
+export function DashboardView({ telemetry, api = defaultDashboardViewApi }: DashboardViewProps) {
+export function DashboardView() {
     const [currentTime, setCurrentTime] = useState('');
     const [dashboardStatus, setDashboardStatus] = useState<DashboardStatusResponse | null>(null);
-    const [alerts, setAlerts] = useState<AlertCenterItem[]>([]);
+    const [notifications, setNotifications] = useState(createNotificationsState());
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [refreshTick, setRefreshTick] = useState(0);
     const [ackInFlight, setAckInFlight] = useState<Record<string, boolean>>({});
+    const inFlightAlertIdsRef = useRef(new Set<string>());
+    const previousAlertByIdRef = useRef<Record<string, AlertCenterItem | undefined>>({});
 
     useEffect(() => {
         const tick = () => {
@@ -239,12 +304,15 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
 
             try {
                 const [dashboard, alertRows] = await Promise.all([
-                    fetchDashboardStatus(abortController.signal),
-                    fetchDashboardAlerts(undefined, abortController.signal),
+                    dashboardApi.fetchDashboardStatus(abortController.signal),
+                    dashboardApi.fetchDashboardAlerts?.(undefined, abortController.signal),
+                    api.fetchDashboardStatus(abortController.signal),
+                    api.fetchDashboardAlerts(undefined, abortController.signal),
                 ]);
                 if (mounted) {
                     setDashboardStatus(dashboard);
-                    setAlerts(alertRows);
+                    setNotifications(setNotificationAlerts(createNotificationsState(dashboard.alert_center), alertRows));
+                    setAlerts(alertRows ?? dashboard.alert_center.items);
                 }
             } catch (fetchError) {
                 if (abortController.signal.aborted) return;
@@ -264,40 +332,92 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
             mounted = false;
             abortController.abort();
         };
-    }, [refreshTick]);
+    }, [dashboardApi, refreshTick]);
+    }, [api, refreshTick]);
 
     const alertCounts = useMemo(() => {
         const counts: Record<AlertSeverity, number> = { critical: 0, warning: 0, info: 0 };
-        for (const alert of alerts) {
+        for (const alert of notifications.alerts) {
             counts[alert.severity] += 1;
         }
         return counts;
-    }, [alerts]);
+    }, [notifications.alerts]);
 
-    const activeAlerts = useMemo(() => alerts.filter((item) => !item.acknowledged), [alerts]);
+    const filteredAlerts = useMemo(() => getFilteredNotificationAlerts(notifications), [notifications]);
+    const activeAlerts = useMemo(
+      () => notifications.alerts.filter((item) => !item.acknowledged),
+      [notifications.alerts]
+    );
 
     const handleAcknowledge = async (alertId: string) => {
-        const previousAlerts = alerts;
+        const previousAlerts = notifications.alerts;
         const nowIso = new Date().toISOString();
 
         setAckInFlight((prev) => ({ ...prev, [alertId]: true }));
-        setAlerts((prev) =>
-            prev.map((item) =>
+        setNotifications((prev) => setNotificationAlerts(
+          prev,
+          prev.alerts.map((item) =>
                 item.alert_id === alertId
                     ? { ...item, acknowledged: true, acknowledged_at: item.acknowledged_at ?? nowIso }
                     : item
             )
-        );
+        ));
 
         try {
             const acknowledgedAlert = await acknowledgeDashboardAlert(alertId);
+            setNotifications((prev) => setNotificationAlerts(
+              prev,
+              prev.alerts.map((item) => (item.alert_id === alertId ? acknowledgedAlert : item))
+            ));
+        } catch {
+            setNotifications((prev) => setNotificationAlerts(prev, previousAlerts));
+        if (inFlightAlertIdsRef.current.has(alertId)) {
+            return;
+        }
+
+        inFlightAlertIdsRef.current.add(alertId);
+        const nowIso = new Date().toISOString();
+
+        setAckInFlight((prev) => ({ ...prev, [alertId]: true }));
+        setAlerts((prev) =>
+            prev.map((item) => {
+                if (item.alert_id !== alertId) {
+                    return item;
+                }
+
+                previousAlertByIdRef.current[alertId] = item;
+                return {
+                    ...item,
+                    acknowledged: true,
+                    acknowledged_at: item.acknowledged_at ?? nowIso,
+                };
+            })
+        );
+
+        try {
+            const acknowledgedAlert = await dashboardApi.acknowledgeAlert(alertId);
+            const acknowledgedAlert = await api.acknowledgeDashboardAlert(alertId);
             setAlerts((prev) =>
                 prev.map((item) => (item.alert_id === alertId ? acknowledgedAlert : item))
             );
         } catch {
-            setAlerts(previousAlerts);
+            const previousAlert = previousAlertByIdRef.current[alertId];
+            if (previousAlert) {
+                setAlerts((prev) =>
+                    prev.map((item) => (item.alert_id === alertId ? previousAlert : item))
+                );
+            }
         } finally {
-            setAckInFlight((prev) => ({ ...prev, [alertId]: false }));
+            delete previousAlertByIdRef.current[alertId];
+            inFlightAlertIdsRef.current.delete(alertId);
+            setAckInFlight((prev) => {
+                if (!prev[alertId]) {
+                    return prev;
+                }
+                const next = { ...prev };
+                delete next[alertId];
+                return next;
+            });
         }
     };
 
@@ -314,7 +434,7 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
               ? 'orange'
               : 'red';
     const queueSeverity = dashboardStatus
-        ? deriveQueueSeverity(dashboardStatus.queue_depth.current_depth, dashboardStatus.queue_depth.thresholds)
+        ? resolveQueueDepthSeverity(dashboardStatus.queue_depth)
         : 'info';
 
     const queueColor =
@@ -326,12 +446,31 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
     const rotationColor = dashboardStatus?.rotation.is_stale ? 'red' : 'lime';
     const alertCenterColor = activeAlerts.length > 0 ? 'orange' : 'lime';
     const queueSparkline = dashboardStatus?.queue_depth.trend.map((point) => point.depth);
+    const queueScaleMax = dashboardStatus
+      ? Math.max(
+          dashboardStatus.queue_depth.current_depth,
+          dashboardStatus.queue_depth.thresholds.warning,
+          dashboardStatus.queue_depth.thresholds.critical,
+          ...dashboardStatus.queue_depth.trend.map((item) => item.depth),
+          1
+        )
+      : 1;
+    const warningMarkerLeft = dashboardStatus
+      ? (dashboardStatus.queue_depth.thresholds.warning / queueScaleMax) * 100
+      : 0;
+    const criticalMarkerLeft = dashboardStatus
+      ? (dashboardStatus.queue_depth.thresholds.critical / queueScaleMax) * 100
+      : 0;
+    const statusCardsHeadingId = 'dashboard-status-cards-heading';
+    const alertCenterHeadingId = 'dashboard-alert-center-heading';
+    const nowPlayingHeadingId = 'dashboard-now-playing-heading';
+    const audioEngineHeadingId = 'dashboard-audio-engine-heading';
 
     return (
-        <div className="space-y-5">
+        <main className="space-y-5" aria-labelledby="dashboard-overview-heading">
             <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-end justify-between">
                 <div>
-                    <h1 className="text-2xl font-black tracking-tight text-white">
+                    <h1 id="dashboard-overview-heading" className="text-2xl font-black tracking-tight text-white">
                         Station <span className="text-lime-400">Overview</span>
                     </h1>
                     <p className="text-[11px] text-zinc-500 mt-0.5">
@@ -339,6 +478,9 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
                     </p>
                     <p className="text-[11px] text-zinc-500 mt-0.5">
                         Live monitoring {error ? '· Status API degraded' : '· Status API connected'}
+                    </p>
+                    <p className="text-[11px] text-zinc-500 mt-0.5" data-testid="service-health-freshness">
+                        {formatFreshnessMinutes(dashboardStatus?.service_health.observed_at ?? null)}
                     </p>
                 </div>
                 <div className="text-right">
@@ -357,10 +499,16 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
+            <section
+                aria-labelledby={statusCardsHeadingId}
+                className="space-y-3"
+                tabIndex={0}
+            >
+                <h2 id={statusCardsHeadingId} className="sr-only">Status cards</h2>
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
                 <StatCard
                     label="Service Health"
-                    value={dashboardStatus?.service_health.status ?? '--'}
+                    value={dashboardStatus?.service_health.status ? dashboardStatus.service_health.status.toUpperCase() : '--'}
                     icon={Activity}
                     color={healthColor}
                     trend="stable"
@@ -383,13 +531,22 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
                     delay={0.05}
                 />
                 <StatCard
-                    label="Queue Thresholds"
-                    value={dashboardStatus ? `${dashboardStatus.queue_depth.thresholds.warning}/${dashboardStatus.queue_depth.thresholds.critical}` : '--'}
-                    unit="warn/crit"
+                    label="Warning Threshold"
+                    value={dashboardStatus ? dashboardStatus.queue_depth.thresholds.warning : '--'}
+                    unit="items"
                     icon={AlertTriangle}
                     color={queueColor}
                     trend="stable"
                     delay={0.1}
+                />
+                <StatCard
+                    label="Critical Threshold"
+                    value={dashboardStatus ? dashboardStatus.queue_depth.thresholds.critical : '--'}
+                    unit="items"
+                    icon={AlertTriangle}
+                    color={queueColor}
+                    trend="stable"
+                    delay={0.15}
                 />
                 <StatCard
                     label="Rotation"
@@ -397,42 +554,103 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
                     icon={Signal}
                     color={rotationColor}
                     trend={dashboardStatus?.rotation.is_stale ? 'down' : 'up'}
-                    delay={0.15}
+                    delay={0.2}
                 />
                 <StatCard
                     label="Alert Center"
-                    value={`${activeAlerts.length}/${alerts.length}`}
+                    value={`${activeAlerts.length}/${notifications.alerts.length}`}
                     unit="active/total"
                     icon={CheckCircle2}
                     color={alertCenterColor}
                     trend={activeAlerts.length > 0 ? 'down' : 'up'}
-                    delay={0.2}
+                    delay={0.25}
                 />
-            </div>
+                </div>
+            </section>
+
+            {dashboardStatus ? (
+                <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-3 text-xs text-zinc-400">
+                    Queue state: <span data-testid="queue-depth-state" className={cn("font-semibold uppercase", mapSeverityToStatusTextClass(queueSeverity))}>{queueSeverity}</span>
+                </div>
+            ) : null}
+
+            {dashboardStatus ? (
+              <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3" data-testid="queue-depth-threshold-markers">
+                <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-wider text-zinc-500">
+                  <span>Queue threshold markers</span>
+                  <span>{dashboardStatus.queue_depth.current_depth} current</span>
+                </div>
+                <div className="relative h-2 rounded bg-zinc-800">
+                  <div className="absolute inset-y-0 left-0 rounded bg-lime-500/40" style={{ width: `${(dashboardStatus.queue_depth.current_depth / queueScaleMax) * 100}%` }} />
+                  <div className="absolute inset-y-[-4px] w-px bg-amber-400" style={{ left: `${warningMarkerLeft}%` }} data-testid="queue-warning-marker" />
+                  <div className="absolute inset-y-[-4px] w-px bg-red-400" style={{ left: `${criticalMarkerLeft}%` }} data-testid="queue-critical-marker" />
+                </div>
+                <div className="mt-1 flex justify-between text-[10px] text-zinc-500">
+                  <span>Warning {dashboardStatus.queue_depth.thresholds.warning}</span>
+                  <span>Critical {dashboardStatus.queue_depth.thresholds.critical}</span>
+                </div>
+              </div>
+            ) : null}
 
             {loading ? (
-                <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3 text-xs text-zinc-400">
+                <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3 text-xs text-zinc-400" role="status" aria-live="polite">
+                    Loading dashboard status…
+                </div>
+            ) : null}
+            {error ? (
+                <div className="rounded-xl border border-red-900/70 bg-red-950/40 p-3 text-xs text-red-200" role="alert">
+                <div role="status" aria-live="polite" aria-atomic="true" className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3 text-xs text-zinc-400">
                     Loading status telemetry…
                 </div>
             ) : null}
             {error ? (
-                <div className="rounded-xl border border-red-900/70 bg-red-950/40 p-3 text-xs text-red-200">
+                <div role="alert" className="rounded-xl border border-red-900/70 bg-red-950/40 p-3 text-xs text-red-200">
+                <div role="alert" aria-live="assertive" aria-atomic="true" className="rounded-xl border border-red-900/70 bg-red-950/40 p-3 text-xs text-red-200">
                     Status API unavailable: {error}
                 </div>
             ) : null}
 
-            <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 space-y-2">
+            <section aria-labelledby={alertCenterHeadingId} className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 space-y-2">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xs font-semibold tracking-wide text-zinc-300 uppercase">Alert Center</h2>
+                    <h2 id={alertCenterHeadingId} className="text-xs font-semibold tracking-wide text-zinc-300 uppercase">Alert Center</h2>
                     <div className="text-[10px] text-zinc-500">
-                        critical {alertCounts.critical} · warning {alertCounts.warning} · info {alertCounts.info}
+                        <span data-testid="severity-count-critical">Critical: {alertCounts.critical}</span>
+                        {' · '}
+                        <span>Warning: {alertCounts.warning}</span>
+                        {' · '}
+                        <span>Info: {alertCounts.info}</span>
+                        <span data-testid="severity-count-critical">Critical: {alertCounts.critical}</span> ·{" "}
+                        <span data-testid="severity-count-warning">Warning: {alertCounts.warning}</span> ·{" "}
+                        <span data-testid="severity-count-info">Info: {alertCounts.info}</span>
                     </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    {dashboardStatus?.alert_center.filters.map((severity) => {
+                        const selected = notifications.selectedSeverities.includes(severity);
+                        return (
+                          <button
+                            key={severity}
+                            type="button"
+                            onClick={() => setNotifications((prev) => toggleNotificationSeverity(prev, severity))}
+                            className={cn(
+                              "rounded-full border px-2 py-1 text-[10px] uppercase",
+                              selected ? severityTone[severity] : "border-zinc-700 text-zinc-500"
+                            )}
+                          >
+                            {severity}
+                          </button>
+                        );
+                    })}
+                </div>
+                {filteredAlerts.length === 0 ? (
+                <div className="text-xs text-zinc-500" data-testid="queue-depth-state">
+                    {queueSeverity}
                 </div>
                 {alerts.length === 0 ? (
                     <div className="text-xs text-zinc-500">No alerts in timeline.</div>
                 ) : (
                     <div className="space-y-2">
-                        {alerts.map((alert) => (
+                        {filteredAlerts.map((alert) => (
                             <div
                                 key={alert.alert_id}
                                 className={cn(
@@ -450,7 +668,8 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
                                         </div>
                                         <p className="text-xs text-zinc-400">{alert.description}</p>
                                         {alert.acknowledged && (
-                                            <p className="text-[10px] text-zinc-500">
+                                            <p className="text-[10px] text-zinc-500" data-testid={`alert-ack-${alert.alert_id}`}>
+                                            <p data-testid={`alert-ack-${alert.alert_id}`} className="text-[10px] text-zinc-500">
                                                 Ack at: {formatTimestamp(alert.acknowledged_at)}
                                             </p>
                                         )}
@@ -468,10 +687,12 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
                         ))}
                     </div>
                 )}
-            </div>
+            </section>
 
             <SectionHeader>Now Playing</SectionHeader>
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_340px]">
+            <section aria-labelledby={nowPlayingHeadingId} className="space-y-4">
+                <h2 id={nowPlayingHeadingId} className="sr-only">Now playing</h2>
+                <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_340px]">
                 <div className="space-y-4">
                     <div className="glass-panel overflow-hidden">
                         <div className="panel-header">
@@ -509,10 +730,13 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
                 <div className="space-y-4">
                     <DegenAIHost className="glass-panel" />
                 </div>
-            </div>
+                </div>
+            </section>
 
             <SectionHeader>Audio Engine</SectionHeader>
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+            <section aria-labelledby={audioEngineHeadingId} className="space-y-4">
+                <h2 id={audioEngineHeadingId} className="sr-only">Audio engine</h2>
+                <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                 <div className="glass-panel overflow-hidden">
                     <div className="panel-header">
                         <span className="panel-header-title">Beat Sequencer</span>
@@ -534,7 +758,8 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
                         { key: 'width', label: 'Stereo', unit: '%' },
                     ]}
                 />
-            </div>
-        </div>
+                </div>
+            </section>
+        </main>
     );
 }
