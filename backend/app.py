@@ -20,13 +20,13 @@ async def lifespan(_: FastAPI):
     if not result.ok:
         raise RuntimeError(
             "Startup aborted due to secret integrity check failures. "
-            "Resolve alerts and restart RoboDJ."
+            "Resolve alerts and restart DGN-DJ backend services."
         )
 
     yield
 
 
-app = FastAPI(title="RoboDJ Backend Scheduler Services", lifespan=lifespan)
+app = FastAPI(title="DGN-DJ Backend Scheduler Services", lifespan=lifespan)
 app.include_router(autonomy_policy_router)
 app.include_router(status_router)
 app.include_router(scheduler_ui_router)
