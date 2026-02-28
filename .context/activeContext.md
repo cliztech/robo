@@ -199,3 +199,10 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - [x] Updated `docs/ui/design_tokens_v1.md` with a required semantic token set for third-party skin authors.
 
 - Added `docs/operations/github_workflows_recommendations.md` with prioritized GitHub Actions additions (dependency-review, actionlint/policy, OSSF scorecard, stale/label routing, nightly matrix) to guide next CI hardening pass.
+
+## 2026-02-28 Backend Dependency Manifest Alignment
+
+- Added canonical backend dependency manifests: `backend/requirements.in` (human-edited source) and `backend/requirements.lock` (compiled lock with transitive pins).
+- Updated `.github/workflows/ci.yml` backend and security jobs to install Python dependencies exclusively from `backend/requirements.lock`.
+- Documented the local backend setup/update flow in `README.md` so local/CI use one install path.
+- Verified clean-environment install from lockfile and executed `pytest backend/tests -q`; test collection currently fails on pre-existing syntax errors in `backend/ai_service.py` and `backend/scheduling/scheduler_ui_service.py`.

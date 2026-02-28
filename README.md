@@ -97,6 +97,24 @@ pnpm dev
 
 See `docs/architecture/canonical_runtime_map.md` for ownership boundaries and deployment targets.
 
+### Backend Python environment (authoritative)
+
+Use the compiled backend lock file for both local and CI installs:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install -r backend/requirements.lock
+pytest backend/tests -q
+```
+
+To update backend dependencies, edit `backend/requirements.in` and recompile:
+
+```bash
+pip-compile backend/requirements.in --output-file backend/requirements.lock
+```
+
 ### Environment Variables
 
 ```bash
