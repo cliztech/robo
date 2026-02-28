@@ -105,6 +105,7 @@ Use the compiled backend lock file for both local and CI installs:
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
+pip install pip-tools
 pip install -r backend/requirements.lock
 pytest backend/tests -q
 ```
