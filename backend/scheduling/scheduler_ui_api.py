@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 from backend.security.approval_policy import ApprovalPolicyError, parse_approval_chain
 from backend.security.auth import get_scheduler_api_key
-from backend.security.approval_policy import ApprovalContext, ApprovalPolicyError, ApprovalRecord
+from backend.security.approval_policy import ApprovalContext, ChainApprovalRecord
 
 from .scheduler_models import (
     PreviewRequest,
@@ -52,7 +52,7 @@ def _approval_context_from_request(request: Request) -> ApprovalContext:
         approvals_payload = []
 
     approvals = tuple(
-        ApprovalRecord(
+        ChainApprovalRecord(
             approver_id=str(item.get("approver_id", "")).strip(),
             approver_roles=frozenset(role.strip().lower() for role in item.get("approver_roles", [])),
             reason=str(item.get("reason", "")).strip(),
@@ -76,7 +76,7 @@ def write_scheduler_state(
 ) -> SchedulerUiState:
     try:
         return service.update_schedules(payload.schedules, approval_context=_approval_context_from_request(request))
-    except ValueError as exc:
+    except ValueError:
         approval_chain = parse_approval_chain([entry.model_dump() for entry in payload.approval_chain])
         return service.update_schedules(payload.schedules, approval_chain=approval_chain)
     except (ValueError, ApprovalPolicyError) as exc:

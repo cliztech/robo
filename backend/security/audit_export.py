@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+import string
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping, Sequence
+from uuid import uuid4
 
 REQUIRED_AUDIT_FIELDS = (
     "event_id",
@@ -17,9 +19,6 @@ REQUIRED_AUDIT_FIELDS = (
     "after_sha256",
     "approvals",
 )
-from typing import Iterable, Mapping, Sequence
-from uuid import uuid4
-import string
 
 
 def deterministic_sha256(payload: Mapping[str, object]) -> str:
@@ -124,6 +123,11 @@ def export_audit_batch(
         digest_sha256=digest,
         record_count=len(valid_lines),
     )
+
+
+@dataclass(frozen=True)
+class NDJSONExportResult:
+    batch_id: str
     export_dir: Path
     ndjson_path: Path
     sha256_path: Path
@@ -138,7 +142,7 @@ def export_audit_events_ndjson(
     export_root: Path = Path("artifacts/security/audit_exports"),
     now_utc: datetime | None = None,
     batch_id: str | None = None,
-) -> AuditExportResult:
+) -> NDJSONExportResult:
     timestamp = now_utc or datetime.now(timezone.utc)
     day_dir = export_root / timestamp.strftime("%Y-%m-%d")
     day_dir.mkdir(parents=True, exist_ok=True)
@@ -169,7 +173,7 @@ def export_audit_events_ndjson(
     }
     manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
 
-    return AuditExportResult(
+    return NDJSONExportResult(
         batch_id=safe_batch_id,
         export_dir=day_dir,
         ndjson_path=ndjson_path,
