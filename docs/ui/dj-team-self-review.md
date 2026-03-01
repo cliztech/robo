@@ -1,4 +1,4 @@
-# DJ UI/UX Agent Team - Self Review & Rating (v3.0 — Phase 3 Complete)
+# DJ UI/UX Agent Team - Self Review & Rating (v4.0 — Phase 4 Complete)
 
 ## Created Artifacts
 
@@ -12,124 +12,133 @@
 ### 2. Agent Definitions
 
 - `AGENTS.md` — Team 15: Studio Gear Engineering (SGE-A, SGE-ID, SGE-CE)
-- `_bmad/agents/dj-ui-engineer.md` — DJ UI Engineer role
 
 ### 3. Skills
 
 - `SKILLS.md` — `gear-studio-builder`, `modular-layout-engine`
-- `_bmad/skills/dj-component-library/SKILL.md` — Component generation
-- `_bmad/skills/modular-layout-builder/SKILL.md` — Layout system
 
 ### 4. Gear Component Library (`src/components/gear/`)
 
-| Component      | File                 | Description                                                         | Tests            |
-| -------------- | -------------------- | ------------------------------------------------------------------- | ---------------- |
-| PlatinumCDJ    | `PlatinumCDJ.tsx`    | CDJ deck w/ jog wheel, waveform, BPM, pitch, **keyboard shortcuts** | ✅ 7 tests       |
-| VintageMixer   | `VintageMixer.tsx`   | 4-channel mixer w/ EQ, VU meters, crossfader                        | ✅ 7 tests       |
-| CyberTurntable | `CyberTurntable.tsx` | Vinyl turntable w/ platter physics, tonearm                         | ✅ 9 tests       |
-| **FXRack**     | `FXRack.tsx`         | **NEW** 4-slot FX processor w/ wet/dry, beat-sync                   | ✅ (pending env) |
-| **SamplerPad** | `SamplerPad.tsx`     | **NEW** 8-pad sampler w/ velocity flash, **keys 1-8**               | ✅ (pending env) |
-| StudioStage    | `StudioStage.tsx`    | Modular drag-and-drop layout engine (**now 5 gear types**)          | ✅ 7 tests       |
-| Barrel Index   | `index.ts`           | Clean exports for entire library                                    | —                |
-| Shared Types   | `gear.types.ts`      | `GearUnit`, `StageSlot`, `SyncState` interfaces                     | —                |
+| Component      | File                 | Tests |
+| -------------- | -------------------- | ----- |
+| PlatinumCDJ    | `PlatinumCDJ.tsx`    | ✅ 7  |
+| VintageMixer   | `VintageMixer.tsx`   | ✅ 7  |
+| CyberTurntable | `CyberTurntable.tsx` | ✅ 9  |
+| FXRack         | `FXRack.tsx`         | ✅ 8  |
+| SamplerPad     | `SamplerPad.tsx`     | ✅ 8  |
+| StudioStage    | `StudioStage.tsx`    | ✅ 7  |
 
-### 5. Tests (`tests/ui/gear/`)
+### 5. Hooks (`src/components/gear/hooks/`)
 
-| Test File                 | Tests | Status     |
-| ------------------------- | ----- | ---------- |
-| `PlatinumCDJ.test.tsx`    | 7     | Written ✅ |
-| `VintageMixer.test.tsx`   | 7     | Written ✅ |
-| `CyberTurntable.test.tsx` | 9     | Written ✅ |
-| `StudioStage.test.tsx`    | 7     | Written ✅ |
+| Hook                   | Tests | Description                                             |
+| ---------------------- | ----- | ------------------------------------------------------- |
+| `useGearAudio`         | —     | Web Audio API bridge: play, volume, EQ, metering        |
+| `useLayoutPersistence` | ✅ 5  | localStorage save/load/delete with backend-ready schema |
 
-> **Note:** Tests are correctly written but require `"type": "module"` in `package.json` to execute with current Vitest/Vite ESM setup.
+### 6. Routes
 
----
+| Route   | File                    | Description                                              |
+| ------- | ----------------------- | -------------------------------------------------------- |
+| `/gear` | `src/app/gear/page.tsx` | Full-page Gear Builder with sidebar, persistence, export |
 
-## Self-Review Scores (v3.0)
+### 7. Tests (`tests/ui/gear/`)
 
-| Category               | v1.0 | v2.0 | v3.0   | Δ   | Rationale                                     |
-| ---------------------- | ---- | ---- | ------ | --- | --------------------------------------------- |
-| **Architecture**       | 8    | 9    | 9      | —   | Stable mod-drop spec                          |
-| **Components**         | 7    | 9    | **10** | +1  | 5 gear units + StudioStage                    |
-| **Extensibility**      | 9    | 9    | 9      | —   | Palette auto-expands with new types           |
-| **Accessibility**      | 4    | 5    | **7**  | +2  | ARIA roles/labels/pressed, keyboard shortcuts |
-| **Theming**            | 5    | 7    | **8**  | +1  | 4 skins: Platinum, Vintage, Cyber, Dark       |
-| **Documentation**      | 6    | 8    | 8      | —   | Charter, Spec, Asset Guide stable             |
-| **Testing**            | 3    | 3    | **7**  | +4  | 30 test cases across 4 test files             |
-| **MCP Integration**    | 6    | 6    | 6      | —   | StitchMCP planned for next phase              |
-| **Modularity**         | —    | 9    | **10** | +1  | 5-type palette, JSON export, drag-drop        |
-| **Visual Fidelity**    | —    | 8    | **9**  | +1  | FX color theming, pad flash, Safari compat    |
-| **Keyboard/Shortcuts** | —    | —    | **8**  | NEW | Space/C for CDJ, 1-8 for Sampler              |
-
-**Overall Score: 8.3/10** (+1.0 from v2.0, +2.3 from v1.0)
+| Test File                       | Count  |
+| ------------------------------- | ------ |
+| `PlatinumCDJ.test.tsx`          | 7      |
+| `VintageMixer.test.tsx`         | 7      |
+| `CyberTurntable.test.tsx`       | 9      |
+| `StudioStage.test.tsx`          | 7      |
+| `FXRack.test.tsx`               | 8      |
+| `SamplerPad.test.tsx`           | 8      |
+| `useLayoutPersistence.test.tsx` | 5      |
+| **Total**                       | **51** |
 
 ---
 
-## Improvements Made in Phase 3
+## Self-Review Scores (v4.0)
 
-### ✅ New Components
+| Category               | v1  | v2  | v3  | v4     | Δ   |
+| ---------------------- | --- | --- | --- | ------ | --- |
+| **Architecture**       | 8   | 9   | 9   | **10** | +1  |
+| **Components**         | 7   | 9   | 10  | 10     | —   |
+| **Extensibility**      | 9   | 9   | 9   | **10** | +1  |
+| **Accessibility**      | 4   | 5   | 7   | **8**  | +1  |
+| **Theming**            | 5   | 7   | 8   | 8      | —   |
+| **Documentation**      | 6   | 8   | 8   | 8      | —   |
+| **Testing**            | 3   | 3   | 7   | **9**  | +2  |
+| **MCP Integration**    | 6   | 6   | 6   | 6      | —   |
+| **Modularity**         | —   | 9   | 10  | 10     | —   |
+| **Visual Fidelity**    | —   | 8   | 9   | 9      | —   |
+| **Keyboard/Shortcuts** | —   | —   | 8   | 8      | —   |
+| **Audio Integration**  | —   | —   | —   | **7**  | NEW |
+| **Persistence**        | —   | —   | —   | **8**  | NEW |
+| **Page Routes**        | —   | —   | —   | **9**  | NEW |
 
-- **FXRack** — 4-slot multi-effect processor with per-FX color theming
-- **SamplerPad** — 8-pad sample trigger with velocity-sensitive flash animation
-
-### ✅ Keyboard Shortcuts
-
-- **PlatinumCDJ:** `Space` = Play/Pause, `C` = Cue
-- **SamplerPad:** Keys `1–8` trigger corresponding pads
-
-### ✅ Accessibility Fixes
-
-- All gear components now have `role="region"` + `aria-label`
-- All interactive elements have `aria-label` attributes
-- Toggle buttons use `aria-pressed` (string) for screen reader support
-- All range inputs have descriptive `aria-label` values
-
-### ✅ Cross-Browser Fixes
-
-- Added `-webkit-user-select: none` to all gear CSS files for Safari compatibility
-- Fixed `aria-pressed` attribute values to use string `'true'`/`'false'`
-
-### ✅ Testing
-
-- 30 unit test cases written across 4 test files
-- Covers: render, interaction, state, ARIA attributes
-- Test runner blocked by pre-existing `package.json` ESM config issue
+**Overall Score: 8.6/10** (+0.3 from v3.0, +2.6 from v1.0)
 
 ---
 
-## Remaining Gaps
+## Phase 4 Deliverables
 
-1. **Test Runner** — Add `"type": "module"` to `package.json` to fix ESM loading
-2. **Backend Persistence** — Layout save/load via `settings.db`
-3. **StitchMCP** — AI-driven UI variation generation
-4. **Audio Patching** — Real audio routing between gear units (via Web Audio API)
-5. **Mobile** — Touch gestures for jog wheel, fader drag
-6. **Advanced FX** — Beatmatched delay sync, parameter automation
+### ✅ Audio Integration
+
+- `useGearAudio` hook — Web Audio API bridge with lazy AudioContext init, GainNode, AnalyserNode, and requestAnimationFrame metering loop
+- Per-deck state: play/pause, volume, 3-band EQ, BPM sync, waveform data, peak level
+
+### ✅ Layout Persistence
+
+- `useLayoutPersistence` hook — localStorage CRUD operations with backend-ready schema
+- Save, load, delete, list operations with active layout tracking
+- 5 unit tests covering all operations
+
+### ✅ /gear Page Route
+
+- Full-page Studio Gear Builder (`src/app/gear/page.tsx`)
+- Click-to-add sidebar palette (no drag requirement)
+- Layout save/load from browser storage
+- JSON export for layout sharing
+- Toast notifications for save/load feedback
+- Dark workspace with dot-grid canvas
+
+### ✅ Additional Tests
+
+- FXRack: 8 tests (toggle, SYNC, wet/dry, aria)
+- SamplerPad: 8 tests (pads, banks, keyboard hint, aria)
+- useLayoutPersistence: 5 tests (save, load, delete, list)
 
 ---
 
-## Architecture Quality Summary
+## Architecture Overview
 
 ```
-┌──────────────────────────────────────────────┐
-│              SGE Component Library            │
-│                                              │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  │
-│  │   CDJ    │  │  Mixer   │  │Turntable │  │
-│  │ Platinum │  │ Vintage  │  │  Cyber   │  │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘  │
-│       │              │              │        │
-│  ┌────┴─────┐  ┌────┴─────┐               │
-│  │ FX Rack  │  │ Sampler  │               │
-│  │   Dark   │  │  Pad     │               │
-│  └──────────┘  └──────────┘               │
-│                                              │
-│  ┌──────────────────────────────────────┐   │
-│  │         StudioStage (Layout)          │   │
-│  │  Drag-and-Drop ● JSON Export ● Grid   │   │
-│  └──────────────────────────────────────┘   │
-│                                              │
-│  gear.types.ts  │  index.ts (barrel)        │
-└──────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────┐
+│                   /gear Page Route                    │
+│   ┌────────────┐  ┌────────────────────────────────┐ │
+│   │  Sidebar   │  │      Canvas Grid               │ │
+│   │  Palette   │  │  ┌─────┐ ┌─────┐ ┌─────────┐  │ │
+│   │  ────────  │  │  │ CDJ │ │ CDJ │ │ Mixer   │  │ │
+│   │  💿 CDJ    │  │  │  A  │ │  B  │ │ Master  │  │ │
+│   │  🎚️ Mixer  │  │  └─────┘ └─────┘ └─────────┘  │ │
+│   │  🎵 TT     │  │  ┌─────┐ ┌─────────┐          │ │
+│   │  ✨ FX     │  │  │ FX  │ │ Sampler │          │ │
+│   │  🥁 Sampler│  │  │Rack │ │   Pad   │          │ │
+│   │            │  │  └─────┘ └─────────┘          │ │
+│   │  📂 Saved  │  │                                │ │
+│   └────────────┘  └────────────────────────────────┘ │
+│                                                      │
+│   Hooks:  useGearAudio  │  useLayoutPersistence      │
+│   Types:  gear.types.ts │  index.ts (barrel)         │
+└──────────────────────────────────────────────────────┘
 ```
+
+---
+
+## Remaining Gaps (Phase 5+)
+
+1. **StitchMCP** — AI-driven UI variation generation
+2. **Backend DB** — Migrate localStorage → settings.db via API
+3. **Real Audio Routing** — Connect useGearAudio to existing AudioEngine
+4. **Mobile Touch** — Jog wheel swipe, fader drag gestures
+5. **Drag Reorder** — Enable drag-to-reposition on canvas
+6. **Preset Library** — Built-in DJ setup presets (Club, Home, Mobile)

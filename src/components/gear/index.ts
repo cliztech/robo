@@ -23,3 +23,8 @@ export { SamplerPad } from './SamplerPad';
 
 // Layout Engine
 export { StudioStage } from './StudioStage';
+
+// Hooks
+export { useGearAudio } from './hooks/useGearAudio';
+export { useLayoutPersistence } from './hooks/useLayoutPersistence';
+export type { PersistedGear, PersistedLayout } from './hooks/useLayoutPersistence';

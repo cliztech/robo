@@ -1,0 +1,117 @@
+/**
+ * AudioRoutingViz.css — Signal flow diagram styles
+ */
+
+.routing-viz {
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  border-radius: 8px;
+  padding: 14px;
+  font-family: 'Inter', sans-serif;
+  color: #888;
+}
+
+.routing-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.routing-title {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: #333;
+  text-transform: uppercase;
+}
+
+.routing-legend {
+  display: flex;
+  gap: 12px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: #555;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* Flow */
+.routing-flow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow-x: auto;
+  padding: 8px 0;
+}
+
+.route-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 14px;
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 6px;
+  min-width: 80px;
+  transition: border-color 0.2s;
+}
+
+.route-node:hover {
+  border-color: #333;
+}
+
+.route-icon {
+  font-size: 20px;
+}
+
+.route-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #aaa;
+  white-space: nowrap;
+}
+
+.route-type {
+  font-size: 9px;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Arrow */
+.route-arrow {
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+}
+
+.arrow-line {
+  width: 24px;
+  height: 0;
+  border-top: 2px dashed #333;
+  transition: border-color 0.3s;
+}
+
+.arrow-head {
+  font-size: 14px;
+  color: #333;
+  margin-left: -2px;
+}
+
+.routing-empty {
+  text-align: center;
+  color: #222;
+  font-size: 12px;
+  padding: 16px;
+}
