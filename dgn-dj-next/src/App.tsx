@@ -24,8 +24,8 @@ import { ToastNotification } from './components/ui/ToastNotification';
 import type { Toast } from './components/ui/ToastNotification';
 import { formatTime } from './data/demoTracks';
 import { DECK_COLORS } from './types';
-import { Layout } from './modules/layout/types';
-import { LayoutGrid, List, Settings } from 'lucide-react';
+import type { Layout } from './modules/layout/types';
+import { LayoutGrid, List } from 'lucide-react';
 
 /** Inner app component — has access to DeckContext */
 function DJApp() {
