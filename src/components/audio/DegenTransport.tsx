@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
-import React, { useEffect, useMemo, useState } from 'react';
 import { cn } from '../../lib/utils';
 import { DegenStereoMeter } from './DegenVUMeter';
 import {
@@ -21,9 +20,7 @@ import {
     SkipForward,
     Volume1,
     Volume2,
-    VolumeX,
-    Volume1,
-    Radio
+    VolumeX
 } from 'lucide-react';
 
 interface DegenTransportProps {
@@ -63,10 +60,11 @@ export function DegenTransport({
     const transportTelemetry = resolveTransportTelemetry(adaptDJTelemetryToTransportTelemetry(telemetry));
 
     const [telemetryStep, setTelemetryStep] = useState(0);
-
-    useEffect(() => {
-        setProgress(transportTelemetry.progress);
-    }, [transportTelemetry.progress]);
+    const [progressOverride, setProgressOverride] = useState<number | null>(null);
+    const [volume, setVolume] = useState(85);
+    const [isMuted, setIsMuted] = useState(false);
+    const [repeat, setRepeat] = useState(false);
+    const [shuffle, setShuffle] = useState(false);
 
     useEffect(() => {
         setVolume(transportTelemetry.volume);
@@ -83,14 +81,9 @@ export function DegenTransport({
     }, [isPlaying, telemetryTick]);
 
     const phase = typeof telemetryTick === 'number' ? telemetryTick : telemetryStep;
-    const [progressOverride, setProgressOverride] = useState<number | null>(null);
-    const [volume, setVolume] = useState(85);
-    const [isMuted, setIsMuted] = useState(false);
-    const [repeat, setRepeat] = useState(false);
-    const [shuffle, setShuffle] = useState(false);
 
     const progress = progressOverride ?? telemetry?.transport.progress ?? 0;
-    const elapsed = telemetry?.transport.elapsedSeconds ?? progress * (currentTrack?.duration || 0);
+    const elapsed = telemetry?.transport.elapsedSeconds ?? progress * (track.duration || 0);
     const vuLeft =
         telemetry?.stereoLevels.leftLevel ??
         Math.max(0.1, Math.min(1, transportTelemetry.vuLeft + Math.sin(phase / 5) * 0.08));
@@ -100,7 +93,6 @@ export function DegenTransport({
     const peakLeft = telemetry?.stereoLevels.leftPeak ?? vuLeft;
     const peakRight = telemetry?.stereoLevels.rightPeak ?? vuRight;
 
-    const elapsed = telemetry?.transport.elapsedSeconds ?? progress * (track.duration || 0);
     const remaining = useMemo(() => {
         if (telemetry) {
             return telemetry.transport.remainingSeconds;
@@ -225,7 +217,6 @@ export function DegenTransport({
                         step={0.001}
                         value={progress}
                         onChange={(e) => setProgressOverride(parseFloat(e.target.value))}
-                        onChange={(e) => setProgress(parseFloat(e.target.value))}
                         className="absolute inset-x-0 h-7 w-full opacity-0 cursor-pointer z-10"
                     />
                     <div
