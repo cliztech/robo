@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import List, Optional
 from uuid import uuid4
 
-from backend.security.approval_policy import ApprovalContext, ApprovalRecord, enforce_action_approval
 from backend.security.audit_export import append_audit_record
 from backend.security.config_crypto import config_hash
 
@@ -229,17 +228,17 @@ class AutonomyPolicyService:
                 "event_id": str(uuid4()),
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "action": "ACT-UPDATE-AUTONOMY-POLICY",
-                "actor_id": context.actor_id,
+                "actor_id": "api-key-actor",
                 "result": "success",
                 "before_sha256": before_hash,
                 "after_sha256": config_hash(serialized_payload),
                 "approvals": [
                     {
-                        "approver_id": approval.approver_id,
-                        "approver_roles": sorted(approval.approver_roles),
-                        "reason": approval.reason,
+                        "principal": approval.principal,
+                        "role": approval.role.value,
+                        "approved_at_utc": approval.approved_at_utc,
                     }
-                    for approval in context.approvals
+                    for approval in (approval_chain or [])
                 ],
             },
         )
