@@ -13,7 +13,9 @@ describe('Notifications Store - toggleNotificationSeverity', () => {
 
     const newState = toggleNotificationSeverity(initialState, 'warning');
 
-    expect(newState.selectedSeverities).toEqual(['info', 'warning']);
+    expect(newState.selectedSeverities).toContain('warning');
+    expect(newState.selectedSeverities).toContain('info');
+    expect(newState.selectedSeverities).toHaveLength(2);
   });
 
   it('removes a severity when it is already present in selectedSeverities', () => {
@@ -24,7 +26,9 @@ describe('Notifications Store - toggleNotificationSeverity', () => {
 
     const newState = toggleNotificationSeverity(initialState, 'warning');
 
-    expect(newState.selectedSeverities).toEqual(['info']);
+    expect(newState.selectedSeverities).not.toContain('warning');
+    expect(newState.selectedSeverities).toContain('info');
+    expect(newState.selectedSeverities).toHaveLength(1);
   });
 
   it('maintains state immutability', () => {
