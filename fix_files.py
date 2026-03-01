@@ -1,4 +1,3 @@
-import os
 
 def fix_file(filepath):
     try:
