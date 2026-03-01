@@ -25,8 +25,26 @@ export const PlatinumCDJ: React.FC<{
     return () => clearInterval(interval);
   }, [isPlaying]);
 
+  // Keyboard shortcuts: Space=Play/Pause, C=Cue
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.code === "Space") {
+        e.preventDefault();
+        setIsPlaying((prev) => !prev);
+      } else if (e.key === "c" || e.key === "C") {
+        setIsPlaying(false);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
   return (
-    <div className={`platinum-cdj gear-unit iron-surface`}>
+    <div
+      className={`platinum-cdj gear-unit iron-surface`}
+      role="region"
+      aria-label={`${label} CDJ Player`}
+    >
       {/* Top Section: Deck Info & BPM */}
       <div className="cdj-header">
         <div className="deck-indicator">{label}</div>

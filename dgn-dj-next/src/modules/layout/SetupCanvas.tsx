@@ -458,7 +458,10 @@ export function SetupCanvas({ layoutId = '2-deck-classic', onLayoutChange }: Set
       <div className="flex items-center justify-between px-4 py-2 bg-zinc-900 border-t border-zinc-800 text-xs text-zinc-500">
         <span>{layout.components.length} components</span>
         <span>Grid: {layout.gridSize}px</span>
-        <span>{layout.width}x{layout.height}</span>
+        <span>
+          {Math.max(...layout.components.map(c => c.x + c.width), 0)}x
+          {Math.max(...layout.components.map(c => c.y + c.height), 0)}
+        </span>
       </div>
     </div>
   );

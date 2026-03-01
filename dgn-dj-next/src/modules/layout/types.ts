@@ -36,6 +36,8 @@ export interface Layout {
   name: string;
   version: string;
   gridSize: number;
+  width?: number;
+  height?: number;
   components: LayoutComponent[];
   shortcuts: Record<string, string>;
   theme?: string;

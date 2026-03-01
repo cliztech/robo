@@ -1,0 +1,141 @@
+/**
+ * SamplerPad.css — Studio Iron / Dark Skin Sampler
+ */
+
+.sampler-pad {
+  width: 320px;
+  background: #111;
+  border: 2px solid #222;
+  border-radius: 8px;
+  padding: 14px;
+  color: #ccc;
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  user-select: none;
+}
+
+.sampler-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sampler-label {
+  font-weight: 800;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #666;
+}
+
+.bank-selector {
+  display: flex;
+  gap: 4px;
+}
+
+.bank-btn {
+  padding: 4px 10px;
+  border: 1px solid #333;
+  background: #1a1a1a;
+  color: #444;
+  font-weight: 800;
+  font-size: 11px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.bank-btn.active {
+  color: #00e5ff;
+  border-color: #00e5ff44;
+}
+
+/* Pad Grid — 4x2 */
+.pad-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.pad {
+  aspect-ratio: 1;
+  border: 2px solid #2a2a2a;
+  background: #151515;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: all 0.1s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.pad::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--pad-color, #00e5ff);
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+
+.pad:hover {
+  border-color: var(--pad-color, #00e5ff);
+  transform: scale(1.02);
+}
+
+.pad:active,
+.pad.triggered {
+  transform: scale(0.95);
+}
+
+.pad.triggered::before {
+  opacity: 0.25;
+  animation: pad-flash 0.3s ease-out;
+}
+
+@keyframes pad-flash {
+  0% { opacity: 0.5; }
+  100% { opacity: 0; }
+}
+
+.pad.triggered {
+  border-color: var(--pad-color, #00e5ff);
+  box-shadow: 0 0 12px var(--pad-glow, rgba(0, 229, 255, 0.4));
+}
+
+.pad-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: #777;
+  letter-spacing: 1px;
+  z-index: 1;
+}
+
+.pad.triggered .pad-label {
+  color: #fff;
+}
+
+.pad-key {
+  font-size: 9px;
+  color: #333;
+  font-weight: 600;
+  z-index: 1;
+}
+
+/* Footer */
+.sampler-footer {
+  text-align: center;
+}
+
+.kb-hint {
+  font-size: 10px;
+  color: #2a2a2a;
+  font-style: italic;
+}
