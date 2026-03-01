@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import json
 import os
 import re
 from datetime import datetime
@@ -8,11 +9,24 @@ from pathlib import Path
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from backend.security.approval_policy import ApprovalContext, ApprovalRecord, enforce_action_approval
+from backend.security.approval_policy import (
+    ActionId,
+    ApprovalContext,
+    ApprovalPolicyError,
+    ApprovalRecord,
+    ApproverRole,
+    enforce_action_approval,
+    require_approval,
+)
 from backend.security.audit_export import append_audit_record
-from backend.security.config_crypto import EnvelopeKey, config_hash, serialize_json, transform_sensitive_values
-from backend.security.approval_policy import ActionId, ApprovalRecord, require_approval
-from backend.security.config_crypto import dump_config_json, load_config_json
+from backend.security.config_crypto import (
+    EnvelopeKey,
+    config_hash,
+    dump_config_json,
+    load_config_json,
+    serialize_json,
+    transform_sensitive_values,
+)
 
 from .observability import emit_scheduler_event
 from .schedule_conflict_detection import detect_schedule_conflicts
@@ -97,6 +111,12 @@ class SchedulerUiService:
         if conflicts:
             raise ValueError(self._format_conflict_error(conflicts))
 
+        context = ApprovalContext(
+            actor_id="system", 
+            actor_roles=frozenset({"admin"}),
+            approvals=tuple(approval_chain) if approval_chain else ()
+        )
+
         before_hash = self._file_hash(self.schedules_path)
         raw_payload = envelope.model_dump(mode="json")
         encrypted_payload = transform_sensitive_values(
@@ -109,7 +129,7 @@ class SchedulerUiService:
         self.schedules_path.write_text(serialized_payload, encoding="utf-8")
         after_hash = config_hash(serialized_payload)
         self._append_security_audit(
-            action="ACT-UPDATE-SCHEDULES",
+            action=ActionId.ACT_UPDATE_SCHEDULES.value,
             result="success",
             before_hash=before_hash,
             after_hash=after_hash,
@@ -126,21 +146,6 @@ class SchedulerUiService:
     def publish_schedules(
         self,
         schedules: list[ScheduleRecord],
-        approval_context: ApprovalContext | None = None,
-    ) -> dict[str, object]:
-        context = approval_context or self._default_approval_context()
-        enforce_action_approval("ACT-PUBLISH", context)
-        before_hash = self._file_hash(self.schedules_path)
-        ui_state = self.update_schedules(schedules, approval_context=context)
-        after_hash = self._file_hash(self.schedules_path)
-        self._append_security_audit(
-            action="ACT-PUBLISH",
-            result="success",
-            before_hash=before_hash,
-            after_hash=after_hash,
-            context=context,
-        )
-        *,
         approval_chain: list[ApprovalRecord] | None = None,
     ) -> dict[str, object]:
         require_approval(ActionId.ACT_PUBLISH, approval_chain or [])
@@ -300,9 +305,9 @@ class SchedulerUiService:
             actor_roles=frozenset({"admin"}),
             approvals=(
                 ApprovalRecord(
-                    approver_id="security-automation",
-                    approver_roles=frozenset({"admin"}),
-                    reason="system-approved",
+                    principal="security-studio-internal",
+                    role=ApproverRole.ADMIN,
+                    approved_at_utc=datetime.now(tz=ZoneInfo("UTC")).isoformat(),
                 ),
             ),
         )
@@ -333,9 +338,9 @@ class SchedulerUiService:
                 "after_sha256": after_hash,
                 "approvals": [
                     {
-                        "approver_id": approval.approver_id,
-                        "approver_roles": sorted(approval.approver_roles),
-                        "reason": approval.reason,
+                        "principal": approval.principal,
+                        "role": approval.role.value,
+                        "approved_at_utc": approval.approved_at_utc,
                     }
                     for approval in context.approvals
                 ],
