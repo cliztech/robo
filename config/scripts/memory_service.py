@@ -30,7 +30,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from backend.security.approval_policy import ActionId, parse_approval_chain, require_approval
+from backend.security.approval_policy import (
+    ActionId,
+    parse_approval_chain,
+    require_approval,
+)  # noqa: E402
 
 DEFAULT_DB_PATH = Path(__file__).resolve().parents[1] / "memory_service.db"
 TOKEN_RE = re.compile(r"[a-z0-9']+")
@@ -119,14 +123,23 @@ class MemoryService:
     ) -> int:
         normalized_kind = kind.strip().lower()
         if normalized_kind not in MENTION_KINDS:
-            raise ValueError(f"Unsupported mention kind: {kind}. Expected one of {sorted(MENTION_KINDS)}")
+            raise ValueError(
+                f"Unsupported mention kind: {kind}. Expected one of {sorted(MENTION_KINDS)}"
+            )
         ts = self._to_iso(mentioned_at or self._utc_now())
         cur = self.conn.execute(
             """
             INSERT INTO mentions(kind, text, show_id, persona, metadata_json, mentioned_at)
             VALUES (?, ?, ?, ?, ?, ?)
             """,
-            (normalized_kind, text.strip(), show_id, persona, json.dumps(metadata or {}), ts),
+            (
+                normalized_kind,
+                text.strip(),
+                show_id,
+                persona,
+                json.dumps(metadata or {}),
+                ts,
+            ),
         )
         self.conn.commit()
         return int(cur.lastrowid)
@@ -161,39 +174,65 @@ class MemoryService:
         return list(self.conn.execute(query, params))
 
     def topic_lifecycle(self, topic: str, show_id: Optional[str] = None) -> dict:
+        return self.topic_lifecycles([topic], show_id=show_id)[0]
+
+    def topic_lifecycles(
+        self, topics: list[str], show_id: Optional[str] = None
+    ) -> list[dict]:
         lookback_hours = 168
-        rows = self.recent_mentions(hours=lookback_hours, show_id=show_id, kinds=["topic"], limit=500)
-        topic_norm = topic.strip().lower()
-        matching = [r for r in rows if r["text"].strip().lower() == topic_norm]
+        rows = self.recent_mentions(
+            hours=lookback_hours, show_id=show_id, kinds=["topic"], limit=500
+        )
 
         now = self._utc_now()
-        mention_times = [self._from_iso(r["mentioned_at"]) for r in matching]
-        mention_times.sort(reverse=True)
 
-        mentions_24h = sum(1 for ts in mention_times if now - ts <= timedelta(hours=24))
-        mentions_72h = sum(1 for ts in mention_times if now - ts <= timedelta(hours=72))
-        last_seen_hours = None
-        if mention_times:
-            last_seen_hours = (now - mention_times[0]).total_seconds() / 3600.0
+        topic_mentions = {}
+        for r in rows:
+            text = r["text"].strip().lower()
+            if text not in topic_mentions:
+                topic_mentions[text] = []
+            topic_mentions[text].append(self._from_iso(r["mentioned_at"]))
 
-        if not mention_times:
-            state = "fresh"
-        elif mentions_24h >= 3:
-            state = "saturated"
-        elif mentions_72h >= 2:
-            state = "warming"
-        elif last_seen_hours is not None and last_seen_hours >= 24:
-            state = "cooldown"
-        else:
-            state = "warming"
+        results = []
+        for topic in topics:
+            topic_norm = topic.strip().lower()
+            mention_times = topic_mentions.get(topic_norm, [])
+            mention_times.sort(reverse=True)
 
-        return {
-            "topic": topic,
-            "state": state,
-            "mentions_24h": mentions_24h,
-            "mentions_72h": mentions_72h,
-            "last_seen_hours": round(last_seen_hours, 2) if last_seen_hours is not None else None,
-        }
+            mentions_24h = sum(
+                1 for ts in mention_times if now - ts <= timedelta(hours=24)
+            )
+            mentions_72h = sum(
+                1 for ts in mention_times if now - ts <= timedelta(hours=72)
+            )
+            last_seen_hours = None
+            if mention_times:
+                last_seen_hours = (now - mention_times[0]).total_seconds() / 3600.0
+
+            if not mention_times:
+                state = "fresh"
+            elif mentions_24h >= 3:
+                state = "saturated"
+            elif mentions_72h >= 2:
+                state = "warming"
+            elif last_seen_hours is not None and last_seen_hours >= 24:
+                state = "cooldown"
+            else:
+                state = "warming"
+
+            results.append(
+                {
+                    "topic": topic,
+                    "state": state,
+                    "mentions_24h": mentions_24h,
+                    "mentions_72h": mentions_72h,
+                    "last_seen_hours": round(last_seen_hours, 2)
+                    if last_seen_hours is not None
+                    else None,
+                }
+            )
+
+        return results
 
     def recency_penalties(
         self,
@@ -212,7 +251,10 @@ class MemoryService:
             decay = math.exp(-math.log(2) * (age_hours / max(half_life_hours, 0.1)))
             penalties[phrase] = penalties.get(phrase, 0.0) + max_penalty * decay
 
-        return {k: round(min(v, max_penalty), 3) for k, v in sorted(penalties.items(), key=lambda kv: kv[1], reverse=True)}
+        return {
+            k: round(min(v, max_penalty), 3)
+            for k, v in sorted(penalties.items(), key=lambda kv: kv[1], reverse=True)
+        }
 
     def set_persona_style(
         self,
@@ -262,7 +304,12 @@ class MemoryService:
             "updated_at": row["updated_at"],
         }
 
-    def store_script(self, script_text: str, show_id: Optional[str] = None, persona: Optional[str] = None) -> int:
+    def store_script(
+        self,
+        script_text: str,
+        show_id: Optional[str] = None,
+        persona: Optional[str] = None,
+    ) -> int:
         cur = self.conn.execute(
             """
             INSERT INTO generated_scripts(show_id, persona, script_text, generated_at)
@@ -321,26 +368,38 @@ class MemoryService:
         for row in rows:
             prev_text = row["script_text"]
             string_sim = SequenceMatcher(None, current_text, prev_text).ratio()
-            semantic_sim = self._cosine_similarity(current_vec, self._vectorize(self._tokenize(prev_text)))
-            stronger = max(string_sim, semantic_sim) > max(best.string_similarity, best.semantic_similarity)
+            semantic_sim = self._cosine_similarity(
+                current_vec, self._vectorize(self._tokenize(prev_text))
+            )
+            stronger = max(string_sim, semantic_sim) > max(
+                best.string_similarity, best.semantic_similarity
+            )
             if stronger:
                 reason = "semantic" if semantic_sim >= string_sim else "string"
-                best = DuplicateResult(False, reason, int(row["id"]), string_sim, semantic_sim)
+                best = DuplicateResult(
+                    False, reason, int(row["id"]), string_sim, semantic_sim
+                )
             if string_sim >= string_threshold or semantic_sim >= semantic_threshold:
                 reason = []
                 if string_sim >= string_threshold:
                     reason.append("string")
                 if semantic_sim >= semantic_threshold:
                     reason.append("semantic")
-                return DuplicateResult(True, "+".join(reason), int(row["id"]), string_sim, semantic_sim)
+                return DuplicateResult(
+                    True, "+".join(reason), int(row["id"]), string_sim, semantic_sim
+                )
 
         return best
 
-    def build_prompt_context(self, persona: Optional[str] = None, show_id: Optional[str] = None) -> dict:
+    def build_prompt_context(
+        self, persona: Optional[str] = None, show_id: Optional[str] = None
+    ) -> dict:
         penalties = self.recency_penalties(show_id=show_id)
         top_penalties = list(penalties.items())[:12]
 
-        topics = self.recent_mentions(hours=72, show_id=show_id, kinds=["topic"], limit=150)
+        topics = self.recent_mentions(
+            hours=72, show_id=show_id, kinds=["topic"], limit=150
+        )
         unique_topics: list[str] = []
         seen: set[str] = set()
         for row in topics:
@@ -352,23 +411,33 @@ class MemoryService:
             if len(unique_topics) >= 10:
                 break
 
-        lifecycle = [self.topic_lifecycle(t, show_id=show_id) for t in unique_topics]
+        lifecycle = self.topic_lifecycles(unique_topics, show_id=show_id)
         persona_style = self.get_persona_style(persona) if persona else None
 
         return {
             "show_id": show_id,
             "persona": persona,
-            "recency_penalties": [{"phrase": p, "penalty": score} for p, score in top_penalties],
+            "recency_penalties": [
+                {"phrase": p, "penalty": score} for p, score in top_penalties
+            ],
             "topic_lifecycle": lifecycle,
             "persona_style_memory": persona_style,
             "generation_guidance": {
-                "avoid_high_penalty_phrases": [p for p, score in top_penalties if score >= 1.5],
-                "prioritize_fresh_topics": [t["topic"] for t in lifecycle if t["state"] == "fresh"],
-                "deprioritize_saturated_topics": [t["topic"] for t in lifecycle if t["state"] == "saturated"],
+                "avoid_high_penalty_phrases": [
+                    p for p, score in top_penalties if score >= 1.5
+                ],
+                "prioritize_fresh_topics": [
+                    t["topic"] for t in lifecycle if t["state"] == "fresh"
+                ],
+                "deprioritize_saturated_topics": [
+                    t["topic"] for t in lifecycle if t["state"] == "saturated"
+                ],
             },
         }
 
-    def reset_memory(self, scope: str, show_id: Optional[str] = None, now: Optional[datetime] = None) -> dict:
+    def reset_memory(
+        self, scope: str, show_id: Optional[str] = None, now: Optional[datetime] = None
+    ) -> dict:
         now = now or self._utc_now()
         scope = scope.strip().lower()
         if scope not in {"show", "day", "week", "all"}:
@@ -380,19 +449,26 @@ class MemoryService:
             if not show_id:
                 raise ValueError("show_id is required when scope='show'")
             for table in ("mentions", "generated_scripts"):
-                cur = self.conn.execute(f"DELETE FROM {table} WHERE show_id = ?", (show_id,))
+                cur = self.conn.execute(
+                    f"DELETE FROM {table} WHERE show_id = ?", (show_id,)
+                )
                 deleted[table] = cur.rowcount
         elif scope in {"day", "week"}:
             start = now - timedelta(days=1 if scope == "day" else 7)
             start_iso = self._to_iso(start)
-            for table, column in (("mentions", "mentioned_at"), ("generated_scripts", "generated_at")):
+            for table, column in (
+                ("mentions", "mentioned_at"),
+                ("generated_scripts", "generated_at"),
+            ):
                 if show_id:
                     cur = self.conn.execute(
                         f"DELETE FROM {table} WHERE {column} >= ? AND show_id = ?",
                         (start_iso, show_id),
                     )
                 else:
-                    cur = self.conn.execute(f"DELETE FROM {table} WHERE {column} >= ?", (start_iso,))
+                    cur = self.conn.execute(
+                        f"DELETE FROM {table} WHERE {column} >= ?", (start_iso,)
+                    )
                 deleted[table] = cur.rowcount
         else:  # all
             for table in ("mentions", "generated_scripts", "persona_style_memory"):
@@ -404,8 +480,12 @@ class MemoryService:
 
 
 def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Memory service for RoboDJ script generation freshness")
-    parser.add_argument("--db", default=str(DEFAULT_DB_PATH), help="Path to memory SQLite database")
+    parser = argparse.ArgumentParser(
+        description="Memory service for RoboDJ script generation freshness"
+    )
+    parser.add_argument(
+        "--db", default=str(DEFAULT_DB_PATH), help="Path to memory SQLite database"
+    )
 
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -425,7 +505,9 @@ def _build_parser() -> argparse.ArgumentParser:
     style_get = sub.add_parser("style-get", help="Get persona lexical style memory")
     style_get.add_argument("--persona", required=True)
 
-    sub.add_parser("prompt-context", help="Build prompt context JSON").add_argument("--show-id")
+    sub.add_parser("prompt-context", help="Build prompt context JSON").add_argument(
+        "--show-id"
+    )
     subpar = sub.choices["prompt-context"]
     subpar.add_argument("--persona")
 
@@ -447,7 +529,9 @@ def _build_parser() -> argparse.ArgumentParser:
     reset = sub.add_parser("reset", help="Reset memory by scope")
     reset.add_argument("--scope", required=True, choices=["show", "day", "week", "all"])
     reset.add_argument("--show-id")
-    reset.add_argument("--approval-chain", default="[]", help="JSON array of TI-039 approvals")
+    reset.add_argument(
+        "--approval-chain", default="[]", help="JSON array of TI-039 approvals"
+    )
 
     return parser
 
@@ -482,13 +566,27 @@ def main() -> int:
             print(json.dumps(service.get_persona_style(args.persona), indent=2))
 
         elif args.command == "prompt-context":
-            print(json.dumps(service.build_prompt_context(persona=args.persona, show_id=args.show_id), indent=2))
+            print(
+                json.dumps(
+                    service.build_prompt_context(
+                        persona=args.persona, show_id=args.show_id
+                    ),
+                    indent=2,
+                )
+            )
 
         elif args.command == "topic-state":
-            print(json.dumps(service.topic_lifecycle(topic=args.topic, show_id=args.show_id), indent=2))
+            print(
+                json.dumps(
+                    service.topic_lifecycle(topic=args.topic, show_id=args.show_id),
+                    indent=2,
+                )
+            )
 
         elif args.command == "script-store":
-            script_id = service.store_script(script_text=args.script, show_id=args.show_id, persona=args.persona)
+            script_id = service.store_script(
+                script_text=args.script, show_id=args.show_id, persona=args.persona
+            )
             print(json.dumps({"script_id": script_id}, indent=2))
 
         elif args.command == "script-check":
@@ -501,8 +599,15 @@ def main() -> int:
             print(json.dumps(result.__dict__, indent=2))
 
         elif args.command == "reset":
-            require_approval(ActionId.ACT_DELETE, parse_approval_chain(args.approval_chain))
-            print(json.dumps(service.reset_memory(scope=args.scope, show_id=args.show_id), indent=2))
+            require_approval(
+                ActionId.ACT_DELETE, parse_approval_chain(args.approval_chain)
+            )
+            print(
+                json.dumps(
+                    service.reset_memory(scope=args.scope, show_id=args.show_id),
+                    indent=2,
+                )
+            )
 
         return 0
     finally:
