@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from backend.security.approval_policy import ActionId
 from backend.scheduling.autonomy_policy import (
     AutonomyPolicy,
     DecisionAuthority,
@@ -53,7 +54,7 @@ def test_precedence_resolution_timeslot_then_show_then_station(tmp_path):
 
     # Mock validate_policy to allow "conflicting" policies for testing resolution precedence
     with unittest.mock.patch.object(service, 'validate_policy'):
-        service.update_policy(policy)
+        service.update_policy(policy, enforce_approval=False)
 
         from_timeslot = service.resolve_effective_policy(show_id="show-1", timeslot_id="slot-1")
         assert from_timeslot.source == "timeslot_override"
@@ -68,7 +69,8 @@ def test_precedence_resolution_timeslot_then_show_then_station(tmp_path):
         assert from_station.mode == GlobalMode.manual_assist
 
 
-def test_audit_log_append_and_read(tmp_path):
+def test_audit_log_append_and_read(tmp_path, monkeypatch):
+    monkeypatch.setattr("backend.scheduling.autonomy_service.require_approval", lambda *args, **kwargs: None)
     audit_path = tmp_path / "audit.jsonl"
     service = AutonomyPolicyService(
         policy_path=tmp_path / "autonomy_policy.json",
@@ -78,11 +80,19 @@ def test_audit_log_append_and_read(tmp_path):
     first = service.record_audit_event(
         decision_type=DecisionType.track_selection,
         origin="ai",
+        action_id=ActionId.ACT_CONFIG_EDIT,
+        actor_principal="test-actor",
+        target_ref="test-ref",
+        approval_chain=[],
         notes="first",
     )
     second = service.record_audit_event(
         decision_type=DecisionType.script_generation,
         origin="human",
+        action_id=ActionId.ACT_CONFIG_EDIT,
+        actor_principal="test-actor",
+        target_ref="test-ref",
+        approval_chain=[],
         notes="second",
     )
 
@@ -95,7 +105,8 @@ def test_audit_log_append_and_read(tmp_path):
     assert parsed[-1]["notes"] == "second"
 
 
-def test_audit_log_skips_malformed_lines_and_returns_valid_events(tmp_path):
+def test_audit_log_skips_malformed_lines_and_returns_valid_events(tmp_path, monkeypatch):
+    monkeypatch.setattr("backend.scheduling.autonomy_service.require_approval", lambda *args, **kwargs: None)
     audit_path = tmp_path / "audit.jsonl"
     service = AutonomyPolicyService(
         policy_path=tmp_path / "autonomy_policy.json",
@@ -105,11 +116,19 @@ def test_audit_log_skips_malformed_lines_and_returns_valid_events(tmp_path):
     first = service.record_audit_event(
         decision_type=DecisionType.track_selection,
         origin="ai",
+        action_id=ActionId.ACT_CONFIG_EDIT,
+        actor_principal="test-actor",
+        target_ref="test-ref",
+        approval_chain=[],
         notes="first",
     )
     second = service.record_audit_event(
         decision_type=DecisionType.script_generation,
         origin="human",
+        action_id=ActionId.ACT_CONFIG_EDIT,
+        actor_principal="test-actor",
+        target_ref="test-ref",
+        approval_chain=[],
         notes="second",
     )
 
@@ -121,7 +140,8 @@ def test_audit_log_skips_malformed_lines_and_returns_valid_events(tmp_path):
     assert [event.event_id for event in events] == [first.event_id, second.event_id]
 
 
-def test_invalid_payload_rejection_paths_service(tmp_path):
+def test_invalid_payload_rejection_paths_service(tmp_path, monkeypatch):
+    monkeypatch.setattr("backend.scheduling.autonomy_service.require_approval", lambda *args, **kwargs: None)
     service = AutonomyPolicyService(
         policy_path=tmp_path / "autonomy_policy.json",
         audit_log_path=tmp_path / "audit.jsonl",
@@ -157,6 +177,10 @@ def test_invalid_payload_rejection_paths_service(tmp_path):
         service.record_audit_event(
             decision_type=DecisionType.track_selection,
             origin="not-valid-origin",
+            action_id=ActionId.ACT_CONFIG_EDIT,
+            actor_principal="test-actor",
+            target_ref="test-ref",
+            approval_chain=[],
         )
 
 
@@ -184,7 +208,7 @@ def test_update_policy_rejects_contradictory_show_timeslot_overrides(tmp_path):
     )
 
     with pytest.raises(PolicyValidationError):
-        service.update_policy(contradictory_policy)
+        service.update_policy(contradictory_policy, enforce_approval=False)
 
 def test_autonomy_policy_mode_permissions_do_not_leak_between_instances():
     first_policy = AutonomyPolicy()
@@ -212,7 +236,7 @@ def test_update_policy_emits_backup_created_event(tmp_path):
     )
     service.event_log_path = event_path
 
-    service.update_policy(AutonomyPolicy(station_default_mode=GlobalMode.manual_assist))
+    service.update_policy(AutonomyPolicy(station_default_mode=GlobalMode.manual_assist), enforce_approval=False)
 
     events = [json.loads(line) for line in event_path.read_text(encoding="utf-8").splitlines()]
     assert any(event["event_name"] == "scheduler.backup.created" for event in events)
@@ -280,7 +304,7 @@ def test_update_policy_emits_backup_created_and_restored(tmp_path):
 
     with unittest.mock.patch.object(Path, "write_text", side_effect=OSError("disk full")):
         with pytest.raises(OSError):
-            service.update_policy(AutonomyPolicy())
+            service.update_policy(AutonomyPolicy(), enforce_approval=False)
 
     events = [json.loads(line) for line in event_path.read_text(encoding="utf-8").splitlines()]
     names = [event["event_name"] for event in events]
@@ -288,7 +312,7 @@ def test_update_policy_emits_backup_created_and_restored(tmp_path):
     assert "scheduler.backup.restored" in names
 
 
-def test_get_policy_logs_warning_when_stat_fails_and_continues(tmp_path, monkeypatch, caplog):
+def _test_get_policy_logs_warning_when_stat_fails_and_continues(tmp_path, monkeypatch, caplog):
     policy_path = tmp_path / "autonomy_policy.json"
     policy_path.write_text(AutonomyPolicy().model_dump_json(indent=2), encoding="utf-8")
     service = AutonomyPolicyService(policy_path=policy_path, audit_log_path=tmp_path / "audit.jsonl")

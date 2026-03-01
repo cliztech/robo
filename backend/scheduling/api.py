@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import logging
 import threading
 from datetime import datetime, timezone
@@ -32,29 +31,6 @@ router = APIRouter(
 logger = logging.getLogger(__name__)
 
 
-def _approval_context_from_request(request: Request) -> ApprovalContext:
-    actor_id = request.headers.get("X-Actor-Id", "api-key-actor")
-    actor_roles = {
-        role.strip().lower()
-        for role in request.headers.get("X-Actor-Roles", "").split(",")
-        if role.strip()
-    }
-    approvals_header = request.headers.get("X-Approval-Chain", "[]")
-    try:
-        approvals_payload = json.loads(approvals_header)
-    except json.JSONDecodeError:
-        approvals_payload = []
-
-    approvals = tuple(
-        ApprovalRecord(
-            approver_id=str(item.get("approver_id", "")).strip(),
-            approver_roles=frozenset(role.strip().lower() for role in item.get("approver_roles", [])),
-            reason=str(item.get("reason", "")).strip(),
-        )
-        for item in approvals_payload
-        if isinstance(item, dict)
-    )
-    return ApprovalContext(actor_id=actor_id, actor_roles=frozenset(actor_roles), approvals=approvals)
 
 
 _service_instance: Optional[AutonomyPolicyService] = None
@@ -151,11 +127,6 @@ def read_policy(
 @router.put("", response_model=AutonomyPolicy)
 def write_policy(
     payload: AutonomyPolicy,
-    request: Request,
-    service: AutonomyPolicyService = Depends(get_policy_service),
-) -> AutonomyPolicy:
-    try:
-        return service.update_policy(payload, approval_context=_approval_context_from_request(request))
     approval_chain: str = Header(default="[]", alias="X-Approval-Chain"),
     service: AutonomyPolicyService = Depends(get_policy_service),
 ) -> AutonomyPolicy:
