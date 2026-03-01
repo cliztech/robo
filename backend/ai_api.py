@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import uuid
-from typing import TypeAlias
-
 from fastapi import APIRouter, Depends, Header, HTTPException, Response, status
 
 from backend.ai.contracts.track_analysis import TrackAnalysisRequest
@@ -12,7 +10,6 @@ from backend.ai_service import (
     AICircuitOpenError,
     AIServiceError,
     HostScriptRequest,
-    LegacyAITrackAnalysisRequest,
 )
 from backend.security.auth import verify_api_key
 from backend.track_analysis_api import (
@@ -23,24 +20,16 @@ from backend.track_analysis_api import (
 router = APIRouter(prefix="/api/v1/ai", tags=["ai"])
 _service = AIInferenceService()
 
-TrackAnalysisInput: TypeAlias = TrackAnalysisRequest | LegacyAITrackAnalysisRequest
 
 
 def _resolve_correlation_id(x_correlation_id: str | None) -> str:
     return x_correlation_id or str(uuid.uuid4())
 
 
-def _to_canonical_track_analysis_request(request: TrackAnalysisInput, correlation_id: str) -> TrackAnalysisRequest:
-    if isinstance(request, LegacyAITrackAnalysisRequest):
-        return request.to_canonical(correlation_id)
-    return request
-
-
-def _run_track_analysis(request: TrackAnalysisInput, correlation_id: str) -> AIResponseEnvelope:
-    canonical_request = _to_canonical_track_analysis_request(request, correlation_id)
+def _run_track_analysis(request: TrackAnalysisRequest, correlation_id: str) -> AIResponseEnvelope:
     try:
         result, latency_ms, cost_usd, cache_hit, status_value, prompt_profile_version = _service.analyze_track(
-            canonical_request,
+            request,
             correlation_id,
         )
     except AICircuitOpenError as exc:
@@ -63,7 +52,7 @@ def _run_track_analysis(request: TrackAnalysisInput, correlation_id: str) -> AIR
 
 @router.post("/track-analysis", response_model=AIResponseEnvelope)
 def analyze_track(
-    request: TrackAnalysisInput,
+    request: TrackAnalysisRequest,
     response: Response,
     _: str = Depends(verify_api_key),
     x_correlation_id: str | None = Header(default=None, alias="X-Correlation-ID"),
@@ -75,7 +64,7 @@ def analyze_track(
 
 @router.post("/analyze-track", response_model=AIResponseEnvelope, deprecated=True)
 def analyze_track_compat(
-    request: TrackAnalysisInput,
+    request: TrackAnalysisRequest,
     response: Response,
     _: str = Depends(verify_api_key),
     x_correlation_id: str | None = Header(default=None, alias="X-Correlation-ID"),
