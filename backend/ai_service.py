@@ -62,31 +62,6 @@ class _GuardrailPrompts:
 
 
 
-class LegacyAITrackAnalysisRequest(BaseModel):
-    """Temporary compatibility input for /api/v1/ai/track-analysis.
-
-    TODO(phase-5-story-P5-05): Remove this adapter after all clients send
-    canonical TrackAnalysisRequest payloads with track_id + metadata fields.
-    """
-
-    title: str = Field(min_length=1, max_length=160)
-    artist: str = Field(min_length=1, max_length=160)
-    genre: str = Field(min_length=1, max_length=80)
-    bpm: int = Field(ge=50, le=220)
-    duration_seconds: int = Field(ge=30, le=1800)
-    notes: str = Field(default="", max_length=800)
-
-    def to_canonical(self, correlation_id: str) -> TrackAnalysisRequest:
-        return TrackAnalysisRequest(
-            track_id=f"legacy-{correlation_id}",
-            metadata={
-                "title": self.title.strip(),
-                "artist": self.artist.strip(),
-                "duration_seconds": self.duration_seconds,
-                "genre_hint": self.genre.strip(),
-            },
-            audio_features={"bpm": self.bpm},
-        )
 PROMPTS = _GuardrailPrompts(
     track_analysis=(
         "You are a broadcast-safe track analysis model. Return compact JSON with fields: "
@@ -159,11 +134,12 @@ class AIInferenceService:
     def _resolve_prompt_profile(self) -> tuple[str, str]:
         payload = self._load_prompt_variables()
         if payload is None:
-        config_path = Path(__file__).parent.parent / "config" / "prompt_variables.json"
-        try:
-            payload = load_config_json(config_path)
-        except (OSError, json.JSONDecodeError, ConfigCryptoError):
-            return "default", "{}"
+            config_path = Path(__file__).parent.parent / "config" / "prompt_variables.json"
+            try:
+                payload = load_config_json(config_path)
+            except (OSError, json.JSONDecodeError, ConfigCryptoError):
+                return "default", "{}"
+
 
         version = str(payload.get("version", "default")).strip() or "default"
         variable_settings = payload.get("variable_settings", {})
