@@ -1,4 +1,5 @@
 import argparse
+import concurrent.futures
 import json
 import logging
 import sys
@@ -73,49 +74,6 @@ class BaseAdapter:
             "error_message": str(exc),
         }
         self.logger.warning("base_adapter_fetch_failure %s", json.dumps(diagnostic, sort_keys=True))
-        request_obj = Request(endpoint, headers=headers)
-        try:
-            request = urlopen(request_obj, timeout=timeout)
-            data = request.read().decode("utf-8")
-            if not data:
-                return []
-            payload = json.loads(data)
-        except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
-            self._emit_fetch_diagnostic(endpoint=endpoint, error=exc)
-            return []
-
-        if isinstance(payload, list):
-            return [item for item in payload if isinstance(item, dict)]
-
-        if isinstance(payload, dict):
-            items = payload.get("items", [])
-            if isinstance(items, list):
-                return [item for item in items if isinstance(item, dict)]
-            self._emit_fetch_diagnostic(
-                endpoint=endpoint,
-                error=TypeError(f"payload.items must be list, got {type(items).__name__}"),
-            )
-            return []
-
-        self._emit_fetch_diagnostic(
-            endpoint=endpoint,
-            error=TypeError(f"payload must be list or dict, got {type(payload).__name__}"),
-        )
-        return []
-
-    def _emit_fetch_diagnostic(self, endpoint: str, error: Exception) -> None:
-        print(
-            json.dumps(
-                {
-                    "event": "adapter_fetch_failed",
-                    "source": self.source_name,
-                    "endpoint": endpoint,
-                    "error_class": type(error).__name__,
-                    "error_message": str(error),
-                },
-                ensure_ascii=False,
-            )
-        )
 
     def normalize(self, records: Iterable[Dict[str, Any]]) -> List[ExternalEvent]:
         raise NotImplementedError
@@ -157,7 +115,6 @@ class WeatherAdapter(BaseAdapter):
                             item.get("safety_score", safety),
                             safety,
                             source=item.get("source") or self.source_name,
-                            source=self.source_name,
                             field="safety_score",
                         )
                     ),
@@ -192,7 +149,6 @@ class NewsAdapter(BaseAdapter):
                             item.get("relevance", 0.6),
                             0.6,
                             source=item.get("source") or self.source_name,
-                            source=self.source_name,
                             field="relevance",
                         )
                     ),
@@ -201,7 +157,6 @@ class NewsAdapter(BaseAdapter):
                             item.get("safety_score", 0.97),
                             0.97,
                             source=item.get("source") or self.source_name,
-                            source=self.source_name,
                             field="safety_score",
                         )
                     ),
@@ -236,7 +191,6 @@ class TrendAdapter(BaseAdapter):
                             item.get("relevance", 0.5),
                             0.5,
                             source=item.get("source") or self.source_name,
-                            source=self.source_name,
                             field="relevance",
                         )
                     ),
@@ -245,7 +199,6 @@ class TrendAdapter(BaseAdapter):
                             item.get("safety_score", 0.9),
                             0.9,
                             source=item.get("source") or self.source_name,
-                            source=self.source_name,
                             field="safety_score",
                         )
                     ),
@@ -268,24 +221,6 @@ def parse_float(value: Any, default: float, *, source: str = "unknown", field: s
 
 def clamp(value: float) -> float:
     return max(0.0, min(1.0, value))
-
-
-def parse_float(
-    value: Any,
-    default: float,
-    *,
-    source: Optional[str] = None,
-    field: Optional[str] = None,
-) -> float:
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        if source and field:
-            print(
-                f"[editorial_event_pipeline] invalid numeric value for {source}.{field}: {value!r}; using default={default}",
-                file=sys.stderr,
-            )
-        return default
 
 
 def to_iso8601(value: Optional[str]) -> str:
@@ -407,11 +342,25 @@ def run_pipeline(config: Dict[str, Any], sample_events_path: Optional[str]) -> L
         external_data = load_events_from_file(sample_events_path)
     else:
         external_data = {}
+        enabled_adapters = {}
         for name, adapter in adapters.items():
             if not sources.get(name, {}).get("enabled", False):
                 external_data[name] = []
                 continue
-            external_data[name] = adapter.fetch()
+            enabled_adapters[name] = adapter
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future_to_name = {
+                executor.submit(adapter.fetch): name
+                for name, adapter in enabled_adapters.items()
+            }
+            for future in concurrent.futures.as_completed(future_to_name):
+                name = future_to_name[future]
+                try:
+                    external_data[name] = future.result()
+                except Exception as exc:
+                    logger.warning("Adapter fetch failed for %s: %s", name, exc)
+                    external_data[name] = []
 
     normalized: List[ExternalEvent] = []
     for name, records in external_data.items():
