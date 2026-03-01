@@ -1,0 +1,223 @@
+/**
+ * VintageMixer.css — Studio Iron / Vintage Skin
+ */
+
+.vintage-mixer {
+  width: 340px;
+  background: #141414;
+  border: 2px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 16px;
+  color: #ccc;
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+  user-select: none;
+}
+
+.mixer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mixer-label {
+  font-weight: 800;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #aaa;
+}
+
+.master-indicator {
+  padding: 3px 10px;
+  background: #ff3d00;
+  color: #000;
+  font-weight: 900;
+  font-size: 11px;
+  border-radius: 3px;
+}
+
+/* VU Meters */
+.vu-meters {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  height: 80px;
+}
+
+.vu-meter {
+  width: 14px;
+  background: #0a0a0a;
+  border-radius: 3px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #222;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.vu-fill {
+  width: 100%;
+  transition: height 0.15s ease;
+  border-radius: 2px 2px 0 0;
+}
+
+.vu-fill.left {
+  background: linear-gradient(to top, #00e676, #ffeb3b 70%, #ff1744 95%);
+}
+
+.vu-fill.right {
+  background: linear-gradient(to top, #00e676, #ffeb3b 70%, #ff1744 95%);
+}
+
+.vu-tag {
+  position: absolute;
+  bottom: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  color: #555;
+}
+
+/* Channel Strips */
+.channel-strip-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.channel-strip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 60px;
+}
+
+.eq-knobs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.knob {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #333;
+  background: radial-gradient(circle at 40% 35%, #3a3a3a, #1a1a1a);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.05);
+  cursor: pointer;
+}
+
+.knob.hi { border-color: #00e5ff33; }
+.knob.mid { border-color: #ffeb3b33; }
+.knob.lo { border-color: #ff3d0033; }
+
+.fader-track {
+  height: 100px;
+  display: flex;
+  justify-content: center;
+}
+
+.channel-fader {
+  writing-mode: vertical-lr;
+  direction: rtl;
+  appearance: slider-vertical;
+  width: 6px;
+  height: 100px;
+  accent-color: #00e5ff;
+  cursor: pointer;
+}
+
+.channel-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #555;
+  text-transform: uppercase;
+}
+
+/* Crossfader */
+.crossfader-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #0d0d0d;
+  border-radius: 4px;
+  border: 1px solid #1e1e1e;
+}
+
+.cf-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #444;
+}
+
+.crossfader {
+  flex-grow: 1;
+  height: 6px;
+  accent-color: #ff3d00;
+  cursor: pointer;
+}
+
+/* Master Knob */
+.master-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+}
+
+.master-knob-container {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.master-knob {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #444, #1a1a1a);
+  border: 3px solid #333;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.5), inset 0 1px 3px rgba(255,255,255,0.06);
+  position: relative;
+  transition: transform 0.1s ease;
+}
+
+.knob-notch {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  width: 3px;
+  height: 10px;
+  background: #ff3d00;
+  transform: translateX(-50%);
+  border-radius: 1px;
+  box-shadow: 0 0 6px rgba(255, 61, 0, 0.6);
+}
+
+.master-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: #555;
+  letter-spacing: 2px;
+}
+
+/* Border Accent */
+.vintage-border-accent {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, #ff3d00, transparent);
+  opacity: 0.4;
+}

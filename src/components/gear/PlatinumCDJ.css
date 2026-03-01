@@ -1,0 +1,240 @@
+/**
+ * PlatinumCDJ.css
+ * Studio Iron Design System - Team SGE
+ */
+
+ :root {
+  --iron-bg: #0d0d0d;
+  --iron-surface: #1a1a1a;
+  --iron-platinum: #b0b0b0;
+  --iron-blue: #00e5ff;
+  --iron-red: #ff3d00;
+  --iron-border: #2e2e2e;
+  --iron-glow: rgba(0, 229, 255, 0.4);
+}
+
+.platinum-cdj {
+  width: 320px;
+  height: 480px;
+  background-color: var(--iron-surface);
+  border: 2px solid var(--iron-border);
+  border-radius: 8px;
+  color: #fff;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  position: relative;
+  font-family: 'Inter', sans-serif;
+  user-select: none;
+  overflow: hidden;
+}
+
+.iron-surface::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: 
+    linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,0.02) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.cdj-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.deck-indicator {
+  padding: 4px 12px;
+  background: var(--iron-blue);
+  color: #000;
+  font-weight: 900;
+  font-size: 14px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.bpm-value {
+  font-size: 24px;
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+.bpm-unit {
+  font-size: 10px;
+  opacity: 0.6;
+}
+
+/* Main Display */
+.cdj-main-display {
+  background-color: #000;
+  border-radius: 4px;
+  padding: 12px;
+  margin-bottom: 20px;
+  border: 1px solid var(--iron-border);
+  flex-grow: 0;
+}
+
+.time-display {
+  text-align: right;
+  font-family: inherit;
+  font-weight: 900;
+  font-size: 32px;
+  color: var(--iron-blue);
+  letter-spacing: 2px;
+}
+
+.waveform-container {
+  height: 60px;
+  margin-top: 10px;
+  background: #050505;
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.waveform-visual {
+  width: 1000px;
+  height: 40px;
+  margin-top: 10px;
+  background: 
+    linear-gradient(90deg, 
+      transparent 0%, 
+      var(--iron-blue) 20%, 
+      transparent 40%, 
+      var(--iron-blue) 60%, 
+      transparent 80%, 
+      var(--iron-blue) 100%
+    );
+  opacity: 0.3;
+}
+
+.waveform-visual.scrolling {
+  animation: scroll-waveform 4s linear infinite;
+}
+
+@keyframes scroll-waveform {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-200px); }
+}
+
+/* Jog Wheel */
+.jog-wheel-container {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+  perspective: 1000px;
+}
+
+.jog-wheel {
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #2a2a2a 0%, #151515 100%);
+  border: 6px solid #222;
+  box-shadow: 
+    inset 0 0 20px rgba(0,0,0,0.8),
+    0 5px 15px rgba(0,0,0,0.4);
+  position: relative;
+  transition: transform 0.05s linear;
+}
+
+.jog-inner-texture {
+  position: absolute;
+  top: 10%; left: 10%; right: 10%; bottom: 10%;
+  border-radius: 50%;
+  background-image: repeating-radial-gradient(circle, #222, #222 1px, transparent 1px, transparent 3px);
+  opacity: 0.1;
+}
+
+.jog-indicator {
+  position: absolute;
+  top: 5px; left: 50%;
+  width: 4px; height: 20px;
+  background-color: var(--iron-blue);
+  box-shadow: 0 0 10px var(--iron-blue);
+  transform: translateX(-50%);
+}
+
+/* Controls */
+.cdj-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cdj-btn {
+  padding: 12px 20px;
+  border-radius: 4px;
+  border: 1px solid var(--iron-border);
+  background: #1e1e1e;
+  color: #888;
+  font-weight: 700;
+  flex-grow: 1;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: inset 0 1px 2px rgba(255,255,255,0.05);
+}
+
+.cdj-btn:hover {
+  background: #252525;
+}
+
+.cdj-btn.active {
+  color: #fff;
+  border-color: var(--iron-blue);
+  box-shadow: 0 0 15px var(--iron-glow);
+}
+
+.play-btn.active {
+  background: rgba(0, 229, 255, 0.1);
+  color: var(--iron-blue);
+}
+
+.pitch-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-left: 10px;
+}
+
+.pitch-slider-track {
+  width: 6px;
+  height: 80px;
+  background: #000;
+  border-radius: 3px;
+  position: relative;
+}
+
+.pitch-handle {
+  width: 20px;
+  height: 10px;
+  background: #444;
+  border: 1px solid #666;
+  border-radius: 2px;
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.pitch-value {
+  font-size: 10px;
+  font-family: inherit;
+  color: #888;
+}
+
+/* Border Accent */
+.iron-border-accent {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, var(--iron-blue), transparent);
+  opacity: 0.5;
+}
