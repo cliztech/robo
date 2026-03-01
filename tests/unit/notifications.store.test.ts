@@ -24,9 +24,7 @@ describe('Notifications Store - toggleNotificationSeverity', () => {
 
     const newState = toggleNotificationSeverity(initialState, 'warning');
 
-    expect(newState.selectedSeverities).not.toContain('warning');
-    expect(newState.selectedSeverities).toContain('info');
-    expect(newState.selectedSeverities).toHaveLength(1);
+    expect(newState.selectedSeverities).toEqual(['info']);
   });
 
   it('maintains state immutability', () => {
