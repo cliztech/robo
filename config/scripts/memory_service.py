@@ -30,11 +30,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from backend.security.approval_policy import (
-    ActionId,
-    parse_approval_chain,
-    require_approval,
-)  # noqa: E402
+from backend.security.approval_policy import ActionId, parse_approval_chain, require_approval  # noqa: E402
 
 DEFAULT_DB_PATH = Path(__file__).resolve().parents[1] / "memory_service.db"
 TOKEN_RE = re.compile(r"[a-z0-9']+")
