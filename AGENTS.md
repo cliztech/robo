@@ -88,6 +88,14 @@ Use command-style prompts that map to entries in `_bmad/_config/bmad-help.csv`, 
 | **Git status** | `git status --short` | Quick changed-file overview |
 | **Diff check** | `git diff --name-only` | List modified files before commit |
 
+## Build Commands
+
+| Action | Command | Notes |
+| ------ | ------- | ----- |
+| **Build Tauri exe** | `cd dgn-dj-next && npm run tauri:build` | Requires Rust installed |
+| **Build Python exe** | `python -m PyInstaller --onefile --name "DGN-DJ_Automation" --add-data "config;config" backend/app.py` | Legacy PyInstaller build |
+| **Install Rust** | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh -s -- -y` | Required for Tauri |
+
 ## Project Structure & Module Organization
 
 Canonical product identity is defined in `docs/productization/product_identity.md` (`DGN-DJ by DGNradio`). Legacy `RoboDJ` filenames below are compatibility artifacts and not approved product naming for new docs.
