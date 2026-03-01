@@ -3,6 +3,8 @@ import "./StudioStage.css";
 import { PlatinumCDJ } from "./PlatinumCDJ";
 import { VintageMixer } from "./VintageMixer";
 import { CyberTurntable } from "./CyberTurntable";
+import { FXRack } from "./FXRack";
+import { SamplerPad } from "./SamplerPad";
 import type { GearType } from "./gear.types";
 
 /**
@@ -23,6 +25,8 @@ const GEAR_PALETTE: { type: GearType; label: string; icon: string }[] = [
   { type: "DECK", label: "Platinum CDJ", icon: "💿" },
   { type: "MIXER", label: "Vintage Mixer", icon: "🎚️" },
   { type: "TURNTABLE", label: "Cyber Turntable", icon: "🎵" },
+  { type: "FX", label: "FX Rack", icon: "✨" },
+  { type: "SAMPLER", label: "Sampler Pad", icon: "🥁" },
 ];
 
 let nextId = 1;
@@ -45,7 +49,11 @@ export const StudioStage: React.FC = () => {
           ? `Deck ${String.fromCharCode(65 + placedGear.filter((g) => g.type === "DECK").length)}`
           : dragType === "MIXER"
             ? "Master Mixer"
-            : `Turntable ${placedGear.filter((g) => g.type === "TURNTABLE").length + 1}`;
+            : dragType === "FX"
+              ? "FX Unit"
+              : dragType === "SAMPLER"
+                ? "Sampler"
+                : `Turntable ${placedGear.filter((g) => g.type === "TURNTABLE").length + 1}`;
 
       setPlacedGear((prev) => [
         ...prev,
@@ -74,6 +82,10 @@ export const StudioStage: React.FC = () => {
         return <VintageMixer id={gear.instanceId} label={gear.label} />;
       case "TURNTABLE":
         return <CyberTurntable id={gear.instanceId} label={gear.label} />;
+      case "FX":
+        return <FXRack id={gear.instanceId} label={gear.label} />;
+      case "SAMPLER":
+        return <SamplerPad id={gear.instanceId} label={gear.label} />;
       default:
         return <div className="unknown-gear">Unknown Gear</div>;
     }

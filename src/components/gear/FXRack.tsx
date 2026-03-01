@@ -46,7 +46,7 @@ export const FXRack: React.FC<Partial<GearUnitProps>> = ({
           className={`beat-sync-btn ${beatSync ? "active" : ""}`}
           onClick={() => setBeatSync(!beatSync)}
           aria-label="Beat sync toggle"
-          aria-pressed={beatSync}
+          aria-pressed={beatSync ? "true" : "false"}
         >
           SYNC
         </button>
@@ -63,7 +63,7 @@ export const FXRack: React.FC<Partial<GearUnitProps>> = ({
               className="fx-toggle"
               onClick={() => toggleFX(i)}
               aria-label={`Toggle ${fx.name}`}
-              aria-pressed={fx.active}
+              aria-pressed={fx.active ? "true" : "false"}
             >
               {fx.name}
             </button>
