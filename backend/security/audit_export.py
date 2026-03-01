@@ -17,7 +17,7 @@ REQUIRED_AUDIT_FIELDS = (
     "after_sha256",
     "approvals",
 )
-from typing import Iterable, Mapping, Sequence
+from typing import Mapping, Sequence
 from uuid import uuid4
 import string
 

@@ -11,7 +11,7 @@ from zoneinfo import ZoneInfo
 from backend.security.approval_policy import ApprovalContext, ApprovalRecord, enforce_action_approval
 from backend.security.audit_export import append_audit_record
 from backend.security.config_crypto import EnvelopeKey, config_hash, serialize_json, transform_sensitive_values
-from backend.security.approval_policy import ActionId, ApprovalRecord, require_approval
+from backend.security.approval_policy import ActionId, require_approval
 from backend.security.config_crypto import dump_config_json, load_config_json
 
 from .observability import emit_scheduler_event
@@ -140,11 +140,6 @@ class SchedulerUiService:
             after_hash=after_hash,
             context=context,
         )
-        *,
-        approval_chain: list[ApprovalRecord] | None = None,
-    ) -> dict[str, object]:
-        require_approval(ActionId.ACT_PUBLISH, approval_chain or [])
-        ui_state = self.update_schedules(schedules, approval_chain=approval_chain)
         return {
             "status": "published",
             "published_at": datetime.now(tz=ZoneInfo("UTC")).isoformat(),

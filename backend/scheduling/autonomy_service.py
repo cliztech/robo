@@ -9,13 +9,13 @@ from pathlib import Path
 from typing import List, Optional
 from uuid import uuid4
 
-from backend.security.approval_policy import ApprovalContext, ApprovalRecord, enforce_action_approval
+from backend.security.approval_policy import ApprovalRecord
 from backend.security.audit_export import append_audit_record
 from backend.security.config_crypto import config_hash
 
 from pydantic import ValidationError
 
-from backend.security.approval_policy import ActionId, ApprovalRecord, require_approval
+from backend.security.approval_policy import ActionId, require_approval
 from backend.security.audit_export import AuditExportResult, deterministic_sha256, export_audit_events_ndjson
 
 from .autonomy_policy import (

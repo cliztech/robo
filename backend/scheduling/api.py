@@ -156,11 +156,6 @@ def write_policy(
 ) -> AutonomyPolicy:
     try:
         return service.update_policy(payload, approval_context=_approval_context_from_request(request))
-    approval_chain: str = Header(default="[]", alias="X-Approval-Chain"),
-    service: AutonomyPolicyService = Depends(get_policy_service),
-) -> AutonomyPolicy:
-    try:
-        return service.update_policy(payload, approval_chain=parse_approval_chain(approval_chain))
     except PolicyValidationError as error:
         raise HTTPException(
             status_code=422,
@@ -172,7 +167,6 @@ def write_policy(
             },
         ) from error
     except ApprovalPolicyError as error:
-        raise HTTPException(status_code=403, detail=str(error)) from error
         raise HTTPException(status_code=403, detail={"message": str(error)}) from error
 
 

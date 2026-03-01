@@ -95,17 +95,6 @@ def parse_float(
             logger.debug(
                 "Invalid numeric value encountered; using default",
                 extra={"source": source, "field": field, "value": value},
-    def _emit_fetch_diagnostic(self, endpoint: str, error: Exception) -> None:
-        print(
-            json.dumps(
-                {
-                    "event": "adapter_fetch_failed",
-                    "source": self.source_name,
-                    "endpoint": endpoint,
-                    "error_class": type(error).__name__,
-                    "error_message": str(error),
-                },
-                ensure_ascii=False,
             )
         return default
 
