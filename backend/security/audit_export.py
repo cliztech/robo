@@ -6,6 +6,9 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from typing import Mapping, Sequence
+from uuid import uuid4
+import string
 
 REQUIRED_AUDIT_FIELDS = (
     "event_id",
@@ -17,9 +20,7 @@ REQUIRED_AUDIT_FIELDS = (
     "after_sha256",
     "approvals",
 )
-from typing import Iterable, Mapping, Sequence
-from uuid import uuid4
-import string
+
 
 
 def deterministic_sha256(payload: Mapping[str, object]) -> str:
@@ -124,12 +125,6 @@ def export_audit_batch(
         digest_sha256=digest,
         record_count=len(valid_lines),
     )
-    export_dir: Path
-    ndjson_path: Path
-    sha256_path: Path
-    manifest_path: Path
-    line_count: int
-    digest_sha256: str
 
 
 def export_audit_events_ndjson(
