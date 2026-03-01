@@ -1,5 +1,3 @@
-import re
-
 path = 'src/components/audio/DegenMixer.tsx'
 with open(path, 'r') as f:
     lines = f.readlines()
