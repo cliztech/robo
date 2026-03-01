@@ -12,7 +12,6 @@ from __future__ import annotations
 import argparse
 import json
 import sqlite3
-import sys
 from pathlib import Path
 from typing import Any
 
