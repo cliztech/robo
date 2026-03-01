@@ -1,4 +1,3 @@
-import re
 
 file_path = 'backend/tests/test_autonomy_policy_service.py'
 
