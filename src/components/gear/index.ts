@@ -5,12 +5,7 @@
 
 // Types
 export type {
-    GearType,
-    GearSkin,
-    GearSyncState,
-    GearUnitProps,
-    StageSlot,
-    StudioLayout,
+    GearType, GearSkin, GearSyncState, GearUnitProps, StageSlot, StudioLayout,
 } from './gear.types';
 export { DEFAULT_SYNC } from './gear.types';
 
@@ -21,6 +16,7 @@ export { CyberTurntable } from './CyberTurntable';
 export { FXRack } from './FXRack';
 export { SamplerPad } from './SamplerPad';
 export { VUMeter } from './VUMeter';
+export { WaveformDisplay } from './WaveformDisplay';
 
 // Layout Engine
 export { StudioStage } from './StudioStage';
@@ -34,12 +30,12 @@ export { GearBottomPanel } from './GearBottomPanel';
 export { GearSettings, DEFAULT_SETTINGS } from './GearSettings';
 export type { StudioSettings } from './GearSettings';
 
-// Hooks
-export { useGearAudio } from './hooks/useGearAudio';
-export { useLayoutPersistence } from './hooks/useLayoutPersistence';
-export type { PersistedGear, PersistedLayout } from './hooks/useLayoutPersistence';
-export { useAudioEngineBridge } from './hooks/useAudioEngineBridge';
-export type { EngineStatus } from './hooks/useAudioEngineBridge';
-export { useDragReorder } from './hooks/useDragReorder';
-export type { DragPosition } from './hooks/useDragReorder';
-export { useUndoRedo } from './hooks/useUndoRedo';
+// Hooks — re-export all
+export {
+    useGearAudio, useLayoutPersistence, useAudioEngineBridge,
+    useDragReorder, useUndoRedo, useKeyboardNav, useTouchDrag,
+} from './hooks';
+export type {
+    PersistedGear, PersistedLayout, EngineStatus, DragPosition,
+    KeyboardNavOptions, TouchDragOptions,
+} from './hooks';

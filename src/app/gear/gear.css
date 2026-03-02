@@ -383,3 +383,67 @@
   cursor: not-allowed;
   pointer-events: none;
 }
+
+/* Keyboard Focus Ring */
+.canvas-gear-card.kb-focused {
+  outline: 2px solid #00e5ff;
+  outline-offset: 4px;
+  box-shadow: 0 0 12px #00e5ff44;
+}
+
+.canvas-gear-card:focus-visible {
+  outline: 2px solid #00e5ff;
+  outline-offset: 4px;
+}
+
+/* Import Button */
+.topbar-btn.import:hover {
+  border-color: #b388ff44;
+  color: #b388ff;
+}
+
+/* Focus Indicator */
+.focus-indicator {
+  font-size: 10px;
+  color: #00e5ff;
+  padding: 4px 8px;
+  background: #00e5ff11;
+  border-radius: 4px;
+  margin-top: 4px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Screen-reader only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Touch overrides */
+@media (hover: none) and (pointer: coarse) {
+  .drag-handle {
+    opacity: 0.6;
+    font-size: 16px;
+  }
+
+  .canvas-remove-btn {
+    opacity: 0.8;
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+  }
+
+  .gear-add-btn {
+    padding: 14px 12px;
+  }
+}
