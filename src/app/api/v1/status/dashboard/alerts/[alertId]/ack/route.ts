@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { proxyDashboardRequest } from '../../../../_shared/proxy';
+import { proxyDashboardRequest } from '../../../_shared/proxy';
 
 interface AlertAckParams {
   params: Promise<{ alertId: string }>;

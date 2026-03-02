@@ -12,6 +12,8 @@ import { VintageMixer } from "@/components/gear/VintageMixer";
 import { CyberTurntable } from "@/components/gear/CyberTurntable";
 import { FXRack } from "@/components/gear/FXRack";
 import { SamplerPad } from "@/components/gear/SamplerPad";
+import { WaveformHeader } from "@/components/gear/WaveformHeader";
+import { TrackLibrary } from "@/components/gear/TrackLibrary";
 import { PresetLibrary } from "@/components/gear/PresetLibrary";
 import { AudioRoutingViz, autoRoute } from "@/components/gear/AudioRoutingViz";
 import { GearBottomPanel } from "@/components/gear/GearBottomPanel";
@@ -91,6 +93,9 @@ export default function GearPage() {
   const [bottomTab, setBottomTab] = useState("presets");
   const [studioSettings, setStudioSettings] =
     useState<StudioSettings>(DEFAULT_SETTINGS);
+  const [layoutMode, setLayoutMode] = useState<"builder" | "performance">(
+    "builder",
+  );
   const importRef = useRef<HTMLInputElement>(null);
 
   // Drag reorder (mouse)
@@ -357,6 +362,17 @@ export default function GearPage() {
           <h1 className="brand-title">
             DGN-DJ <span className="brand-accent">Studio Gear</span>
           </h1>
+          <button
+            className={`layout-mode-toggle ${layoutMode === "performance" ? "perf-active" : ""}`}
+            onClick={() =>
+              setLayoutMode((m) =>
+                m === "builder" ? "performance" : "builder",
+              )
+            }
+            aria-pressed={layoutMode === "performance"}
+          >
+            {layoutMode === "builder" ? "⚡ Performance" : "🔧 Builder"}
+          </button>
         </div>
         <div className="topbar-controls">
           <input
@@ -409,7 +425,24 @@ export default function GearPage() {
         </div>
       </header>
 
-      <div className="gear-workspace">
+      {/* ─── Performance Mode ─── */}
+      {layoutMode === "performance" && (
+        <div className="perf-layout">
+          <WaveformHeader />
+          <div className="perf-decks">
+            <PlatinumCDJ deckId="perf-a" label="DECK A" />
+            <VintageMixer id="perf-mixer" label="CLUB MIXER" />
+            <FXRack id="perf-fx" label="SEND FX" />
+            <PlatinumCDJ deckId="perf-b" label="DECK B" />
+          </div>
+          <TrackLibrary />
+        </div>
+      )}
+
+      {/* ─── Builder Mode ─── */}
+      <div
+        className={`gear-workspace ${layoutMode === "performance" ? "hidden" : ""}`}
+      >
         {/* Sidebar */}
         <aside className="gear-sidebar">
           <div className="sidebar-section">

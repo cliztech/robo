@@ -17,6 +17,10 @@ export { FXRack } from './FXRack';
 export { SamplerPad } from './SamplerPad';
 export { VUMeter } from './VUMeter';
 export { WaveformDisplay } from './WaveformDisplay';
+export { WaveformHeader } from './WaveformHeader';
+export type { DeckTrackInfo } from './WaveformHeader';
+export { TrackLibrary } from './TrackLibrary';
+export type { TrackItem } from './TrackLibrary';
 
 // Layout Engine
 export { StudioStage } from './StudioStage';
