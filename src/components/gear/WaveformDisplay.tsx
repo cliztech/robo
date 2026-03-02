@@ -2,41 +2,52 @@ import React, { useRef, useEffect, useCallback } from "react";
 import "./WaveformDisplay.css";
 
 /**
- * WaveformDisplay — Canvas-rendered scrolling waveform visualization.
+ * WaveformDisplay — Canvas-rendered scrolling waveform with RGB frequency bands.
  *
- * Renders a procedurally generated waveform that scrolls when playing.
- * Uses HTML5 Canvas for smooth 60fps rendering.
+ * Renders a multi-color waveform (blue=lows, green=mids, cyan=highs) with
+ * scrolling playhead, beat grid markers, and mirror reflection.
  */
 
 export interface WaveformDisplayProps {
-  /** Is the waveform currently scrolling */
   isPlaying: boolean;
-  /** Base color for waveform bars */
   color?: string;
-  /** Playhead color */
   playheadColor?: string;
-  /** Height of the waveform canvas */
   height?: number;
-  /** BPM (influences waveform density) */
   bpm?: number;
 }
 
-// Generate a static waveform shape (simulated audio data)
-function generateWaveformData(length: number, seed: number = 42): number[] {
-  const data: number[] = [];
+interface WaveformBand {
+  low: number;
+  mid: number;
+  high: number;
+}
+
+// Generate multi-band waveform data (simulated frequency separation)
+function generateWaveformData(
+  length: number,
+  seed: number = 42,
+): WaveformBand[] {
+  const data: WaveformBand[] = [];
   let x = seed;
   for (let i = 0; i < length; i++) {
-    // Pseudo-random deterministic waveform
     x = (x * 1103515245 + 12345) & 0x7fffffff;
-    const base = 0.3 + ((x % 100) / 100) * 0.5;
-    const beat = Math.sin((i / length) * Math.PI * 16) * 0.15;
-    const phrase = Math.sin((i / length) * Math.PI * 2) * 0.1;
-    data.push(Math.max(0.05, Math.min(1, base + beat + phrase)));
+    const r = (x % 1000) / 1000;
+
+    // Simulate bass hits on beat positions
+    const beatPhase = (i % 16) / 16;
+    const isBeat = beatPhase < 0.15;
+    const isSnare = Math.abs(beatPhase - 0.5) < 0.08;
+
+    const low = isBeat ? 0.6 + r * 0.4 : 0.15 + r * 0.25;
+    const mid = isSnare ? 0.5 + r * 0.4 : 0.2 + r * 0.3;
+    const high = 0.1 + r * 0.35 + (isSnare ? 0.2 : 0);
+
+    data.push({ low, mid, high });
   }
   return data;
 }
 
-const WAVEFORM_BARS = 200;
+const WAVEFORM_BARS = 300;
 
 export const WaveformDisplay: React.FC<WaveformDisplayProps> = ({
   isPlaying,
@@ -48,7 +59,9 @@ export const WaveformDisplay: React.FC<WaveformDisplayProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const offsetRef = useRef(0);
   const rafRef = useRef(0);
-  const waveformRef = useRef<number[]>(generateWaveformData(WAVEFORM_BARS));
+  const waveformRef = useRef<WaveformBand[]>(
+    generateWaveformData(WAVEFORM_BARS),
+  );
 
   const draw = useCallback(
     (canvas: HTMLCanvasElement) => {
@@ -59,60 +72,131 @@ export const WaveformDisplay: React.FC<WaveformDisplayProps> = ({
       const h = canvas.height;
       const data = waveformRef.current;
       const barCount = data.length;
-      const barWidth = w / barCount;
+      const barWidth = Math.max(1.5, w / barCount);
       const offset = offsetRef.current;
-      const playheadX = w * 0.35; // Playhead at 35% from left
+      const playheadX = w * 0.35;
+      const centerY = h * 0.5;
 
       ctx.clearRect(0, 0, w, h);
 
-      // Draw bars
+      // Draw beat grid lines
       for (let i = 0; i < barCount; i++) {
         const idx = (i + Math.floor(offset)) % barCount;
-        const amplitude = data[idx];
-        const barH = amplitude * h * 0.85;
-        const x = i * barWidth;
-        const y = (h - barH) / 2;
-
-        // Color: past bars dimmer, future bars brighter
-        const isPast = x < playheadX;
-        const alpha = isPast ? 0.35 : 0.85;
-
-        ctx.fillStyle = isPast
-          ? `${color}${Math.round(alpha * 255)
-              .toString(16)
-              .padStart(2, "0")}`
-          : color;
-        ctx.fillRect(x, y, Math.max(1, barWidth - 1), barH);
+        if (idx % 16 === 0) {
+          const x = i * barWidth;
+          ctx.strokeStyle = "rgba(255,255,255,0.08)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, h);
+          ctx.stroke();
+        }
       }
 
-      // Playhead line
-      ctx.strokeStyle = playheadColor;
-      ctx.lineWidth = 2;
+      // Draw waveform bars (mirrored around center)
+      for (let i = 0; i < barCount; i++) {
+        const idx = (i + Math.floor(offset)) % barCount;
+        const band = data[idx];
+        const x = i * barWidth;
+        const isPast = x < playheadX;
+        const opacity = isPast ? 0.3 : 1.0;
+
+        // Stack: low (blue) + mid (green) + high (cyan)
+        const totalH = (band.low + band.mid + band.high) * centerY * 0.85;
+        const lowH = band.low * centerY * 0.85;
+        const midH = band.mid * centerY * 0.85;
+        const highH = band.high * centerY * 0.85;
+
+        // Upper half (mirrored)
+        let yPos = centerY;
+
+        // Low frequencies (deep blue/purple)
+        ctx.globalAlpha = opacity;
+        ctx.fillStyle = "#4466ff";
+        ctx.fillRect(x, yPos - lowH, barWidth - 0.5, lowH);
+        ctx.fillRect(x, yPos, barWidth - 0.5, lowH * 0.7); // mirror
+
+        // Mid frequencies (green/teal)
+        ctx.fillStyle = "#00cc88";
+        ctx.fillRect(x, yPos - lowH - midH, barWidth - 0.5, midH);
+        ctx.fillRect(x, yPos + lowH * 0.7, barWidth - 0.5, midH * 0.7);
+
+        // High frequencies (cyan/white)
+        ctx.fillStyle = "#00e5ff";
+        ctx.fillRect(x, yPos - lowH - midH - highH, barWidth - 0.5, highH);
+        ctx.fillRect(
+          x,
+          yPos + lowH * 0.7 + midH * 0.7,
+          barWidth - 0.5,
+          highH * 0.5,
+        );
+      }
+
+      ctx.globalAlpha = 1.0;
+
+      // Centre line
+      ctx.strokeStyle = "rgba(255,255,255,0.06)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, centerY);
+      ctx.lineTo(w, centerY);
+      ctx.stroke();
+
+      // Playhead line with glow
+      ctx.save();
       ctx.shadowColor = playheadColor;
-      ctx.shadowBlur = 6;
+      ctx.shadowBlur = 8;
+      ctx.strokeStyle = playheadColor;
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(playheadX, 0);
       ctx.lineTo(playheadX, h);
       ctx.stroke();
-      ctx.shadowBlur = 0;
+      ctx.restore();
 
-      // Time indicator glow at playhead base
-      ctx.fillStyle = `${playheadColor}22`;
-      ctx.fillRect(playheadX - 1, 0, 3, h);
+      // Playhead glow band
+      const glowGrad = ctx.createLinearGradient(
+        playheadX - 6,
+        0,
+        playheadX + 6,
+        0,
+      );
+      glowGrad.addColorStop(0, "transparent");
+      glowGrad.addColorStop(0.5, "rgba(255,255,255,0.06)");
+      glowGrad.addColorStop(1, "transparent");
+      ctx.fillStyle = glowGrad;
+      ctx.fillRect(playheadX - 6, 0, 12, h);
+
+      // Playhead triangle markers (top)
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.moveTo(playheadX - 4, 0);
+      ctx.lineTo(playheadX + 4, 0);
+      ctx.lineTo(playheadX, 5);
+      ctx.closePath();
+      ctx.fill();
+      // Bottom
+      ctx.beginPath();
+      ctx.moveTo(playheadX - 4, h);
+      ctx.lineTo(playheadX + 4, h);
+      ctx.lineTo(playheadX, h - 5);
+      ctx.closePath();
+      ctx.fill();
     },
-    [color, playheadColor],
+    [playheadColor],
   );
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Set canvas resolution to match display
     const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * 2; // 2x for retina
-    canvas.height = rect.height * 2;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
     const ctx = canvas.getContext("2d");
-    if (ctx) ctx.scale(2, 2);
+    if (ctx) ctx.scale(dpr, dpr);
+    // Reset for draw coordinates
     canvas.width = rect.width;
     canvas.height = rect.height;
 
@@ -125,7 +209,7 @@ export const WaveformDisplay: React.FC<WaveformDisplayProps> = ({
       return;
     }
 
-    const speed = bpm / 3600; // Scroll speed based on BPM
+    const speed = bpm / 2400;
 
     const tick = () => {
       offsetRef.current += speed;
