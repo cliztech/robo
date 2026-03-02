@@ -1,4 +1,4 @@
-# DJ UI/UX Agent Team - Self Review & Rating (v6.0 — Phase 6 Complete)
+# DJ UI/UX Agent Team - Self Review & Rating (v7.0 — Phase 7 Complete)
 
 ## Created Artifacts
 
@@ -9,15 +9,7 @@
 - `docs/sge/GEAR_MODULARITY_SPEC.md` — mod-drop v1.0 Interop Spec
 - `docs/sge/ASSET_GEN_GUIDE.md` — "Studio Iron" Asset Generation Guide
 
-### 2. Agent Definitions
-
-- `AGENTS.md` — Team 15: Studio Gear Engineering (SGE-A, SGE-ID, SGE-CE)
-
-### 3. Skills
-
-- `SKILLS.md` — `gear-studio-builder`, `modular-layout-engine`
-
-### 4. Gear Component Library (`src/components/gear/`)
+### 2. Gear Component Library (`src/components/gear/`)
 
 | Component       | File                  | Tests |
 | --------------- | --------------------- | ----- |
@@ -32,8 +24,9 @@
 | GearBottomPanel | `GearBottomPanel.tsx` | ✅ 6  |
 | GearSettings    | `GearSettings.tsx`    | ✅ 7  |
 | VUMeter         | `VUMeter.tsx`         | ✅ 10 |
+| WaveformDisplay | `WaveformDisplay.tsx` | ✅ 7  |
 
-### 5. Hooks (`src/components/gear/hooks/`)
+### 3. Hooks (`src/components/gear/hooks/`)
 
 | Hook                   | Tests | Description                                             |
 | ---------------------- | ----- | ------------------------------------------------------- |
@@ -42,14 +35,10 @@
 | `useAudioEngineBridge` | —     | Connects gear UI to real AudioEngine via events         |
 | `useDragReorder`       | ✅ 7  | Drag-to-reposition with grid snap support               |
 | `useUndoRedo`          | ✅ 10 | Generic undo/redo history stack with max depth          |
+| `useKeyboardNav`       | ✅ 10 | Tab/arrow/Delete/Escape keyboard navigation             |
+| `useTouchDrag`         | ✅ 3  | Touch event drag handlers for mobile/tablet             |
 
-### 6. Routes
-
-| Route   | File                    | Description                                                         |
-| ------- | ----------------------- | ------------------------------------------------------------------- |
-| `/gear` | `src/app/gear/page.tsx` | Full-page Gear Builder with drag, undo/redo, bottom panel, metering |
-
-### 7. Tests (`tests/ui/gear/`)
+### 4. Tests (`tests/ui/gear/`)
 
 | Test File                       | Count   |
 | ------------------------------- | ------- |
@@ -67,117 +56,131 @@
 | `VUMeter.test.tsx`              | 10      |
 | `useUndoRedo.test.tsx`          | 10      |
 | `useDragReorder.test.tsx`       | 7       |
-| **Total**                       | **111** |
+| `WaveformDisplay.test.tsx`      | 7       |
+| `useKeyboardNav.test.tsx`       | 10      |
+| `useTouchDrag.test.tsx`         | 3       |
+| **Total**                       | **131** |
 
 ---
 
-## Self-Review Scores (v6.0)
+## Self-Review Scores (v7.0)
 
-| Category               | v1  | v2  | v3  | v4  | v5  | v6    | Δ   |
-| ---------------------- | --- | --- | --- | --- | --- | ----- | --- |
-| **Architecture**       | 8   | 9   | 9   | 10  | 10  | 10    | —   |
-| **Components**         | 7   | 9   | 10  | 10  | 10  | 10    | —   |
-| **Extensibility**      | 9   | 9   | 9   | 10  | 10  | 10    | —   |
-| **Accessibility**      | 4   | 5   | 7   | 8   | 9   | **9** | —   |
-| **Theming**            | 5   | 7   | 8   | 8   | 9   | 9     | —   |
-| **Documentation**      | 6   | 8   | 8   | 8   | 9   | 9     | —   |
-| **Testing**            | 3   | 3   | 7   | 9   | 10  | 10    | —   |
-| **MCP Integration**    | 6   | 6   | 6   | 6   | 6   | 6     | —   |
-| **Modularity**         | —   | 9   | 10  | 10  | 10  | 10    | —   |
-| **Visual Fidelity**    | —   | 8   | 9   | 9   | 10  | 10    | —   |
-| **Keyboard/Shortcuts** | —   | —   | 8   | 8   | 8   | **9** | +1  |
-| **Audio Integration**  | —   | —   | —   | 7   | 8   | **9** | +1  |
-| **Persistence**        | —   | —   | —   | 8   | 9   | 9     | —   |
-| **Page Routes**        | —   | —   | —   | 9   | 10  | 10    | —   |
-| **Preset System**      | —   | —   | —   | —   | 9   | 9     | —   |
-| **Signal Routing**     | —   | —   | —   | —   | 9   | 9     | —   |
-| **Settings Panel**     | —   | —   | —   | —   | 8   | 8     | —   |
-| **Drag Reorder**       | —   | —   | —   | —   | —   | **9** | NEW |
-| **Undo/Redo**          | —   | —   | —   | —   | —   | **9** | NEW |
-| **Live Metering**      | —   | —   | —   | —   | —   | **9** | NEW |
+| Category               | v4  | v5  | v6  | v7     | Δ   |
+| ---------------------- | --- | --- | --- | ------ | --- |
+| **Architecture**       | 10  | 10  | 10  | 10     | —   |
+| **Components**         | 10  | 10  | 10  | 10     | —   |
+| **Extensibility**      | 10  | 10  | 10  | 10     | —   |
+| **Accessibility**      | 8   | 9   | 9   | **10** | +1  |
+| **Theming**            | 8   | 9   | 9   | 9      | —   |
+| **Documentation**      | 8   | 9   | 9   | 9      | —   |
+| **Testing**            | 9   | 10  | 10  | 10     | —   |
+| **MCP Integration**    | 6   | 6   | 6   | 6      | —   |
+| **Modularity**         | 10  | 10  | 10  | 10     | —   |
+| **Visual Fidelity**    | 9   | 10  | 10  | **10** | —   |
+| **Keyboard/Shortcuts** | 8   | 8   | 9   | **10** | +1  |
+| **Audio Integration**  | 7   | 8   | 9   | 9      | —   |
+| **Persistence**        | 8   | 9   | 9   | **10** | +1  |
+| **Page Routes**        | 9   | 10  | 10  | 10     | —   |
+| **Preset System**      | —   | 9   | 9   | 9      | —   |
+| **Signal Routing**     | —   | 9   | 9   | 9      | —   |
+| **Settings Panel**     | —   | 8   | 8   | 8      | —   |
+| **Drag Reorder**       | —   | —   | 9   | **10** | +1  |
+| **Undo/Redo**          | —   | —   | 9   | 9      | —   |
+| **Live Metering**      | —   | —   | 9   | 9      | —   |
+| **Waveform Display**   | —   | —   | —   | **9**  | NEW |
+| **Keyboard Nav**       | —   | —   | —   | **9**  | NEW |
+| **Touch Support**      | —   | —   | —   | **8**  | NEW |
+| **Import/Export**      | —   | —   | —   | **9**  | NEW |
 
-**Overall Score: 9.3/10** (+0.2 from v5.0, +3.3 from v1.0)
+**Overall Score: 9.4/10** (+0.1 from v6.0, +3.4 from v1.0)
 
 ---
 
-## Phase 6 Deliverables
+## Phase 7 Deliverables
 
-### ✅ Drag-to-Reposition
+### ✅ Canvas Waveform Display
 
-- `useDragReorder` hook — mouse-based drag with transform positioning
-- Grid snap support (20px grid, controllable via Settings)
-- Visual drag handle (⠿ grip dot, appears on hover, turns cyan on drag)
-- Z-index elevation of dragged item
-- Smooth transition on drop (0.15s ease)
-- Canvas enters `grabbing` cursor during drag
+- `WaveformDisplay.tsx` — Canvas-rendered scrolling waveform
+- Procedurally generated waveform data with deterministic seed
+- Playhead at 35% mark with white glow line
+- Past bars dimmed, future bars bright
+- BPM-based scroll speed
+- Playing badge (▶) with pulse animation
+- Integrated into PlatinumCDJ replacing CSS gradient placeholder
 - 7 unit tests
 
-### ✅ Undo/Redo System
+### ✅ Keyboard Navigation
 
-- `useUndoRedo` hook — generic history stack
-- Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z keyboard shortcuts
-- Toolbar buttons with disabled state indication
-- Configurable max history depth (default 50)
-- Redo stack clears on new action (standard behavior)
+- `useKeyboardNav` hook — full keyboard control for gear cards
+- Tab / Shift+Tab to cycle through items
+- Arrow keys (↑↓←→) to move focused card by grid step
+- Delete / Backspace to remove focused card
+- Escape to deselect
+- Focus ring visual indicator (cyan glow outline)
+- Sidebar shows currently keyboard-focused gear name
 - 10 unit tests
 
-### ✅ Live VU Metering
+### ✅ Touch Support
 
-- `VUMeter` component — real-time audio level meter
-- Peak and RMS display modes + off state
-- Color-coded zones: green (0-65%), yellow (65-85%), red (85%+)
-- Peak-hold indicator (white line)
-- Vertical and horizontal orientations
-- Demo animation mode (sine wave + noise for visual display)
-- Integrated into PlatinumCDJ — stereo L/R meters activate on play
-- ARIA `meter` role with dynamic valuenow
-- 10 unit tests
+- `useTouchDrag` hook — touch event handlers for mobile/tablet
+- onTouchStart / onTouchMove / onTouchEnd wired to canvas
+- Grid snap support matching mouse drag behavior
+- CSS media query for touch-specific UI adjustments (larger targets)
+- 3 unit tests
 
-### ✅ Enhanced Page Integration
+### ✅ Import Layout
 
-- Gear page now uses `useUndoRedo` for all gear state changes
-- Drag handles visible on gear card hover
-- Undo/Redo buttons in header toolbar
-- Positions reset on preset load and layout load
-- Settings.gridSnap wired to drag snap behavior
+- 📥 Import button in toolbar opens file picker
+- Reads JSON layout files exported by the Export feature
+- Loads gear, settings, positions, and layout name
+- Error handling for invalid files with toast feedback
+- Hidden file input with sr-only accessibility class
+
+### ✅ Position Persistence
+
+- Gear card positions now saved and restored with layouts
+- Export includes positions in JSON output
+- Import restores positions from JSON input
 
 ---
 
 ## Architecture Overview
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                      /gear Page Route                         │
-│  ┌──────────┐  ┌──────────────────────────────────────────┐  │
-│  │ Sidebar  │  │           Canvas Grid (draggable)        │  │
-│  │ ──────── │  │  ┌────────────┐ ┌────────────┐          │  │
-│  │ 💿 CDJ   │  │  │ CDJ A      │ │ CDJ B      │          │  │
-│  │ 🎚 Mixer │  │  │ ⠿ [VU|VU] │ │ ⠿ [VU|VU] │          │  │
-│  │ 🎵 TT    │  │  └────────────┘ └────────────┘          │  │
-│  │ ✨ FX    │  │  ┌────────────────────┐                  │  │
-│  │ 🥁 Sampl │  │  │ Mixer (drag handle)│                  │  │
-│  │          │  │  └────────────────────┘                  │  │
-│  │ 📂 Saved │  │                                          │  │
-│  └──────────┘  └──────────────────────────────────────────┘  │
-│  [↩ Undo] [↪ Redo] [💾 Save] [� Export] [🗑️ Clear]        │
-│                ┌──────────────────────────────────────────┐  │
-│                │  📦 Presets │ 🔀 Signal │ ⚙ Settings     │  │
-│                └──────────────────────────────────────────┘  │
-│                                                              │
-│  Hooks: useGearAudio │ useLayoutPersistence │ useDragReorder │
-│         useAudioEngineBridge │ useUndoRedo                   │
-│  Types: gear.types.ts │ index.ts (barrel)                    │
-└──────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                        /gear Page Route                           │
+│  ┌──────────┐  ┌────────────────────────────────────────────┐    │
+│  │ Sidebar  │  │  Canvas Grid (drag + touch + keyboard)     │    │
+│  │ ──────── │  │  ┌─────────────┐ ┌─────────────┐          │    │
+│  │ 💿 CDJ   │  │  │ CDJ A       │ │ CDJ B       │          │    │
+│  │ 🎚 Mixer │  │  │ ▓▓▓▒▒▒▒|▒▒▒│ │ ▓▓▒▒▒|▒▒▒▒▒│ Canvas   │    │
+│  │ 🎵 TT    │  │  │ [VU][VU]   │ │ [VU][VU]   │ Waveform  │    │
+│  │ ✨ FX    │  │  │ ⠿ drag     │ │ ⠿ drag     │          │    │
+│  │ 🥁 Sampl │  │  └─────────────┘ └─────────────┘          │    │
+│  │          │  │  ┌────────────────────┐                    │    │
+│  │ 📂 Saved │  │  │ Mixer (drag/focus) │                    │    │
+│  │ ⌨ Focus  │  │  └────────────────────┘                    │    │
+│  └──────────┘  └────────────────────────────────────────────┘    │
+│  [↩ Undo][↪ Redo][💾 Save][📤 Export][📥 Import][🗑️ Clear]     │
+│                ┌────────────────────────────────────────────┐    │
+│                │  📦 Presets │ 🔀 Signal │ ⚙ Settings       │    │
+│                └────────────────────────────────────────────┘    │
+│                                                                  │
+│  Hooks: useGearAudio │ useLayoutPersistence │ useDragReorder     │
+│         useUndoRedo  │ useKeyboardNav       │ useTouchDrag       │
+│         useAudioEngineBridge                                     │
+│  Components: WaveformDisplay │ VUMeter │ GearBottomPanel         │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Remaining Gaps (Phase 7+)
+## Remaining Gaps (Phase 8+)
 
 1. **StitchMCP** — AI-driven UI variation generation
 2. **Backend DB** — Migrate localStorage → settings.db via API
-3. **Real Audio Routing** — Connect useAudioEngineBridge to gear components
-4. **Mobile Touch** — Jog wheel swipe, fader drag gestures
-5. **Import Layout** — Load JSON layout files from disk
-6. **Keyboard Nav** — Tab-through gear cards with focus ring
-7. **Real-time Waveform** — Canvas-rendered scrolling waveform display
+3. **Real Audio Engine** — Connect useAudioEngineBridge to gear outputs
+4. **Collaborative Sessions** — Multi-user layout editing via WebSocket
+5. **Theme Switcher** — Light/dark/custom theme support
+6. **Responsive Layout** — Mobile-first responsive redesign
+7. **Performance Profiling** — Bundle analysis and lazy-loading
