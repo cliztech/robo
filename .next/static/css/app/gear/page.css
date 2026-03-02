@@ -385,31 +385,37 @@
   !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!./src/components/gear/VUMeter.css ***!
   \*****************************************************************************************************************************************************************************************************************************************************************************/
 /**
- * VUMeter.css — Audio level meter styles
- * Phase 6 — Live metering with color-coded zones
+ * VUMeter.css — Segmented LED-style Audio Meter
+ * Realistic multi-segment display with glow effects
  */
 
 .vu-meter-unit {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 4px;
-}
-
-.vu-meter-unit.vertical {
-  flex-direction: column-reverse;
+  gap: 3px;
 }
 
 .vu-meter-unit.horizontal {
   flex-direction: row;
 }
 
-/* Track */
+.vu-label {
+  font-size: 7px;
+  font-weight: 800;
+  color: #445;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* Track container */
 .vu-track {
   position: relative;
   overflow: hidden;
   border-radius: 2px;
-  background: #0a0a0a;
-  border: 1px solid #1a1a1a;
+  background: #060608;
+  border: 1px solid #1a1c20;
+  box-shadow: inset 0 1px 4px rgba(0,0,0,0.7);
 }
 
 .vu-meter-unit.vertical .vu-track {
@@ -420,11 +426,41 @@
   height: 10px;
 }
 
+/* Segmented LED overlay */
+.vu-track::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.vu-meter-unit.vertical .vu-track::before {
+  background:
+    repeating-linear-gradient(
+      180deg,
+      transparent 0px,
+      transparent 3px,
+      #060608 3px,
+      #060608 4px
+    );
+}
+
+.vu-meter-unit.horizontal .vu-track::before {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 3px,
+      #060608 3px,
+      #060608 4px
+    );
+}
+
 /* Bar fill */
 .vu-bar {
   position: absolute;
-  border-radius: 1px;
-  transition: height 0.06s linear, width 0.06s linear;
+  transition: all 0.08s linear;
 }
 
 .vu-meter-unit.vertical .vu-bar {
@@ -440,59 +476,62 @@
 }
 
 .vu-bar.green {
-  background: linear-gradient(to top, #00c853, #69f0ae);
-  box-shadow: 0 0 4px #00c85366;
+  background: linear-gradient(to top, #00c853 0%, #00e676 50%, #66ff66 100%);
+  box-shadow: 0 0 6px rgba(0, 200, 83, 0.4);
 }
 
 .vu-bar.yellow {
-  background: linear-gradient(to top, #00c853, #ffeb3b 70%, #ffc107);
-  box-shadow: 0 0 4px #ffeb3b44;
+  background: linear-gradient(to top, #00c853 0%, #00e676 30%, #ffeb3b 65%, #ffc107 85%, #ff9800 100%);
+  box-shadow: 0 0 6px rgba(255, 193, 7, 0.4);
 }
 
 .vu-bar.red {
-  background: linear-gradient(to top, #00c853, #ffeb3b 60%, #ff1744 90%);
-  box-shadow: 0 0 6px #ff174466;
+  background: linear-gradient(to top, #00c853 0%, #00e676 25%, #ffeb3b 55%, #ff9800 75%, #ff1744 90%, #ff0000 100%);
+  box-shadow: 0 0 8px rgba(255, 23, 68, 0.5);
 }
 
 .vu-bar.off {
-  background: #1a1a1a;
-  height: 100% !important;
-  width: 100% !important;
+  background: #111;
+  opacity: 0.3;
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  inset: 0;
 }
 
-/* Peak hold */
+/* Peak hold indicator */
 .vu-peak-hold {
   position: absolute;
-  background: #fff;
-  box-shadow: 0 0 4px #ffffff88;
-  transition: bottom 0.1s linear, left 0.1s linear;
+  z-index: 3;
 }
 
 .vu-meter-unit.vertical .vu-peak-hold {
-  left: 1px;
-  right: 1px;
+  left: 0;
+  right: 0;
   height: 2px;
+  background: #fff;
+  box-shadow: 0 0 6px #fff, 0 0 12px rgba(255,255,255,0.3);
 }
 
 .vu-meter-unit.horizontal .vu-peak-hold {
-  top: 1px;
-  bottom: 1px;
+  top: 0;
+  bottom: 0;
   width: 2px;
+  background: #fff;
+  box-shadow: 0 0 6px #fff, 0 0 12px rgba(255,255,255,0.3);
 }
 
-/* Scale markers */
+/* Scale marks */
 .vu-scale {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   pointer-events: none;
+  z-index: 4;
 }
 
 .vu-mark {
   position: absolute;
-  background: #ffffff11;
+  background: rgba(255,255,255,0.15);
 }
 
 .vu-meter-unit.vertical .vu-mark {
@@ -507,22 +546,12 @@
   width: 1px;
 }
 
-/* Label */
-.vu-label {
-  font-size: 8px;
-  font-weight: 700;
-  color: #444;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-}
-
 /*!*************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!./src/components/gear/WaveformDisplay.css ***!
   \*************************************************************************************************************************************************************************************************************************************************************************************/
 /**
  * WaveformDisplay.css — Canvas waveform visualization
- * Phase 7 — Real-time scrolling waveform renderer
+ * Phase 7+ — Premium LCD display style
  */
 
 .waveform-display {
@@ -530,8 +559,28 @@
   width: 100%;
   border-radius: 3px;
   overflow: hidden;
-  background: #050505;
-  border: 1px solid #1a1a1a;
+  background: #020204;
+  border: 1px solid #1a1c20;
+  box-shadow:
+    inset 0 2px 6px rgba(0,0,0,0.8),
+    0 1px 0 rgba(255,255,255,0.03);
+}
+
+/* Scanline overlay for LCD effect */
+.waveform-display::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      180deg,
+      transparent 0px,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+  pointer-events: none;
+  z-index: 1;
 }
 
 .waveform-canvas {
@@ -542,99 +591,131 @@
 .waveform-playing-badge {
   position: absolute;
   top: 3px;
-  right: 5px;
-  font-size: 8px;
+  right: 6px;
+  font-size: 7px;
   color: #00e5ff;
-  text-shadow: 0 0 4px #00e5ff88;
-  animation: waveform-pulse 1s ease-in-out infinite;
+  text-shadow: 0 0 6px #00e5ff;
+  animation: waveform-pulse 0.8s ease-in-out infinite;
   pointer-events: none;
+  z-index: 2;
 }
 
 @keyframes waveform-pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  50% { opacity: 0.3; }
 }
 
 /*!**********************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!./src/components/gear/VintageMixer.css ***!
   \**********************************************************************************************************************************************************************************************************************************************************************************/
 /**
- * VintageMixer.css — Studio Iron / Vintage Skin
+ * VintageMixer.css — Professional DJ Mixer Skin
+ * Realistic metallic finish with depth and detail
  */
 
 .vintage-mixer {
-  width: 340px;
-  background: #141414;
-  border: 2px solid #2a2a2a;
-  border-radius: 8px;
-  padding: 16px;
+  width: 360px;
+  background: linear-gradient(175deg, #181c20 0%, #0e1014 50%, #101216 100%);
+  border: 1.5px solid #262a2e;
+  border-top-color: #3a3e44;
+  border-radius: 10px;
+  padding: 14px 16px 12px;
   color: #ccc;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   position: relative;
-  box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+  box-shadow:
+    0 2px 0 #2a2e32,
+    0 12px 32px rgba(0, 0, 0, 0.7),
+    0 24px 48px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255,255,255,0.04);
   -webkit-user-select: none;
   -moz-user-select: none;
        user-select: none;
+}
+
+/* Brushed metal overlay */
+.vintage-mixer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 15%, transparent 85%, rgba(0,0,0,0.15) 100%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.006) 0px, transparent 1px, transparent 2px);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .mixer-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
+  z-index: 1;
 }
 
 .mixer-label {
   font-weight: 800;
   font-size: 13px;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
-  color: #aaa;
+  letter-spacing: 2.5px;
+  background: linear-gradient(180deg, #ccc 30%, #777 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .master-indicator {
-  padding: 3px 10px;
-  background: #ff3d00;
+  padding: 3px 12px;
+  background: linear-gradient(135deg, #ff4500, #ff3d00);
   color: #000;
   font-weight: 900;
-  font-size: 11px;
+  font-size: 10px;
   border-radius: 3px;
+  letter-spacing: 1px;
+  box-shadow: 0 0 10px rgba(255, 61, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+  text-shadow: 0 1px 0 rgba(255,255,255,0.15);
 }
 
-/* VU Meters */
+/* VU Meters — Segment LED style */
 .vu-meters {
   display: flex;
-  gap: 6px;
+  gap: 5px;
   justify-content: center;
   height: 80px;
+  position: relative;
+  z-index: 1;
+  padding: 6px 0;
 }
 
 .vu-meter {
-  width: 14px;
-  background: #0a0a0a;
+  width: 16px;
+  background: #060608;
   border-radius: 3px;
   position: relative;
   overflow: hidden;
-  border: 1px solid #222;
+  border: 1px solid #1e2024;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);
 }
 
 .vu-fill {
   width: 100%;
-  transition: height 0.15s ease;
-  border-radius: 2px 2px 0 0;
+  transition: height 0.12s ease;
+  border-radius: 1px 1px 0 0;
 }
 
 .vu-fill.left {
-  background: linear-gradient(to top, #00e676, #ffeb3b 70%, #ff1744 95%);
+  background: linear-gradient(to top, #00e676 0%, #66ff66 40%, #ffeb3b 70%, #ff9800 85%, #ff1744 95%);
 }
 
 .vu-fill.right {
-  background: linear-gradient(to top, #00e676, #ffeb3b 70%, #ff1744 95%);
+  background: linear-gradient(to top, #00e676 0%, #66ff66 40%, #ffeb3b 70%, #ff9800 85%, #ff1744 95%);
 }
 
 .vu-tag {
@@ -642,50 +723,118 @@
   bottom: -16px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 9px;
-  color: #555;
+  font-size: 8px;
+  color: #444;
+  font-weight: 700;
 }
 
 /* Channel Strips */
 .channel-strip-row {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   justify-content: center;
+  position: relative;
+  z-index: 1;
 }
 
 .channel-strip {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  width: 60px;
+  gap: 6px;
+  width: 64px;
+  padding: 8px 4px;
+  background: #0c0e10;
+  border: 1px solid #1a1c20;
+  border-radius: 5px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
 }
 
 .eq-knobs {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
   align-items: center;
 }
 
+/* Realistic knobs with 3D */
 .knob {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  border: 2px solid #333;
-  background: radial-gradient(circle at 40% 35%, #3a3a3a, #1a1a1a);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.05);
+  border: 2px solid #444;
+  background:
+    radial-gradient(circle at 38% 32%, #505050 0%, #2a2a2e 50%, #1a1a1e 100%);
+  box-shadow:
+    0 2px 4px rgba(0,0,0,0.5),
+    inset 0 1px 2px rgba(255,255,255,0.08),
+    inset 0 -1px 2px rgba(0,0,0,0.3);
   cursor: pointer;
+  position: relative;
+  transition: transform 0.1s ease;
 }
 
-.knob.hi { border-color: #00e5ff33; }
-.knob.mid { border-color: #ffeb3b33; }
-.knob.lo { border-color: #ff3d0033; }
+.knob:hover {
+  transform: scale(1.05);
+}
 
+/* Knob pointer dot */
+.knob::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  width: 2px;
+  height: 5px;
+  border-radius: 1px;
+  transform: translateX(-50%);
+}
+
+.knob.hi {
+  border-color: #2a4050;
+}
+.knob.hi::after {
+  background: #00e5ff;
+  box-shadow: 0 0 4px #00e5ff;
+}
+
+.knob.mid {
+  border-color: #4a4a28;
+}
+.knob.mid::after {
+  background: #ffeb3b;
+  box-shadow: 0 0 4px #ffeb3b88;
+}
+
+.knob.lo {
+  border-color: #4a2828;
+}
+.knob.lo::after {
+  background: #ff3d00;
+  box-shadow: 0 0 4px #ff3d0088;
+}
+
+/* Fader Track */
 .fader-track {
   height: 100px;
   display: flex;
   justify-content: center;
+  position: relative;
+}
+
+/* Fader track rail */
+.fader-track::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 4px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, #0a0a0c, #141416);
+  border-radius: 2px;
+  border: 1px solid #1e2024;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
 }
 
 .channel-fader {
@@ -698,30 +847,37 @@
   height: 100px;
   accent-color: #00e5ff;
   cursor: pointer;
+  position: relative;
+  z-index: 1;
 }
 
 .channel-label {
-  font-size: 10px;
-  font-weight: 700;
-  color: #555;
+  font-size: 9px;
+  font-weight: 800;
+  color: #556;
   text-transform: uppercase;
+  letter-spacing: 1.5px;
 }
 
 /* Crossfader */
 .crossfader-section {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: #0d0d0d;
-  border-radius: 4px;
-  border: 1px solid #1e1e1e;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #0a0c0e;
+  border-radius: 5px;
+  border: 1px solid #1a1c20;
+  position: relative;
+  z-index: 1;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
 }
 
 .cf-label {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
   color: #444;
+  letter-spacing: 1px;
 }
 
 .crossfader {
@@ -735,55 +891,70 @@
 .master-section {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   justify-content: center;
+  position: relative;
+  z-index: 1;
 }
 
 .master-knob-container {
-  width: 48px;
-  height: 48px;
+  width: 50px;
+  height: 50px;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 .master-knob {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  background: radial-gradient(circle at 40% 35%, #444, #1a1a1a);
-  border: 3px solid #333;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.5), inset 0 1px 3px rgba(255,255,255,0.06);
+  background:
+    radial-gradient(circle at 38% 32%, #555 0%, #333 40%, #1a1a1e 100%);
+  border: 3px solid #444;
+  box-shadow:
+    0 3px 10px rgba(0,0,0,0.6),
+    inset 0 2px 4px rgba(255,255,255,0.08),
+    inset 0 -1px 3px rgba(0,0,0,0.4),
+    0 0 0 1px #222;
   position: relative;
   transition: transform 0.1s ease;
 }
 
+.master-knob:hover {
+  transform: scale(1.04);
+}
+
 .knob-notch {
   position: absolute;
-  top: 4px;
+  top: 3px;
   left: 50%;
   width: 3px;
   height: 10px;
   background: #ff3d00;
   transform: translateX(-50%);
   border-radius: 1px;
-  box-shadow: 0 0 6px rgba(255, 61, 0, 0.6);
+  box-shadow: 0 0 8px rgba(255, 61, 0, 0.7);
 }
 
 .master-label {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 800;
-  color: #555;
-  letter-spacing: 2px;
+  color: #556;
+  letter-spacing: 3px;
 }
 
 /* Border Accent */
 .vintage-border-accent {
   position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, transparent, #ff3d00, transparent);
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 5%, #ff3d0080 30%, #ff3d00 50%, #ff3d0080 70%, transparent 95%);
   opacity: 0.4;
+  border-radius: 0 0 10px 10px;
+  z-index: 2;
 }
 
 /*!************************************************************************************************************************************************************************************************************************************************************************************!*\
@@ -1021,64 +1192,99 @@
   !*** css ./node_modules/next/dist/build/webpack/loaders/css-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[2]!./node_modules/next/dist/build/webpack/loaders/postcss-loader/src/index.js??ruleSet[1].rules[14].oneOf[10].use[3]!./src/components/gear/FXRack.css ***!
   \****************************************************************************************************************************************************************************************************************************************************************************/
 /**
- * FXRack.css — Studio Iron / Dark Skin FX Processor
+ * FXRack.css — Professional FX Processor Skin
+ * Realistic rack-mount unit styling
  */
 
 .fx-rack {
-  width: 320px;
-  background: #111;
-  border: 2px solid #222;
-  border-radius: 8px;
-  padding: 14px;
+  width: 340px;
+  background: linear-gradient(175deg, #161a1e 0%, #0c0e12 60%, #0e1014 100%);
+  border: 1.5px solid #262a2e;
+  border-top-color: #3a3e44;
+  border-radius: 10px;
+  padding: 14px 16px;
   color: #ccc;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  gap: 10px;
+  box-shadow:
+    0 2px 0 #2a2e32,
+    0 12px 32px rgba(0, 0, 0, 0.7),
+    0 24px 48px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255,255,255,0.04);
   -webkit-user-select: none;
   -moz-user-select: none;
        user-select: none;
+  position: relative;
+}
+
+/* Brushed-metal overlay */
+.fx-rack::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 12%, transparent 88%, rgba(0,0,0,0.12) 100%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.006) 0px, transparent 1px, transparent 2px);
+  pointer-events: none;
 }
 
 .fx-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
+  z-index: 1;
 }
 
 .fx-label {
   font-weight: 800;
-  font-size: 12px;
+  font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 2px;
-  color: #666;
+  letter-spacing: 2.5px;
+  background: linear-gradient(180deg, #999 30%, #555 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .beat-sync-btn {
-  padding: 5px 12px;
-  border: 1px solid #333;
-  background: #1a1a1a;
-  color: #555;
+  padding: 5px 14px;
+  border: 1px solid #2a2c30;
+  background: linear-gradient(180deg, #1a1e22 0%, #141618 100%);
+  color: #556;
   font-weight: 800;
-  font-size: 10px;
+  font-size: 9px;
   border-radius: 3px;
   cursor: pointer;
   transition: all 0.2s;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    0 2px 4px rgba(0,0,0,0.3);
+}
+
+.beat-sync-btn:hover {
+  border-color: #3a3e44;
+  background: linear-gradient(180deg, #222630 0%, #1a1e22 100%);
 }
 
 .beat-sync-btn.active {
   color: #00e5ff;
-  border-color: #00e5ff44;
-  box-shadow: 0 0 8px rgba(0, 229, 255, 0.2);
+  border-color: rgba(0, 229, 255, 0.35);
+  box-shadow: 0 0 10px rgba(0, 229, 255, 0.15);
+  text-shadow: 0 0 6px rgba(0, 229, 255, 0.4);
 }
 
 /* FX Slots */
 .fx-slots {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  position: relative;
+  z-index: 1;
 }
 
 .fx-slot {
@@ -1086,36 +1292,54 @@
   align-items: center;
   gap: 10px;
   padding: 8px 10px;
-  background: #0d0d0d;
-  border: 1px solid #1e1e1e;
-  border-radius: 4px;
+  background: #0a0c0e;
+  border: 1px solid #1a1c20;
+  border-radius: 5px;
   transition: all 0.2s;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
 }
 
 .fx-slot.active {
-  border-color: var(--fx-color, #00e5ff);
-  background: rgba(255,255,255,0.02);
+  border-color: color-mix(in srgb, var(--fx-color, #00e5ff) 40%, transparent);
+  background: linear-gradient(90deg, rgba(255,255,255,0.015) 0%, #0a0c0e 100%);
+  box-shadow:
+    inset 0 1px 3px rgba(0,0,0,0.3),
+    inset 2px 0 8px color-mix(in srgb, var(--fx-color, #00e5ff) 6%, transparent);
 }
 
 .fx-toggle {
-  width: 70px;
+  width: 72px;
   padding: 6px 0;
-  border: 1px solid #2a2a2a;
-  background: #151515;
-  color: #555;
+  border: 1px solid #2a2c30;
+  background: linear-gradient(180deg, #1a1e22 0%, #141618 100%);
+  color: #445;
   font-weight: 800;
-  font-size: 10px;
+  font-size: 9px;
   border-radius: 3px;
   cursor: pointer;
   transition: all 0.2s;
-  letter-spacing: 1px;
+  letter-spacing: 1.5px;
   text-align: center;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.04),
+    0 2px 3px rgba(0,0,0,0.3);
+}
+
+.fx-toggle:hover {
+  background: linear-gradient(180deg, #222630 0%, #1a1e22 100%);
+  border-color: #3a3e44;
+}
+
+.fx-toggle:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.4);
 }
 
 .fx-slot.active .fx-toggle {
   color: var(--fx-color, #00e5ff);
-  border-color: var(--fx-color, #00e5ff);
-  box-shadow: 0 0 6px color-mix(in srgb, var(--fx-color, #00e5ff) 30%, transparent);
+  border-color: color-mix(in srgb, var(--fx-color, #00e5ff) 45%, transparent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--fx-color, #00e5ff) 20%, transparent);
+  text-shadow: 0 0 6px color-mix(in srgb, var(--fx-color, #00e5ff) 40%, transparent);
 }
 
 .fx-wet-section {
@@ -1133,19 +1357,34 @@
 }
 
 .fx-wet-value {
-  font-size: 10px;
-  color: #444;
+  font-size: 9px;
+  color: #445;
   width: 32px;
   text-align: right;
   font-variant-numeric: tabular-nums;
+  font-weight: 600;
 }
 
 .fx-indicator {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  transition: opacity 0.2s;
+  transition: all 0.2s;
   flex-shrink: 0;
+  box-shadow: 0 0 4px currentColor;
+}
+
+/* Rack mount screw details */
+.fx-rack::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 5%, #00e5ff40 30%, #00e5ff80 50%, #00e5ff40 70%, transparent 95%);
+  opacity: 0.3;
+  border-radius: 0 0 10px 10px;
 }
 
 /*!********************************************************************************************************************************************************************************************************************************************************************************!*\
@@ -1954,27 +2193,30 @@
   \*******************************************************************************************************************************************************************************************************************************************************************/
 /**
  * /gear page styles — DGN-DJ Studio Gear Builder
- * Full dark-mode workspace with sidebar palette and canvas grid.
+ * Premium dark workspace with depth and polish.
  */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap");
 
 .gear-page {
   min-height: 100vh;
-  background: #060606;
+  background: #060608;
   color: #ccc;
   display: flex;
   flex-direction: column;
-  font-family: var(--font-inter, 'Inter', sans-serif);
+  font-family: "Inter", "Segoe UI", sans-serif;
 }
 
-/* Top Bar */
+/* ━━━ Top Bar ━━━ */
 .gear-topbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 20px;
-  background: #0a0a0a;
-  border-bottom: 1px solid #1a1a1a;
+  padding: 8px 20px;
+  background: linear-gradient(180deg, #0e1014 0%, #0a0c0e 100%);
+  border-bottom: 1px solid #1a1c20;
   z-index: 100;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
 .topbar-brand {
@@ -1988,79 +2230,86 @@
 }
 
 .brand-title {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 800;
   letter-spacing: 0.5px;
-  color: #888;
+  color: #667;
 }
 
 .brand-accent {
-  color: #00e5ff;
+  background: linear-gradient(135deg, #00e5ff, #00b8d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .topbar-controls {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .layout-name-field {
   background: transparent;
   border: 1px solid transparent;
-  color: #fff;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 6px 10px;
+  color: #ddd;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 10px;
   border-radius: 4px;
-  width: 160px;
+  width: 140px;
   transition: border-color 0.2s;
 }
 
 .layout-name-field:focus {
   outline: none;
-  border-color: #00e5ff44;
+  border-color: #00e5ff33;
+  background: rgba(0, 229, 255, 0.03);
 }
 
 .topbar-btn {
-  padding: 6px 14px;
-  border: 1px solid #222;
-  background: #111;
-  color: #666;
+  padding: 5px 12px;
+  border: 1px solid #222428;
+  background: linear-gradient(180deg, #161820 0%, #101214 100%);
+  color: #556;
   font-weight: 700;
-  font-size: 11px;
+  font-size: 10px;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.15s;
+  letter-spacing: 0.3px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 .topbar-btn:hover {
-  background: #1a1a1a;
+  background: linear-gradient(180deg, #1e2228 0%, #161820 100%);
   color: #aaa;
+  border-color: #333638;
 }
 
 .topbar-btn.save:hover {
-  border-color: #00e5ff44;
+  border-color: #00e5ff33;
   color: #00e5ff;
+  text-shadow: 0 0 6px rgba(0, 229, 255, 0.3);
 }
 
 .topbar-btn.export:hover {
-  border-color: #7c4dff44;
+  border-color: #7c4dff33;
   color: #7c4dff;
 }
 
 .topbar-btn.clear:hover {
-  border-color: #ff3d0044;
+  border-color: #ff3d0033;
   color: #ff3d00;
 }
 
-/* Workspace */
+/* ━━━ Workspace ━━━ */
 .gear-workspace {
   display: flex;
   flex-grow: 1;
   min-height: 0;
 }
 
-/* Main content area (canvas + bottom panel) */
 .gear-main {
   display: flex;
   flex-direction: column;
@@ -2068,11 +2317,11 @@
   min-width: 0;
 }
 
-/* Sidebar */
+/* ━━━ Sidebar ━━━ */
 .gear-sidebar {
-  width: 220px;
-  background: #0a0a0a;
-  border-right: 1px solid #151515;
+  width: 200px;
+  background: linear-gradient(180deg, #0c0e10 0%, #080a0c 100%);
+  border-right: 1px solid #161820;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
@@ -2080,16 +2329,16 @@
 }
 
 .sidebar-section {
-  padding: 14px;
-  border-bottom: 1px solid #131313;
+  padding: 12px 14px;
+  border-bottom: 1px solid #12141a;
 }
 
 .sidebar-title {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 900;
-  color: #333;
+  color: #334;
   letter-spacing: 3px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   text-transform: uppercase;
 }
 
@@ -2098,24 +2347,24 @@
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 10px;
-  background: #111;
-  border: 1px solid #1a1a1a;
-  border-radius: 6px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid #1a1c22;
+  border-radius: 5px;
   cursor: pointer;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   transition: all 0.15s;
   text-align: left;
 }
 
 .gear-add-btn:hover {
-  background: #151515;
-  border-color: #2a2a2a;
+  background: rgba(255, 255, 255, 0.04);
+  border-color: #2a2c32;
   transform: translateX(2px);
 }
 
 .gear-add-icon {
-  font-size: 20px;
+  font-size: 18px;
   flex-shrink: 0;
 }
 
@@ -2126,19 +2375,19 @@
 }
 
 .gear-add-name {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
-  color: #999;
+  color: #889;
 }
 
 .gear-add-desc {
-  font-size: 10px;
-  color: #444;
+  font-size: 9px;
+  color: #445;
   margin-top: 1px;
 }
 
 .gear-add-plus {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 900;
   color: #333;
   opacity: 0;
@@ -2153,43 +2402,61 @@
 .saved-layout-btn {
   display: block;
   width: 100%;
-  padding: 8px 10px;
+  padding: 6px 10px;
   background: transparent;
-  border: 1px solid #181818;
+  border: 1px solid #161820;
   border-radius: 4px;
-  color: #555;
-  font-size: 11px;
+  color: #445;
+  font-size: 10px;
   font-weight: 600;
   cursor: pointer;
   text-align: left;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
   transition: all 0.15s;
 }
 
 .saved-layout-btn:hover {
-  background: #111;
-  color: #888;
+  background: rgba(255, 255, 255, 0.02);
+  color: #889;
 }
 
 .sidebar-footer {
-  padding: 14px;
+  padding: 12px 14px;
   margin-top: auto;
 }
 
 .gear-count {
-  font-size: 11px;
-  color: #2a2a2a;
+  font-size: 10px;
+  color: #223;
   font-weight: 700;
 }
 
-/* Canvas */
+/* ━━━ Canvas Area ━━━ */
 .gear-canvas-area {
   flex-grow: 1;
-  padding: 24px;
+  padding: 20px;
   overflow: auto;
-  background-image:
-    radial-gradient(circle, #111 1px, transparent 1px);
-  background-size: 20px 20px;
+  background:
+    radial-gradient(ellipse at center, #0e1014 0%, #060608 70%),
+    radial-gradient(circle, #161820 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    20px 20px;
+  position: relative;
+}
+
+/* Subtle vignette overlay */
+.gear-canvas-area::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 40%,
+    rgba(0, 0, 0, 0.4) 100%
+  );
+  pointer-events: none;
+  z-index: 0;
 }
 
 .canvas-empty {
@@ -2199,54 +2466,72 @@
   justify-content: center;
   height: 100%;
   min-height: 400px;
+  position: relative;
+  z-index: 1;
 }
 
 .empty-icon {
-  font-size: 56px;
-  opacity: 0.08;
-  margin-bottom: 16px;
+  font-size: 48px;
+  opacity: 0.06;
+  margin-bottom: 14px;
 }
 
 .empty-title {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 800;
-  color: #222;
-  margin-bottom: 6px;
+  color: #223;
+  margin-bottom: 4px;
 }
 
 .empty-desc {
-  font-size: 13px;
-  color: #1a1a1a;
+  font-size: 11px;
+  color: #1a1a22;
 }
 
 .gear-canvas-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 16px;
   align-items: flex-start;
+  position: relative;
+  z-index: 1;
 }
 
 .canvas-gear-card {
   position: relative;
-  animation: _gear-slide-in 0.25s ease-out;
+  animation: _gear-slide-in 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  border-radius: 10px;
+  transition:
+    box-shadow 0.2s,
+    outline 0.15s;
+}
+
+.canvas-gear-card:hover {
+  box-shadow: 0 0 0 1px rgba(0, 229, 255, 0.1);
 }
 
 @keyframes _gear-slide-in {
-  0% { opacity: 0; transform: translateY(-16px) scale(0.97); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
+  0% {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .canvas-remove-btn {
   position: absolute;
-  top: -6px;
-  right: -6px;
-  width: 22px;
-  height: 22px;
+  top: -5px;
+  right: -5px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  background: #ff3d00;
+  background: linear-gradient(135deg, #ff4500, #ff3d00);
   color: #fff;
-  border: 2px solid #0a0a0a;
-  font-size: 10px;
+  border: 2px solid #0a0a0c;
+  font-size: 9px;
   font-weight: 900;
   cursor: pointer;
   z-index: 10;
@@ -2254,46 +2539,64 @@
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transition: opacity 0.15s;
+  transition:
+    opacity 0.15s,
+    transform 0.15s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.canvas-remove-btn:hover {
+  transform: scale(1.15);
 }
 
 .canvas-gear-card:hover .canvas-remove-btn {
   opacity: 1;
 }
 
-/* Toast */
+/* ━━━ Toast ━━━ */
 .gear-toast {
   position: fixed;
   bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
-  padding: 10px 20px;
-  background: #111;
-  border: 1px solid #00e5ff44;
+  padding: 8px 18px;
+  background: #0e1014;
+  border: 1px solid rgba(0, 229, 255, 0.25);
   color: #00e5ff;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   border-radius: 6px;
   z-index: 200;
-  animation: _toast-in 0.2s ease-out;
+  animation: _toast-in 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.5),
+    0 0 12px rgba(0, 229, 255, 0.1);
 }
 
 @keyframes _toast-in {
-  0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
-  100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
-/* Drag Handle */
+/* ━━━ Drag Handle ━━━ */
 .drag-handle {
   position: absolute;
-  top: 4px;
-  left: 4px;
-  font-size: 12px;
+  top: 5px;
+  left: 5px;
+  font-size: 11px;
   color: #222;
   cursor: grab;
   z-index: 11;
   opacity: 0;
-  transition: opacity 0.15s, color 0.15s;
+  transition:
+    opacity 0.15s,
+    color 0.15s;
   -webkit-user-select: none;
   -moz-user-select: none;
        user-select: none;
@@ -2302,7 +2605,7 @@
 
 .canvas-gear-card:hover .drag-handle {
   opacity: 1;
-  color: #555;
+  color: #556;
 }
 
 .canvas-gear-card:active .drag-handle {
@@ -2315,35 +2618,35 @@
   cursor: grabbing;
 }
 
-/* Undo/Redo */
+/* ━━━ Undo/Redo ━━━ */
 .topbar-btn.undo,
 .topbar-btn.redo {
-  font-size: 11px;
+  font-size: 10px;
   letter-spacing: 0.3px;
 }
 
 .topbar-btn.undo:not(:disabled):hover {
-  border-color: #ffeb3b44;
+  border-color: #ffeb3b33;
   color: #ffeb3b;
 }
 
 .topbar-btn.redo:not(:disabled):hover {
-  border-color: #69f0ae44;
+  border-color: #69f0ae33;
   color: #69f0ae;
 }
 
 .topbar-btn:disabled,
 .topbar-btn.disabled {
-  opacity: 0.25;
+  opacity: 0.2;
   cursor: not-allowed;
   pointer-events: none;
 }
 
-/* Keyboard Focus Ring */
+/* ━━━ Keyboard Focus Ring ━━━ */
 .canvas-gear-card.kb-focused {
   outline: 2px solid #00e5ff;
   outline-offset: 4px;
-  box-shadow: 0 0 12px #00e5ff44;
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.2);
 }
 
 .canvas-gear-card:focus-visible {
@@ -2353,16 +2656,16 @@
 
 /* Import Button */
 .topbar-btn.import:hover {
-  border-color: #b388ff44;
+  border-color: #b388ff33;
   color: #b388ff;
 }
 
 /* Focus Indicator */
 .focus-indicator {
-  font-size: 10px;
+  font-size: 9px;
   color: #00e5ff;
-  padding: 4px 8px;
-  background: #00e5ff11;
+  padding: 3px 8px;
+  background: rgba(0, 229, 255, 0.05);
   border-radius: 4px;
   margin-top: 4px;
   text-align: center;
@@ -2384,18 +2687,18 @@
   border-width: 0;
 }
 
-/* Touch overrides */
+/* ━━━ Touch Overrides ━━━ */
 @media (hover: none) and (pointer: coarse) {
   .drag-handle {
-    opacity: 0.6;
+    opacity: 0.5;
     font-size: 16px;
   }
 
   .canvas-remove-btn {
-    opacity: 0.8;
-    width: 30px;
-    height: 30px;
-    font-size: 14px;
+    opacity: 0.7;
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
   }
 
   .gear-add-btn {

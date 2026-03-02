@@ -1,79 +1,110 @@
 /**
- * VintageMixer.css — Studio Iron / Vintage Skin
+ * VintageMixer.css — Professional DJ Mixer Skin
+ * Realistic metallic finish with depth and detail
  */
 
 .vintage-mixer {
-  width: 340px;
-  background: #141414;
-  border: 2px solid #2a2a2a;
-  border-radius: 8px;
-  padding: 16px;
+  width: 360px;
+  background: linear-gradient(175deg, #181c20 0%, #0e1014 50%, #101216 100%);
+  border: 1.5px solid #262a2e;
+  border-top-color: #3a3e44;
+  border-radius: 10px;
+  padding: 14px 16px 12px;
   color: #ccc;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
   position: relative;
-  box-shadow: 0 8px 28px rgba(0,0,0,0.5);
+  box-shadow:
+    0 2px 0 #2a2e32,
+    0 12px 32px rgba(0, 0, 0, 0.7),
+    0 24px 48px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255,255,255,0.04);
   -webkit-user-select: none;
   user-select: none;
+}
+
+/* Brushed metal overlay */
+.vintage-mixer::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 15%, transparent 85%, rgba(0,0,0,0.15) 100%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.006) 0px, transparent 1px, transparent 2px);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .mixer-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
+  z-index: 1;
 }
 
 .mixer-label {
   font-weight: 800;
   font-size: 13px;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
-  color: #aaa;
+  letter-spacing: 2.5px;
+  background: linear-gradient(180deg, #ccc 30%, #777 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .master-indicator {
-  padding: 3px 10px;
-  background: #ff3d00;
+  padding: 3px 12px;
+  background: linear-gradient(135deg, #ff4500, #ff3d00);
   color: #000;
   font-weight: 900;
-  font-size: 11px;
+  font-size: 10px;
   border-radius: 3px;
+  letter-spacing: 1px;
+  box-shadow: 0 0 10px rgba(255, 61, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+  text-shadow: 0 1px 0 rgba(255,255,255,0.15);
 }
 
-/* VU Meters */
+/* VU Meters — Segment LED style */
 .vu-meters {
   display: flex;
-  gap: 6px;
+  gap: 5px;
   justify-content: center;
   height: 80px;
+  position: relative;
+  z-index: 1;
+  padding: 6px 0;
 }
 
 .vu-meter {
-  width: 14px;
-  background: #0a0a0a;
+  width: 16px;
+  background: #060608;
   border-radius: 3px;
   position: relative;
   overflow: hidden;
-  border: 1px solid #222;
+  border: 1px solid #1e2024;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.6);
 }
 
 .vu-fill {
   width: 100%;
-  transition: height 0.15s ease;
-  border-radius: 2px 2px 0 0;
+  transition: height 0.12s ease;
+  border-radius: 1px 1px 0 0;
 }
 
 .vu-fill.left {
-  background: linear-gradient(to top, #00e676, #ffeb3b 70%, #ff1744 95%);
+  background: linear-gradient(to top, #00e676 0%, #66ff66 40%, #ffeb3b 70%, #ff9800 85%, #ff1744 95%);
 }
 
 .vu-fill.right {
-  background: linear-gradient(to top, #00e676, #ffeb3b 70%, #ff1744 95%);
+  background: linear-gradient(to top, #00e676 0%, #66ff66 40%, #ffeb3b 70%, #ff9800 85%, #ff1744 95%);
 }
 
 .vu-tag {
@@ -81,50 +112,118 @@
   bottom: -16px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 9px;
-  color: #555;
+  font-size: 8px;
+  color: #444;
+  font-weight: 700;
 }
 
 /* Channel Strips */
 .channel-strip-row {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   justify-content: center;
+  position: relative;
+  z-index: 1;
 }
 
 .channel-strip {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  width: 60px;
+  gap: 6px;
+  width: 64px;
+  padding: 8px 4px;
+  background: #0c0e10;
+  border: 1px solid #1a1c20;
+  border-radius: 5px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
 }
 
 .eq-knobs {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
   align-items: center;
 }
 
+/* Realistic knobs with 3D */
 .knob {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  border: 2px solid #333;
-  background: radial-gradient(circle at 40% 35%, #3a3a3a, #1a1a1a);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.05);
+  border: 2px solid #444;
+  background:
+    radial-gradient(circle at 38% 32%, #505050 0%, #2a2a2e 50%, #1a1a1e 100%);
+  box-shadow:
+    0 2px 4px rgba(0,0,0,0.5),
+    inset 0 1px 2px rgba(255,255,255,0.08),
+    inset 0 -1px 2px rgba(0,0,0,0.3);
   cursor: pointer;
+  position: relative;
+  transition: transform 0.1s ease;
 }
 
-.knob.hi { border-color: #00e5ff33; }
-.knob.mid { border-color: #ffeb3b33; }
-.knob.lo { border-color: #ff3d0033; }
+.knob:hover {
+  transform: scale(1.05);
+}
 
+/* Knob pointer dot */
+.knob::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  width: 2px;
+  height: 5px;
+  border-radius: 1px;
+  transform: translateX(-50%);
+}
+
+.knob.hi {
+  border-color: #2a4050;
+}
+.knob.hi::after {
+  background: #00e5ff;
+  box-shadow: 0 0 4px #00e5ff;
+}
+
+.knob.mid {
+  border-color: #4a4a28;
+}
+.knob.mid::after {
+  background: #ffeb3b;
+  box-shadow: 0 0 4px #ffeb3b88;
+}
+
+.knob.lo {
+  border-color: #4a2828;
+}
+.knob.lo::after {
+  background: #ff3d00;
+  box-shadow: 0 0 4px #ff3d0088;
+}
+
+/* Fader Track */
 .fader-track {
   height: 100px;
   display: flex;
   justify-content: center;
+  position: relative;
+}
+
+/* Fader track rail */
+.fader-track::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 4px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, #0a0a0c, #141416);
+  border-radius: 2px;
+  border: 1px solid #1e2024;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
 }
 
 .channel-fader {
@@ -135,30 +234,37 @@
   height: 100px;
   accent-color: #00e5ff;
   cursor: pointer;
+  position: relative;
+  z-index: 1;
 }
 
 .channel-label {
-  font-size: 10px;
-  font-weight: 700;
-  color: #555;
+  font-size: 9px;
+  font-weight: 800;
+  color: #556;
   text-transform: uppercase;
+  letter-spacing: 1.5px;
 }
 
 /* Crossfader */
 .crossfader-section {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: #0d0d0d;
-  border-radius: 4px;
-  border: 1px solid #1e1e1e;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #0a0c0e;
+  border-radius: 5px;
+  border: 1px solid #1a1c20;
+  position: relative;
+  z-index: 1;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
 }
 
 .cf-label {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
   color: #444;
+  letter-spacing: 1px;
 }
 
 .crossfader {
@@ -172,53 +278,68 @@
 .master-section {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   justify-content: center;
+  position: relative;
+  z-index: 1;
 }
 
 .master-knob-container {
-  width: 48px;
-  height: 48px;
+  width: 50px;
+  height: 50px;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
 .master-knob {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  background: radial-gradient(circle at 40% 35%, #444, #1a1a1a);
-  border: 3px solid #333;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.5), inset 0 1px 3px rgba(255,255,255,0.06);
+  background:
+    radial-gradient(circle at 38% 32%, #555 0%, #333 40%, #1a1a1e 100%);
+  border: 3px solid #444;
+  box-shadow:
+    0 3px 10px rgba(0,0,0,0.6),
+    inset 0 2px 4px rgba(255,255,255,0.08),
+    inset 0 -1px 3px rgba(0,0,0,0.4),
+    0 0 0 1px #222;
   position: relative;
   transition: transform 0.1s ease;
 }
 
+.master-knob:hover {
+  transform: scale(1.04);
+}
+
 .knob-notch {
   position: absolute;
-  top: 4px;
+  top: 3px;
   left: 50%;
   width: 3px;
   height: 10px;
   background: #ff3d00;
   transform: translateX(-50%);
   border-radius: 1px;
-  box-shadow: 0 0 6px rgba(255, 61, 0, 0.6);
+  box-shadow: 0 0 8px rgba(255, 61, 0, 0.7);
 }
 
 .master-label {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 800;
-  color: #555;
-  letter-spacing: 2px;
+  color: #556;
+  letter-spacing: 3px;
 }
 
 /* Border Accent */
 .vintage-border-accent {
   position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, transparent, #ff3d00, transparent);
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 5%, #ff3d0080 30%, #ff3d00 50%, #ff3d0080 70%, transparent 95%);
   opacity: 0.4;
+  border-radius: 0 0 10px 10px;
+  z-index: 2;
 }
