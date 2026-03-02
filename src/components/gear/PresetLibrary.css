@@ -1,5 +1,6 @@
 /**
- * PresetLibrary.css — Preset selection card grid
+ * PresetLibrary.css — Preset selection card grid with tag chips
+ * Phase 5 — Enhanced styling with animations and active state
  */
 
 .preset-library {
@@ -15,7 +16,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .preset-title {
@@ -43,6 +44,48 @@
   color: #ccc;
 }
 
+/* Tag Chips */
+.preset-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
+.preset-tag {
+  padding: 3px 9px;
+  font-size: 10px;
+  font-weight: 700;
+  background: #111;
+  border: 1px solid #1a1a1a;
+  border-radius: 12px;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-transform: lowercase;
+}
+
+.preset-tag:hover {
+  border-color: #2a2a2a;
+  color: #888;
+}
+
+.preset-tag.active {
+  background: #00e5ff11;
+  border-color: #00e5ff33;
+  color: #00e5ff;
+}
+
+.preset-tag.clear-tag {
+  color: #ff3d00;
+  border-color: #ff3d0033;
+}
+
+.preset-tag.clear-tag:hover {
+  background: #ff3d0011;
+}
+
+/* Grid */
 .preset-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -50,6 +93,7 @@
 }
 
 .preset-card {
+  position: relative;
   display: flex;
   align-items: flex-start;
   gap: 12px;
@@ -61,6 +105,18 @@
   text-align: left;
   transition: all 0.15s;
   width: 100%;
+  animation: _preset-appear 0.2s ease-out;
+}
+
+@keyframes _preset-appear {
+  0% {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .preset-card:hover {
@@ -73,6 +129,12 @@
   transform: scale(0.98);
 }
 
+.preset-card.active {
+  border-color: #00e5ff33;
+  background: #00e5ff06;
+  box-shadow: 0 0 12px #00e5ff0a;
+}
+
 .preset-card-icon {
   font-size: 24px;
   flex-shrink: 0;
@@ -83,6 +145,8 @@
   display: flex;
   flex-direction: column;
   gap: 3px;
+  flex: 1;
+  min-width: 0;
 }
 
 .preset-card-name {
@@ -97,11 +161,45 @@
   line-height: 1.3;
 }
 
+.preset-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
 .preset-card-gear {
   font-size: 10px;
   color: #333;
-  margin-top: 3px;
   font-weight: 600;
+}
+
+.preset-card-tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.preset-micro-tag {
+  font-size: 9px;
+  color: #2a2a2a;
+  padding: 1px 5px;
+  border: 1px solid #181818;
+  border-radius: 4px;
+}
+
+.preset-active-badge {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 8px;
+  color: #00e5ff;
+  animation: _badge-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes _badge-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
 }
 
 .preset-empty {

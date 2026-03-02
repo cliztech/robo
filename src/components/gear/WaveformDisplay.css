@@ -1,0 +1,34 @@
+/**
+ * WaveformDisplay.css — Canvas waveform visualization
+ * Phase 7 — Real-time scrolling waveform renderer
+ */
+
+.waveform-display {
+  position: relative;
+  width: 100%;
+  border-radius: 3px;
+  overflow: hidden;
+  background: #050505;
+  border: 1px solid #1a1a1a;
+}
+
+.waveform-canvas {
+  width: 100%;
+  display: block;
+}
+
+.waveform-playing-badge {
+  position: absolute;
+  top: 3px;
+  right: 5px;
+  font-size: 8px;
+  color: #00e5ff;
+  text-shadow: 0 0 4px #00e5ff88;
+  animation: waveform-pulse 1s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes waveform-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}

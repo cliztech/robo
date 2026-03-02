@@ -106,6 +106,14 @@
   min-height: 0;
 }
 
+/* Main content area (canvas + bottom panel) */
+.gear-main {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  min-width: 0;
+}
+
 /* Sidebar */
 .gear-sidebar {
   width: 220px;
@@ -319,4 +327,59 @@
 @keyframes _toast-in {
   0% { opacity: 0; transform: translateX(-50%) translateY(10px); }
   100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Drag Handle */
+.drag-handle {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  font-size: 12px;
+  color: #222;
+  cursor: grab;
+  z-index: 11;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+  -webkit-user-select: none;
+  user-select: none;
+  line-height: 1;
+}
+
+.canvas-gear-card:hover .drag-handle {
+  opacity: 1;
+  color: #555;
+}
+
+.canvas-gear-card:active .drag-handle {
+  cursor: grabbing;
+  color: #00e5ff;
+}
+
+/* Canvas dragging state */
+.gear-canvas-area.dragging {
+  cursor: grabbing;
+}
+
+/* Undo/Redo */
+.topbar-btn.undo,
+.topbar-btn.redo {
+  font-size: 11px;
+  letter-spacing: 0.3px;
+}
+
+.topbar-btn.undo:not(:disabled):hover {
+  border-color: #ffeb3b44;
+  color: #ffeb3b;
+}
+
+.topbar-btn.redo:not(:disabled):hover {
+  border-color: #69f0ae44;
+  color: #69f0ae;
+}
+
+.topbar-btn:disabled,
+.topbar-btn.disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+  pointer-events: none;
 }

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import "./PresetLibrary.css";
 import type { GearType } from "./gear.types";
 
@@ -6,6 +6,8 @@ import type { GearType } from "./gear.types";
  * PresetLibrary — Built-in DJ setup presets that users can one-click load.
  * Each preset defines a curated collection of gear units arranged for
  * a specific use case (Club, Home, Mobile, Broadcast).
+ *
+ * Phase 5: Enhanced with active tracking, tag filtering, and gear badges.
  */
 
 export interface PresetGear {
@@ -109,20 +111,39 @@ export const BUILT_IN_PRESETS: GearPreset[] = [
   },
 ];
 
+/** Collect all unique tags for filter chips */
+const ALL_TAGS = [...new Set(BUILT_IN_PRESETS.flatMap((p) => p.tags))];
+
 interface PresetLibraryProps {
   onLoadPreset: (gear: PresetGear[]) => void;
+  activePresetId?: string;
 }
 
 export const PresetLibrary: React.FC<PresetLibraryProps> = ({
   onLoadPreset,
+  activePresetId,
 }) => {
   const [filter, setFilter] = useState("");
+  const [activeTag, setActiveTag] = useState<string | null>(null);
 
-  const filtered = BUILT_IN_PRESETS.filter(
-    (p) =>
+  const filtered = BUILT_IN_PRESETS.filter((p) => {
+    const matchesSearch =
       !filter ||
       p.name.toLowerCase().includes(filter.toLowerCase()) ||
-      p.tags.some((t) => t.includes(filter.toLowerCase())),
+      p.tags.some((t) => t.includes(filter.toLowerCase()));
+    const matchesTag = !activeTag || p.tags.includes(activeTag);
+    return matchesSearch && matchesTag;
+  });
+
+  const handleTagClick = useCallback((tag: string) => {
+    setActiveTag((prev) => (prev === tag ? null : tag));
+  }, []);
+
+  const handleLoadPreset = useCallback(
+    (preset: GearPreset) => {
+      onLoadPreset(preset.gear);
+    },
+    [onLoadPreset],
   );
 
   return (
@@ -138,20 +159,60 @@ export const PresetLibrary: React.FC<PresetLibraryProps> = ({
         />
       </div>
 
+      {/* Tag chips */}
+      <div className="preset-tags" role="group" aria-label="Preset tags">
+        {ALL_TAGS.map((tag) => (
+          <button
+            key={tag}
+            className={`preset-tag${activeTag === tag ? " active" : ""}`}
+            onClick={() => handleTagClick(tag)}
+            aria-pressed={activeTag === tag}
+          >
+            {tag}
+          </button>
+        ))}
+        {activeTag && (
+          <button
+            className="preset-tag clear-tag"
+            onClick={() => setActiveTag(null)}
+            aria-label="Clear tag filter"
+          >
+            ✕
+          </button>
+        )}
+      </div>
+
       <div className="preset-grid">
         {filtered.map((preset) => (
           <button
             key={preset.id}
-            className="preset-card"
-            onClick={() => onLoadPreset(preset.gear)}
+            className={`preset-card${activePresetId === preset.id ? " active" : ""}`}
+            onClick={() => handleLoadPreset(preset)}
             aria-label={`Load ${preset.name} preset`}
+            aria-current={activePresetId === preset.id ? "true" : undefined}
           >
             <div className="preset-card-icon">{preset.icon}</div>
             <div className="preset-card-info">
               <span className="preset-card-name">{preset.name}</span>
               <span className="preset-card-desc">{preset.description}</span>
-              <div className="preset-card-gear">{preset.gear.length} units</div>
+              <div className="preset-card-meta">
+                <span className="preset-card-gear">
+                  {preset.gear.length} units
+                </span>
+                <span className="preset-card-tags">
+                  {preset.tags.map((t) => (
+                    <span key={t} className="preset-micro-tag">
+                      {t}
+                    </span>
+                  ))}
+                </span>
+              </div>
             </div>
+            {activePresetId === preset.id && (
+              <span className="preset-active-badge" aria-hidden="true">
+                ●
+              </span>
+            )}
           </button>
         ))}
       </div>

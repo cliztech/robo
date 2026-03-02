@@ -1,0 +1,132 @@
+/**
+ * VUMeter.css — Audio level meter styles
+ * Phase 6 — Live metering with color-coded zones
+ */
+
+.vu-meter-unit {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.vu-meter-unit.vertical {
+  flex-direction: column-reverse;
+}
+
+.vu-meter-unit.horizontal {
+  flex-direction: row;
+}
+
+/* Track */
+.vu-track {
+  position: relative;
+  overflow: hidden;
+  border-radius: 2px;
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+}
+
+.vu-meter-unit.vertical .vu-track {
+  width: 10px;
+}
+
+.vu-meter-unit.horizontal .vu-track {
+  height: 10px;
+}
+
+/* Bar fill */
+.vu-bar {
+  position: absolute;
+  border-radius: 1px;
+  transition: height 0.06s linear, width 0.06s linear;
+}
+
+.vu-meter-unit.vertical .vu-bar {
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.vu-meter-unit.horizontal .vu-bar {
+  top: 0;
+  left: 0;
+  bottom: 0;
+}
+
+.vu-bar.green {
+  background: linear-gradient(to top, #00c853, #69f0ae);
+  box-shadow: 0 0 4px #00c85366;
+}
+
+.vu-bar.yellow {
+  background: linear-gradient(to top, #00c853, #ffeb3b 70%, #ffc107);
+  box-shadow: 0 0 4px #ffeb3b44;
+}
+
+.vu-bar.red {
+  background: linear-gradient(to top, #00c853, #ffeb3b 60%, #ff1744 90%);
+  box-shadow: 0 0 6px #ff174466;
+}
+
+.vu-bar.off {
+  background: #1a1a1a;
+  height: 100% !important;
+  width: 100% !important;
+}
+
+/* Peak hold */
+.vu-peak-hold {
+  position: absolute;
+  background: #fff;
+  box-shadow: 0 0 4px #ffffff88;
+  transition: bottom 0.1s linear, left 0.1s linear;
+}
+
+.vu-meter-unit.vertical .vu-peak-hold {
+  left: 1px;
+  right: 1px;
+  height: 2px;
+}
+
+.vu-meter-unit.horizontal .vu-peak-hold {
+  top: 1px;
+  bottom: 1px;
+  width: 2px;
+}
+
+/* Scale markers */
+.vu-scale {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.vu-mark {
+  position: absolute;
+  background: #ffffff11;
+}
+
+.vu-meter-unit.vertical .vu-mark {
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+
+.vu-meter-unit.horizontal .vu-mark {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
+
+/* Label */
+.vu-label {
+  font-size: 8px;
+  font-weight: 700;
+  color: #444;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}

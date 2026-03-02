@@ -1,4 +1,4 @@
-# DJ UI/UX Agent Team - Self Review & Rating (v4.0 — Phase 4 Complete)
+# DJ UI/UX Agent Team - Self Review & Rating (v6.0 — Phase 6 Complete)
 
 ## Created Artifacts
 
@@ -19,14 +19,19 @@
 
 ### 4. Gear Component Library (`src/components/gear/`)
 
-| Component      | File                 | Tests |
-| -------------- | -------------------- | ----- |
-| PlatinumCDJ    | `PlatinumCDJ.tsx`    | ✅ 7  |
-| VintageMixer   | `VintageMixer.tsx`   | ✅ 7  |
-| CyberTurntable | `CyberTurntable.tsx` | ✅ 9  |
-| FXRack         | `FXRack.tsx`         | ✅ 8  |
-| SamplerPad     | `SamplerPad.tsx`     | ✅ 8  |
-| StudioStage    | `StudioStage.tsx`    | ✅ 7  |
+| Component       | File                  | Tests |
+| --------------- | --------------------- | ----- |
+| PlatinumCDJ     | `PlatinumCDJ.tsx`     | ✅ 7  |
+| VintageMixer    | `VintageMixer.tsx`    | ✅ 7  |
+| CyberTurntable  | `CyberTurntable.tsx`  | ✅ 9  |
+| FXRack          | `FXRack.tsx`          | ✅ 8  |
+| SamplerPad      | `SamplerPad.tsx`      | ✅ 8  |
+| StudioStage     | `StudioStage.tsx`     | ✅ 7  |
+| PresetLibrary   | `PresetLibrary.tsx`   | ✅ 9  |
+| AudioRoutingViz | `AudioRoutingViz.tsx` | ✅ 11 |
+| GearBottomPanel | `GearBottomPanel.tsx` | ✅ 6  |
+| GearSettings    | `GearSettings.tsx`    | ✅ 7  |
+| VUMeter         | `VUMeter.tsx`         | ✅ 10 |
 
 ### 5. Hooks (`src/components/gear/hooks/`)
 
@@ -34,111 +39,145 @@
 | ---------------------- | ----- | ------------------------------------------------------- |
 | `useGearAudio`         | —     | Web Audio API bridge: play, volume, EQ, metering        |
 | `useLayoutPersistence` | ✅ 5  | localStorage save/load/delete with backend-ready schema |
+| `useAudioEngineBridge` | —     | Connects gear UI to real AudioEngine via events         |
+| `useDragReorder`       | ✅ 7  | Drag-to-reposition with grid snap support               |
+| `useUndoRedo`          | ✅ 10 | Generic undo/redo history stack with max depth          |
 
 ### 6. Routes
 
-| Route   | File                    | Description                                              |
-| ------- | ----------------------- | -------------------------------------------------------- |
-| `/gear` | `src/app/gear/page.tsx` | Full-page Gear Builder with sidebar, persistence, export |
+| Route   | File                    | Description                                                         |
+| ------- | ----------------------- | ------------------------------------------------------------------- |
+| `/gear` | `src/app/gear/page.tsx` | Full-page Gear Builder with drag, undo/redo, bottom panel, metering |
 
 ### 7. Tests (`tests/ui/gear/`)
 
-| Test File                       | Count  |
-| ------------------------------- | ------ |
-| `PlatinumCDJ.test.tsx`          | 7      |
-| `VintageMixer.test.tsx`         | 7      |
-| `CyberTurntable.test.tsx`       | 9      |
-| `StudioStage.test.tsx`          | 7      |
-| `FXRack.test.tsx`               | 8      |
-| `SamplerPad.test.tsx`           | 8      |
-| `useLayoutPersistence.test.tsx` | 5      |
-| **Total**                       | **51** |
+| Test File                       | Count   |
+| ------------------------------- | ------- |
+| `PlatinumCDJ.test.tsx`          | 7       |
+| `VintageMixer.test.tsx`         | 7       |
+| `CyberTurntable.test.tsx`       | 9       |
+| `StudioStage.test.tsx`          | 7       |
+| `FXRack.test.tsx`               | 8       |
+| `SamplerPad.test.tsx`           | 8       |
+| `useLayoutPersistence.test.tsx` | 5       |
+| `PresetLibrary.test.tsx`        | 9       |
+| `AudioRoutingViz.test.tsx`      | 11      |
+| `GearBottomPanel.test.tsx`      | 6       |
+| `GearSettings.test.tsx`         | 7       |
+| `VUMeter.test.tsx`              | 10      |
+| `useUndoRedo.test.tsx`          | 10      |
+| `useDragReorder.test.tsx`       | 7       |
+| **Total**                       | **111** |
 
 ---
 
-## Self-Review Scores (v4.0)
+## Self-Review Scores (v6.0)
 
-| Category               | v1  | v2  | v3  | v4     | Δ   |
-| ---------------------- | --- | --- | --- | ------ | --- |
-| **Architecture**       | 8   | 9   | 9   | **10** | +1  |
-| **Components**         | 7   | 9   | 10  | 10     | —   |
-| **Extensibility**      | 9   | 9   | 9   | **10** | +1  |
-| **Accessibility**      | 4   | 5   | 7   | **8**  | +1  |
-| **Theming**            | 5   | 7   | 8   | 8      | —   |
-| **Documentation**      | 6   | 8   | 8   | 8      | —   |
-| **Testing**            | 3   | 3   | 7   | **9**  | +2  |
-| **MCP Integration**    | 6   | 6   | 6   | 6      | —   |
-| **Modularity**         | —   | 9   | 10  | 10     | —   |
-| **Visual Fidelity**    | —   | 8   | 9   | 9      | —   |
-| **Keyboard/Shortcuts** | —   | —   | 8   | 8      | —   |
-| **Audio Integration**  | —   | —   | —   | **7**  | NEW |
-| **Persistence**        | —   | —   | —   | **8**  | NEW |
-| **Page Routes**        | —   | —   | —   | **9**  | NEW |
+| Category               | v1  | v2  | v3  | v4  | v5  | v6    | Δ   |
+| ---------------------- | --- | --- | --- | --- | --- | ----- | --- |
+| **Architecture**       | 8   | 9   | 9   | 10  | 10  | 10    | —   |
+| **Components**         | 7   | 9   | 10  | 10  | 10  | 10    | —   |
+| **Extensibility**      | 9   | 9   | 9   | 10  | 10  | 10    | —   |
+| **Accessibility**      | 4   | 5   | 7   | 8   | 9   | **9** | —   |
+| **Theming**            | 5   | 7   | 8   | 8   | 9   | 9     | —   |
+| **Documentation**      | 6   | 8   | 8   | 8   | 9   | 9     | —   |
+| **Testing**            | 3   | 3   | 7   | 9   | 10  | 10    | —   |
+| **MCP Integration**    | 6   | 6   | 6   | 6   | 6   | 6     | —   |
+| **Modularity**         | —   | 9   | 10  | 10  | 10  | 10    | —   |
+| **Visual Fidelity**    | —   | 8   | 9   | 9   | 10  | 10    | —   |
+| **Keyboard/Shortcuts** | —   | —   | 8   | 8   | 8   | **9** | +1  |
+| **Audio Integration**  | —   | —   | —   | 7   | 8   | **9** | +1  |
+| **Persistence**        | —   | —   | —   | 8   | 9   | 9     | —   |
+| **Page Routes**        | —   | —   | —   | 9   | 10  | 10    | —   |
+| **Preset System**      | —   | —   | —   | —   | 9   | 9     | —   |
+| **Signal Routing**     | —   | —   | —   | —   | 9   | 9     | —   |
+| **Settings Panel**     | —   | —   | —   | —   | 8   | 8     | —   |
+| **Drag Reorder**       | —   | —   | —   | —   | —   | **9** | NEW |
+| **Undo/Redo**          | —   | —   | —   | —   | —   | **9** | NEW |
+| **Live Metering**      | —   | —   | —   | —   | —   | **9** | NEW |
 
-**Overall Score: 8.6/10** (+0.3 from v3.0, +2.6 from v1.0)
+**Overall Score: 9.3/10** (+0.2 from v5.0, +3.3 from v1.0)
 
 ---
 
-## Phase 4 Deliverables
+## Phase 6 Deliverables
 
-### ✅ Audio Integration
+### ✅ Drag-to-Reposition
 
-- `useGearAudio` hook — Web Audio API bridge with lazy AudioContext init, GainNode, AnalyserNode, and requestAnimationFrame metering loop
-- Per-deck state: play/pause, volume, 3-band EQ, BPM sync, waveform data, peak level
+- `useDragReorder` hook — mouse-based drag with transform positioning
+- Grid snap support (20px grid, controllable via Settings)
+- Visual drag handle (⠿ grip dot, appears on hover, turns cyan on drag)
+- Z-index elevation of dragged item
+- Smooth transition on drop (0.15s ease)
+- Canvas enters `grabbing` cursor during drag
+- 7 unit tests
 
-### ✅ Layout Persistence
+### ✅ Undo/Redo System
 
-- `useLayoutPersistence` hook — localStorage CRUD operations with backend-ready schema
-- Save, load, delete, list operations with active layout tracking
-- 5 unit tests covering all operations
+- `useUndoRedo` hook — generic history stack
+- Ctrl+Z / Ctrl+Y / Ctrl+Shift+Z keyboard shortcuts
+- Toolbar buttons with disabled state indication
+- Configurable max history depth (default 50)
+- Redo stack clears on new action (standard behavior)
+- 10 unit tests
 
-### ✅ /gear Page Route
+### ✅ Live VU Metering
 
-- Full-page Studio Gear Builder (`src/app/gear/page.tsx`)
-- Click-to-add sidebar palette (no drag requirement)
-- Layout save/load from browser storage
-- JSON export for layout sharing
-- Toast notifications for save/load feedback
-- Dark workspace with dot-grid canvas
+- `VUMeter` component — real-time audio level meter
+- Peak and RMS display modes + off state
+- Color-coded zones: green (0-65%), yellow (65-85%), red (85%+)
+- Peak-hold indicator (white line)
+- Vertical and horizontal orientations
+- Demo animation mode (sine wave + noise for visual display)
+- Integrated into PlatinumCDJ — stereo L/R meters activate on play
+- ARIA `meter` role with dynamic valuenow
+- 10 unit tests
 
-### ✅ Additional Tests
+### ✅ Enhanced Page Integration
 
-- FXRack: 8 tests (toggle, SYNC, wet/dry, aria)
-- SamplerPad: 8 tests (pads, banks, keyboard hint, aria)
-- useLayoutPersistence: 5 tests (save, load, delete, list)
+- Gear page now uses `useUndoRedo` for all gear state changes
+- Drag handles visible on gear card hover
+- Undo/Redo buttons in header toolbar
+- Positions reset on preset load and layout load
+- Settings.gridSnap wired to drag snap behavior
 
 ---
 
 ## Architecture Overview
 
 ```
-┌──────────────────────────────────────────────────────┐
-│                   /gear Page Route                    │
-│   ┌────────────┐  ┌────────────────────────────────┐ │
-│   │  Sidebar   │  │      Canvas Grid               │ │
-│   │  Palette   │  │  ┌─────┐ ┌─────┐ ┌─────────┐  │ │
-│   │  ────────  │  │  │ CDJ │ │ CDJ │ │ Mixer   │  │ │
-│   │  💿 CDJ    │  │  │  A  │ │  B  │ │ Master  │  │ │
-│   │  🎚️ Mixer  │  │  └─────┘ └─────┘ └─────────┘  │ │
-│   │  🎵 TT     │  │  ┌─────┐ ┌─────────┐          │ │
-│   │  ✨ FX     │  │  │ FX  │ │ Sampler │          │ │
-│   │  🥁 Sampler│  │  │Rack │ │   Pad   │          │ │
-│   │            │  │  └─────┘ └─────────┘          │ │
-│   │  📂 Saved  │  │                                │ │
-│   └────────────┘  └────────────────────────────────┘ │
-│                                                      │
-│   Hooks:  useGearAudio  │  useLayoutPersistence      │
-│   Types:  gear.types.ts │  index.ts (barrel)         │
-└──────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                      /gear Page Route                         │
+│  ┌──────────┐  ┌──────────────────────────────────────────┐  │
+│  │ Sidebar  │  │           Canvas Grid (draggable)        │  │
+│  │ ──────── │  │  ┌────────────┐ ┌────────────┐          │  │
+│  │ 💿 CDJ   │  │  │ CDJ A      │ │ CDJ B      │          │  │
+│  │ 🎚 Mixer │  │  │ ⠿ [VU|VU] │ │ ⠿ [VU|VU] │          │  │
+│  │ 🎵 TT    │  │  └────────────┘ └────────────┘          │  │
+│  │ ✨ FX    │  │  ┌────────────────────┐                  │  │
+│  │ 🥁 Sampl │  │  │ Mixer (drag handle)│                  │  │
+│  │          │  │  └────────────────────┘                  │  │
+│  │ 📂 Saved │  │                                          │  │
+│  └──────────┘  └──────────────────────────────────────────┘  │
+│  [↩ Undo] [↪ Redo] [💾 Save] [� Export] [🗑️ Clear]        │
+│                ┌──────────────────────────────────────────┐  │
+│                │  📦 Presets │ 🔀 Signal │ ⚙ Settings     │  │
+│                └──────────────────────────────────────────┘  │
+│                                                              │
+│  Hooks: useGearAudio │ useLayoutPersistence │ useDragReorder │
+│         useAudioEngineBridge │ useUndoRedo                   │
+│  Types: gear.types.ts │ index.ts (barrel)                    │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Remaining Gaps (Phase 5+)
+## Remaining Gaps (Phase 7+)
 
 1. **StitchMCP** — AI-driven UI variation generation
 2. **Backend DB** — Migrate localStorage → settings.db via API
-3. **Real Audio Routing** — Connect useGearAudio to existing AudioEngine
+3. **Real Audio Routing** — Connect useAudioEngineBridge to gear components
 4. **Mobile Touch** — Jog wheel swipe, fader drag gestures
-5. **Drag Reorder** — Enable drag-to-reposition on canvas
-6. **Preset Library** — Built-in DJ setup presets (Club, Home, Mobile)
+5. **Import Layout** — Load JSON layout files from disk
+6. **Keyboard Nav** — Tab-through gear cards with focus ring
+7. **Real-time Waveform** — Canvas-rendered scrolling waveform display

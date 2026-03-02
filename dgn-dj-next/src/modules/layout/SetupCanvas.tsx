@@ -15,6 +15,7 @@ import {
   Wand2, LayoutGrid, FolderOpen, Radio, Activity, Box,
   Plus, Download, Upload, Maximize2, ChevronDown, Settings, LayoutIcon, X
 } from 'lucide-react';
+import { CompactDeck, CompactMixerChannel, CompactFXRack, CompactPads, CompactWaveform, CompactBrowser, CompactBroadcast } from '../../components/compact/CompactComponents';
 
 // ─── Component Icons ────────────────────────────────────────────
 
@@ -305,27 +306,42 @@ export function SetupCanvas({ layoutId = '2-deck-classic', onLayoutChange }: Set
   }, [setSelectedId]);
 
   // Render component content based on type
-  const renderComponentContent = (type: ComponentType) => {
+  const renderComponentContent = (type: ComponentType, componentId: string) => {
+    const isCompact = componentId.includes('b') || componentId.includes('c');
+    
     switch (type) {
       case 'deck-cdj':
-        return <div className="flex items-center justify-center h-full text-zinc-500">CDJ Deck</div>;
+        return <CompactDeck deck={componentId.includes('b') ? 'B' : 'A'} compact={isCompact} />;
       case 'deck-turntable':
-        return <div className="flex items-center justify-center h-full text-zinc-500">Turntable</div>;
+        return <CompactDeck deck={componentId.includes('b') ? 'B' : 'A'} compact={isCompact} />;
       case 'deck-sampler':
-        return <div className="flex items-center justify-center h-full text-zinc-500">Sampler</div>;
+        return <CompactPads />;
       case 'mixer-2ch':
+        return (
+          <div className="flex gap-1 h-full bg-zinc-900 p-1 rounded-lg">
+            <CompactMixerChannel channel={1} accentColor="#0091FF" />
+            <CompactMixerChannel channel={2} accentColor="#FF5500" />
+          </div>
+        );
       case 'mixer-4ch':
-        return <div className="flex items-center justify-center h-full text-zinc-500">Mixer</div>;
+        return (
+          <div className="flex gap-1 h-full bg-zinc-900 p-1 rounded-lg">
+            <CompactMixerChannel channel={1} accentColor="#0091FF" />
+            <CompactMixerChannel channel={2} accentColor="#FF5500" />
+            <CompactMixerChannel channel={3} accentColor="#22C55E" />
+            <CompactMixerChannel channel={4} accentColor="#A855F7" />
+          </div>
+        );
       case 'fx-rack':
-        return <div className="flex items-center justify-center h-full text-zinc-500">FX Rack</div>;
+        return <CompactFXRack />;
       case 'pads':
-        return <div className="flex items-center justify-center h-full text-zinc-500">Performance Pads</div>;
+        return <CompactPads />;
       case 'browser':
-        return <div className="flex items-center justify-center h-full text-zinc-500">Track Browser</div>;
+        return <CompactBrowser />;
       case 'broadcast':
-        return <div className="flex items-center justify-center h-full text-zinc-500">Broadcast</div>;
+        return <CompactBroadcast />;
       case 'waveform':
-        return <div className="flex items-center justify-center h-full text-zinc-500">Waveform</div>;
+        return <CompactWaveform />;
       default:
         return <div className="flex items-center justify-center h-full text-zinc-500">Custom</div>;
     }
@@ -438,7 +454,7 @@ export function SetupCanvas({ layoutId = '2-deck-classic', onLayoutChange }: Set
             onResize={(w, h) => resizeComponent(component.id, w, h)}
             onRemove={() => removeComponent(component.id)}
           >
-            {renderComponentContent(component.type)}
+            {renderComponentContent(component.type, component.id)}
           </ComponentWrapper>
         ))}
 

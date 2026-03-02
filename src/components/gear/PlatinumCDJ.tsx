@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
-import "./PlatinumCDJ.css"; // Importing SGE Iron styles
+import "./PlatinumCDJ.css";
+import { VUMeter } from "./VUMeter";
+import { WaveformDisplay } from "./WaveformDisplay";
 
 /**
  * PlatinumCDJ - A high-fidelity, modular virtual deck for DGN-DJ Studio.
@@ -48,23 +50,34 @@ export const PlatinumCDJ: React.FC<{
       {/* Top Section: Deck Info & BPM */}
       <div className="cdj-header">
         <div className="deck-indicator">{label}</div>
-        <div className="bpm-display">
-          <span className="bpm-value">{bpm.toFixed(1)}</span>
-          <span className="bpm-unit">BPM</span>
+        <div className="cdj-header-right">
+          <div className="cdj-meters">
+            <VUMeter
+              level={0}
+              mode="peak"
+              size={40}
+              label="L"
+              demo={isPlaying}
+            />
+            <VUMeter
+              level={0}
+              mode="peak"
+              size={40}
+              label="R"
+              demo={isPlaying}
+            />
+          </div>
+          <div className="bpm-display">
+            <span className="bpm-value">{bpm.toFixed(1)}</span>
+            <span className="bpm-unit">BPM</span>
+          </div>
         </div>
       </div>
 
-      {/* Main Display: Waveform & Time */}
+      {/* Main Display: Canvas Waveform & Time */}
       <div className="cdj-main-display">
         <div className="time-display">03:42.12</div>
-        <div className="waveform-container">
-          <div className="waveform-track neon-blue">
-            {/* Visual placeholder for scrolling waveform */}
-            <div
-              className={`waveform-visual ${isPlaying ? "scrolling" : ""}`}
-            />
-          </div>
-        </div>
+        <WaveformDisplay isPlaying={isPlaying} bpm={bpm} height={52} />
       </div>
 
       {/* Jog Wheel Section */}

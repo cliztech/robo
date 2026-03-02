@@ -59,6 +59,18 @@
   letter-spacing: 1px;
 }
 
+.cdj-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cdj-meters {
+  display: flex;
+  gap: 3px;
+  align-items: flex-end;
+}
+
 .bpm-value {
   font-size: 24px;
   font-weight: 700;
