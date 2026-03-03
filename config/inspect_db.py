@@ -45,11 +45,6 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def quote_identifier(name: str) -> str:
-    """Safely quote an SQLite identifier for PRAGMA statements."""
-    return '"' + name.replace('"', '""') + '"'
-
-
 def fetch_table_names(cursor: sqlite3.Cursor) -> list[str]:
     cursor.execute(
         """
@@ -60,14 +55,6 @@ def fetch_table_names(cursor: sqlite3.Cursor) -> list[str]:
         """
     )
     return [row[0] for row in cursor.fetchall()]
-
-
-def fetch_table_sql(cursor: sqlite3.Cursor, table_name: str) -> str | None:
-    cursor.execute(
-        "SELECT sql FROM sqlite_master WHERE type='table' AND name = ?;", (table_name,)
-    )
-    row = cursor.fetchone()
-    return row[0] if row else None
 
 
 def get_schema(db_path: Path, selected_tables: set[str] | None, include_sql: bool) -> dict[str, Any]:
@@ -86,30 +73,50 @@ def get_schema(db_path: Path, selected_tables: set[str] | None, include_sql: boo
                 tables = all_tables
                 missing = []
 
-            schema: dict[str, Any] = {"tables": {}}
+            schema: dict[str, Any] = {"tables": {t: {"columns": []} for t in tables}}
 
-            for table in tables:
-                pragma_table = quote_identifier(table)
-                cursor.execute(f"PRAGMA table_info({pragma_table});")
-                columns = [
-                    {
-                        "cid": row[0],
-                        "name": row[1],
-                        "type": row[2],
-                        "notnull": bool(row[3]),
-                        "default": row[4],
-                        "pk": bool(row[5]),
-                    }
-                    for row in cursor.fetchall()
-                ]
+            if not tables:
+                if missing:
+                    schema["missing_tables"] = missing
+                return schema
 
-                table_data: dict[str, Any] = {"columns": columns}
-                if include_sql:
-                    sql_val = fetch_table_sql(cursor, table)
-                    if sql_val:
-                         table_data["create_sql"] = sql_val
+            if len(tables) < 50:
+                placeholders = ",".join("?" for _ in tables)
+                query = f"""
+                    SELECT m.name, p.cid, p.name, p.type, p."notnull", p.dflt_value, p.pk, m.sql
+                    FROM sqlite_master m
+                    JOIN pragma_table_info(m.name) p
+                    WHERE m.type='table' AND m.name IN ({placeholders})
+                    ORDER BY m.name, p.cid
+                """
+                cursor.execute(query, tuple(tables))
+            else:
+                query = """
+                    SELECT m.name, p.cid, p.name, p.type, p."notnull", p.dflt_value, p.pk, m.sql
+                    FROM sqlite_master m
+                    JOIN pragma_table_info(m.name) p
+                    WHERE m.type='table' AND m.name NOT LIKE 'sqlite_%'
+                    ORDER BY m.name, p.cid
+                """
+                cursor.execute(query)
 
-                schema["tables"][table] = table_data
+            for row in cursor.fetchall():
+                table_name = row[0]
+                if table_name not in schema["tables"]:
+                    continue
+
+                schema["tables"][table_name]["columns"].append({
+                    "cid": row[1],
+                    "name": row[2],
+                    "type": row[3],
+                    "notnull": bool(row[4]),
+                    "default": row[5],
+                    "pk": bool(row[6]),
+                })
+
+                if include_sql and "create_sql" not in schema["tables"][table_name]:
+                    if row[7]:
+                         schema["tables"][table_name]["create_sql"] = row[7]
 
             if missing:
                 schema["missing_tables"] = missing

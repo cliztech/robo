@@ -149,3 +149,44 @@ def test_circuit_breaker_blocks_after_failure() -> None:
         assert "circuit breaker open" in str(exc)
     else:
         raise AssertionError("expected circuit open exception")
+
+@mock.patch("backend.ai_api._service.analyze_track")
+def test_track_analysis_circuit_open_error(mock_analyze_track) -> None:
+    mock_analyze_track.side_effect = AICircuitOpenError("circuit breaker open")
+    client = TestClient(app)
+    response = client.post(
+        "/api/v1/ai/track-analysis",
+        json={
+            "title": "Neon Skyline",
+            "artist": "Bytewave",
+            "genre": "Synthwave",
+            "bpm": 118,
+            "duration_seconds": 245,
+            "notes": "night drive",
+        },
+        headers={"X-Correlation-ID": "corr-track-err", "X-API-Key": TEST_API_KEY},
+    )
+
+    assert response.status_code == 503
+    assert response.json()["detail"] == "circuit breaker open"
+
+@mock.patch("backend.ai_api._service.analyze_track")
+def test_track_analysis_service_error(mock_analyze_track) -> None:
+    from backend.ai_service import AIServiceError
+    mock_analyze_track.side_effect = AIServiceError("service error")
+    client = TestClient(app)
+    response = client.post(
+        "/api/v1/ai/track-analysis",
+        json={
+            "title": "Neon Skyline",
+            "artist": "Bytewave",
+            "genre": "Synthwave",
+            "bpm": 118,
+            "duration_seconds": 245,
+            "notes": "night drive",
+        },
+        headers={"X-Correlation-ID": "corr-track-err2", "X-API-Key": TEST_API_KEY},
+    )
+
+    assert response.status_code == 502
+    assert response.json()["detail"] == "service error"

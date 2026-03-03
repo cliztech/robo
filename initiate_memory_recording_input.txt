@@ -1,0 +1,1 @@
+Added unit tests for the pure state transformation function `toggleNotificationSeverity` inside `src/features/notifications/notifications.store.ts`. Used vitest for testing, covering addition, removal, state immutability, and ensuring that other properties (like `alerts`) are preserved correctly. This approach ensures safety nets are in place for future refactoring.

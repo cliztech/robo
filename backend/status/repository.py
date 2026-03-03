@@ -9,23 +9,28 @@ from backend.status.models import AlertCenterItem, AlertSeverity
 
 
 class StatusAlertRepository(Protocol):
-    def list_alerts(self, severity: AlertSeverity | None = None) -> list[AlertCenterItem]:
-        ...
+    def list_alerts(
+        self, severity: AlertSeverity | None = None
+    ) -> list[AlertCenterItem]: ...
 
-    def acknowledge_alert(self, alert_id: str) -> AlertCenterItem | None:
-        ...
+    def acknowledge_alert(self, alert_id: str) -> AlertCenterItem | None: ...
 
-    def reconcile_alerts(self, alerts: Sequence[AlertCenterItem], observed_at: datetime) -> None:
-        ...
+    def reconcile_alerts(
+        self, alerts: Sequence[AlertCenterItem], observed_at: datetime
+    ) -> None: ...
 
 
 class SQLiteStatusAlertRepository:
-    def __init__(self, db_path: Path, default_alerts: Sequence[AlertCenterItem]) -> None:
+    def __init__(
+        self, db_path: Path, default_alerts: Sequence[AlertCenterItem]
+    ) -> None:
         self._db_path = db_path
         self._default_alerts = default_alerts
         self._initialize()
 
-    def list_alerts(self, severity: AlertSeverity | None = None) -> list[AlertCenterItem]:
+    def list_alerts(
+        self, severity: AlertSeverity | None = None
+    ) -> list[AlertCenterItem]:
         query = "SELECT * FROM status_alerts WHERE resolved_at IS NULL"
         params: list[str] = []
         if severity is not None:
@@ -61,15 +66,17 @@ class SQLiteStatusAlertRepository:
             return None
         return self._row_to_alert(row)
 
-    def reconcile_alerts(self, alerts: Sequence[AlertCenterItem], observed_at: datetime) -> None:
+    def reconcile_alerts(
+        self, alerts: Sequence[AlertCenterItem], observed_at: datetime
+    ) -> None:
         if observed_at.tzinfo is None:
             observed_at = observed_at.replace(tzinfo=timezone.utc)
         observed_at_iso = observed_at.isoformat()
         active_alert_ids = {alert.alert_id for alert in alerts}
 
         with self._connect() as connection:
-            for alert in alerts:
-                connection.execute(
+            if alerts:
+                connection.executemany(
                     """
                     INSERT INTO status_alerts (
                         alert_id, severity, title, description, created_at,
@@ -82,16 +89,21 @@ class SQLiteStatusAlertRepository:
                         last_seen_at = excluded.last_seen_at,
                         resolved_at = NULL
                     """,
-                    (
-                        alert.alert_id,
-                        alert.severity.value,
-                        alert.title,
-                        alert.description,
-                        alert.created_at.isoformat(),
-                        int(alert.acknowledged),
-                        alert.acknowledged_at.isoformat() if alert.acknowledged_at else None,
-                        observed_at_iso,
-                    ),
+                    [
+                        (
+                            alert.alert_id,
+                            alert.severity.value,
+                            alert.title,
+                            alert.description,
+                            alert.created_at.isoformat(),
+                            int(alert.acknowledged),
+                            alert.acknowledged_at.isoformat()
+                            if alert.acknowledged_at
+                            else None,
+                            observed_at_iso,
+                        )
+                        for alert in alerts
+                    ],
                 )
 
             if active_alert_ids:
@@ -134,12 +146,19 @@ class SQLiteStatusAlertRepository:
                 """
             )
             columns = {
-                row["name"] for row in connection.execute("PRAGMA table_info(status_alerts)").fetchall()
+                row["name"]
+                for row in connection.execute(
+                    "PRAGMA table_info(status_alerts)"
+                ).fetchall()
             }
             if "last_seen_at" not in columns:
-                connection.execute("ALTER TABLE status_alerts ADD COLUMN last_seen_at TEXT")
+                connection.execute(
+                    "ALTER TABLE status_alerts ADD COLUMN last_seen_at TEXT"
+                )
             if "resolved_at" not in columns:
-                connection.execute("ALTER TABLE status_alerts ADD COLUMN resolved_at TEXT")
+                connection.execute(
+                    "ALTER TABLE status_alerts ADD COLUMN resolved_at TEXT"
+                )
 
             for alert in self._default_alerts:
                 connection.execute(
@@ -156,7 +175,9 @@ class SQLiteStatusAlertRepository:
                         alert.description,
                         alert.created_at.isoformat(),
                         int(alert.acknowledged),
-                        alert.acknowledged_at.isoformat() if alert.acknowledged_at else None,
+                        alert.acknowledged_at.isoformat()
+                        if alert.acknowledged_at
+                        else None,
                         alert.created_at.isoformat(),
                     ),
                 )
@@ -176,5 +197,7 @@ class SQLiteStatusAlertRepository:
             description=row["description"],
             created_at=datetime.fromisoformat(row["created_at"]),
             acknowledged=bool(row["acknowledged"]),
-            acknowledged_at=datetime.fromisoformat(acknowledged_at) if acknowledged_at else None,
+            acknowledged_at=datetime.fromisoformat(acknowledged_at)
+            if acknowledged_at
+            else None,
         )

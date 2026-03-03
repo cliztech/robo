@@ -106,15 +106,15 @@ class PlaylistGenerationService:
 
     def generate_playlist(self, request: PlaylistGenerationRequest) -> PlaylistGenerationResult:
         # Pre-process tracks into optimized structures (O(N))
-        remaining = [
-            _OptimizedTrack(
+        remaining = {
+            t.id: _OptimizedTrack(
                 track=t,
                 genre_lower=t.genre.lower(),
                 mood_lower=t.mood.lower(),
                 artist_norm=self._normalize_artist(t.artist),
             )
             for t in request.tracks
-        ]
+        }
         output: list[PlaylistEntry] = []
         transition_scores: list[float] = []
 
@@ -140,7 +140,7 @@ class PlaylistGenerationService:
                 "genre_run_length": 0,
                 "duration_target": 0,
             }
-            for candidate in remaining:
+            for candidate in remaining.values():
                 failed_constraints = self._hard_constraint_failures(request, output, previous_track, candidate)
                 if not failed_constraints:
                     hard_filtered.append(candidate)
@@ -200,7 +200,7 @@ class PlaylistGenerationService:
                     selection_reason=self._selection_reason(request, target_energy, previous_track, chosen),
                 )
             )
-            remaining = [track for track in remaining if track.track.id != chosen_track.id]
+            del remaining[chosen_track.id]
 
         return PlaylistGenerationResult(
             entries=output,
