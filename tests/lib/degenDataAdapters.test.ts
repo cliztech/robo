@@ -178,7 +178,7 @@ describe('degenDataAdapters', () => {
         });
 
         it('resolveScheduleSegmentData prefers provided segments over defaults', () => {
-            const mockSegments = [{ id: 'seg1', type: 'music', title: 'Test', startHour: 10, durationMinutes: 60 }];
+            const mockSegments: ScheduleSegmentData[] = [{ id: 'seg1', type: 'music', title: 'Test', startHour: 10, durationMinutes: 60 }];
             const result = adapters.resolveScheduleSegmentData(mockSegments);
             expect(result).toBe(mockSegments);
         it('resolveTrackLibraryData prefers provided tracks over demo data', async () => {
