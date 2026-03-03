@@ -1,4 +1,3 @@
-import pytest
 from dgn_airwaves import build_segment
 
 def test_build_segment_basic():
