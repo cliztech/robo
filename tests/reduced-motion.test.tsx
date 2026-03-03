@@ -61,7 +61,7 @@ describe('Reduced Motion Hook', () => {
         // Simulate media query change back to false
         act(() => {
             if (changeListener) {
-                (changeListener as any)({ matches: false } as MediaQueryListEvent);
+                changeListener({ matches: false } as MediaQueryListEvent);
             }
         });
         expect(result.current).toBe(false);
