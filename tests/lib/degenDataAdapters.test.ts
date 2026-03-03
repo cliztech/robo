@@ -106,7 +106,7 @@ describe('degenDataAdapters', () => {
         });
 
         it('resolveTrackLibraryData prefers provided tracks over defaults', () => {
-            const mockTracks = [{ id: '99', title: 'Test', artist: 'Test', bpm: 100, key: 'Cm', duration: 100, genre: 'Test', energy: 5 }];
+            const mockTracks: TrackLibraryTrack[] = [{ id: '99', title: 'Test', artist: 'Test', bpm: 100, key: 'Cm', duration: 100, genre: 'Test', energy: 5 }];
             const result = adapters.resolveTrackLibraryData(mockTracks);
             expect(result).toBe(mockTracks);
         });
