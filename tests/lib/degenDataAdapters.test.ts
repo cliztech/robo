@@ -218,7 +218,7 @@ describe('degenDataAdapters', () => {
         });
 
         it('resolveTransportTrack prefers provided track over defaults', () => {
-            const mockTrack = { title: 'Custom', artist: 'Artist' };
+            const mockTrack: TransportTrack = { title: 'Custom', artist: 'Artist' };
             const result = adapters.resolveTransportTrack(mockTrack);
             expect(result).toBe(mockTrack);
     describe('Pure Utility Functions (Environment Independent)', () => {
