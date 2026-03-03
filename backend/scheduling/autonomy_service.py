@@ -229,17 +229,17 @@ class AutonomyPolicyService:
                 "event_id": str(uuid4()),
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "action": "ACT-UPDATE-AUTONOMY-POLICY",
-                "actor_id": context.actor_id,
+                "actor_id": "api-key-actor",
                 "result": "success",
                 "before_sha256": before_hash,
                 "after_sha256": config_hash(serialized_payload),
                 "approvals": [
                     {
-                        "approver_id": approval.approver_id,
-                        "approver_roles": sorted(approval.approver_roles),
-                        "reason": approval.reason,
+                        "principal": approval.principal,
+                        "role": approval.role.value,
+                        "approved_at_utc": approval.approved_at_utc,
                     }
-                    for approval in context.approvals
+                    for approval in (approval_chain or [])
                 ],
             },
         )

@@ -42,7 +42,7 @@ describe('dashboard status proxy route handlers', () => {
       data: {
         session: {
           user: { id: 'user-1' },
-          access_token: 'token-abc',
+          access_token: 'mock-token-abc',
         },
       },
     });
@@ -101,7 +101,7 @@ describe('dashboard status proxy route handlers', () => {
       data: {
         session: {
           user: { id: 'user-2' },
-          access_token: 'token-def',
+          access_token: 'mock-token-def',
         },
       },
     });
@@ -131,7 +131,7 @@ describe('dashboard status proxy route handlers', () => {
       data: {
         session: {
           user: { id: 'user-3' },
-          access_token: 'token-ghi',
+          access_token: 'mock-token-ghi',
         },
       },
     });

@@ -5,7 +5,6 @@ from __future__ import annotations
 
 from pathlib import Path
 import re
-import sys
 
 TRACKED_ISSUES_DIR = Path('docs/exec-plans/active/tracked-issues')
 HEADER_RE = re.compile(r'^# TI-\d{3}\b', re.MULTILINE)

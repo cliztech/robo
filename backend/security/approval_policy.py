@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
-from typing import Iterable
+from enum import Enum
+from typing import Iterable, Sequence
 
 
 class ApprovalPolicyError(PermissionError):
@@ -135,7 +137,7 @@ class ApproverRole(str, Enum):
 
 
 @dataclass(frozen=True)
-class ApprovalRecord:
+class ChainApprovalRecord:
     principal: str
     role: ApproverRole
     approved_at_utc: str
@@ -156,11 +158,7 @@ ACTION_MINIMUM_APPROVER_ROLES: dict[ActionId, frozenset[ApproverRole]] = {
 }
 
 
-class ApprovalPolicyError(PermissionError):
-    pass
-
-
-def parse_approval_chain(raw_chain: Sequence[dict[str, str]] | str | None) -> list[ApprovalRecord]:
+def parse_approval_chain(raw_chain: Sequence[dict[str, str]] | str | None) -> list[ChainApprovalRecord]:
     if raw_chain is None:
         return []
 
@@ -175,7 +173,7 @@ def parse_approval_chain(raw_chain: Sequence[dict[str, str]] | str | None) -> li
     else:
         records = raw_chain
 
-    parsed: list[ApprovalRecord] = []
+    parsed: list[ChainApprovalRecord] = []
     for index, item in enumerate(records):
         if not isinstance(item, dict):
             raise ApprovalPolicyError(f"approval_chain[{index}] must be an object")
@@ -191,12 +189,12 @@ def parse_approval_chain(raw_chain: Sequence[dict[str, str]] | str | None) -> li
         if not principal.strip():
             raise ApprovalPolicyError(f"approval_chain[{index}].principal must be non-empty")
 
-        parsed.append(ApprovalRecord(principal=principal, role=role, approved_at_utc=approved_at))
+        parsed.append(ChainApprovalRecord(principal=principal, role=role, approved_at_utc=approved_at))
 
     return parsed
 
 
-def evaluate_approval_chain(action_id: ActionId, approval_chain: Sequence[ApprovalRecord]) -> ApprovalDecision:
+def evaluate_approval_chain(action_id: ActionId, approval_chain: Sequence[ChainApprovalRecord]) -> ApprovalDecision:
     required_roles = ACTION_MINIMUM_APPROVER_ROLES[action_id]
     chain_roles = {entry.role for entry in approval_chain}
     missing_roles = sorted(role.value for role in required_roles - chain_roles)
@@ -209,7 +207,7 @@ def evaluate_approval_chain(action_id: ActionId, approval_chain: Sequence[Approv
     return ApprovalDecision(allowed=True, reason="approved")
 
 
-def require_approval(action_id: ActionId, approval_chain: Sequence[ApprovalRecord]) -> None:
+def require_approval(action_id: ActionId, approval_chain: Sequence[ChainApprovalRecord]) -> None:
     decision = evaluate_approval_chain(action_id=action_id, approval_chain=approval_chain)
     if not decision.allowed:
         raise ApprovalPolicyError(decision.reason)

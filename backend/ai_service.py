@@ -140,6 +140,11 @@ class AIInferenceService:
             except (OSError, json.JSONDecodeError, ConfigCryptoError):
                 return "default", "{}"
 
+        config_path = Path(__file__).parent.parent / "config" / "prompt_variables.json"
+        try:
+            payload = load_config_json(config_path)
+        except (OSError, json.JSONDecodeError, ConfigCryptoError):
+            return "default", "{}"
 
         version = str(payload.get("version", "default")).strip() or "default"
         variable_settings = payload.get("variable_settings", {})

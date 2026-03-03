@@ -1,4 +1,3 @@
-import re
 
 path = 'src/components/audio/DegenWaveform.tsx'
 with open(path, 'r') as f:
