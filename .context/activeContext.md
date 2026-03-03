@@ -225,3 +225,9 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Updated TECH_STACK.md to reflect current runtime/framework/tooling versions (Node 20.x, Next.js 15.5.10, React 18, Vitest 4.x, FastAPI/Python backend context).
 - Rebranded backend operator-facing startup/title strings from legacy RoboDJ naming to DGN-DJ naming.
 - Expanded CI docs consistency gate by wiring `scripts/ci/check_docs_consistency.py` into `.github/workflows/ci.yml` and adding README structure checks.
+
+## 2026-03-03 Roadmap Autopilot Build-Plan Dedup Hardening
+- Updated `scripts/roadmap_autopilot.py` build-plan writer to perform atomic replacement writes via temp file + `Path.replace()` to prevent accidental append/partial-write artifacts.
+- Added pre-render de-duplication for build-plan tasks and cadence reminders keyed by `(source_file, line_ref, normalized_task_text)`.
+- Regenerated `docs/exec-plans/active/unfinished-task-build-plan.md` and verified a single generated header plus unique reminders/task rows.
+- Extended `scripts/ci/check_docs_consistency.py` with guards for duplicate generated-header blocks and duplicate build-plan task/reminder keys.

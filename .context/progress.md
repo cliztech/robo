@@ -236,3 +236,9 @@
 - [x] Refreshed TECH_STACK.md runtime/framework/tooling entries to current versions (including Next.js 15.5.10).
 - [x] Replaced backend operator-facing legacy RoboDJ naming in startup error text and FastAPI title with DGN-DJ branding.
 - [x] Added docs consistency check execution to CI and strengthened `scripts/ci/check_docs_consistency.py` with README title/index validation.
+
+## 2026-03-03 Roadmap Autopilot Build Plan Integrity
+- [x] Switched roadmap autopilot build-plan output to atomic temp-file replacement writes.
+- [x] Added task/reminder de-duplication keyed by `(source_file, line_ref, normalized_task_text)` before markdown rendering.
+- [x] Regenerated `docs/exec-plans/active/unfinished-task-build-plan.md`; confirmed single generation header, unique cadence reminders, and no duplicate task rows.
+- [x] Extended docs consistency CI check to fail on duplicate autopilot generated-header blocks and duplicate build-plan keys.
