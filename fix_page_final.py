@@ -1,3 +1,5 @@
+import re
+
 file_path = 'src/app/page.tsx'
 
 header_imports = """'use client';

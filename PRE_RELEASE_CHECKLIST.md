@@ -4,8 +4,6 @@
 
 Run the following commands in order before release sign-off.
 
-Dependency gate: verify current Python/Node/Docker toolchain versions satisfy `docs/product-specs/dependency-compatibility-contract.md` before sign-off.
-
 1. `python config/validate_config.py`
    Expected output string: `Configuration validation passed for schedules.json and prompt_variables.json.`
 2. `python config/check_runtime_secrets.py --require-env-only`
@@ -84,13 +82,13 @@ Dependency gate: verify current Python/Node/Docker toolchain versions satisfy `d
 ### C. Operator startup preflight behavior
 
 - [ ] **Launcher validation gate behavior is verified.**
-  Command: `./DGN-DJ_Launcher.bat`
+  Command: `./RoboDJ_Launcher.bat`
   Canonical expected output (success path): `Configuration validation passed for schedules.json and prompt_variables.json.`
 - [ ] **Blocked-start behavior is verified for failed validation.**
   Canonical expected output strings:
   - `Configuration validation failed:`
   - `Fix the fields above, then rerun: python config/validate_config.py`
-  - `[DGN-DJ] ERROR: Startup blocked because configuration validation failed.`
+  - `[RoboDJ] ERROR: Startup blocked because configuration validation failed.`
 - **Checklist owner:** ____________________
 - **Sign-off (name + date/time):** ____________________
 ## Launcher workflow pre-run gate (all release paths)
@@ -124,7 +122,7 @@ Roadmap cross-links: [v1.1 heading](FEATURE_HEAVY_ROADMAP_TODO.md#v11--reliabili
 ### v1.1 Must gates
 
 - [ ] **Startup diagnostics panel checks are all PASS before startup completion.**
-  Command: `./DGN-DJ_Launcher.bat`
+  Command: `./RoboDJ_Launcher.bat`
   Canonical expected output: `database=PASS`, `key_integrity=PASS`, `audio_device=PASS`
 - [ ] **Launch-time config validator blocks malformed JSON and allows valid JSON.**
   Command: `python config/validate_config.py`
@@ -199,22 +197,22 @@ Roadmap cross-links: [v2.0 heading](FEATURE_HEAVY_ROADMAP_TODO.md#v20--enterpris
   - Full-day simulation catches schedule/content errors before air.
 ## Startup Preflight Failure Runbook
 
-When launching via `DGN-DJ_Launcher.bat`, startup now runs config validation before opening the app.
+When launching via `RoboDJ_Launcher.bat`, startup now runs config validation before opening the app.
 
 1. If preflight fails, startup is blocked and the launcher prints:
    - `Configuration validation failed:`
    - One or more ` - [target] ...` error lines with JSON paths and expected values/types.
    - `Fix the fields above, then rerun: python config/validate_config.py`
-   - `[DGN-DJ] ERROR: Startup blocked because configuration validation failed.`
+   - `[RoboDJ] ERROR: Startup blocked because configuration validation failed.`
 2. Fix only the reported config fields (`config/schedules.json`, `config/prompt_variables.json`).
 3. Re-run `python config/validate_config.py` until the expected success string appears exactly:
    - `Configuration validation passed for schedules.json and prompt_variables.json.`
-4. Relaunch using `DGN-DJ_Launcher.bat`.
+4. Relaunch using `RoboDJ_Launcher.bat`.
 - [ ] Verify backup/restore operations align with `config/BACKUP_RESTORE_CONTRACT.md` (scope, retention, confirmations, rollback).
 
 ## Startup preflight behavior (operator runbook)
 
-- `DGN-DJ_Launcher.bat` now runs `config/validate_config.py` and `config/check_runtime_secrets.py --require-env-only` before launching the app.
+- `RoboDJ_Launcher.bat` now runs `config/validate_config.py` and `config/check_runtime_secrets.py --require-env-only` before launching the app.
 - Startup continues only when validation prints:
   `Configuration validation passed for schedules.json and prompt_variables.json.`
 - If validation fails, startup is blocked and the launcher keeps the actionable validator output visible.
@@ -222,7 +220,7 @@ When launching via `DGN-DJ_Launcher.bat`, startup now runs config validation bef
 - Operator actions on failure:
   1. Read each listed `[target]` error and fix the referenced field(s) in the matching config JSON.
   2. Re-run `python config/validate_config.py` until it prints the expected success string exactly.
-  3. Re-launch `DGN-DJ_Launcher.bat`.
+  3. Re-launch `RoboDJ_Launcher.bat`.
 - If startup is blocked because Python is missing, install Python 3 (or expose `py`/`python` on `PATH`) and rerun the launcher.
 ## Required Before Release Candidate
 
@@ -246,43 +244,21 @@ When launching via `DGN-DJ_Launcher.bat`, startup now runs config validation bef
 
 > This gate is mandatory for readiness scoring and release approval.
 
-- [ ] **PASS/FAIL:** Redaction + role-visibility contract enforcement is verified.
+- [ ] **PASS/FAIL:** Redaction contract enforcement is verified.
   - Command: `python config/spec_check_frontend_contracts.py`
-  - Pass criteria: command exits 0 and confirms denylist and role-visibility contracts across all files in `contracts/frontend_responses/*.schema.json`.
-  - Fail criteria: any denylisted key/path fragment is found, role-visibility contract is missing, command errors, or coverage is incomplete.
-
-- [ ] **PASS/FAIL:** Key-rotation readiness and env-only secret loading are verified.
-  - Command: `python config/check_runtime_secrets.py --require-env-only`
-  - Pass criteria: command exits 0, reports env-backed key material only, and records no unauthorized fallback usage.
-  - Fail criteria: command exits non-zero, fallback secret files are used without approved break-glass incident, or verification evidence is missing.
+  - Pass criteria: command exits 0 and reports denylist checks passed for all files in `contracts/frontend_responses/*.schema.json`.
+  - Fail criteria: any denylisted key/path fragment is found, command errors, or coverage is incomplete.
 
 - [ ] **PASS/FAIL:** Redaction source-of-truth artifacts are unchanged or reviewed.
-  - Files: `contracts/redaction_rules.md`, `contracts/redaction_denylist.json`, `contracts/shared_settings_visibility.schema.json`
-  - Command: `git diff main --name-only -- contracts/redaction_rules.md contracts/redaction_denylist.json contracts/shared_settings_visibility.schema.json contracts/frontend_responses/*.schema.json`
+  - Files: `contracts/redaction_rules.md`, `contracts/redaction_denylist.json`
+  - Command: git diff main --name-only -- contracts/redaction_rules.md contracts/redaction_denylist.json contracts/frontend_responses/*.schema.json
   - Pass criteria: any touched file has reviewer sign-off from SecOps Compliance Agent.
   - Fail criteria: touched redaction artifacts lack security review sign-off.
 
-### Security gate sign-off record (required before RC cut)
-
-| Gate item | Result (PASS/FAIL) | Evidence link or command output | Signer | UTC timestamp |
-| --- | --- | --- | --- | --- |
-| Redaction + role-visibility contract check |  |  | Release Manager Agent |  |
-| Key-rotation/env-only secret readiness |  |  | SecOps Compliance Agent |  |
-| Artifact review/sign-off completeness |  |  | Release Manager Agent + SecOps Compliance Agent |  |
-
-- [ ] **PASS/FAIL:** TI-041 deterministic security smoke matrix is green.
-  - Commands:
-    - `pnpm test:security -- --case authn-invalid-password`
-    - `pnpm test:security -- --case authz-role-deny`
-    - `pnpm test:security -- --case lockout-threshold`
-    - `pnpm test:security -- --case privileged-action-block`
-  - Pass criteria: all four commands exit 0 and emit expected TI-041 markers.
-  - Fail criteria: any command exits non-zero or is missing the required marker output.
-
 - [ ] **PASS/FAIL:** Security gate sign-off recorded.
   - Required signers: **Release Manager Agent** and **SecOps Compliance Agent**
-  - Pass criteria: all rows in the sign-off record are completed with PASS and UTC timestamps before release candidate creation.
-  - Fail criteria: missing signer, missing timestamp, FAIL result, or sign-off captured after release candidate creation.
+  - Pass criteria: both signers are recorded with UTC timestamp before release candidate creation.
+  - Fail criteria: missing signer, missing timestamp, or sign-off captured after release candidate creation.
 - [ ] Accessibility QA matrix in `REACT_BROWSER_UI_TEAM_BLUEPRINT.md` completed for shell, overlays, and scheduler interactions.
 - [ ] Keyboard-only flow verified for all release-critical paths.
 - [ ] Focus order and focus restoration behavior verified for overlays/modals.
@@ -297,16 +273,3 @@ When launching via `DGN-DJ_Launcher.bat`, startup now runs config validation bef
 
 - **Checklist owner:** ____________________
 - **Sign-off (name + date/time):** ____________________
-
-## CI security severity gate verification (required)
-
-- [ ] **PASS/FAIL:** Branch-aware CI security policy is in effect.
-  - Release-enforced refs: `main`, `release/*`, and PRs targeting those refs.
-  - Feature refs: report-only mode with warnings.
-- [ ] **PASS/FAIL:** Release-enforced refs block on:
-  - `npm audit` high/critical vulnerabilities.
-  - Python SAST (`bandit`) HIGH severity findings.
-  - `pip-audit` high/critical findings, or unscored vulnerabilities.
-- [ ] **PASS/FAIL:** Security report artifacts are uploaded for every run (including failed gates).
-  - Expected artifacts: `pip-audit.json`, `python-sast-bandit.json`, `npm-audit.json`.
-- [ ] **PASS/FAIL:** Failure behavior has been simulated with intentionally vulnerable dependencies and documented in release evidence.

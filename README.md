@@ -1,10 +1,10 @@
-# DGN-DJ by DGNradio - AI-Powered Radio Automation Platform
+# AetherRadio - AI-Powered Radio Automation Platform
 
 **Complete Implementation Guide for Development Team**
 
 ## 🎯 Project Overview
 
-DGN-DJ by DGNradio is a next-generation AI-powered radio automation platform that enables users to run professional 24/7 internet radio stations with intelligent playlist generation, seamless crossfading, and real-time audio processing.
+AetherRadio is a next-generation AI-powered radio automation platform that enables users to run professional 24/7 internet radio stations with intelligent playlist generation, seamless crossfading, and real-time audio processing.
 
 ### Core Features
 
@@ -17,14 +17,12 @@ DGN-DJ by DGNradio is a next-generation AI-powered radio automation platform tha
 
 ## 🏗️ Architecture
 
-The following architecture reflects current stack ownership: the root Next.js app powers the studio/operator web experience, while backend services handle scheduling, status, and AI workflows.
-
 ```text
 ┌─────────────────────────────────────────────────────┐
-│ Root Web App (Next.js 15.5.10 + React 18)              │
-│ - App Router + route handlers                          │
-│ - Server Components + Client Components                │
-│ - Studio/operator UI (Tailwind + shadcn/ui)            │
+│ Frontend (Next.js 14 + React 18)                   │
+│ - App Router                                        │
+│ - Server Components + Client Components             │
+│ - Shadcn/UI + Tailwind CSS                          │
 └─────────────────┬───────────────────────────────────┘
                   │
 ┌─────────────────▼───────────────────────────────────┐
@@ -35,34 +33,33 @@ The following architecture reflects current stack ownership: the root Next.js ap
 └─────────────────┬───────────────────────────────────┘
                   │
 ┌─────────────────▼───────────────────────────────────┐
-│ Backend Services (Python/FastAPI + Service APIs)    │
-│ - Scheduler, autonomy policy, dashboard status APIs │
-│ - Playlist + AI analysis APIs                        │
-│ - Secret integrity + backend service orchestration   │
+│ Backend Services                                    │
+│ - Next.js API Routes                                │
+│ - Supabase (PostgreSQL + Auth + Storage)           │
+│ - OpenAI API (AI Analysis)                          │
+│ - FFmpeg/FFprobe (Audio Processing)                 │
 └─────────────────┬───────────────────────────────────┘
                   │
 ┌─────────────────▼───────────────────────────────────┐
-│ Platform Integrations                                │
-│ - Supabase (Auth, data, storage)                     │
-│ - OpenAI API + Vercel AI SDK                         │
-│ - FFmpeg/FFprobe + Icecast runtime                   │
-│ - Vercel + Docker Compose + Windows launcher targets │
+│ Infrastructure                                      │
+│ - Vercel (Hosting)                                  │
+│ - Supabase Cloud (Database + Storage)               │
+│ - Icecast (Streaming Server)                        │
 └─────────────────────────────────────────────────────┘
 ```
 
 ## 📁 Documentation Files
 
-1. [docs/architecture/canonical_runtime_map.md](docs/architecture/canonical_runtime_map.md) - Canonical runtime entrypoints, ownership boundaries, deployment targets, and reference-only trees
-2. [docs/operations/execution_index.md](docs/operations/execution_index.md) - Active track index, ownership, and status source mapping
-3. [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) - Complete folder structure
-4. [TECH_STACK.md](TECH_STACK.md) - Technologies and dependencies
-5. [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) - Complete database schema
-6. [PHASE_0_SETUP.md](PHASE_0_SETUP.md) - Environment setup (Day 1)
-7. [PHASE_1_DATABASE.md](PHASE_1_DATABASE.md) - Database architecture (Day 2-3)
-8. [PHASE_2_AUTH.md](PHASE_2_AUTH.md) - Authentication system (Day 4)
-9. [PHASE_3_AUDIO_ENGINE.md](PHASE_3_AUDIO_ENGINE.md) - Audio engine (Day 5-7)
-10. [PHASE_4_FILE_UPLOAD.md](PHASE_4_FILE_UPLOAD.md) - File upload system (Day 8-10)
-11. [API_ROUTES.md](API_ROUTES.md) - API endpoints reference
+1. [docs/operations/execution_index.md](docs/operations/execution_index.md) - Active track index, ownership, and status source mapping
+1. [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) - Complete folder structure
+2. [TECH_STACK.md](TECH_STACK.md) - Technologies and dependencies
+3. [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) - Complete database schema
+4. [PHASE_0_SETUP.md](PHASE_0_SETUP.md) - Environment setup (Day 1)
+5. [PHASE_1_DATABASE.md](PHASE_1_DATABASE.md) - Database architecture (Day 2-3)
+6. [PHASE_2_AUTH.md](PHASE_2_AUTH.md) - Authentication system (Day 4)
+7. [PHASE_3_AUDIO_ENGINE.md](PHASE_3_AUDIO_ENGINE.md) - Audio engine (Day 5-7)
+8. [PHASE_4_FILE_UPLOAD.md](PHASE_4_FILE_UPLOAD.md) - File upload system (Day 8-10)
+9. [API_ROUTES.md](API_ROUTES.md) - API endpoints reference
 
 ## 🚀 Quick Start
 
@@ -79,40 +76,17 @@ The following architecture reflects current stack ownership: the root Next.js ap
 
 ```bash
 git clone <repository-url>
-cd dgn-dj
+cd aetherradio
 pnpm install
 cp .env.example .env.local
 pnpm supabase db reset
 pnpm dev
 ```
 
-### Runtime commands (canonical)
+### Windows launcher (EXE-style startup)
 
-- Main web studio: `npm run dev` (Node.js 20.x, Next.js 15.5.10).
-- Windows launcher flow: `./DGN-DJ_Launcher.bat` for packaged desktop startup (legacy `RoboDJ_Launcher.bat` remains compatibility alias in some environments).
-- DJ Console subproject: `npm --prefix apps/dj-console run dev`.
-- Radio-agentic workspace: `pnpm --dir radio-agentic install && docker compose -f radio-agentic/docker-compose.yml up --build`.
-
-See `docs/architecture/canonical_runtime_map.md` for ownership boundaries and deployment targets.
-
-### Backend Python environment (authoritative)
-
-Use the compiled backend lock file for both local and CI installs:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-pip install pip-tools
-pip install -r backend/requirements.lock
-pytest backend/tests -q
-```
-
-To update backend dependencies, edit `backend/requirements.in` and recompile:
-
-```bash
-pip-compile backend/requirements.in --output-file backend/requirements.lock
-```
+- Run `DGNDJ_Fullstack_Launcher.bat` from the repo root to boot the full-stack runtime with dependency checks.
+- The launcher validates `node`/`npm`, installs dependencies when `node_modules` is missing, and starts `npm run dev`.
 
 ### Environment Variables
 
@@ -146,13 +120,9 @@ npm run lint
 
 ## 📦 Deployment
 
-- Primary web deployment target: **Vercel** (root Next.js app).
-- Containerized services deployment target: **Docker Compose / container runtime** (`radio-agentic`).
-- Desktop operator target: **Windows launcher + packaged executable workflow**.
-
 ```bash
-npm run build
-npm run start
+pnpm build
+pnpm start
 vercel --prod
 ```
 
@@ -179,4 +149,4 @@ Proprietary - All rights reserved.
 
 Last Updated: February 14, 2026
 Version: 1.0.0
-Team: DGN-DJ Development Team
+Team: AetherRadio Development Team

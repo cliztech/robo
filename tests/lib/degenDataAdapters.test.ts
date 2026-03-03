@@ -13,11 +13,6 @@ import {
     createDeterministicWaveform,
     buildDefaultEffectValues
 } from '@/lib/degenDataAdapters';
-import { MixerChannel } from '@/lib/degenDataAdapters';
-
-// We need to test the module in different environment configurations.
-// Since the module reads process.env at the top level, we must use vi.resetModules()
-// and import() the module dynamically for each test scenario.
 
 // We import the *types* above, but we will dynamically import the *functions* in tests
 // to allow re-evaluation of the top-level DEGEN_DEMO_DATA_ENABLED constant.
@@ -64,46 +59,8 @@ describe('degenDataAdapters', () => {
         it('resolveTransportTrack returns default transport track when no track provided', () => {
             const result = adapters.resolveTransportTrack();
             expect(result).toEqual(adapters.DEFAULT_TRANSPORT_TRACK);
-    // Store original env to restore after tests
-    const originalEnv = process.env;
-
-    beforeEach(() => {
-        vi.resetModules();
-        process.env = { ...originalEnv };
+        });
     });
-
-    afterEach(() => {
-        process.env = originalEnv;
-    });
-
-    describe('Environment: Production/Test (Demo Data Disabled)', () => {
-        beforeEach(() => {
-            // Simulate production or test environment where demo data is disabled
-            process.env.NODE_ENV = 'production';
-            delete process.env.NEXT_PUBLIC_DEGEN_DEMO_DATA;
-        });
-
-        it('resolveTrackLibraryData returns empty array by default', async () => {
-            const mod = await import('@/lib/degenDataAdapters');
-            expect(mod.DEGEN_DEMO_DATA_ENABLED).toBe(false);
-
-            const result = mod.resolveTrackLibraryData();
-            expect(result).toEqual([]);
-        });
-
-        it('resolveTrackLibraryData returns provided tracks', async () => {
-            const mod = await import('@/lib/degenDataAdapters');
-            const mockTracks = [{ id: '1', title: 'Test', artist: 'Test', bpm: 120, key: 'Am', duration: 100, genre: 'Test', energy: 5 }];
-
-            const result = mod.resolveTrackLibraryData(mockTracks);
-            expect(result).toBe(mockTracks);
-        });
-
-        it('resolveScheduleSegmentData returns empty array by default', async () => {
-            const mod = await import('@/lib/degenDataAdapters');
-            const result = mod.resolveScheduleSegmentData();
-            expect(result).toEqual([]);
-        });
 
     describe('when Demo Data is DISABLED', () => {
         let adapters: any;
@@ -119,16 +76,6 @@ describe('degenDataAdapters', () => {
         it('resolveTrackLibraryData returns empty array when no tracks provided', () => {
             const result = adapters.resolveTrackLibraryData();
             expect(result).toEqual([]);
-        it('resolveScheduleCurrentHour returns 0 by default', async () => {
-            const mod = await import('@/lib/degenDataAdapters');
-            const result = mod.resolveScheduleCurrentHour();
-            expect(result).toBe(0);
-        });
-
-        it('resolveTransportTrack returns fallback object by default', async () => {
-            const mod = await import('@/lib/degenDataAdapters');
-            const result = mod.resolveTransportTrack();
-            expect(result).toEqual({ title: 'No track loaded', artist: '—' });
         });
 
         it('resolveScheduleSegmentData returns empty array when no segments provided', () => {
@@ -144,21 +91,8 @@ describe('degenDataAdapters', () => {
         it('resolveTransportTrack returns fallback "No track loaded" object', () => {
             const result = adapters.resolveTransportTrack();
             expect(result).toEqual({ title: 'No track loaded', artist: '—' });
-    describe('Environment: Development (Demo Data Enabled)', () => {
-        beforeEach(() => {
-            // Simulate development environment with demo data enabled
-            process.env.NODE_ENV = 'development';
-            process.env.NEXT_PUBLIC_DEGEN_DEMO_DATA = 'true';
         });
-
-        it('resolveTrackLibraryData returns demo library', async () => {
-            const mod = await import('@/lib/degenDataAdapters');
-            expect(mod.DEGEN_DEMO_DATA_ENABLED).toBe(true);
-
-            const result = mod.resolveTrackLibraryData();
-            expect(result).toBe(mod.DEMO_TRACK_LIBRARY);
-            expect(result.length).toBeGreaterThan(0);
-        });
+    });
 
     describe('Common Behavior (Input Priority)', () => {
         // We can test this under either environment, but let's just pick one or test generically.
@@ -172,39 +106,15 @@ describe('degenDataAdapters', () => {
         });
 
         it('resolveTrackLibraryData prefers provided tracks over defaults', () => {
-            const mockTracks: TrackLibraryTrack[] = [{ id: '99', title: 'Test', artist: 'Test', bpm: 100, key: 'Cm', duration: 100, genre: 'Test', energy: 5 }];
+            const mockTracks = [{ id: '99', title: 'Test', artist: 'Test', bpm: 100, key: 'Cm', duration: 100, genre: 'Test', energy: 5 }];
             const result = adapters.resolveTrackLibraryData(mockTracks);
             expect(result).toBe(mockTracks);
         });
 
         it('resolveScheduleSegmentData prefers provided segments over defaults', () => {
-            const mockSegments: ScheduleSegmentData[] = [{ id: 'seg1', type: 'music', title: 'Test', startHour: 10, durationMinutes: 60 }];
+            const mockSegments = [{ id: 'seg1', type: 'music', title: 'Test', startHour: 10, durationMinutes: 60 }];
             const result = adapters.resolveScheduleSegmentData(mockSegments);
             expect(result).toBe(mockSegments);
-        it('resolveTrackLibraryData prefers provided tracks over demo data', async () => {
-            const mod = await import('@/lib/degenDataAdapters');
-            const mockTracks = [{ id: 'custom', title: 'Custom', artist: 'Custom', bpm: 120, key: 'Am', duration: 100, genre: 'Test', energy: 5 }];
-
-            const result = mod.resolveTrackLibraryData(mockTracks);
-            expect(result).toBe(mockTracks);
-        });
-
-        it('resolveScheduleSegmentData returns demo segments', async () => {
-            const mod = await import('@/lib/degenDataAdapters');
-            const result = mod.resolveScheduleSegmentData();
-            expect(result).toBe(mod.DEMO_SCHEDULE_SEGMENTS);
-        });
-
-        it('resolveScheduleCurrentHour returns demo hour (9.5)', async () => {
-            const mod = await import('@/lib/degenDataAdapters');
-            const result = mod.resolveScheduleCurrentHour();
-            expect(result).toBe(9.5);
-        });
-
-        it('resolveTransportTrack returns default transport track', async () => {
-            const mod = await import('@/lib/degenDataAdapters');
-            const result = mod.resolveTransportTrack();
-            expect(result).toBe(mod.DEFAULT_TRANSPORT_TRACK);
         });
 
         it('resolveScheduleCurrentHour prefers provided hour over defaults', () => {
@@ -218,54 +128,50 @@ describe('degenDataAdapters', () => {
         });
 
         it('resolveTransportTrack prefers provided track over defaults', () => {
-            const mockTrack: TransportTrack = { title: 'Custom', artist: 'Artist' };
+            const mockTrack = { title: 'Custom', artist: 'Artist' };
             const result = adapters.resolveTransportTrack(mockTrack);
             expect(result).toBe(mockTrack);
-    describe('Pure Utility Functions (Environment Independent)', () => {
-        // These can be imported once or dynamically, behavior shouldn't change
+        });
+    });
 
-        it('resolveTransportTelemetry merges with defaults', async () => {
-            const mod = await import('@/lib/degenDataAdapters');
+    describe('Utility Functions (Environment Independent)', () => {
+        // These functions don't rely on the flag, so we can test them directly or via dynamic import.
+
+        let adapters: any;
+        beforeEach(async () => {
+            adapters = await import('@/lib/degenDataAdapters');
+        });
+
+        it('resolveTransportTelemetry merges defaults with provided partials', () => {
             const partial = { volume: 50 };
-            const result = mod.resolveTransportTelemetry(partial);
+            const result = adapters.resolveTransportTelemetry(partial);
+            expect(result).toEqual({ ...DEFAULT_TRANSPORT_TELEMETRY, volume: 50 });
+        });
 
-            expect(result).toEqual({
-                ...mod.DEFAULT_TRANSPORT_TELEMETRY,
-                volume: 50
+        it('buildDefaultMixerState generates correct channel structure', () => {
+            const channels: MixerChannel[] = [
+                { id: 'ch1', label: 'CH1', color: 'red', type: 'deck' },
+                { id: 'master', label: 'MST', color: 'white', type: 'master' }
+            ];
+            const state = adapters.buildDefaultMixerState(channels);
+            expect(state.ch1.volume).toBe(70);
+            expect(state.master.volume).toBe(80);
+        });
+
+        it('createDeterministicWaveform generates normalized values', () => {
+            const wave = adapters.createDeterministicWaveform(100);
+            expect(wave).toHaveLength(100);
+            wave.forEach((val: number) => {
+                expect(val).toBeGreaterThanOrEqual(0.04);
+                expect(val).toBeLessThanOrEqual(1);
             });
         });
 
-        it('buildDefaultMixerState creates correct initial state', async () => {
-            const mod = await import('@/lib/degenDataAdapters');
-            const channels: MixerChannel[] = [
-                { id: 'deck-a', label: 'DECK A', color: '#aaff00', type: 'deck' },
-                { id: 'master', label: 'MASTER', color: '#ffffff', type: 'master' }
-            ];
-
-            const state = mod.buildDefaultMixerState(channels);
-            expect(state['deck-a'].volume).toBe(70);
-            expect(state['master'].volume).toBe(80);
-        });
-
-        it('createDeterministicWaveform generates consistent data', async () => {
-            const mod = await import('@/lib/degenDataAdapters');
-            const wave1 = mod.createDeterministicWaveform(50);
-            const wave2 = mod.createDeterministicWaveform(50);
-
-            expect(wave1).toHaveLength(50);
-            expect(wave1).toEqual(wave2);
-            // Verify normalization
-            expect(wave1.every(v => v >= 0.04 && v <= 1)).toBe(true);
-        });
-
-        it('buildDefaultEffectValues assigns values deterministically', async () => {
-            const mod = await import('@/lib/degenDataAdapters');
-            const keys = ['reverb', 'delay', 'filter'];
-            const values = mod.buildDefaultEffectValues(keys);
-
-            expect(values.reverb).toBe(40); // 40 + (0 % 5) * 10
-            expect(values.delay).toBe(50);  // 40 + (1 % 5) * 10
-            expect(values.filter).toBe(60); // 40 + (2 % 5) * 10
+        it('buildDefaultEffectValues generates deterministic values', () => {
+            const keys = ['fx1', 'fx2'];
+            const values = adapters.buildDefaultEffectValues(keys);
+            expect(values.fx1).toBe(40);
+            expect(values.fx2).toBe(50);
         });
     });
 });

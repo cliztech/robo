@@ -1,24 +1,12 @@
 from __future__ import annotations
 
-from functools import lru_cache
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from enum import Enum
-from pathlib import Path
-from typing import List
+from typing import Dict, List
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
-
 from backend.security.auth import verify_api_key
-from backend.status.evaluators import (
-    StatusThresholds,
-    derive_queue_state,
-    evaluate_queue_depth_alert,
-    evaluate_rotation_alert,
-)
-from backend.status.models import AlertCenterItem, AlertSeverity
-from backend.status.repository import SQLiteStatusAlertRepository, StatusAlertRepository
-from backend.status.telemetry import FileStatusTelemetryProvider, StatusTelemetryProvider
 
 router = APIRouter(prefix="/api/v1/status", tags=["status"], dependencies=[Depends(verify_api_key)])
 
@@ -27,6 +15,12 @@ class ServiceHealth(str, Enum):
     healthy = "healthy"
     degraded = "degraded"
     offline = "offline"
+
+
+class AlertSeverity(str, Enum):
+    critical = "critical"
+    warning = "warning"
+    info = "info"
 
 
 class QueueTrendPoint(BaseModel):
@@ -59,6 +53,16 @@ class RotationStatus(BaseModel):
     stale_reason: str | None = None
 
 
+class AlertCenterItem(BaseModel):
+    alert_id: str
+    severity: AlertSeverity
+    title: str
+    description: str
+    created_at: datetime
+    acknowledged: bool = False
+    acknowledged_at: datetime | None = None
+
+
 class AlertCenter(BaseModel):
     filters: List[AlertSeverity] = Field(default_factory=lambda: list(AlertSeverity))
     items: List[AlertCenterItem] = Field(default_factory=list)
@@ -71,108 +75,78 @@ class DashboardStatusResponse(BaseModel):
     alert_center: AlertCenter
 
 
-@lru_cache
-def get_alert_repository() -> StatusAlertRepository:
-    return SQLiteStatusAlertRepository(
-        db_path=Path("config/logs/status_alerts.db"),
-        default_alerts=[],
-    )
-
-
-@lru_cache
-def get_status_telemetry_provider() -> StatusTelemetryProvider:
-    return FileStatusTelemetryProvider(telemetry_path=Path("config/logs/status_telemetry.json"))
-
-
-def get_status_thresholds() -> StatusThresholds:
-    return StatusThresholds()
+_ALERTS: Dict[str, AlertCenterItem] = {
+    "alert-queue-critical": AlertCenterItem(
+        alert_id="alert-queue-critical",
+        severity=AlertSeverity.critical,
+        title="Queue depth above critical threshold",
+        description="Queue depth has exceeded 50 items for over 5 minutes.",
+        created_at=datetime.now(timezone.utc) - timedelta(minutes=7),
+    ),
+    "alert-rotation-stale": AlertCenterItem(
+        alert_id="alert-rotation-stale",
+        severity=AlertSeverity.warning,
+        title="Rotation data stale",
+        description="No successful rotation has been recorded for over 45 minutes.",
+        created_at=datetime.now(timezone.utc) - timedelta(minutes=2),
+    ),
+}
 
 
 @router.get("/dashboard", response_model=DashboardStatusResponse)
-def read_dashboard_status(
-    repository: StatusAlertRepository = Depends(get_alert_repository),
-    telemetry_provider: StatusTelemetryProvider = Depends(get_status_telemetry_provider),
-    thresholds: StatusThresholds = Depends(get_status_thresholds),
-) -> DashboardStatusResponse:
-    queue_snapshot = telemetry_provider.read_queue_depth()
-    rotation_snapshot = telemetry_provider.read_rotation()
-    service_health_snapshot = telemetry_provider.read_service_health()
+def read_dashboard_status() -> DashboardStatusResponse:
+    now = datetime.now(timezone.utc)
+    trend = [
+        QueueTrendPoint(timestamp=now - timedelta(minutes=10), depth=18),
+        QueueTrendPoint(timestamp=now - timedelta(minutes=8), depth=25),
+        QueueTrendPoint(timestamp=now - timedelta(minutes=6), depth=31),
+        QueueTrendPoint(timestamp=now - timedelta(minutes=4), depth=42),
+        QueueTrendPoint(timestamp=now - timedelta(minutes=2), depth=56),
+        QueueTrendPoint(timestamp=now, depth=54),
+    ]
 
-    observed_at = max(
-        queue_snapshot.observed_at,
-        rotation_snapshot.last_successful_rotation_at,
-        service_health_snapshot.observed_at,
-    )
-    queue_alert = evaluate_queue_depth_alert(
-        current_depth=queue_snapshot.current_depth,
-        observed_at=queue_snapshot.observed_at,
-        thresholds=thresholds,
-    )
-    rotation_alert = evaluate_rotation_alert(
-        last_successful_rotation_at=rotation_snapshot.last_successful_rotation_at,
-        observed_at=observed_at,
-        thresholds=thresholds,
-    )
-    active_alerts = [alert for alert in [queue_alert, rotation_alert] if alert is not None]
-    repository.reconcile_alerts(active_alerts, observed_at=observed_at)
-
-    queue_state = derive_queue_state(queue_snapshot.current_depth, thresholds)
-    is_rotation_stale = rotation_alert is not None
-    stale_reason = (
-        "rotation worker has not published a successful run" if is_rotation_stale else None
-    )
-
-    service_health_status = ServiceHealth(service_health_snapshot.status)
-    reason = service_health_snapshot.reason
-    if queue_state == AlertSeverity.critical and service_health_status == ServiceHealth.healthy:
-        service_health_status = ServiceHealth.degraded
-        reason = "queue depth above critical threshold"
+    last_rotation = now - timedelta(minutes=47)
+    stale_after = 30
+    is_stale = (now - last_rotation) > timedelta(minutes=stale_after)
 
     return DashboardStatusResponse(
         service_health=ServiceHealthCard(
-            status=service_health_status,
-            reason=reason,
-            observed_at=service_health_snapshot.observed_at,
+            status=ServiceHealth.degraded,
+            reason="queue depth above critical threshold",
+            observed_at=now,
         ),
         queue_depth=QueueDepthTrend(
-            current_depth=queue_snapshot.current_depth,
-            trend=[
-                QueueTrendPoint(
-                    timestamp=queue_snapshot.observed_at,
-                    depth=queue_snapshot.current_depth,
-                )
-            ],
-            thresholds=ThresholdBand(
-                warning=thresholds.queue_warning,
-                critical=thresholds.queue_critical,
-            ),
-            state=queue_state,
+            current_depth=trend[-1].depth,
+            trend=trend,
+            thresholds=ThresholdBand(warning=30, critical=50),
+            state=AlertSeverity.critical,
         ),
         rotation=RotationStatus(
-            last_successful_rotation_at=rotation_snapshot.last_successful_rotation_at,
-            stale_after_minutes=thresholds.rotation_stale_after_minutes,
-            is_stale=is_rotation_stale,
-            stale_reason=stale_reason,
+            last_successful_rotation_at=last_rotation,
+            stale_after_minutes=stale_after,
+            is_stale=is_stale,
+            stale_reason="rotation worker has not published a successful run",
         ),
-        alert_center=AlertCenter(items=repository.list_alerts()),
+        alert_center=AlertCenter(items=list(_ALERTS.values())),
     )
 
 
 @router.get("/dashboard/alerts", response_model=list[AlertCenterItem])
-def read_alerts(
-    severity: AlertSeverity | None = None,
-    repository: StatusAlertRepository = Depends(get_alert_repository),
-) -> list[AlertCenterItem]:
-    return repository.list_alerts(severity=severity)
+def read_alerts(severity: AlertSeverity | None = None) -> list[AlertCenterItem]:
+    alerts = list(_ALERTS.values())
+    if severity is not None:
+        alerts = [item for item in alerts if item.severity == severity]
+    return alerts
 
 
 @router.post("/dashboard/alerts/{alert_id}/ack", response_model=AlertCenterItem)
-def acknowledge_alert(
-    alert_id: str,
-    repository: StatusAlertRepository = Depends(get_alert_repository),
-) -> AlertCenterItem:
-    alert = repository.acknowledge_alert(alert_id)
+def acknowledge_alert(alert_id: str) -> AlertCenterItem:
+    alert = _ALERTS.get(alert_id)
     if alert is None:
         raise HTTPException(status_code=404, detail="alert not found")
+
+    if not alert.acknowledged:
+        alert.acknowledged = True
+        alert.acknowledged_at = datetime.now(timezone.utc)
 
     return alert

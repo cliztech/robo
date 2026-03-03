@@ -38,12 +38,18 @@ export function DegenEffectRack({ title, deck, controls, initialValues, isActive
         setValues(buildDefaultEffectValues(controls.map((ctrl) => ctrl.key)));
     };
 
-    const deckColorToken = deck === 'B'
-        ? '--color-deck-b'
-        : deck === 'A' || deck === 'MST'
-            ? '--color-deck-a'
-            : '--color-accent-3';
-    const deckColor = `hsl(var(${deckColorToken}))`;
+
+    const deckColorToken = deck === 'A' || deck === 'MST'
+        ? '--color-deck-a'
+        : deck === 'B'
+            ? '--color-deck-b'
+            : '--color-deck-mic';
+
+    const deckColor = deck === 'A' || deck === 'MST'
+        ? 'hsl(var(--color-deck-a))'
+        : deck === 'B'
+            ? 'hsl(var(--color-deck-b))'
+            : 'hsl(var(--color-deck-mic))';
 
     return (
         <div className="glass-panel overflow-hidden">

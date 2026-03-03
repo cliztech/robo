@@ -23,44 +23,8 @@ When users issue short slash commands (for example, `/bmad build`) that are not 
 | Incoming slash command | Canonical BMAD command | Rationale |
 | --- | --- | --- |
 | `/bmad build` | `bmad-bmm-quick-dev` | Implies immediate implementation/delivery intent in a one-off flow. |
-| `bmad build dev` | `bmad-bmm-quick-dev` | Natural-language alias for quick implementation mode; normalize to the same one-off delivery flow. |
 
 If no safe mapping is obvious, run `bmad-help` behavior and present nearest valid commands from `_bmad/_config/bmad-help.csv`.
-
-## Security smoke command signature (TI-041 canonical)
-
-Use this exact command form for CI/release security smoke verification:
-
-```bash
-pnpm test:security -- --case <authn-invalid-password|authz-role-deny|lockout-threshold|privileged-action-block>
-```
-
-This command signature must remain byte-for-byte aligned with `docs/exec-plans/active/tracked-issues/TI-041.md`.
-## Security smoke pre-release workflow (TI-041)
-
-Run this command set before release readiness sign-off.
-
-```bash
-# Full TI-041 matrix (authN/authZ/lockout/privileged-action block)
-pnpm test:security
-
-# Focused repro for privileged-action block controls (TI-039 + TI-040 dependencies)
-pnpm test:security -- --case privileged-action-block
-
-# Verify deterministic artifacts
-sha256sum artifacts/security/logs/ti-041-security-smoke.log
-cat artifacts/security/hashes/ti-041-smoke-output.sha256
-```
-
-Pass signature:
-- exit code `0`;
-- expected markers present in `artifacts/security/logs/ti-041-security-smoke.log`;
-- checklist `CHK-TI041-01..04` checked in `artifacts/security/reports/ti-041-smoke-matrix-report.md`;
-- log hash matches `artifacts/security/hashes/ti-041-smoke-output.sha256`.
-
-Failure routing:
-- Release gate: mark pre-release security gate **FAIL** in `PRE_RELEASE_CHECKLIST.md`.
-- Security incident routes: `RB-022` (unauthorized action/approval failure) and `RB-020` (encrypted-secret control failure) in `docs/runbooks/index.md`.
 
 ## 0) Fast start and repository sanity checks
 
@@ -109,32 +73,6 @@ Use this table to map the intake route (`QA`, `Proposal`, `Change`) to the corre
    - Delivery language ("implement", "fix", "ship") defaults to `Change` order.
 3. **Never skip mandatory verification:** whenever edits happen, include Sections `6` and `7` before PR readiness in Section `3`.
 4. **Escalate only after prerequisites are satisfied:** if uncertain between two commands, execute the earlier prerequisite command and re-evaluate with its output.
-
-### Deterministic phrase routing for agent-team GUI/music-console requests
-
-Use this override table when intake text explicitly asks to create/compose an agent team for GUI/music console work. This removes ambiguity between planning vs implementation phrasing.
-
-| Trigger phrase family (match case-insensitive, typo-tolerant) | Primary command | Follow-up command | Route rationale |
-| --- | --- | --- | --- |
-| `create agent team for gui`, `create agent team for dj console`, `create agent team for music console`, `build agent team for gui/music console`, `create agwnt team for gui`, `agwnt team for music console`, `dj/music console gui team` | `bmad-party-mode` | `bmad-bmm-create-ux-design` | Multi-agent collaboration is required first; UX workflow then turns discussion output into actionable design artifacts. |
-
-#### Normalization notes for intake agents
-
-- Treat `agwnt` as `agent`.
-- Treat `gui`, `ui`, and `console gui` as equivalent frontend intent tokens.
-- Treat `dj console`, `music console`, and `dj/music console` as equivalent product-area tokens.
-
-### Concrete example command sequence (DJ/music console GUI)
-
-Run the following sequence verbatim when the user intent is: _"create agent team for DJ/music console GUI"_.
-
-```bash
-# 1) Primary deterministic route: spin up multi-agent orchestration
-bmad-party-mode "Create agent team for DJ/music console GUI with clear role split and handoff plan"
-
-# 2) Required follow-up: convert outcomes into UX design artifacts
-bmad-bmm-create-ux-design "Using party-mode outcomes, produce wireflow + interaction model for DJ/music console GUI"
-```
 
 ---
 
@@ -213,8 +151,6 @@ mkdir -p "$TASK_ROOT"/{packets,results,merged}
 cat > "$TASK_ROOT/packets/01-research.md" <<'P1'
 # Packet: Research
 ## Question
-## Phase Namespace (`delivery|workflow`)
-## Phase ID (`delivery_phase_<n>|workflow_phase_<n>|unphased`)
 ## Inputs
 ## Constraints
 ## Deliverable
@@ -223,8 +159,6 @@ P1
 cat > "$TASK_ROOT/packets/02-risk-review.md" <<'P2'
 # Packet: Risk Review
 ## Question
-## Phase Namespace (`delivery|workflow`)
-## Phase ID (`delivery_phase_<n>|workflow_phase_<n>|unphased`)
 ## Inputs
 ## Constraints
 ## Deliverable
@@ -233,8 +167,6 @@ P2
 cat > "$TASK_ROOT/packets/03-validation.md" <<'P3'
 # Packet: Validation
 ## Question
-## Phase Namespace (`delivery|workflow`)
-## Phase ID (`delivery_phase_<n>|workflow_phase_<n>|unphased`)
 ## Inputs
 ## Constraints
 ## Deliverable
@@ -275,22 +207,6 @@ $ git commit -m "docs: add parallel analysis packet and merged results for promp
 
 Use for long-running work that should be visible before final review.
 
-### Phase-4 review hygiene (ongoing enforcement)
-
-For implementation-phase work, run review hygiene continuously (not only at the
-end):
-
-1. Open/update a draft PR as soon as the first implementable increment exists.
-2. Attach validation command outputs in the PR and map each output to story
-   acceptance criteria.
-3. Re-run workflow gate checklist on each draft update:
-   - Plan completeness = 100%
-   - Subagent evidence completeness = 100%
-   - Draft PR maturity checklist = passed
-   - Worktree hygiene checks = passed
-4. Do not run `gh pr ready` until all checklist items are satisfied.
-5. Keep unresolved follow-ups in PR body with owner + target milestone.
-
 ### Commands
 
 ```bash
@@ -305,17 +221,11 @@ gh pr create \
 gh pr edit <pr-number> --body-file /tmp/pr-body-updated.md
 gh pr comment <pr-number> --body "Checkpoint: completed validation pass and updated risks section."
 
-# 2.1) Post AC-mapped validation outputs for current increment
-gh pr comment <pr-number> --body "AC mapping:\n- AC-1 -> `pytest ...` (pass)\n- AC-2 -> `python -m json.tool ...` (pass)"
-
-# 2.2) Post workflow gate checklist state
-gh pr comment <pr-number> --body "Workflow gate checklist:\n- [x] Plan completeness = 100%\n- [x] Subagent evidence completeness = 100%\n- [x] Draft PR maturity checklist passed\n- [x] Worktree hygiene passed"
-
 # 3) Review gate checks
 gh pr checks <pr-number>
 gh pr view <pr-number> --json reviewRequests,reviews,state
 
-# 4) Mark ready only after green gates and checklist completion
+# 4) Mark ready only after green gates
 gh pr ready <pr-number>
 ```
 
@@ -332,8 +242,7 @@ $ gh pr ready 123
 ### Failure recovery notes
 
 - If `gh` is unauthenticated, run `gh auth login` and retry.
-- If checks fail, checklist items are incomplete, or follow-ups remain unowned,
-  keep PR in draft and post remediation steps with command output.
+- If checks fail, keep PR in draft and post remediation steps with command output.
 
 ---
 
@@ -506,38 +415,3 @@ Optional PR checks:
 gh pr checks <pr-number>
 gh pr view <pr-number> --json state,reviewDecision
 ```
-
-## 8) TI-041 pre-release security smoke invocation
-
-Run this command from repository root before release cut:
-
-```bash
-pnpm test:security
-```
-
-Optional single-scenario runs:
-
-```bash
-pnpm test:security -- --case authn-invalid-password
-pnpm test:security -- --case authz-role-deny
-pnpm test:security -- --case lockout-threshold
-pnpm test:security -- --case privileged-action-block
-```
-
-Expected pass signatures:
-
-- Process exit code: `0`
-- Output markers include:
-  - `AUTHN_DENIED_EXPECTED`
-  - `AUTHZ_DENIED_EXPECTED`
-  - `LOCKOUT_TRIGGERED`
-  - `LOCKOUT_WINDOW_ACTIVE`
-  - `PRIV_ACTION_BLOCKED`
-- Output must **not** include `PRIV_ACTION_EXECUTED`
-
-Expected fail signatures:
-
-- Non-zero exit code.
-- Any required marker is missing.
-- `PRIV_ACTION_EXECUTED` appears in output.
-- Contract validation fails for TI-002/TI-003/TI-039 references.

@@ -1,7 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
-import type { LucideIcon } from 'lucide-react';
+import type { ElementType, ReactNode } from 'react';
 import { DegenTransport } from '@/components/audio/DegenTransport';
 import { ConsoleSidebar } from './ConsoleSidebar';
 import { ConsoleTopbar } from './ConsoleTopbar';
@@ -9,7 +8,7 @@ import type { ConsoleNavItem, ConsoleViewMode } from '@/components/console/types
 
 interface ConsoleLayoutProps {
     navItems: ConsoleNavItem[];
-    utilityItems: { icon: LucideIcon; label: string }[];
+    utilityItems: { icon: ElementType; label: string }[];
     currentView: ConsoleViewMode;
     isOnAir: boolean;
     onViewChange: (view: ConsoleViewMode) => void;
@@ -27,7 +26,7 @@ export function ConsoleLayout({
     children,
 }: ConsoleLayoutProps) {
     return (
-        <div className="phase8-console flex h-screen bg-[hsl(0,0%,3%)] text-white overflow-hidden ambient-bg">
+        <div className="flex h-screen bg-[hsl(0,0%,3%)] text-white overflow-hidden ambient-bg">
             <ConsoleSidebar
                 navItems={navItems}
                 utilityItems={utilityItems}

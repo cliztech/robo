@@ -1,7 +1,8 @@
+import os
 import pytest
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from unittest import mock
-from backend.security.secret_integrity import run_secret_integrity_checks
+from backend.security.secret_integrity import run_secret_integrity_checks, SecretCheckResult
 
 @pytest.fixture
 def valid_secrets():

@@ -224,7 +224,7 @@ Before moving to frontend integration:
 ## Next Step
 
 After route stubs are implemented, proceed with integration tests and frontend API client wiring.
-# DGN-DJ Studio - API Routes Reference
+# AetherRadio - API Routes Reference
 
 ## Conventions
 

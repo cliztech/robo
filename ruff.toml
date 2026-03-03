@@ -1,2 +1,0 @@
-[lint.per-file-ignores]
-"backend/tests/*" = ["S101", "S105"]

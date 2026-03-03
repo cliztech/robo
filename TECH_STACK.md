@@ -1,9 +1,8 @@
-# DGN-DJ by DGNradio - Technology Stack
+# AetherRadio - Technology Stack
 
-## Core Runtime & Framework
+## Core Framework
 
-- **Node.js 20.x** (canonical JS runtime)
-- **Next.js 15.5.10** (root app; App Router + route handlers)
+- **Next.js 14** (App Router, API routes, middleware)
 - **React 18** (hooks, suspense, context)
 - **TypeScript 5** (strict mode)
 
@@ -11,13 +10,11 @@
 
 - **Tailwind CSS 3**
 - **Shadcn/UI**
-- **Framer Motion 11.x**
-- **Lucide React 0.378.x**
+- **Framer Motion**
+- **Lucide React**
 
 ## Backend & Data
 
-- **Python 3.10+** (backend services runtime)
-- **FastAPI** (backend service APIs)
 - **Supabase**
   - PostgreSQL
   - Auth
@@ -34,7 +31,7 @@
 ## AI Stack
 
 - **OpenAI API** (`gpt-4o`, `gpt-4o-mini`)
-- **Vercel AI SDK (`ai` 3.x)** for typed AI integration
+- **Vercel AI SDK** for typed AI integration
 
 ## Upload, Validation, State
 
@@ -50,16 +47,14 @@
 ## Developer Tooling
 
 - **ESLint + Prettier**
-- **Vitest 4.x + React Testing Library**
+- **Vitest + React Testing Library**
 - **Playwright**
 - **Husky + lint-staged**
 
 ## Deployment
 
-- **Vercel** (root Next.js app)
-- **Docker Compose** (service stack runtime, including `radio-agentic`)
-- **Windows launcher + packaged desktop flow**
-- **Supabase Cloud** (database/storage/auth)
+- **Vercel** (frontend/API)
+- **Supabase Cloud** (database/storage)
 - **Cloudflare** (DNS/security optional)
 - **DigitalOcean/AWS** (Icecast hosting options)
 
@@ -79,4 +74,4 @@
 - OpenAI API key
 - Stripe account (if billing enabled)
 
-Last Updated: February 28, 2026
+Last Updated: February 14, 2026

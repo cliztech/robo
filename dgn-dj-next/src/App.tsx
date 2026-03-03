@@ -3,7 +3,6 @@ import { DeckProvider, useDeck } from './contexts/DeckContext';
 import { MainLayout } from './components/layout/MainLayout';
 import { TopNavBar } from './components/layout/TopNavBar';
 import { WaveformStrip } from './components/deck/WaveformStrip';
-import { WaveformRail } from './components/shell/waveform-rail';
 import { DeckContainer } from './components/deck/DeckContainer';
 import { DeckInfoPanel } from './components/deck/DeckInfoPanel';
 import { JogWheel } from './components/deck/JogWheel';
@@ -80,16 +79,7 @@ function DJApp() {
       <TopNavBar />
 
       {/* ═══ ROW 2: Waveform Engine — ~37.6% viewport ═══ */}
-      <div className="flex flex-col">
-        <WaveformRail 
-          playingA={deckA.playing} 
-          playingB={deckB.playing}
-          posA={deckA.position / (deckA.track?.duration ?? 1)}
-          posB={deckB.position / (deckB.track?.duration ?? 1)}
-          className="h-4 border-none bg-transparent"
-        />
-        <WaveformStrip playingA={deckA.playing} playingB={deckB.playing} />
-      </div>
+      <WaveformStrip playingA={deckA.playing} playingB={deckB.playing} />
 
       {/* ═══ ROW 3: Decks + Mixer — ~24% viewport ═══ */}
       <div className="flex gap-[--layout-gutter] p-[--layout-padding]"

@@ -4,20 +4,11 @@
   "title": "frontend_status_response",
   "type": "object",
   "additionalProperties": false,
-  "required": [
-    "service_status",
-    "queue_depth",
-    "last_rotation_at",
-    "settings_visibility"
-  ],
+  "required": ["service_status", "queue_depth", "last_rotation_at"],
   "properties": {
     "service_status": {
       "type": "string",
-      "enum": [
-        "healthy",
-        "degraded",
-        "offline"
-      ]
+      "enum": ["healthy", "degraded", "offline"]
     },
     "queue_depth": {
       "type": "integer",
@@ -26,10 +17,6 @@
     "last_rotation_at": {
       "type": "string",
       "format": "date-time"
-    },
-    "settings_visibility": {
-      "$ref": "../shared_settings_visibility.schema.json",
-      "description": "Role-aware visibility/editability contract for admin/operator/viewer settings access."
     }
   }
 }
