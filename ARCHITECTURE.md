@@ -62,6 +62,9 @@ Use this quick map when placing artifacts:
 ## Related docs
 
 - Product specs: `docs/product-specs/`
+- Runtime matrix: `docs/product-specs/runtime-matrix.md`
+- Dependency compatibility contract: `docs/product-specs/dependency-compatibility-contract.md`
+- Environment profiles: `docs/product-specs/environment-profiles.md`
 - Design docs: `docs/design-docs/`
 - Execution plans: `docs/exec-plans/`
 - Reliability and security: `docs/RELIABILITY.md`, `docs/SECURITY.md`

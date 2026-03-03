@@ -41,7 +41,7 @@ Return waveform data points or waveform asset URL.
 
 Returns AI classification fields (genre, mood, energy, confidence).
 
-### `POST /api/ai/generate-playlist`
+### `POST /api/v1/ai/generate-playlist`
 
 Generate a playlist candidate for a station and constraints.
 

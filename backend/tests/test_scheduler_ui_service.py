@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+import json
+from pathlib import Path
+from unittest.mock import patch
+
 import pytest
 
 from backend.scheduling.scheduler_models import (
@@ -153,8 +157,45 @@ def test_cron_single_day_tokens_map_without_fallback(day_token: str, expected_da
 
 
 @pytest.mark.parametrize("unsupported_token", ["*", "1,2", "1-5", "*/2", "MON"])
-def test_cron_unsupported_day_patterns_raise_clear_error(unsupported_token: str) -> None:
+def test_cron_unsupported_day_patterns_skip_gracefully(unsupported_token: str, caplog: pytest.LogCaptureFixture) -> None:
     service = SchedulerUiService()
 
-    with pytest.raises(ValueError, match="supports only a single numeric day-of-week token in range 0-7"):
-        service._build_timeline_blocks([_schedule("sch_invalid", "Invalid", cron=f"0 9 * * {unsupported_token}")])
+    with caplog.at_level("WARNING"):
+        blocks = service._build_timeline_blocks([_schedule("sch_invalid", "Invalid", cron=f"0 9 * * {unsupported_token}")])
+
+    assert blocks == []
+    assert "Skipping timeline block for schedule_id=sch_invalid" in caplog.text
+    assert "Unsupported cron day-of-week" in caplog.text
+
+
+def test_load_and_migrate_logs_warning_when_stat_fails_and_continues(tmp_path, monkeypatch, caplog) -> None:
+    schedules_path = tmp_path / "schedules.json"
+    schedules_path.write_text(json.dumps({"schema_version": 2, "schedules": []}), encoding="utf-8")
+    service = SchedulerUiService(schedules_path=schedules_path)
+
+    original_stat = Path.stat
+
+    def _raise_for_schedule(path_obj: Path, *args, **kwargs):
+        if path_obj == schedules_path:
+            raise OSError("temporary stat failure")
+        return original_stat(path_obj, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "stat", _raise_for_schedule)
+
+    with patch("backend.scheduling.scheduler_ui_service.emit_scheduler_event") as emit_event:
+        with caplog.at_level("WARNING"):
+            state = service.get_ui_state()
+
+    assert state.schedule_file.schema_version == 2
+    assert state.schedule_file.schedules == []
+    assert any("Scheduler schedule file stat failed during cache check." in rec.message for rec in caplog.records)
+
+    emit_event.assert_called_once()
+    _, kwargs = emit_event.call_args
+    assert kwargs["event_name"] == "scheduler.schedule_file.stat.failed"
+    assert kwargs["metadata"] == {
+        "path": str(schedules_path),
+        "operation": "stat",
+        "error_type": "OSError",
+        "error_message": "temporary stat failure",
+    }

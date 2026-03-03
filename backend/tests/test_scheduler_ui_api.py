@@ -6,13 +6,22 @@ from backend.app import app
 from backend.scheduling.scheduler_ui_api import get_scheduler_service
 from backend.scheduling.scheduler_ui_service import SchedulerUiService
 
-TEST_API_KEY = "valid_api_key_for_testing"
+TEST_API_KEY = "valid_api_key_for_testing" # example
+GLOBAL_API_KEY = "global_api_key_should_not_work" # example
 
 def _override_service(tmp_path):
     schedules_path = tmp_path / "schedules.json"
     def _factory() -> SchedulerUiService:
         return SchedulerUiService(schedules_path=schedules_path)
     return _factory
+
+
+
+def _approval_chain(*roles: str):
+    return [
+        {"principal": f"test:{role}", "role": role, "approved_at_utc": "2026-01-01T00:00:00Z"}
+        for role in roles
+    ]
 
 def _sample_schedule(schedule_id="sch_1", name="Test Show"):
     return {
@@ -30,7 +39,11 @@ def _sample_schedule(schedule_id="sch_1", name="Test Show"):
 
 @pytest.fixture(autouse=True)
 def mock_env_api_key():
-    with mock.patch.dict(os.environ, {"ROBODJ_SCHEDULER_API_KEY": TEST_API_KEY, "ROBODJ_SECRET_KEY": TEST_API_KEY}):
+    # Set distinct keys to ensure tests verify the Scheduler API Key specifically
+    with mock.patch.dict(os.environ, {
+        "ROBODJ_SCHEDULER_API_KEY": TEST_API_KEY,
+        "ROBODJ_SECRET_KEY": GLOBAL_API_KEY
+    }):
         yield
 
 def test_unauthenticated_request(tmp_path):
@@ -59,7 +72,7 @@ def test_put_scheduler_state(tmp_path):
     app.dependency_overrides[get_scheduler_service] = _override_service(tmp_path)
     client = TestClient(app)
     try:
-        payload = {"schedules": [_sample_schedule()]}
+        payload = {"schedules": [_sample_schedule()], "approval_chain": _approval_chain("operator", "producer", "admin")}
         response = client.put("/api/v1/scheduler-ui/state", json=payload, headers={"X-API-Key": TEST_API_KEY})
         assert response.status_code == 200
         data = response.json()
@@ -68,6 +81,7 @@ def test_put_scheduler_state(tmp_path):
 
         # Test validation error with conflicting schedules
         invalid_payload = {
+            "approval_chain": _approval_chain("producer", "admin"),
             "schedules": [
                 _sample_schedule("sch_1", "Show A"),
                 _sample_schedule("sch_2", "Show B") # Same cron will cause conflict
@@ -94,7 +108,7 @@ def test_publish_scheduler_state(tmp_path):
     app.dependency_overrides[get_scheduler_service] = _override_service(tmp_path)
     client = TestClient(app)
     try:
-        payload = {"schedules": [_sample_schedule()]}
+        payload = {"schedules": [_sample_schedule()], "approval_chain": _approval_chain("producer", "admin")}
         response = client.post("/api/v1/scheduler-ui/publish", json=payload, headers={"X-API-Key": TEST_API_KEY})
         assert response.status_code == 200
         data = response.json()
@@ -136,5 +150,16 @@ def test_preview_schedule_spec(tmp_path):
         assert "one_off" in data
         assert "rrule" in data
         assert "cron" in data
+    finally:
+        app.dependency_overrides.clear()
+
+
+def test_publish_scheduler_state_rejects_missing_approvers(tmp_path):
+    app.dependency_overrides[get_scheduler_service] = _override_service(tmp_path)
+    client = TestClient(app)
+    try:
+        payload = {"schedules": [_sample_schedule()], "approval_chain": _approval_chain("operator")}
+        response = client.post("/api/v1/scheduler-ui/publish", json=payload, headers={"X-API-Key": TEST_API_KEY})
+        assert response.status_code == 422
     finally:
         app.dependency_overrides.clear()

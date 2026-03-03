@@ -52,6 +52,8 @@ export interface Track {
   title: string;
   artist: string;
   duration: number;
+  bpm?: number;
+  key?: string;
   fadeIn?: number;
   fadeOut?: number;
   startAt?: number;
@@ -457,7 +459,7 @@ export class AudioEngine extends TypedEmitter {
     this.analyser.getByteFrequencyData(frequencyData);
     this.analyser.getByteTimeDomainData(waveformData);
 
-    this.meterAnalyser.getByteTimeDomainData(this.meterDataArray);
+    this.meterAnalyser.getByteTimeDomainData(this.meterDataArray as unknown as Uint8Array<ArrayBuffer>);
 
     let peak = 0;
     let sumSquares = 0;

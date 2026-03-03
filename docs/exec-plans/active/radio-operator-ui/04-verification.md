@@ -38,5 +38,10 @@ For each phase/workstream, capture:
 - `open_risks`: unresolved items with owner + due date
 
 ## Verification Cadence
+- Increment-level verification starts with the **first implementable increment** in phase-4 (Draft PR required).
 - Phase-level verification on phase completion.
 - Full initiative verification before handoff/release summary.
+
+## Acceptance-Criteria Evidence Mapping Rule
+- Every validation command output attached to the Draft PR must map to at least one explicit story acceptance criterion ID.
+- Any acceptance criterion lacking mapped evidence is automatically `Fail` for verification and blocks Ready-for-Review.

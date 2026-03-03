@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import secrets
 import shutil
 import sqlite3
 import sys
@@ -21,6 +22,7 @@ CONFIG_DIR = REPO_ROOT / "config"
 BACKUP_DIR = CONFIG_DIR / "backups"
 LOG_DIR = CONFIG_DIR / "logs"
 SNAPSHOT_PREFIX = "config_snapshot_"
+SNAPSHOT_CREATE_MAX_ATTEMPTS = 5
 SNAPSHOT_FILES = ["schedules.json", "prompt_variables.json"]
 SNAPSHOT_SECRET_FILES = ["secret.key", "secret_v2.key"]
 EVENT_LOG_PATH = LOG_DIR / "startup_safety_events.jsonl"
@@ -162,7 +164,8 @@ def run_startup_diagnostics() -> bool:
 
 
 def _snapshot_name() -> str:
-    return f"{SNAPSHOT_PREFIX}{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
+    return f"{SNAPSHOT_PREFIX}{timestamp}_{secrets.token_hex(2)}"
 
 
 def _files_for_snapshot(include_secrets: bool) -> list[str]:
@@ -174,8 +177,19 @@ def _files_for_snapshot(include_secrets: bool) -> list[str]:
 
 def create_backup_snapshot(*, include_secrets: bool = False, snapshot_type: str = "last_known_good_config") -> Path:
     BACKUP_DIR.mkdir(parents=True, exist_ok=True)
-    snapshot_dir = BACKUP_DIR / _snapshot_name()
-    snapshot_dir.mkdir(parents=True, exist_ok=False)
+    last_collision_error: FileExistsError | None = None
+    for _ in range(SNAPSHOT_CREATE_MAX_ATTEMPTS):
+        snapshot_dir = BACKUP_DIR / _snapshot_name()
+        try:
+            snapshot_dir.mkdir(parents=True, exist_ok=False)
+            break
+        except FileExistsError as exc:
+            last_collision_error = exc
+    else:
+        raise RuntimeError(
+            "Unable to create a unique backup snapshot directory "
+            f"after {SNAPSHOT_CREATE_MAX_ATTEMPTS} attempts in {BACKUP_DIR}."
+        ) from last_collision_error
 
     copied: list[str] = []
     for relative in _files_for_snapshot(include_secrets):

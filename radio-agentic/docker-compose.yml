@@ -70,6 +70,9 @@ services:
       ICECAST_MOUNT: /stream
       ICECAST_USER: source
       ICECAST_PASS: ${ICECAST_PASS:-__SET_IN_ENV__}
+      ICECAST_STATS_POLL_INTERVAL_MS: ${ICECAST_STATS_POLL_INTERVAL_MS:-10000}
+      ICECAST_STATS_FAILURE_THRESHOLD: ${ICECAST_STATS_FAILURE_THRESHOLD:-3}
+      ICECAST_STATS_PATH: ${ICECAST_STATS_PATH:-/status-json.xsl}
     volumes:
       - /tmp:/tmp
     depends_on: [icecast, nats, audio-engine]

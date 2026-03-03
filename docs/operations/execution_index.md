@@ -10,9 +10,20 @@ This index lists active tracks, owners, and current status pointers. The status 
 | --- | --- | --- | --- |
 | Startup diagnostics (`feature_startup_diagnostics`) | Runtime engineer | Complete | [`TODO_v1_1.md` → "1) Startup diagnostics panel"](../../TODO_v1_1.md#1-startup-diagnostics-panel-feature_startup_diagnostics) |
 | Launch config validator (`feature_launch_config_validation`) | Config owner | Complete | [`TODO_v1_1.md` → "2) Launch config validator"](../../TODO_v1_1.md#2-launch-config-validator-feature_launch_config_validation) |
-| Crash recovery restore (`feature_crash_recovery_restore_lkg`) | Runtime engineer | In progress | [`TODO_v1_1.md` → "3) Crash recovery: restore last known good config"](../../TODO_v1_1.md#3-crash-recovery-restore-last-known-good-config-feature_crash_recovery_restore_lkg) |
+| Crash recovery restore (`feature_crash_recovery_restore_lkg`) | Runtime engineer | Complete | [`TODO_v1_1.md` → "3) Crash recovery: restore last known good config"](../../TODO_v1_1.md#3-crash-recovery-restore-last-known-good-config-feature_crash_recovery_restore_lkg) |
 | One-click backup snapshot (`feature_one_click_backup_snapshot`) | Config owner | Complete | [`TODO_v1_1.md` → "4) One-click backup snapshot"](../../TODO_v1_1.md#4-one-click-backup-snapshot-feature_one_click_backup_snapshot) |
 | Product readiness scorecard | Management Team (Project Coordinator) | Active weekly refresh | [`docs/readiness_scorecard.md` → "Scoring model"](../readiness_scorecard.md#scoring-model) |
+
+## Cadence operations table
+
+| Task | Owner | Frequency | Next due (UTC) | Last completed (UTC) |
+| --- | --- | --- | --- | --- |
+| Weekly readiness score refresh (`docs/readiness_scorecard.md`) | Management Team (Project Coordinator) | Weekly | 2026-03-03 | 2026-02-27 |
+| Weekly backlog hygiene reconciliation (`TODO.md` ↔ tracked issues) | Management Team (Project Coordinator) | Weekly | 2026-03-01 | 2026-02-24 |
+| Bi-weekly blocked-item pruning (`TI-037`) | Planner Agent | Bi-weekly | 2026-03-10 | 2026-02-24 |
+| Monthly roadmap-variant reassessment (`TI-038`) | Management Team (Sprint Planner) | Monthly | 2026-03-31 | 2026-02-24 |
+
+> Defer log: backlog hygiene window due 2026-02-27 was deferred to 2026-03-01 to preserve Phase 5 stabilization throughput.
 
 ## Planning runbooks
 
@@ -27,6 +38,17 @@ Run this protocol once per week (or immediately after major scope/status shifts)
 3. **Changed metrics:** List only metrics that changed since prior update (example: `weighted total 62% → 65%`, `2/4 checklist items complete`).
 4. **Blockers:** Record current blockers with expected unblock date.
 5. **Next step:** Add one concrete next action with owner.
+
+### Roadmap hygiene reconciliation (weekly)
+
+During the same weekly pass, reconcile `TODO.md` checkboxes against tracked-issue status fields:
+
+1. Compare each `TODO.md` checklist item linked to `docs/exec-plans/active/tracked-issues/TI-*.md`.
+2. If TI `Status: Closed`, set corresponding `TODO.md` item to `[x]`.
+3. If TI status is not closed (`Open`, `In Progress`, `Blocked`, etc.), set corresponding `TODO.md` item to `[ ]`.
+4. Record any mismatch corrections in the weekly update entry under `Changed metrics`.
+5. Escalate unresolved ambiguity (missing TI link or unclear TI status) to Project Coordinator before closing weekly hygiene review.
+6. Add `Status parity check (TODO.md ↔ sprint-status.yaml): complete` to the weekly checklist/update entry.
 
 Use this compact template when posting weekly updates in the SoT file for that track:
 
@@ -43,3 +65,18 @@ Use this compact template when posting weekly updates in the SoT file for that t
 - Any track status entry is considered **stale after 7 days** without an update in its SoT section.
 - Stale tracks must be marked `⚠ stale` in planning discussions until refreshed.
 - During weekly review, stale tracks are escalated to the listed owner for same-week refresh.
+- Sprint close gate: all dated cadence items within the sprint window must be either completed or formally deferred with rationale, owner, and replacement due date.
+
+## Weekly updates log
+
+- Date (UTC): 2026-02-24
+- Owner: QA lead
+- Changed metrics: recovery SLA pass rate `0% (0/1) -> 50% (1/2)` after timed recovery run `2026-02-24T01:34:19Z-02` (0.85s to ready state)
+- Blockers: launcher `--on-launch` path can hit same-second snapshot-name collision during restore + post-pass snapshot creation; unblock target 2026-02-26
+- Next step: harden snapshot naming to avoid collisions and rerun launcher-gate SLA drill for a second passing sample
+
+- Date (UTC): 2026-02-24
+- Owner: Runtime engineer
+- Changed metrics: snapshot collision blocker resolved via collision-resistant naming + retry guard; rapid snapshot creation tests added and passing
+- Blockers: none (previous same-second snapshot-name collision closed)
+- Next step: rerun launcher `--on-launch` recovery SLA drill and attach second passing sample to readiness scorecard

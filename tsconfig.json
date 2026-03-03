@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "target": "es5",
+        "target": "es2017",
         "lib": [
             "dom",
             "dom.iterable",
@@ -30,11 +30,15 @@
     },
     "include": [
         "next-env.d.ts",
-        "**/*.ts",
-        "**/*.tsx",
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "tests/**/*.ts",
+        "tests/**/*.tsx",
         ".next/types/**/*.ts"
     ],
     "exclude": [
-        "node_modules"
+        "dgn-dj-next",
+        "node_modules",
+        "radio-agentic"
     ]
 }

@@ -1,0 +1,51 @@
+name: Release Readiness Gate
+
+on:
+  pull_request:
+    branches:
+      - main
+      - work
+  push:
+    branches:
+      - main
+      - work
+
+permissions:
+  contents: read
+
+jobs:
+  release-readiness-gate:
+    name: release-readiness-gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          python -m pip install --upgrade pip
+          python -m pip install bandit
+
+      - name: Evaluate configured release gates
+        run: python scripts/ci/evaluate_release_gates.py
+
+      - name: Upload readiness report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-readiness-report
+          path: artifacts/release-readiness/
+          retention-days: 30

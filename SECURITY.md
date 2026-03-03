@@ -45,3 +45,39 @@ That command fails if:
 
 - required environment secrets are missing, or
 - real key material is detected in `config/secret.key` / `config/secret_v2.key`.
+
+## CodeQL Policy and Severity Gate
+
+CodeQL is enabled via `.github/workflows/codeql.yml` and scans only repository languages currently in use:
+
+- `actions`
+- `javascript-typescript`
+- `python`
+
+Merge-blocking policy:
+
+- CI blocks on any **open high/critical** CodeQL alert for the current ref.
+- Scheduled scans run without merge gating to keep weekly signal without interrupting maintenance jobs.
+
+Triage workflow:
+
+- Follow `docs/runbooks/codeql-triage.md` (RB-023) when the severity gate fails.
+- Only dismiss alerts with explicit rationale and traceable ownership.
+
+## CI Security Severity Gate Policy
+
+Repository CI (`.github/workflows/ci.yml`) enforces branch-aware security gating while preserving full report artifacts.
+
+- **Release-enforced refs:** pushes to `main`, pushes to `release/*`, and pull requests targeting `main` or `release/*`.
+- **Feature/non-release refs:** findings are warning-only to preserve developer velocity, but reports are still generated and uploaded.
+
+Blocking policy on release-enforced refs:
+
+- `npm audit`: block on any **high** or **critical** vulnerability.
+- Python SAST (`bandit`): block on any **HIGH** severity issue.
+- `pip-audit`: block on **high/critical** findings when severity exists; if severity metadata is absent, unscored findings are treated as blocking.
+
+Observability guarantees:
+
+- Security reports are always emitted to workflow artifacts (`pip-audit.json`, `python-sast-bandit.json`, `npm-audit.json`), including failure paths.
+- Gate evaluation runs with `if: always()` so final policy decisions are visible even when scans return non-zero statuses.

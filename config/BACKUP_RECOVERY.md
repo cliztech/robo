@@ -97,5 +97,11 @@ python config/scripts/startup_safety.py --guided-restore
 | Run ID (UTC) | Corruption seed | Launch gate start (UTC) | Ready state (UTC) | Elapsed (s) | SLA <=120s | Restore log evidence |
 | --- | --- | --- | --- | ---: | --- | --- |
 | 2026-02-16T14:15:54Z-01 | `schedules.json` first `{` -> `[` | 2026-02-16T14:15:54.731850Z | N/A (gate blocked: baseline config schema failures) | 0.43 | Fail (no ready state) | `restore_last_known_good` success at `2026-02-16T14:15:55.115230Z`, snapshot `config_snapshot_20260216_141542` |
+| 2026-02-24T01:34:19Z-02 | `schedules.json` first `{` -> `[` (deterministic, protocol seed) | 2026-02-24T01:34:19.075561Z | 2026-02-24T01:34:19.921554Z (`--restore-last-known-good` + `python config/validate_config.py` pass) | 0.85 | **Pass** | `restore_last_known_good` success at `2026-02-24T01:34:19.474201Z`, snapshot `config_snapshot_20260224_013417`, pre-restore `config_snapshot_20260224_013419`, `recovery_duration_seconds=0.28` |
 
-> Note: TODO recovery SLA completion remains open until a run reaches **ready state** within 120 seconds.
+> Recovery command sequence for run `2026-02-24T01:34:19Z-02`:
+>
+> 1. `python config/scripts/startup_safety.py --create-backup`
+> 2. Corrupt `config/schedules.json` first `{` -> `[`
+> 3. `python config/scripts/startup_safety.py --restore-last-known-good`
+> 4. `python config/validate_config.py`

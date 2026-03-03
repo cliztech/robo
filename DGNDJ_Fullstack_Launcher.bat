@@ -1,5 +1,5 @@
 @echo off
-setlocal EnableExtensions EnableDelayedExpansion
+setlocal EnableExtensions
 
 :: DGN-DJ Fullstack Launcher (Windows)
 :: - Dev mode: install deps (if needed) + run `npm run dev`
@@ -47,17 +47,8 @@ echo [DGN-DJ] ERROR: Unknown argument "%~1".
 goto :usage_error
 
 :args_done
-setlocal
-
-:: DGN-DJ Fullstack Launcher (Windows)
-:: - Verifies Node/npm availability
-:: - Ensures dependencies are present
-:: - Starts the Next.js full-stack runtime (frontend + API routes)
-
 set "SCRIPT_DIR=%~dp0"
 if "%SCRIPT_DIR:~-1%"=="\" set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
-
-if "%PORT_VALUE%"=="" set "PORT_VALUE=3000"
 
 pushd "%SCRIPT_DIR%"
 
@@ -66,9 +57,6 @@ echo [DGN-DJ] Fullstack launcher mode: %MODE%
 echo [DGN-DJ] Working directory: "%SCRIPT_DIR%"
 echo [DGN-DJ] Local URL target: http://localhost:%PORT_VALUE%
 echo [DGN-DJ] ============================================================
-pushd "%SCRIPT_DIR%"
-
-echo [DGN-DJ] Starting fullstack launcher from "%SCRIPT_DIR%"...
 
 where node >nul 2>nul
 if not %ERRORLEVEL%==0 (
@@ -81,7 +69,7 @@ if not %ERRORLEVEL%==0 (
 where npm >nul 2>nul
 if not %ERRORLEVEL%==0 (
     echo [DGN-DJ] ERROR: npm was not found on PATH.
-    echo [DGN-DJ] Reinstall Node.js (includes npm) and retry.
+    echo [DGN-DJ] Reinstall Node.js ^(includes npm^) and retry.
     popd
     exit /b 1
 )
@@ -123,7 +111,7 @@ if not exist "node_modules" (
         exit /b 1
     )
 ) else (
-    echo [DGN-DJ] Dependencies already present (node_modules found).
+    echo [DGN-DJ] Dependencies already present ^(node_modules found^).
 )
 
 if /I "%MODE%"=="prod" goto :run_prod
@@ -152,9 +140,9 @@ echo Usage:
 echo   DGNDJ_Fullstack_Launcher.bat [dev^|prod] [--port N]
 echo.
 echo Options:
-echo   dev        Start Next.js dev server (default)
+echo   dev        Start Next.js dev server ^(default^)
 echo   prod       Build then run Next.js production server
-echo   --port N   Override port (default: 3000 or PORT env var)
+echo   --port N   Override port ^(default: 3000 or PORT env var^)
 echo   --help     Show this help
 exit /b 0
 
@@ -165,20 +153,4 @@ exit /b 1
 
 :exit
 popd
-endlocal ^& exit /b %APP_EXIT%
-if not exist "node_modules" (
-    echo [DGN-DJ] node_modules missing - installing dependencies...
-    call npm install
-    if not %ERRORLEVEL%==0 (
-        echo [DGN-DJ] ERROR: npm install failed.
-        popd
-        exit /b 1
-    )
-)
-
-echo [DGN-DJ] Launching Next.js full-stack dev server on http://localhost:3000
-call npm run dev
-set "DEV_EXIT=%ERRORLEVEL%"
-
-popd
-endlocal & exit /b %DEV_EXIT%
+endlocal & exit /b %APP_EXIT%

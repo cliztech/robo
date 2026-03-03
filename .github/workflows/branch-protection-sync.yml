@@ -1,0 +1,50 @@
+name: Branch Protection Sync
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/branch-protection/main.ruleset.json'
+      - '.github/workflows/branch-protection-sync.yml'
+
+permissions:
+  contents: read
+  administration: write
+
+jobs:
+  sync-ruleset:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Apply main branch ruleset
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const desired = JSON.parse(fs.readFileSync('.github/branch-protection/main.ruleset.json', 'utf8'));
+
+            const { data: existingRulesets } = await github.rest.repos.getRepoRulesets({ owner, repo });
+            const existing = existingRulesets.find((ruleset) => ruleset.name === desired.name);
+
+            if (existing) {
+              await github.request('PUT /repos/{owner}/{repo}/rulesets/{ruleset_id}', {
+                owner,
+                repo,
+                ruleset_id: existing.id,
+                ...desired,
+              });
+              core.info(`Updated ruleset ${desired.name} (${existing.id}).`);
+            } else {
+              await github.request('POST /repos/{owner}/{repo}/rulesets', {
+                owner,
+                repo,
+                ...desired,
+              });
+              core.info(`Created ruleset ${desired.name}.`);
+            }

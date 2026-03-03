@@ -31,7 +31,7 @@ DEFAULT_WORKFLOW_FILES = [
 ]
 
 HEADER_PATTERN = re.compile(r"^(#{1,6})\s+(.*\S)\s*$")
-TASK_PATTERN = re.compile(r"^\s*[-*]\s+\[\s\]\s+(.*\S)\s*$")
+CHECKBOX_PATTERN = re.compile(r"^\s*[-*]\s+\[(?P<state>[ xX])\]\s+(?P<text>.*\S)\s*$")
 PHASE_PATTERN = re.compile(r"\bP(\d+)\b", re.IGNORECASE)
 BULLET_PATTERN = re.compile(r"^\s*[-*]\s+(?!\[)(.*\S)\s*$")
 NUMBERED_PATTERN = re.compile(r"^\s*\d+[.)]\s+(.*\S)\s*$")
@@ -45,6 +45,21 @@ ACTION_TEXT_PATTERN = re.compile(
     r"introduce|launch|monitor|optimize|publish|run|ship|track|update|"
     r"validate|verify|write|restore)\b",
     re.IGNORECASE,
+)
+TI_REFERENCE_PATTERN = re.compile(r"\bTI-\d{3}\b", re.IGNORECASE)
+TRACKED_ISSUE_HEADER_PATTERN = re.compile(r"^#\s+TI-\d{3}\b", re.IGNORECASE)
+TRACKED_ISSUE_STATUS_PATTERN = re.compile(r"^-\s+\*\*Status:\*\*", re.IGNORECASE)
+CANONICAL_TASK_KEY_PATTERN = re.compile(
+    r"\b(?:canonical[_ -]?task[_ -]?key|task[_ -]?key)\s*[:=]\s*([a-z0-9_.-]+)",
+    re.IGNORECASE,
+)
+NON_ALNUM_PATTERN = re.compile(r"[^a-z0-9]+")
+TRACKED_ISSUES_DIR = ROOT / "docs" / "exec-plans" / "active" / "tracked-issues"
+DUE_ENTRY_PATTERN = re.compile(
+    r"^\s*[-*]\s+\[(?P<state>[ xX])\]\s+"
+    r"(?P<date>\d{4}-\d{2}-\d{2})\s+"
+    r"\(Owner:\s*(?P<owner>[^\)]+)\):\s*"
+    r"(?P<summary>.*\S)\s*$"
 )
 
 
@@ -67,8 +82,78 @@ class QueueItem:
     line_number: int
     section: str
     phase: str
+    phase_namespace: str
     text: str
     kind: str
+
+
+VALID_PHASE_NAMESPACES = {"delivery", "workflow", "none"}
+
+
+def classify_phase_namespace(kind: str) -> str:
+    if kind == "todo":
+        return "delivery"
+    if kind == "workflow":
+        return "workflow"
+    return "none"
+
+
+def validate_phase_namespace(tasks: list[QueueItem]) -> None:
+    """Reject phase records missing an explicit namespace."""
+    for task in tasks:
+        if task.phase_namespace not in VALID_PHASE_NAMESPACES:
+            rel_source = task.source.relative_to(ROOT)
+            raise RuntimeError(
+                "build plan generation aborted: missing/invalid phase namespace "
+                f"for {rel_source}:{task.line_number} "
+                f"(phase='{task.phase}', namespace='{task.phase_namespace}')"
+            )
+@dataclass(frozen=True)
+class ReconciledSkip:
+    """Task excluded during state reconciliation."""
+
+    item: QueueItem
+    reason: str
+    matched_value: str
+
+
+@dataclass(frozen=True)
+class DueReminder:
+    """Date-based cadence reminder extracted from TODO.md tracking lines."""
+
+    date: dt.date
+    owner: str
+    summary: str
+    state: str
+    is_overdue: bool
+
+
+def collect_due_reminders(todo_path: Path, today: dt.date) -> list[DueReminder]:
+    """Collect date-based TODO cadence reminders with overdue classification."""
+    if not todo_path.exists():
+        return []
+
+    reminders: list[DueReminder] = []
+    for raw_line in todo_path.read_text(encoding="utf-8").splitlines():
+        match = DUE_ENTRY_PATTERN.match(raw_line)
+        if not match:
+            continue
+
+        due_date = dt.date.fromisoformat(match.group("date"))
+        state = match.group("state").lower()
+        is_complete = state == "x"
+        reminders.append(
+            DueReminder(
+                date=due_date,
+                owner=match.group("owner").strip(),
+                summary=match.group("summary").strip(),
+                state="complete" if is_complete else "open",
+                is_overdue=(not is_complete and due_date < today),
+            )
+        )
+
+    reminders.sort(key=lambda item: (item.date, item.owner, item.summary))
+    return reminders
 
 
 def collect_open_tasks(markdown_path: Path) -> list[OpenTask]:
@@ -93,19 +178,154 @@ def collect_open_tasks(markdown_path: Path) -> list[OpenTask]:
             )
             continue
 
-        task_match = TASK_PATTERN.match(raw_line)
-        if task_match:
+        task_match = CHECKBOX_PATTERN.match(raw_line)
+        if task_match and task_match.group("state") == " ":
             open_tasks.append(
                 OpenTask(
                     source=markdown_path,
                     line_number=line_number,
                     section=current_section,
                     phase=current_phase,
-                    text=task_match.group(1),
+                    text=task_match.group("text"),
                 )
             )
 
     return open_tasks
+
+
+def collect_closed_tasks(markdown_path: Path) -> list[OpenTask]:
+    """Collect checked markdown checklist items from a TODO board."""
+    if not markdown_path.exists():
+        return []
+
+    current_section = "(root)"
+    current_phase = "Unphased"
+    closed_tasks: list[OpenTask] = []
+
+    for line_number, raw_line in enumerate(
+        markdown_path.read_text(encoding="utf-8").splitlines(),
+        start=1,
+    ):
+        header_match = HEADER_PATTERN.match(raw_line)
+        if header_match:
+            current_section = header_match.group(2)
+            phase_match = PHASE_PATTERN.search(current_section)
+            current_phase = (
+                f"P{int(phase_match.group(1))}" if phase_match else "Unphased"
+            )
+            continue
+
+        task_match = CHECKBOX_PATTERN.match(raw_line)
+        if task_match and task_match.group("state").lower() == "x":
+            closed_tasks.append(
+                OpenTask(
+                    source=markdown_path,
+                    line_number=line_number,
+                    section=current_section,
+                    phase=current_phase,
+                    text=task_match.group("text"),
+                )
+            )
+
+    return closed_tasks
+
+
+def normalized_title_fingerprint(text: str) -> str:
+    lowered = text.lower()
+    without_links = re.sub(r"\[[^\]]+\]\([^\)]+\)", " ", lowered)
+    without_ti = TI_REFERENCE_PATTERN.sub(" ", without_links)
+    without_metadata = re.sub(r"\([^\)]*\)", " ", without_ti)
+    without_formatting = re.sub(r"[`*_#>]", " ", without_metadata)
+    collapsed = NON_ALNUM_PATTERN.sub(" ", without_formatting)
+    return " ".join(collapsed.split())
+
+
+def extract_ti_references(text: str) -> set[str]:
+    return {match.group(0).upper() for match in TI_REFERENCE_PATTERN.finditer(text)}
+
+
+def extract_canonical_task_keys(text: str) -> set[str]:
+    return {match.group(1).lower() for match in CANONICAL_TASK_KEY_PATTERN.finditer(text)}
+
+
+def validate_tracked_issue_files(tracked_issues_dir: Path = TRACKED_ISSUES_DIR) -> None:
+    """Fail fast when tracked-issue docs break one-issue-per-file structure."""
+    if not tracked_issues_dir.exists():
+        return
+
+    violations: list[str] = []
+    for issue_path in sorted(tracked_issues_dir.glob("TI-*.md")):
+        text = issue_path.read_text(encoding="utf-8")
+        lines = text.splitlines()
+        header_count = sum(1 for line in lines if TRACKED_ISSUE_HEADER_PATTERN.match(line.strip()))
+        status_count = sum(1 for line in lines if TRACKED_ISSUE_STATUS_PATTERN.match(line.strip()))
+
+        if header_count != 1 or status_count != 1:
+            rel_path = issue_path.relative_to(ROOT)
+            violations.append(
+                f"- {rel_path}: expected 1 TI header + 1 status block, "
+                f"found header_count={header_count}, status_count={status_count}"
+            )
+
+    if violations:
+        raise RuntimeError(
+            "tracked issue structure validation failed:\n" + "\n".join(violations)
+        )
+
+
+def reconcile_tasks(
+    tasks: list[QueueItem],
+    closed_tasks: list[OpenTask],
+) -> tuple[list[QueueItem], list[ReconciledSkip]]:
+    """Drop open queue rows already closed in TODO.md tracked issue checklist."""
+    closed_tis: set[str] = set()
+    closed_keys: set[str] = set()
+    closed_fingerprints: set[str] = set()
+
+    for item in closed_tasks:
+        ti_refs = extract_ti_references(item.text)
+        if not ti_refs and not extract_canonical_task_keys(item.text):
+            continue
+        closed_tis.update(ti_refs)
+        closed_keys.update(extract_canonical_task_keys(item.text))
+        fingerprint = normalized_title_fingerprint(item.text)
+        if fingerprint:
+            closed_fingerprints.add(fingerprint)
+
+    reconciled: list[QueueItem] = []
+    skipped: list[ReconciledSkip] = []
+
+    for item in tasks:
+        item_tis = extract_ti_references(item.text)
+        matched_ti = sorted(item_tis & closed_tis)
+        if matched_ti:
+            skipped.append(
+                ReconciledSkip(item=item, reason="closed_ti_reference", matched_value=matched_ti[0])
+            )
+            continue
+
+        item_keys = extract_canonical_task_keys(item.text)
+        matched_key = sorted(item_keys & closed_keys)
+        if matched_key:
+            skipped.append(
+                ReconciledSkip(item=item, reason="closed_canonical_task_key", matched_value=matched_key[0])
+            )
+            continue
+
+        item_fingerprint = normalized_title_fingerprint(item.text)
+        if item_fingerprint and item_fingerprint in closed_fingerprints:
+            skipped.append(
+                ReconciledSkip(
+                    item=item,
+                    reason="closed_title_fingerprint",
+                    matched_value=item_fingerprint,
+                )
+            )
+            continue
+
+        reconciled.append(item)
+
+    return reconciled, skipped
 
 
 def render_queue(tasks: list[QueueItem], limit: int) -> str:
@@ -125,7 +345,7 @@ def render_queue(tasks: list[QueueItem], limit: int) -> str:
         rel_source = task.source.relative_to(ROOT)
         lines.append(
             f"{index:>2}. [{rel_source}:{task.line_number}] "
-            f"{task.phase} | {task.section} -> {task.text}"
+            f"{task.phase} [{task.phase_namespace}] | {task.section} -> {task.text}"
             f" ({task.kind})"
         )
 
@@ -180,9 +400,15 @@ def render_phase_summary(phase_totals: dict[str, int]) -> str:
 
 
 
-def write_build_plan(tasks: list[QueueItem], output_path: Path) -> None:
+def write_build_plan(
+    tasks: list[QueueItem],
+    output_path: Path,
+    skipped_tasks: list[ReconciledSkip] | None = None,
+    due_reminders: list[DueReminder] | None = None,
+) -> None:
     """Write a markdown build plan grouped by phase from unfinished tasks."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    validate_phase_namespace(tasks)
 
     by_phase: dict[str, list[QueueItem]] = {}
     for task in tasks:
@@ -202,6 +428,42 @@ def write_build_plan(tasks: list[QueueItem], output_path: Path) -> None:
     lines.append(render_phase_summary(phase_totals))
     lines.append("")
 
+    skipped = skipped_tasks or []
+    reminders = due_reminders or []
+    lines.append(f"Reconciled/skipped tasks: **{len(skipped)}**.")
+    lines.append("")
+
+    if reminders:
+        overdue_count = sum(1 for item in reminders if item.is_overdue)
+        lines.append("## Cadence Due-Date Reminders")
+        lines.append("")
+        lines.append(
+            f"Total dated reminders: **{len(reminders)}** · Overdue open reminders: **{overdue_count}**."
+        )
+        lines.append("")
+        for reminder in reminders:
+            status = "done" if reminder.state == "complete" else ("overdue" if reminder.is_overdue else "upcoming")
+            lines.append(
+                f"- {reminder.date.isoformat()} | {status} | Owner: {reminder.owner} | {reminder.summary}"
+            )
+        lines.append("")
+
+    if skipped:
+        lines.append("## Reconciled / Skipped")
+        lines.append("")
+        for entry in sorted(
+            skipped,
+            key=lambda item: (str(item.item.source), item.item.line_number),
+        ):
+            rel_source = entry.item.source.relative_to(ROOT)
+            lines.append(
+                "- `"
+                f"{rel_source}:{entry.item.line_number}` ({entry.item.kind}) "
+                f"{entry.item.section} -> {entry.item.text} "
+                f"[reason={entry.reason}; matched={entry.matched_value}]"
+            )
+        lines.append("")
+
     def sort_key(label: str) -> tuple[int, str]:
         match = PHASE_PATTERN.search(label)
         if match:
@@ -214,11 +476,24 @@ def write_build_plan(tasks: list[QueueItem], output_path: Path) -> None:
         for task in sorted(by_phase[phase], key=lambda item: (str(item.source), item.line_number)):
             rel_source = task.source.relative_to(ROOT)
             lines.append(
-                f"- [ ] `{rel_source}:{task.line_number}` ({task.kind}) {task.section} -> {task.text}"
+                f"- [ ] `{rel_source}:{task.line_number}` ({task.kind}) "
+                f"[phase_namespace={task.phase_namespace}] "
+                f"{task.section} -> {task.text}"
             )
         lines.append("")
 
-    output_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    rendered = "\n".join(lines).rstrip() + "\n"
+    generated_header = "Generated by `scripts/roadmap_autopilot.py` at "
+    generated_header_count = sum(
+        1 for line in rendered.splitlines() if line.startswith(generated_header)
+    )
+    if generated_header_count != 1:
+        raise RuntimeError(
+            "build plan generation aborted: duplicate or missing generated header "
+            f"(count={generated_header_count})"
+        )
+
+    output_path.write_text(rendered, encoding="utf-8")
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -326,8 +601,8 @@ def collect_workflow_actions(markdown_path: Path) -> list[QueueItem]:
                 source=markdown_path,
                 line_number=line_number,
                 section=current_section,
-                phase="Unphased",
                 phase=phase,
+                phase_namespace=classify_phase_namespace("workflow"),
                 text=normalized,
                 kind="workflow",
             )
@@ -342,8 +617,12 @@ def run_once(
     limit: int,
     build_plan: str = "",
 ) -> int:
+    validate_tracked_issue_files()
+
     tasks: list[QueueItem] = []
     missing_files: list[Path] = []
+
+    closed_todo_tracked_tasks: list[OpenTask] = []
 
     for markdown_path in todo_files:
         if markdown_path.exists():
@@ -353,11 +632,14 @@ def run_once(
                     line_number=task.line_number,
                     section=task.section,
                     phase=task.phase,
+                    phase_namespace=classify_phase_namespace("todo"),
                     text=task.text,
                     kind="todo",
                 )
                 for task in collect_open_tasks(markdown_path)
             )
+            if markdown_path.name == "TODO.md":
+                closed_todo_tracked_tasks.extend(collect_closed_tasks(markdown_path))
         else:
             missing_files.append(markdown_path)
 
@@ -368,6 +650,7 @@ def run_once(
             missing_files.append(markdown_path)
 
     tasks.sort(key=lambda item: (str(item.source), item.line_number))
+    tasks, skipped_tasks = reconcile_tasks(tasks, closed_todo_tracked_tasks)
 
     if missing_files:
         for missing in missing_files:
@@ -376,13 +659,20 @@ def run_once(
     print(render_queue(tasks, limit=limit))
 
     if build_plan:
+        reminder_source = next((path for path in todo_files if path.name == "TODO.md"), ROOT / "TODO.md")
+        due_reminders = collect_due_reminders(reminder_source, today=dt.datetime.now(dt.timezone.utc).date())
         output_path = (ROOT / build_plan).resolve()
         try:
             output_path.relative_to(ROOT)
         except ValueError:
             print(f"error: build plan path outside project root: {build_plan}", file=sys.stderr)
             return 2
-        write_build_plan(tasks, output_path)
+        write_build_plan(
+            tasks,
+            output_path,
+            skipped_tasks=skipped_tasks,
+            due_reminders=due_reminders,
+        )
         rel_output = output_path.relative_to(ROOT)
         print(f"\nWrote build plan: {rel_output}")
 

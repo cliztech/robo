@@ -1,8 +1,15 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+import threading
+import json
+from typing import Optional
 
-from backend.security.auth import verify_api_key
+from fastapi import APIRouter, Depends, HTTPException, Request
+
+from backend.security.approval_policy import ApprovalPolicyError, parse_approval_chain
+from backend.security.auth import get_scheduler_api_key
+from backend.security.approval_policy import ApprovalContext, ApprovalRecord
+from backend.security.approval_policy import ApprovalContext, ChainApprovalRecord
 
 from .scheduler_models import (
     PreviewRequest,
@@ -16,12 +23,45 @@ from .scheduler_ui_service import SchedulerUiService
 router = APIRouter(
     prefix="/api/v1/scheduler-ui",
     tags=["scheduler-ui"],
-    dependencies=[Depends(verify_api_key)]
+    dependencies=[Depends(get_scheduler_api_key)]
 )
+
+_service_instance: Optional[SchedulerUiService] = None
+_service_lock = threading.Lock()
 
 
 def get_scheduler_service() -> SchedulerUiService:
-    return SchedulerUiService()
+    global _service_instance
+    if _service_instance is None:
+        with _service_lock:
+            if _service_instance is None:
+                _service_instance = SchedulerUiService()
+    return _service_instance
+
+
+def _approval_context_from_request(request: Request) -> ApprovalContext:
+    actor_id = request.headers.get("X-Actor-Id", "api-key-actor")
+    actor_roles = {
+        role.strip().lower()
+        for role in request.headers.get("X-Actor-Roles", "").split(",")
+        if role.strip()
+    }
+    approvals_header = request.headers.get("X-Approval-Chain", "[]")
+    try:
+        approvals_payload = json.loads(approvals_header)
+    except json.JSONDecodeError:
+        approvals_payload = []
+
+    approvals = tuple(
+        ChainApprovalRecord(
+            approver_id=str(item.get("approver_id", "")).strip(),
+            approver_roles=frozenset(role.strip().lower() for role in item.get("approver_roles", [])),
+            reason=str(item.get("reason", "")).strip(),
+        )
+        for item in approvals_payload
+        if isinstance(item, dict)
+    )
+    return ApprovalContext(actor_id=actor_id, actor_roles=frozenset(actor_roles), approvals=approvals)
 
 
 @router.get("/state", response_model=SchedulerUiState)
@@ -32,12 +72,19 @@ def read_scheduler_state(service: SchedulerUiService = Depends(get_scheduler_ser
 @router.put("/state", response_model=SchedulerUiState)
 def write_scheduler_state(
     payload: SchedulerUiStateUpdate,
+    request: Request,
     service: SchedulerUiService = Depends(get_scheduler_service),
 ) -> SchedulerUiState:
     try:
-        return service.update_schedules(payload.schedules)
+        return service.update_schedules(payload.schedules, approval_context=_approval_context_from_request(request))
     except ValueError as exc:
+    except ValueError:
+        approval_chain = parse_approval_chain([entry.model_dump() for entry in payload.approval_chain])
+        return service.update_schedules(payload.schedules, approval_chain=approval_chain)
+    except (ValueError, ApprovalPolicyError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except ApprovalPolicyError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
 
 
 @router.post("/validate", response_model=list[ScheduleConflict])
@@ -51,12 +98,16 @@ def validate_scheduler_state(
 @router.post("/publish")
 def publish_scheduler_state(
     payload: SchedulerUiStateUpdate,
+    request: Request,
     service: SchedulerUiService = Depends(get_scheduler_service),
 ):
     try:
-        return service.publish_schedules(payload.schedules)
-    except ValueError as exc:
+        approval_chain = parse_approval_chain([entry.model_dump() for entry in payload.approval_chain])
+        return service.publish_schedules(payload.schedules, approval_chain=approval_chain)
+    except (ValueError, ApprovalPolicyError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except ApprovalPolicyError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
 
 
 @router.post("/templates/apply")

@@ -1,7 +1,6 @@
 export * from './GorillaLogo';
 export * from './address-bar';
 export * from './app-shell';
-export * from './deck-panel';
 export * from './library-browser';
 export * from './mixer-panel';
 export * from './sidebar';

@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://robodj.local/contracts/shared_settings_visibility.schema.json",
+  "title": "shared_settings_visibility",
+  "description": "Role-aware settings visibility and editability matrix for admin/operator/viewer clients.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "roles",
+    "deny_state"
+  ],
+  "properties": {
+    "roles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "admin",
+        "operator",
+        "viewer"
+      ],
+      "properties": {
+        "admin": {
+          "$ref": "#/$defs/role_contract"
+        },
+        "operator": {
+          "$ref": "#/$defs/role_contract"
+        },
+        "viewer": {
+          "$ref": "#/$defs/role_contract"
+        }
+      }
+    },
+    "deny_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "reason_code"
+      ],
+      "properties": {
+        "status": {
+          "const": "denied"
+        },
+        "reason_code": {
+          "const": "role_not_permitted"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "role_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "visible_sections",
+        "editable_sections"
+      ],
+      "properties": {
+        "visible_sections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/settings_section"
+          },
+          "uniqueItems": true
+        },
+        "editable_sections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/settings_section"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "settings_section": {
+      "type": "string",
+      "enum": [
+        "station_profile",
+        "ui_preferences",
+        "autonomy_controls",
+        "publish_controls",
+        "integration_metadata"
+      ]
+    }
+  }
+}

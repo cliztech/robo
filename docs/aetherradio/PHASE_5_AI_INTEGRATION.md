@@ -21,6 +21,13 @@
 - Prompt versioning for reproducible behavior
 - Manual fallback when AI service is unavailable
 
+## Canonical API Route (Contract Guardrail)
+
+- Canonical endpoint for track analysis: `POST /api/v1/ai/track-analysis`.
+- Legacy compatibility alias: `POST /api/v1/ai/analyze-track` (deprecated; same envelope and correlation-id behavior, emits deprecation headers).
+- Shared response envelope for AI routes (`track-analysis` + `host-script`):
+  - `success`, `status`, `correlation_id`, `data`, `error`, `latency_ms`, `cost_usd`, `cache_hit`, `prompt_profile_version`.
+
 ## Validation
 
 ```bash

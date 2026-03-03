@@ -3,10 +3,12 @@ import type { LucideIcon } from 'lucide-react';
 export type ConsoleViewMode =
     | 'dashboard'
     | 'decks'
+    | 'studio'
     | 'mixer'
     | 'library'
     | 'schedule'
-    | 'ai-host';
+    | 'ai-host'
+    | 'skin-manager';
 
 export interface ConsoleNavItem {
     view: ConsoleViewMode;

@@ -1,0 +1,18 @@
+# Authoritative backend dependency manifest for local development and CI.
+# Compile with: pip-compile backend/requirements.in --output-file backend/requirements.lock
+
+# Runtime dependencies
+fastapi
+pydantic
+cryptography
+sqlalchemy
+alembic
+uvicorn
+
+# Test/lint dependencies used by backend CI job
+pytest
+httpx
+ruff
+
+# Security tooling used by CI security job
+pip-audit
