@@ -236,3 +236,5 @@
 - [x] Refreshed TECH_STACK.md runtime/framework/tooling entries to current versions (including Next.js 15.5.10).
 - [x] Replaced backend operator-facing legacy RoboDJ naming in startup error text and FastAPI title with DGN-DJ branding.
 - [x] Added docs consistency check execution to CI and strengthened `scripts/ci/check_docs_consistency.py` with README title/index validation.
+
+- [x] Aligned TI-040/TI-041 status semantics: TI-040 dependency checkpoints now include explicit evidence links/downstream impact, TI-041 carries implementation vs release-readiness split, and TODO/readiness scorecard now consume the same release-gate interpretation.

@@ -36,6 +36,12 @@ This scorecard provides a versioned, repeatable way to track progress from roadm
 
 ## Weekly updates (SoT for Product readiness scorecard)
 
+### Status interpretation for release gating
+
+- `implementation_status` tracks build/test/documentation execution progress.
+- `release_readiness_status` tracks dependency-evidence closure and gate eligibility.
+- A tracked issue is release-eligible only when both values are `complete`/`ready`; implementation-only completion must not raise readiness claims.
+
 - ⚠ stale
   - Date (UTC): 2026-02-16
   - Owner: Management Team (Project Coordinator)
@@ -52,10 +58,11 @@ This scorecard provides a versioned, repeatable way to track progress from roadm
   - Next step: publish updated Track A execution evidence and re-evaluate Security & compliance score in next weekly refresh
 - Date (UTC): 2026-02-27
   - Owner: Management Team (Project Coordinator)
-  - Changed metrics: weighted total remains `63%`; security blockers now mapped directly to TI-039/TI-040 implementation windows
+  - Changed metrics: weighted total remains `63%`; security blockers now mapped to split status semantics (`implementation_status` vs `release_readiness_status`)
   - Blockers:
-    - TI-039 approval workflow implementation still open (target 2026-03-07)
-    - TI-040 config-at-rest encryption implementation still open (target 2026-03-10)
+    - TI-039 implementation_status: `open`; release_readiness_status: `blocked` (target 2026-03-07)
+    - TI-040 implementation_status: `in_progress`; release_readiness_status: `blocked` (DEP-TI040-01..03 unresolved; target 2026-03-10)
+    - TI-041 implementation_status: `complete`; release_readiness_status: `blocked` (pending TI040-ART-LOG/TI040-ART-REPORT/TI040-ART-HASH)
   - Next step: complete weekly backlog hygiene reconciliation and publish deferred-item rationale in the cadence table
 
 ## Weekly update workflow
