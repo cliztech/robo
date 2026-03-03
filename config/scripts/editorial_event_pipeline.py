@@ -349,7 +349,7 @@ def run_pipeline(config: Dict[str, Any], sample_events_path: Optional[str]) -> L
                 continue
             enabled_adapters[name] = adapter
 
-        with concurrent.futures.ThreadPoolExecutor() as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(enabled_adapters) or 1) as executor:
             future_to_name = {
                 executor.submit(adapter.fetch): name
                 for name, adapter in enabled_adapters.items()
