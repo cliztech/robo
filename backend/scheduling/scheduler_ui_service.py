@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import json
 import os
 import re
 from datetime import datetime
@@ -11,7 +12,7 @@ from zoneinfo import ZoneInfo
 from backend.security.approval_policy import ApprovalContext, ApprovalRecord, enforce_action_approval
 from backend.security.audit_export import append_audit_record
 from backend.security.config_crypto import EnvelopeKey, config_hash, serialize_json, transform_sensitive_values
-from backend.security.approval_policy import ActionId, ApprovalRecord, require_approval
+
 from backend.security.config_crypto import dump_config_json, load_config_json
 
 from .observability import emit_scheduler_event
@@ -86,10 +87,10 @@ class SchedulerUiService:
     def update_schedules(
         self,
         schedules: list[ScheduleRecord],
-        *,
-        approval_chain: list[ApprovalRecord] | None = None,
+        approval_context: ApprovalContext | None = None,
+
     ) -> SchedulerUiState:
-        require_approval(ActionId.ACT_CONFIG_EDIT, approval_chain or [])
+        enforce_action_approval("ACT-CONFIG-EDIT", approval_context or self._default_approval_context())
         envelope = ScheduleEnvelope(schema_version=2, schedules=schedules)
         self._validate_schema(envelope)
 
@@ -113,7 +114,7 @@ class SchedulerUiService:
             result="success",
             before_hash=before_hash,
             after_hash=after_hash,
-            context=context,
+            context=approval_context,
         )
         payload = envelope.model_dump(mode="json")
         self.schedules_path.write_text(dump_config_json(self.schedules_path, payload, indent=2), encoding="utf-8")
@@ -131,20 +132,15 @@ class SchedulerUiService:
         context = approval_context or self._default_approval_context()
         enforce_action_approval("ACT-PUBLISH", context)
         before_hash = self._file_hash(self.schedules_path)
-        ui_state = self.update_schedules(schedules, approval_context=context)
+        ui_state = self.update_schedules(schedules, approval_context=approval_context)
         after_hash = self._file_hash(self.schedules_path)
         self._append_security_audit(
             action="ACT-PUBLISH",
             result="success",
             before_hash=before_hash,
             after_hash=after_hash,
-            context=context,
+            context=approval_context,
         )
-        *,
-        approval_chain: list[ApprovalRecord] | None = None,
-    ) -> dict[str, object]:
-        require_approval(ActionId.ACT_PUBLISH, approval_chain or [])
-        ui_state = self.update_schedules(schedules, approval_chain=approval_chain)
         return {
             "status": "published",
             "published_at": datetime.now(tz=ZoneInfo("UTC")).isoformat(),
@@ -314,12 +310,11 @@ class SchedulerUiService:
 
     def _append_security_audit(
         self,
-        *,
         action: str,
         result: str,
         before_hash: str,
         after_hash: str,
-        context: ApprovalContext,
+        context: ApprovalContext | None = None,
     ) -> None:
         append_audit_record(
             self.audit_log_path,
@@ -472,7 +467,6 @@ class SchedulerUiService:
 
     def _parse_numeric_cron_time(
         self,
-        *,
         hour: str,
         minute: str,
         schedule_id: str,

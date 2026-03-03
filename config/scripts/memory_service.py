@@ -229,6 +229,55 @@ class MemoryService:
             )
 
         return results
+    def topics_lifecycle(self, topics: list[str], show_id: Optional[str] = None) -> list[dict]:
+        if not topics:
+            return []
+
+        lookback_hours = 168
+        rows = self.recent_mentions(hours=lookback_hours, show_id=show_id, kinds=["topic"], limit=500)
+
+        topic_mentions = {t.strip().lower(): [] for t in topics}
+        for r in rows:
+            text = r["text"].strip().lower()
+            if text in topic_mentions:
+                topic_mentions[text].append(self._from_iso(r["mentioned_at"]))
+
+        now = self._utc_now()
+        results = []
+        for topic in topics:
+            topic_norm = topic.strip().lower()
+            mention_times = topic_mentions.get(topic_norm, [])
+            mention_times.sort(reverse=True)
+
+            mentions_24h = sum(1 for ts in mention_times if now - ts <= timedelta(hours=24))
+            mentions_72h = sum(1 for ts in mention_times if now - ts <= timedelta(hours=72))
+            last_seen_hours = None
+            if mention_times:
+                last_seen_hours = (now - mention_times[0]).total_seconds() / 3600.0
+
+            if not mention_times:
+                state = "fresh"
+            elif mentions_24h >= 3:
+                state = "saturated"
+            elif mentions_72h >= 2:
+                state = "warming"
+            elif last_seen_hours is not None and last_seen_hours >= 24:
+                state = "cooldown"
+            else:
+                state = "warming"
+
+            results.append({
+                "topic": topic,
+                "state": state,
+                "mentions_24h": mentions_24h,
+                "mentions_72h": mentions_72h,
+                "last_seen_hours": round(last_seen_hours, 2) if last_seen_hours is not None else None,
+            })
+
+        return results
+
+    def topic_lifecycle(self, topic: str, show_id: Optional[str] = None) -> dict:
+        return self.topics_lifecycle([topic], show_id=show_id)[0]
 
     def recency_penalties(
         self,
@@ -408,6 +457,7 @@ class MemoryService:
                 break
 
         lifecycle = self.topic_lifecycles(unique_topics, show_id=show_id)
+        lifecycle = self.topics_lifecycle(unique_topics, show_id=show_id)
         persona_style = self.get_persona_style(persona) if persona else None
 
         return {
