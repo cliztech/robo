@@ -54,7 +54,7 @@ jobs:
 
       - name: Verify expected distribution files
         run: |
-          test -f "RoboDJ_Launcher.bat"
+          test -f "DGN-DJ_Launcher.bat"
           test -d "config"
           test -f "config/inspect_db.py"
           test -f "config/prompt_variables.json"

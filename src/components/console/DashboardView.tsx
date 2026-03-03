@@ -1,194 +1,286 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useId, useMemo, useRef, useState, type ElementType } from "react";
+import { motion } from "framer-motion";
 import {
-    Activity,
-    Gauge,
-    Minus,
-    Signal,
-    TrendingDown,
-    TrendingUp,
-    Users,
-    Wifi,
-    Zap,
-} from 'lucide-react';
-import { DegenEffectRack } from '@/components/audio/DegenEffectRack';
-import { DegenBeatGrid } from '@/components/audio/DegenBeatGrid';
-import { DegenWaveform } from '@/components/audio/DegenWaveform';
-import { DegenScheduleTimeline } from '@/components/schedule/DegenScheduleTimeline';
-import { DegenAIHost } from '@/components/ai/DegenAIHost';
-import { cn } from '@/lib/utils';
+  Activity,
+  Gauge,
+  Minus,
+  Signal,
+  TrendingDown,
+  TrendingUp,
+  AlertTriangle,
+  CheckCircle2,
+  RefreshCw,
+} from "lucide-react";
+import { DegenEffectRack } from "@/components/audio/DegenEffectRack";
+import { DegenBeatGrid } from "@/components/audio/DegenBeatGrid";
+import { DegenWaveform } from "@/components/audio/DegenWaveform";
+import { DegenScheduleTimeline } from "@/components/schedule/DegenScheduleTimeline";
+import { DegenAIHost } from "@/components/ai/DegenAIHost";
+import { cn } from "@/lib/utils";
+import { type DashboardCardColor } from "./dashboard.types";
+import {
+  type DashboardCardColor,
+  mapSeverityToCardColor,
+  mapSeverityToStatusTextClass,
+  mapStatusToTrend,
+} from "./dashboard.types";
+import {
+  acknowledgeDashboardAlert,
+  fetchDashboardAlerts,
+  fetchDashboardStatus,
+  type AlertSeverity,
+  type DashboardStatusResponse,
+} from "@/lib/status/dashboardClient";
+import {
+  createNotificationsState,
+  getFilteredNotificationAlerts,
+  setNotificationAlerts,
+  toggleNotificationSeverity,
+} from "@/features/notifications/notifications.store";
+  type AlertCenterItem,
+  type AlertSeverity,
+  type DashboardStatusResponse,
+} from "@/lib/status/dashboardClient";
+
+export interface DashboardViewApi {
+  fetchDashboardStatus: (signal?: AbortSignal) => Promise<DashboardStatusResponse>;
+  fetchDashboardAlerts: (
+    severity?: AlertSeverity,
+    signal?: AbortSignal,
+  ) => Promise<AlertCenterItem[]>;
+  acknowledgeDashboardAlert: (
+    alertId: string,
+    signal?: AbortSignal,
+  ) => Promise<AlertCenterItem>;
+}
+
+interface DashboardViewProps {
+  telemetry?: unknown;
+  api?: Partial<DashboardStatusApi>;
+}
+const defaultDashboardViewApi: DashboardViewApi = {
+  fetchDashboardStatus,
+  fetchDashboardAlerts,
+  acknowledgeDashboardAlert,
+};
+
+interface StatCardProps {
+  label: string;
+  value: string | number;
+  unit?: string;
+  icon: ElementType;
+  color?: DashboardCardColor;
+  trend?: "up" | "down" | "stable";
+  sparkline?: number[];
+  delay?: number;
+}
 
 function StatCard({
-    label,
-    value,
-    unit,
-    icon: Icon,
-    color = 'lime',
-    trend,
-    sparkline,
-    delay = 0,
-}: {
-    label: string;
-    value: string | number;
-    unit?: string;
-    icon: React.ElementType;
-    color?: 'lime' | 'purple' | 'cyan' | 'orange' | 'red';
-    trend?: 'up' | 'down' | 'stable';
-    sparkline?: number[];
-    delay?: number;
-}) {
-    const colorMap = {
-        lime: {
-            gradient: 'from-lime-500/8 via-lime-500/3 to-transparent',
-            border: 'border-lime-500/15',
-            text: 'text-lime-400',
-            icon: 'text-lime-500/70',
-            glow: 'shadow-[0_0_20px_rgba(170,255,0,0.04)]',
-            spark: '#aaff00',
-        },
-        purple: {
-            gradient: 'from-purple-500/8 via-purple-500/3 to-transparent',
-            border: 'border-purple-500/15',
-            text: 'text-purple-400',
-            icon: 'text-purple-500/70',
-            glow: 'shadow-[0_0_20px_rgba(153,51,255,0.04)]',
-            spark: '#9933ff',
-        },
-        cyan: {
-            gradient: 'from-cyan-500/8 via-cyan-500/3 to-transparent',
-            border: 'border-cyan-500/15',
-            text: 'text-cyan-400',
-            icon: 'text-cyan-500/70',
-            glow: 'shadow-[0_0_20px_rgba(0,191,255,0.04)]',
-            spark: '#00bfff',
-        },
-        orange: {
-            gradient: 'from-orange-500/8 via-orange-500/3 to-transparent',
-            border: 'border-orange-500/15',
-            text: 'text-orange-400',
-            icon: 'text-orange-500/70',
-            glow: 'shadow-[0_0_20px_rgba(255,107,0,0.04)]',
-            spark: '#ff6b00',
-        },
-        red: {
-            gradient: 'from-red-500/8 via-red-500/3 to-transparent',
-            border: 'border-red-500/15',
-            text: 'text-red-400',
-            icon: 'text-red-500/70',
-            glow: 'shadow-[0_0_20px_rgba(239,68,68,0.04)]',
-            spark: '#ef4444',
-        },
-    };
+  label,
+  value,
+  unit,
+  icon: Icon,
+  color = "lime",
+  trend,
+  sparkline,
+  delay = 0,
+}: StatCardProps) {
+  const sparkId = useId();
+  const colors = {
+    lime: {
+      gradient: "from-lime-500/8 via-lime-500/3 to-transparent",
+      border: "border-lime-500/15",
+      icon: "text-lime-500/70",
+      spark: "#aaff00",
+    },
+    purple: {
+      gradient: "from-purple-500/8 via-purple-500/3 to-transparent",
+      border: "border-purple-500/15",
+      icon: "text-purple-500/70",
+      spark: "#9933ff",
+    },
+    cyan: {
+      gradient: "from-cyan-500/8 via-cyan-500/3 to-transparent",
+      border: "border-cyan-500/15",
+      icon: "text-cyan-500/70",
+      spark: "#00bfff",
+    },
+    orange: {
+      gradient: "from-orange-500/8 via-orange-500/3 to-transparent",
+      border: "border-orange-500/15",
+      icon: "text-orange-500/70",
+      spark: "#ff6b00",
+    },
+    red: {
+      gradient: "from-red-500/8 via-red-500/3 to-transparent",
+      border: "border-red-500/15",
+      icon: "text-red-500/70",
+      spark: "#ef4444",
+    },
+  };
 
-    const c = colorMap[color];
-    const defaultSparkline = [30, 45, 38, 52, 48, 60, 55, 70, 65, 75, 72, 80];
+  const points = sparkline ?? [30, 45, 38, 52, 48, 60, 55, 70, 65, 75, 72, 80];
+  const trendIcon =
+    trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus;
+  const TrendIcon = trendIcon;
+  const trendClass =
+    trend === "up"
+      ? "text-lime-500"
+      : trend === "down"
+        ? "text-red-400"
+        : "text-zinc-600";
+  const c = colors[color];
 
-    const TrendIcon = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : Minus;
-    const trendColor = trend === 'up' ? 'text-lime-500' : trend === 'down' ? 'text-red-400' : 'text-zinc-600';
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.25 }}
+      className={cn(
+        "rounded-xl border p-4 bg-gradient-to-br",
+        c.gradient,
+        c.border,
+      )}
+    >
+      <div className="flex items-start justify-between">
+        <div>
+          <div className="flex items-center gap-1.5 text-zinc-500 text-[9px] uppercase tracking-[0.15em]">
+            <Icon size={13} className={c.icon} />
+            <span>{label}</span>
+          </div>
+          <div className="mt-1 text-2xl font-black text-white tabular-nums">
+            {value}
+            {unit ? (
+              <span className="ml-1 text-[10px] font-medium text-zinc-500">
+                {unit}
+              </span>
+            ) : null}
+          </div>
+        </div>
+        {trend ? <TrendIcon size={10} className={trendClass} /> : null}
+      </div>
 
-    const sparkId = React.useId();
-
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 16, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ delay, duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-            className={cn(
-                'relative overflow-hidden rounded-xl border p-4',
-                'bg-gradient-to-br',
-                c.gradient,
-                c.border,
-                c.glow,
-                'hover:scale-[1.02] hover:shadow-lg transition-all duration-300'
-            )}
+      <div className="mt-3 h-6">
+        <svg
+          viewBox="0 0 100 30"
+          preserveAspectRatio="none"
+          className="h-full w-full"
         >
-            <div className="absolute inset-0 shimmer opacity-30 pointer-events-none" />
-
-            <div className="relative z-10 flex items-start justify-between">
-                <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-1.5">
-                        <Icon size={13} className={c.icon} />
-                        <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-zinc-500">
-                            {label}
-                        </span>
-                    </div>
-                    <div className="flex items-baseline gap-1.5 mt-1">
-                        <span className="text-2xl font-black text-white tabular-nums tracking-tight">
-                            {value}
-                        </span>
-                        {unit && (
-                            <span className="text-[10px] font-medium text-zinc-500">{unit}</span>
-                        )}
-                    </div>
-                </div>
-
-                {trend && (
-                    <div className={cn('flex items-center gap-0.5 mt-1', trendColor)}>
-                        <TrendIcon size={10} />
-                    </div>
-                )}
-            </div>
-
-            <div className="relative z-10 mt-3 h-6">
-                <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="w-full h-full">
-                    <defs>
-                        <linearGradient id={sparkId} x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor={c.spark} stopOpacity="0.15" />
-                            <stop offset="100%" stopColor={c.spark} stopOpacity="0" />
-                        </linearGradient>
-                    </defs>
-                    <path
-                        d={`M 0 30 ${(sparkline || defaultSparkline)
-                            .map(
-                                (v, i, arr) =>
-                                    `L ${(i / (arr.length - 1)) * 100} ${30 - (v / 100) * 28}`
-                            )
-                            .join(' ')} L 100 30 Z`}
-                        fill={`url(#${sparkId})`}
-                    />
-                    <polyline
-                        points={(sparkline || defaultSparkline)
-                            .map(
-                                (v, i, arr) =>
-                                    `${(i / (arr.length - 1)) * 100},${30 - (v / 100) * 28}`
-                            )
-                            .join(' ')}
-                        fill="none"
-                        stroke={c.spark}
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="sparkline-animate"
-                        opacity="0.5"
-                    />
-                </svg>
-            </div>
-        </motion.div>
-    );
+          <defs>
+            <linearGradient id={sparkId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={c.spark} stopOpacity="0.2" />
+              <stop offset="100%" stopColor={c.spark} stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          <path
+            d={`M 0 30 ${points
+              .map(
+                (v, i, arr) =>
+                  `L ${(i / (arr.length - 1)) * 100} ${30 - (v / 100) * 28}`,
+              )
+              .join(" ")} L 100 30 Z`}
+            fill={`url(#${sparkId})`}
+          />
+          <polyline
+            points={points
+              .map(
+                (v, i, arr) =>
+                  `${(i / (arr.length - 1)) * 100},${30 - (v / 100) * 28}`,
+              )
+              .join(" ")}
+            fill="none"
+            stroke={c.spark}
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            opacity="0.7"
+          />
+        </svg>
+      </div>
+    </motion.div>
+  );
 }
 
 function SectionHeader({ children }: { children: React.ReactNode }) {
-    return (
-        <div className="flex items-center gap-3 mb-3">
-            <div className="h-[1px] flex-1 bg-gradient-to-r from-zinc-800 to-transparent" />
-            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600">
-                {children}
-            </span>
-            <div className="h-[1px] flex-1 bg-gradient-to-l from-zinc-800 to-transparent" />
-        </div>
-    );
+  return (
+    <div className="flex items-center gap-3 mb-3">
+      <div className="h-px flex-1 bg-gradient-to-r from-zinc-800 to-transparent" />
+      <span className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600">
+        {children}
+      </span>
+      <div className="h-px flex-1 bg-gradient-to-l from-zinc-800 to-transparent" />
+    </div>
+  );
 }
 
-export function DashboardView({ telemetry }: { telemetry?: any }) {
+function deriveQueueSeverity(currentDepth: number, thresholds: { warning: number; critical: number }): AlertSeverity {
+    if (currentDepth >= thresholds.critical) {
+        return 'critical';
+    }
+    if (currentDepth >= thresholds.warning) {
+        return 'warning';
+    }
+    return 'info';
+}
+
+function isAlertSeverity(value: unknown): value is AlertSeverity {
+    return value === 'info' || value === 'warning' || value === 'critical';
+}
+
+export function resolveQueueDepthSeverity(
+    queueDepth: DashboardStatusResponse['queue_depth']
+): AlertSeverity {
+    if (isAlertSeverity(queueDepth.state)) {
+        return queueDepth.state;
+    }
+
+    return deriveQueueSeverity(queueDepth.current_depth, queueDepth.thresholds);
+}
+
+function formatTimestamp(value: string | null): string {
+  if (!value) {
+    return "—";
+  }
+  return new Date(value).toLocaleString();
+}
+
+function formatFreshnessMinutes(value: string | null): string {
+  if (!value) {
+    return "Updated —";
+  }
+
+  const observedAt = new Date(value).getTime();
+  if (Number.isNaN(observedAt)) {
+    return "Updated —";
+  }
+
+  const elapsedMinutes = Math.max(0, Math.floor((Date.now() - observedAt) / 60_000));
+  return `Updated ${elapsedMinutes} min ago`;
+}
+
+interface DashboardViewProps {
+    telemetry?: any;
+    api?: DashboardViewApi;
+}
+
+export function DashboardView({ telemetry, api = defaultDashboardViewApi }: DashboardViewProps) {
+export function DashboardView() {
     const [currentTime, setCurrentTime] = useState('');
+    const [dashboardStatus, setDashboardStatus] = useState<DashboardStatusResponse | null>(null);
+    const [notifications, setNotifications] = useState(createNotificationsState());
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [refreshTick, setRefreshTick] = useState(0);
+    const [ackInFlight, setAckInFlight] = useState<Record<string, boolean>>({});
+    const inFlightAlertIdsRef = useRef(new Set<string>());
+    const previousAlertByIdRef = useRef<Record<string, AlertCenterItem | undefined>>({});
 
     useEffect(() => {
         const tick = () => {
-            const now = new Date();
             setCurrentTime(
-                now.toLocaleTimeString(undefined, {
+                new Date().toLocaleTimeString(undefined, {
                     hour: '2-digit',
                     minute: '2-digit',
                     second: '2-digit',
@@ -198,108 +290,431 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
         };
 
         tick();
-        const id = setInterval(tick, 1000);
-        return () => clearInterval(id);
+        const timer = setInterval(tick, 1000);
+        return () => clearInterval(timer);
     }, []);
 
+    useEffect(() => {
+        let mounted = true;
+        const abortController = new AbortController();
+
+        const load = async () => {
+            setLoading(true);
+            setError(null);
+
+            try {
+                const [dashboard, alertRows] = await Promise.all([
+                    dashboardApi.fetchDashboardStatus(abortController.signal),
+                    dashboardApi.fetchDashboardAlerts?.(undefined, abortController.signal),
+                    api.fetchDashboardStatus(abortController.signal),
+                    api.fetchDashboardAlerts(undefined, abortController.signal),
+                ]);
+                if (mounted) {
+                    setDashboardStatus(dashboard);
+                    setNotifications(setNotificationAlerts(createNotificationsState(dashboard.alert_center), alertRows));
+                    setAlerts(alertRows ?? dashboard.alert_center.items);
+                }
+            } catch (fetchError) {
+                if (abortController.signal.aborted) return;
+                if (mounted) {
+                    setError(fetchError instanceof Error ? fetchError.message : 'Failed to load dashboard status');
+                }
+            } finally {
+                if (mounted && !abortController.signal.aborted) {
+                    setLoading(false);
+                }
+            }
+        };
+
+        void load();
+
+        return () => {
+            mounted = false;
+            abortController.abort();
+        };
+    }, [dashboardApi, refreshTick]);
+    }, [api, refreshTick]);
+
+    const alertCounts = useMemo(() => {
+        const counts: Record<AlertSeverity, number> = { critical: 0, warning: 0, info: 0 };
+        for (const alert of notifications.alerts) {
+            counts[alert.severity] += 1;
+        }
+        return counts;
+    }, [notifications.alerts]);
+
+    const filteredAlerts = useMemo(() => getFilteredNotificationAlerts(notifications), [notifications]);
+    const activeAlerts = useMemo(
+      () => notifications.alerts.filter((item) => !item.acknowledged),
+      [notifications.alerts]
+    );
+
+    const handleAcknowledge = async (alertId: string) => {
+        const previousAlerts = notifications.alerts;
+        const nowIso = new Date().toISOString();
+
+        setAckInFlight((prev) => ({ ...prev, [alertId]: true }));
+        setNotifications((prev) => setNotificationAlerts(
+          prev,
+          prev.alerts.map((item) =>
+                item.alert_id === alertId
+                    ? { ...item, acknowledged: true, acknowledged_at: item.acknowledged_at ?? nowIso }
+                    : item
+            )
+        ));
+
+        try {
+            const acknowledgedAlert = await acknowledgeDashboardAlert(alertId);
+            setNotifications((prev) => setNotificationAlerts(
+              prev,
+              prev.alerts.map((item) => (item.alert_id === alertId ? acknowledgedAlert : item))
+            ));
+        } catch {
+            setNotifications((prev) => setNotificationAlerts(prev, previousAlerts));
+        if (inFlightAlertIdsRef.current.has(alertId)) {
+            return;
+        }
+
+        inFlightAlertIdsRef.current.add(alertId);
+        const nowIso = new Date().toISOString();
+
+        setAckInFlight((prev) => ({ ...prev, [alertId]: true }));
+        setAlerts((prev) =>
+            prev.map((item) => {
+                if (item.alert_id !== alertId) {
+                    return item;
+                }
+
+                previousAlertByIdRef.current[alertId] = item;
+                return {
+                    ...item,
+                    acknowledged: true,
+                    acknowledged_at: item.acknowledged_at ?? nowIso,
+                };
+            })
+        );
+
+        try {
+            const acknowledgedAlert = await dashboardApi.acknowledgeAlert(alertId);
+            const acknowledgedAlert = await api.acknowledgeDashboardAlert(alertId);
+            setAlerts((prev) =>
+                prev.map((item) => (item.alert_id === alertId ? acknowledgedAlert : item))
+            );
+        } catch {
+            const previousAlert = previousAlertByIdRef.current[alertId];
+            if (previousAlert) {
+                setAlerts((prev) =>
+                    prev.map((item) => (item.alert_id === alertId ? previousAlert : item))
+                );
+            }
+        } finally {
+            delete previousAlertByIdRef.current[alertId];
+            inFlightAlertIdsRef.current.delete(alertId);
+            setAckInFlight((prev) => {
+                if (!prev[alertId]) {
+                    return prev;
+                }
+                const next = { ...prev };
+                delete next[alertId];
+                return next;
+            });
+        }
+    };
+
+    const severityTone: Record<AlertSeverity, string> = {
+        critical: 'bg-red-500/15 text-red-300 border-red-500/30',
+        warning: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+        info: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30',
+    };
+
+    const healthColor =
+        dashboardStatus?.service_health.status === 'healthy'
+            ? 'lime'
+            : dashboardStatus?.service_health.status === 'degraded'
+              ? 'orange'
+              : 'red';
+    const queueSeverity = dashboardStatus
+        ? resolveQueueDepthSeverity(dashboardStatus.queue_depth)
+        : 'info';
+
+    const queueColor =
+        queueSeverity === 'critical'
+            ? 'red'
+            : queueSeverity === 'warning'
+              ? 'orange'
+              : 'lime';
+    const rotationColor = dashboardStatus?.rotation.is_stale ? 'red' : 'lime';
+    const alertCenterColor = activeAlerts.length > 0 ? 'orange' : 'lime';
+    const queueSparkline = dashboardStatus?.queue_depth.trend.map((point) => point.depth);
+    const queueScaleMax = dashboardStatus
+      ? Math.max(
+          dashboardStatus.queue_depth.current_depth,
+          dashboardStatus.queue_depth.thresholds.warning,
+          dashboardStatus.queue_depth.thresholds.critical,
+          ...dashboardStatus.queue_depth.trend.map((item) => item.depth),
+          1
+        )
+      : 1;
+    const warningMarkerLeft = dashboardStatus
+      ? (dashboardStatus.queue_depth.thresholds.warning / queueScaleMax) * 100
+      : 0;
+    const criticalMarkerLeft = dashboardStatus
+      ? (dashboardStatus.queue_depth.thresholds.critical / queueScaleMax) * 100
+      : 0;
+    const statusCardsHeadingId = 'dashboard-status-cards-heading';
+    const alertCenterHeadingId = 'dashboard-alert-center-heading';
+    const nowPlayingHeadingId = 'dashboard-now-playing-heading';
+    const audioEngineHeadingId = 'dashboard-audio-engine-heading';
+
     return (
-        <div className="space-y-5">
-            <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-end justify-between"
-            >
+        <main className="space-y-5" aria-labelledby="dashboard-overview-heading">
+            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-end justify-between">
                 <div>
-                    <h1 className="text-2xl font-black tracking-tight text-white">
-                        Station <span className="glow-text text-lime-400">Overview</span>
+                    <h1 id="dashboard-overview-heading" className="text-2xl font-black tracking-tight text-white">
+                        Station <span className="text-lime-400">Overview</span>
                     </h1>
                     <p className="text-[11px] text-zinc-500 mt-0.5">
-                        Live monitoring · All systems nominal
+                        {dashboardStatus?.service_health.reason || 'Initializing...'}
+                    </p>
+                    <p className="text-[11px] text-zinc-500 mt-0.5">
+                        Live monitoring {error ? '· Status API degraded' : '· Status API connected'}
+                    </p>
+                    <p className="text-[11px] text-zinc-500 mt-0.5" data-testid="service-health-freshness">
+                        {formatFreshnessMinutes(dashboardStatus?.service_health.observed_at ?? null)}
                     </p>
                 </div>
                 <div className="text-right">
-                    <div className="text-lg font-mono font-bold text-zinc-300 tabular-nums tracking-wider">
-                        {currentTime}
-                    </div>
+                    <div className="text-lg font-mono font-bold text-zinc-300 tabular-nums tracking-wider">{currentTime}</div>
                     <div className="text-[9px] text-zinc-600 uppercase tracking-widest">Local Time</div>
                 </div>
             </motion.div>
 
-            <div className="grid grid-cols-5 gap-3">
+            <div className="flex justify-end">
+                <button
+                    type="button"
+                    onClick={() => setRefreshTick((value) => value + 1)}
+                    className="inline-flex items-center gap-1 rounded-md border border-zinc-700 px-2 py-1 text-[10px] uppercase tracking-wider text-zinc-300 hover:border-zinc-500"
+                >
+                    <RefreshCw size={12} /> Refresh status
+                </button>
+            </div>
+
+            <section
+                aria-labelledby={statusCardsHeadingId}
+                className="space-y-3"
+                tabIndex={0}
+            >
+                <h2 id={statusCardsHeadingId} className="sr-only">Status cards</h2>
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
                 <StatCard
-                    label="Uptime"
-                    value="99.8"
-                    unit="%"
+                    label="Service Health"
+                    value={dashboardStatus?.service_health.status ? dashboardStatus.service_health.status.toUpperCase() : '--'}
                     icon={Activity}
-                    color="lime"
+                    color={healthColor}
                     trend="stable"
-                    sparkline={[95, 96, 98, 97, 99, 99, 100, 99, 100, 100, 99, 100]}
-                    delay={0}
                 />
                 <StatCard
-                    label="Listeners"
-                    value="1,247"
-                    icon={Users}
-                    color="purple"
-                    trend="up"
-                    sparkline={[40, 45, 55, 60, 58, 70, 75, 80, 85, 82, 90, 95]}
+                    label="Queue Depth"
+                    value={dashboardStatus?.queue_depth.current_depth ?? '--'}
+                    unit="items"
+                    icon={Gauge}
+                    color={queueColor}
+                    trend={
+                        dashboardStatus?.queue_depth.trend && dashboardStatus.queue_depth.trend.length >= 2
+                            ? dashboardStatus.queue_depth.trend[dashboardStatus.queue_depth.trend.length - 1].depth >=
+                              dashboardStatus.queue_depth.trend[dashboardStatus.queue_depth.trend.length - 2].depth
+                                ? 'up'
+                                : 'down'
+                            : 'stable'
+                    }
+                    sparkline={queueSparkline}
                     delay={0.05}
                 />
                 <StatCard
-                    label="Latency"
-                    value="12"
-                    unit="ms"
-                    icon={Gauge}
-                    color="cyan"
-                    trend="down"
-                    sparkline={[40, 35, 30, 28, 25, 22, 20, 18, 15, 14, 13, 12]}
+                    label="Warning Threshold"
+                    value={dashboardStatus ? dashboardStatus.queue_depth.thresholds.warning : '--'}
+                    unit="items"
+                    icon={AlertTriangle}
+                    color={queueColor}
+                    trend="stable"
                     delay={0.1}
                 />
                 <StatCard
-                    label="Stream"
-                    value="320"
-                    unit="kbps"
-                    icon={Wifi}
-                    color="lime"
+                    label="Critical Threshold"
+                    value={dashboardStatus ? dashboardStatus.queue_depth.thresholds.critical : '--'}
+                    unit="items"
+                    icon={AlertTriangle}
+                    color={queueColor}
                     trend="stable"
-                    sparkline={[80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80, 80]}
                     delay={0.15}
                 />
                 <StatCard
-                    label="AI Load"
-                    value="34"
-                    unit="%"
-                    icon={Zap}
-                    color="orange"
-                    trend="up"
-                    sparkline={[15, 20, 25, 22, 30, 28, 35, 32, 38, 36, 35, 34]}
+                    label="Rotation"
+                    value={dashboardStatus?.rotation.is_stale ? 'stale' : 'fresh'}
+                    icon={Signal}
+                    color={rotationColor}
+                    trend={dashboardStatus?.rotation.is_stale ? 'down' : 'up'}
                     delay={0.2}
                 />
-            </div>
+                <StatCard
+                    label="Alert Center"
+                    value={`${activeAlerts.length}/${notifications.alerts.length}`}
+                    unit="active/total"
+                    icon={CheckCircle2}
+                    color={alertCenterColor}
+                    trend={activeAlerts.length > 0 ? 'down' : 'up'}
+                    delay={0.25}
+                />
+                </div>
+            </section>
+
+            {dashboardStatus ? (
+                <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-3 text-xs text-zinc-400">
+                    Queue state: <span data-testid="queue-depth-state" className={cn("font-semibold uppercase", mapSeverityToStatusTextClass(queueSeverity))}>{queueSeverity}</span>
+                </div>
+            ) : null}
+
+            {dashboardStatus ? (
+              <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3" data-testid="queue-depth-threshold-markers">
+                <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-wider text-zinc-500">
+                  <span>Queue threshold markers</span>
+                  <span>{dashboardStatus.queue_depth.current_depth} current</span>
+                </div>
+                <div className="relative h-2 rounded bg-zinc-800">
+                  <div className="absolute inset-y-0 left-0 rounded bg-lime-500/40" style={{ width: `${(dashboardStatus.queue_depth.current_depth / queueScaleMax) * 100}%` }} />
+                  <div className="absolute inset-y-[-4px] w-px bg-amber-400" style={{ left: `${warningMarkerLeft}%` }} data-testid="queue-warning-marker" />
+                  <div className="absolute inset-y-[-4px] w-px bg-red-400" style={{ left: `${criticalMarkerLeft}%` }} data-testid="queue-critical-marker" />
+                </div>
+                <div className="mt-1 flex justify-between text-[10px] text-zinc-500">
+                  <span>Warning {dashboardStatus.queue_depth.thresholds.warning}</span>
+                  <span>Critical {dashboardStatus.queue_depth.thresholds.critical}</span>
+                </div>
+              </div>
+            ) : null}
+
+            {loading ? (
+                <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3 text-xs text-zinc-400" role="status" aria-live="polite">
+                    Loading dashboard status…
+                </div>
+            ) : null}
+            {error ? (
+                <div className="rounded-xl border border-red-900/70 bg-red-950/40 p-3 text-xs text-red-200" role="alert">
+                <div role="status" aria-live="polite" aria-atomic="true" className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3 text-xs text-zinc-400">
+                    Loading status telemetry…
+                </div>
+            ) : null}
+            {error ? (
+                <div role="alert" className="rounded-xl border border-red-900/70 bg-red-950/40 p-3 text-xs text-red-200">
+                <div role="alert" aria-live="assertive" aria-atomic="true" className="rounded-xl border border-red-900/70 bg-red-950/40 p-3 text-xs text-red-200">
+                    Status API unavailable: {error}
+                </div>
+            ) : null}
+
+            <section aria-labelledby={alertCenterHeadingId} className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                    <h2 id={alertCenterHeadingId} className="text-xs font-semibold tracking-wide text-zinc-300 uppercase">Alert Center</h2>
+                    <div className="text-[10px] text-zinc-500">
+                        <span data-testid="severity-count-critical">Critical: {alertCounts.critical}</span>
+                        {' · '}
+                        <span>Warning: {alertCounts.warning}</span>
+                        {' · '}
+                        <span>Info: {alertCounts.info}</span>
+                        <span data-testid="severity-count-critical">Critical: {alertCounts.critical}</span> ·{" "}
+                        <span data-testid="severity-count-warning">Warning: {alertCounts.warning}</span> ·{" "}
+                        <span data-testid="severity-count-info">Info: {alertCounts.info}</span>
+                    </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    {dashboardStatus?.alert_center.filters.map((severity) => {
+                        const selected = notifications.selectedSeverities.includes(severity);
+                        return (
+                          <button
+                            key={severity}
+                            type="button"
+                            onClick={() => setNotifications((prev) => toggleNotificationSeverity(prev, severity))}
+                            className={cn(
+                              "rounded-full border px-2 py-1 text-[10px] uppercase",
+                              selected ? severityTone[severity] : "border-zinc-700 text-zinc-500"
+                            )}
+                          >
+                            {severity}
+                          </button>
+                        );
+                    })}
+                </div>
+                {filteredAlerts.length === 0 ? (
+                <div className="text-xs text-zinc-500" data-testid="queue-depth-state">
+                    {queueSeverity}
+                </div>
+                {alerts.length === 0 ? (
+                    <div className="text-xs text-zinc-500">No alerts in timeline.</div>
+                ) : (
+                    <div className="space-y-2">
+                        {filteredAlerts.map((alert) => (
+                            <div
+                                key={alert.alert_id}
+                                className={cn(
+                                    'rounded-lg border border-zinc-800 p-2',
+                                    alert.acknowledged && 'opacity-60'
+                                )}
+                            >
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="space-y-1">
+                                        <div className="flex items-center gap-2">
+                                            <span className={cn('rounded-full border px-2 py-0.5 text-[10px] uppercase', severityTone[alert.severity])}>
+                                                {alert.severity}
+                                            </span>
+                                            <p className="text-sm font-medium text-zinc-100">{alert.title}</p>
+                                        </div>
+                                        <p className="text-xs text-zinc-400">{alert.description}</p>
+                                        {alert.acknowledged && (
+                                            <p className="text-[10px] text-zinc-500" data-testid={`alert-ack-${alert.alert_id}`}>
+                                            <p data-testid={`alert-ack-${alert.alert_id}`} className="text-[10px] text-zinc-500">
+                                                Ack at: {formatTimestamp(alert.acknowledged_at)}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <button
+                                        type="button"
+                                        disabled={alert.acknowledged || ackInFlight[alert.alert_id]}
+                                        onClick={() => void handleAcknowledge(alert.alert_id)}
+                                        className="rounded border border-zinc-700 px-2 py-1 text-[10px] uppercase text-zinc-300 disabled:cursor-not-allowed disabled:opacity-40"
+                                    >
+                                        {alert.acknowledged ? 'Acknowledged' : 'Acknowledge'}
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </section>
 
             <SectionHeader>Now Playing</SectionHeader>
-
-            <div className="grid grid-cols-[1fr_340px] gap-4">
+            <section aria-labelledby={nowPlayingHeadingId} className="space-y-4">
+                <h2 id={nowPlayingHeadingId} className="sr-only">Now playing</h2>
+                <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_340px]">
                 <div className="space-y-4">
                     <div className="glass-panel overflow-hidden">
                         <div className="panel-header">
                             <div className="flex items-center gap-2">
                                 <div
                                     className="w-2 h-2 rounded-full bg-lime-500 animate-pulse"
-                                    style={{ boxShadow: '0 0 8px rgba(170,255,0,0.5)' }}
+                                    style={{ boxShadow: '0 0 8px rgba(170,255,0,0.45)' }}
                                 />
                                 <span className="panel-header-title">Master Output</span>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Signal size={10} className="text-lime-500" />
-                                <span className="text-[9px] font-mono text-zinc-500">AAC 320k</span>
+                                <span className="text-[9px] font-mono text-zinc-500">
+                                    AAC 320k
+                                </span>
                             </div>
                         </div>
                         <div className="p-3">
                             <DegenWaveform
                                 progress={0.42}
                                 duration={234}
-                                trackTitle="Neural Drift v2.1 — SynthKong"
+                                trackTitle="Neural Drift v2.1 - SynthKong"
                                 isPlaying
                                 cuePoints={[
                                     { position: 0.12, label: 'CUE 1', color: '#ff6b00' },
@@ -308,7 +723,6 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
                             />
                         </div>
                     </div>
-
                     <SectionHeader>On-Air Schedule</SectionHeader>
                     <DegenScheduleTimeline />
                 </div>
@@ -316,11 +730,13 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
                 <div className="space-y-4">
                     <DegenAIHost className="glass-panel" />
                 </div>
-            </div>
+                </div>
+            </section>
 
             <SectionHeader>Audio Engine</SectionHeader>
-
-            <div className="grid grid-cols-2 gap-4">
+            <section aria-labelledby={audioEngineHeadingId} className="space-y-4">
+                <h2 id={audioEngineHeadingId} className="sr-only">Audio engine</h2>
+                <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                 <div className="glass-panel overflow-hidden">
                     <div className="panel-header">
                         <span className="panel-header-title">Beat Sequencer</span>
@@ -329,6 +745,7 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
                         <DegenBeatGrid decks={4} steps={16} />
                     </div>
                 </div>
+
                 <DegenEffectRack
                     title="Master FX"
                     deck="MST"
@@ -341,7 +758,8 @@ export function DashboardView({ telemetry }: { telemetry?: any }) {
                         { key: 'width', label: 'Stereo', unit: '%' },
                     ]}
                 />
-            </div>
-        </div>
+                </div>
+            </section>
+        </main>
     );
 }

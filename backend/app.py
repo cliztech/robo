@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
 
+from backend.ai_api import router as ai_router
 from backend.playlist_api import router as playlist_router
 from backend.scheduling.api import router as autonomy_policy_router
 from backend.scheduling.scheduler_ui_api import router as scheduler_ui_router
@@ -19,17 +20,18 @@ async def lifespan(_: FastAPI):
     if not result.ok:
         raise RuntimeError(
             "Startup aborted due to secret integrity check failures. "
-            "Resolve alerts and restart RoboDJ."
+            "Resolve alerts and restart DGN-DJ backend services."
         )
 
     yield
 
 
-app = FastAPI(title="RoboDJ Backend Scheduler Services", lifespan=lifespan)
+app = FastAPI(title="DGN-DJ Backend Scheduler Services", lifespan=lifespan)
 app.include_router(autonomy_policy_router)
 app.include_router(status_router)
 app.include_router(scheduler_ui_router)
 app.include_router(playlist_router)
+app.include_router(ai_router)
 
 
 @app.get("/")

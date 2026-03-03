@@ -4,6 +4,8 @@ Status: draft
 Audience: Design Team, DevOps Team, QA Team, Management Team  
 Purpose: track executable GUI work items for the DJ console implementation with BMAD stage gating.
 
+Design pod charter (ownership, cadence, decision rights, DoD): [`docs/ui/dj_console_design_pod.md`](./dj_console_design_pod.md).
+
 Canonical status labels: **Not Started / In Progress / Blocked / Done**.
 
 ## Task Backlog by Epic/Module

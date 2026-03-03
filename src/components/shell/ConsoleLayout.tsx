@@ -27,7 +27,7 @@ export function ConsoleLayout({
     children,
 }: ConsoleLayoutProps) {
     return (
-        <div className="flex h-screen bg-[hsl(0,0%,3%)] text-white overflow-hidden ambient-bg">
+        <div className="phase8-console flex h-screen bg-[hsl(0,0%,3%)] text-white overflow-hidden ambient-bg">
             <ConsoleSidebar
                 navItems={navItems}
                 utilityItems={utilityItems}

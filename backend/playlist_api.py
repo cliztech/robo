@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends
+from fastapi.responses import JSONResponse
 
 from backend.playlist_service import (
     PlaylistGenerationRequest,
+    PlaylistConstraintsInfeasibleError,
     PlaylistGenerationService,
     PlaylistResponseEnvelope,
 )
@@ -20,5 +22,10 @@ def generate_playlist(
     _: str = Depends(verify_api_key),
     service: PlaylistGenerationService = Depends(get_playlist_service),
 ) -> PlaylistResponseEnvelope:
-    result = service.generate(request)
+    try:
+        result = service.generate(request)
+    except PlaylistConstraintsInfeasibleError as exc:
+        envelope = PlaylistResponseEnvelope(success=False, data=None, error=exc.error)
+        return JSONResponse(status_code=422, content=envelope.model_dump())
+
     return PlaylistResponseEnvelope(success=True, data=result, error=None)

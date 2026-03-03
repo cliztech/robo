@@ -1,4 +1,10 @@
-from backend.playlist_service import PlaylistGenerationRequest, PlaylistGenerationService
+import pytest
+
+from backend.playlist_service import (
+    PlaylistConstraintsInfeasibleError,
+    PlaylistGenerationRequest,
+    PlaylistGenerationService,
+)
 
 
 def _track(idx: int, artist: str, genre: str, mood: str, energy: int, bpm: int, duration_seconds: int = 180) -> dict:
@@ -54,6 +60,25 @@ def test_avoids_recent_artist_repeats_when_possible():
     assert result.entries[0].artist != result.entries[1].artist
 
 
+def test_artist_repeat_detection_normalizes_case_and_whitespace():
+    service = PlaylistGenerationService()
+    request = PlaylistGenerationRequest(
+        tracks=[
+            _track(1, " Artist One ", "dance", "energetic", 7, 124),
+            _track(2, "artist one", "dance", "energetic", 8, 126),
+            _track(3, "Other", "dance", "energetic", 7, 125),
+        ],
+        desired_count=2,
+        avoid_recent_artist_window=1,
+    )
+
+    result = service.generate(request)
+
+    assert service._normalize_artist(result.entries[0].artist) != service._normalize_artist(
+        result.entries[1].artist
+    )
+
+
 def test_respects_max_bpm_delta_when_candidates_available():
     service = PlaylistGenerationService()
     request = PlaylistGenerationRequest(
@@ -68,3 +93,29 @@ def test_respects_max_bpm_delta_when_candidates_available():
 
     result = service.generate(request)
     assert abs(result.entries[0].bpm - result.entries[1].bpm) <= 15
+
+
+def test_raises_infeasible_error_with_blocked_constraints():
+    service = PlaylistGenerationService()
+    request = PlaylistGenerationRequest(
+        tracks=[
+            _track(1, "A", "house", "energetic", 7, 100),
+            _track(2, "B", "house", "energetic", 8, 130),
+            _track(3, "C", "house", "energetic", 9, 140),
+        ],
+        desired_count=3,
+        max_bpm_delta=10,
+        max_consecutive_same_genre=1,
+    )
+
+    with pytest.raises(PlaylistConstraintsInfeasibleError) as exc_info:
+        service.generate(request)
+
+    error = exc_info.value.error
+    assert error.code == "playlist_constraints_infeasible"
+    assert error.slot == 1
+    assert error.generated_entries == 1
+    assert "bpm_delta" in error.blocked_constraints
+    assert "genre_run_length" in error.blocked_constraints
+    assert error.blocked_counts["bpm_delta"] > 0
+    assert error.blocked_counts["genre_run_length"] > 0

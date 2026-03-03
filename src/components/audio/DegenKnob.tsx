@@ -30,7 +30,9 @@ export function DegenKnob({
 
     const ratio = (value - min) / (max - min);
     const angle = ratio * 270 - 135;
-    const accentColor = color || 'hsl(var(--color-control-active))';
+    
+    // Use the provided color or fall back to accent
+    const accentColor = color || 'var(--color-accent)';
 
     const clampValue = (nextValue: number) => Math.max(min, Math.min(max, nextValue));
 
@@ -123,64 +125,69 @@ export function DegenKnob({
                 <svg viewBox="0 0 100 100" className="w-full h-full">
                     <defs>
                         <radialGradient id={`knob-bg-${label}`} cx="40%" cy="35%" r="60%">
-                            <stop offset="0%" stopColor="hsl(var(--surface-rgb) / 0.08)" />
-                            <stop offset="100%" stopColor="hsl(var(--black-rgb) / 0.3)" />
+                            <stop offset="0%" stopColor="rgba(255,255,255,0.12)" />
+                            <stop offset="100%" stopColor="rgba(0,0,0,0.5)" />
                         </radialGradient>
+                        
+                        {/* Knurled Texture Pattern */}
+                        <pattern id="knurl-pattern" x="0" y="0" width="4" height="4" patternUnits="userSpaceOnUse">
+                            <circle cx="2" cy="2" r="0.8" fill="rgba(255,255,255,0.03)" />
+                        </pattern>
+
                         <filter id={`knob-shadow-${label}`} x="-20%" y="-20%" width="140%" height="140%">
-                            <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="hsl(var(--black-rgb) / 0.6)" />
+                            <feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="rgba(0,0,0,0.8)" />
                         </filter>
                     </defs>
 
-                    {/* Outer ring shadow */}
-                    <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--black-rgb) / 0.3)" strokeWidth="1" />
+                    {/* Outer ring - Industrial beveled edge */}
+                    <circle cx="50" cy="50" r="42" fill="#141416" stroke="rgba(255,255,255,0.08)" strokeWidth="0.5" />
 
-                    {/* Knob body */}
+                    {/* Knob body with texture */}
                     <circle
                         cx="50" cy="50" r="40"
                         fill={`url(#knob-bg-${label})`}
-                        stroke="hsl(var(--surface-rgb) / 0.04)"
+                        stroke="rgba(255,255,255,0.05)"
                         strokeWidth="1"
                         filter={`url(#knob-shadow-${label})`}
                     />
+                    
+                    {/* Knurling Layer */}
+                    <circle cx="50" cy="50" r="40" fill="url(#knurl-pattern)" pointerEvents="none" />
 
-                    {/* Inner circle */}
-                    <circle cx="50" cy="50" r="32" fill="hsl(var(--black-rgb) / 0.15)" stroke="hsl(var(--surface-rgb) / 0.03)" strokeWidth="0.5" />
+                    {/* Inner cap - Brushed aluminum feel */}
+                    <circle cx="50" cy="50" r="32" fill="rgba(20,20,22,0.6)" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5" />
 
-                    {/* Background track */}
+                    {/* Value track */}
                     <path
                         d={describeArc(50, 50, arcRadius, startAngle, endAngle)}
                         fill="none"
-                        stroke="hsl(var(--surface-rgb) / 0.06)"
-                        strokeWidth="4"
+                        stroke="rgba(255,255,255,0.04)"
+                        strokeWidth="3.5"
                         strokeLinecap="round"
                     />
 
-                    {/* Value track */}
                     {ratio > 0.005 && (
                         <path
                             d={describeArc(50, 50, arcRadius, startAngle, valueAngle)}
                             fill="none"
                             stroke={accentColor}
-                            strokeWidth="4"
+                            strokeWidth="3.5"
                             strokeLinecap="round"
-                            opacity={0.8}
-                                                        style={{ filter: `drop-shadow(0 0 4px color-mix(in srgb, ${accentColor} 35%, transparent))` }}
+                            style={{ filter: `drop-shadow(0 0 6px hsla(var(--accent), 0.5))` }}
                         />
                     )}
 
-                    {/* Indicator needle */}
+                    {/* Indicator needle - Sharp precision line */}
                     <g transform={`rotate(${angle} 50 50)`}>
-                        <line
-                            x1="50" y1="22" x2="50" y2="32"
-                            stroke={accentColor}
-                            strokeWidth="3"
-                            strokeLinecap="round"
-                            opacity={0.9}
+                        <rect
+                            x="48.5" y="16" width="3" height="12" rx="1.5"
+                            fill={accentColor}
+                            style={{ filter: `drop-shadow(0 0 3px hsla(var(--accent), 0.4))` }}
                         />
                     </g>
 
                     {/* Center dot */}
-                    <circle cx="50" cy="50" r="3" fill="hsl(var(--surface-rgb) / 0.08)" />
+                    <circle cx="50" cy="50" r="3" fill="rgba(255,255,255,0.08)" />
                 </svg>
             </div>
 

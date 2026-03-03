@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { ConsoleWorkspaceView } from '@/components/console/ConsoleWorkspaceView';
 import { CONSOLE_NAV_ITEMS, CONSOLE_UTILITY_ITEMS } from '@/components/console/consoleNav';
 import { ConsoleLayout } from '@/components/shell/ConsoleLayout';

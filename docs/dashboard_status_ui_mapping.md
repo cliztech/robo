@@ -19,10 +19,11 @@ This spec maps the extended `/api/v1/status/dashboard` contract into React dashb
 
 - `queue_depth.trend[]` maps to a compact sparkline.
 - `queue_depth.thresholds.warning` and `.critical` map to horizontal threshold rules.
-- `queue_depth.state` controls chart accent and card border tone:
+- `queue_depth.state` is the primary severity source for chart accent and card border tone:
   - `info` neutral/green
   - `warning` amber
   - `critical` red
+- If `queue_depth.state` is missing or malformed, derive severity from `queue_depth.current_depth` against `queue_depth.thresholds.warning` and `.critical`.
 - `queue_depth.current_depth` is shown as the primary numeric KPI.
 
 ## 3) Last Successful Rotation + Stale Warning
@@ -62,3 +63,19 @@ Patterns aligned to blueprint notification center:
    - `notificationCenterVm`
 3. Subscribe to polling/refresh and update notification center incrementally.
 4. Route acknowledge actions through alert center endpoint so state remains persistent across refreshes.
+
+## Deployment Assumptions (Canonical Integration Path)
+
+This UI uses **Next.js route-handler proxying** as the canonical integration path.
+
+- Browser client calls only same-origin Next.js endpoints:
+  - `GET /api/v1/status/dashboard`
+  - `GET /api/v1/status/dashboard/alerts?severity=...`
+  - `POST /api/v1/status/dashboard/alerts/{alert_id}/ack`
+- Route handlers enforce Supabase session auth before proxying.
+- Route handlers forward `Authorization: Bearer <access_token>` and `X-User-Id` to the backend status service.
+- Backend service base URL is resolved from:
+  1. `DASHBOARD_STATUS_BACKEND_URL`
+  2. fallback `INTERNAL_API_BASE_URL`
+  3. fallback `http://127.0.0.1:5000`
+- Non-2xx backend responses are normalized into `{ status, detail, code? }` to keep client-side error handling stable.

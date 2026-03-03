@@ -3,6 +3,7 @@
 Status: Prototype complete; Hardening in progress (Phase 4)
 Owner: Design + DevOps + QA + AI Improvement + Management
 Primary reference style: user-provided DJ/radio console mockups (dark, high-density, deck-centric)
+Design pod charter: [`docs/ui/dj_console_design_pod.md`](./dj_console_design_pod.md)
 
 ## Execution Status Tracker
 
@@ -211,6 +212,8 @@ Each component requires state contracts for:
 - Reproducible demo datasets for queue/scheduler conflict testing
 
 ## 7) Agent Team Plan (Who Does What)
+
+Mission-specific execution template for GUI console design is defined in [`docs/ui/dj_console_design_pod.md`](./dj_console_design_pod.md), including daily standup ownership, weekly design review gates, and pre-PR quality gate ownership.
 
 ### 7.1 Management Team
 - Finalize phased scope and milestone ownership

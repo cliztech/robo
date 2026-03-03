@@ -1,0 +1,110 @@
+# ──────────────────────────────────────────────────────────────
+# DGN-DJ / RoboDJ — Development Docker Compose
+# ──────────────────────────────────────────────────────────────
+# Usage:
+#   docker compose -f docker-compose.dev.yml up        # start all
+#   docker compose -f docker-compose.dev.yml up -d      # background
+#   docker compose -f docker-compose.dev.yml down        # stop all
+#   make dev                                             # alias
+# ──────────────────────────────────────────────────────────────
+
+services:
+  # ── PostgreSQL ─────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: robodj-db
+    environment:
+      POSTGRES_DB: robodj
+      POSTGRES_USER: robodj
+      POSTGRES_PASSWORD: robodj_dev
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - robodj_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U robodj -d robodj"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # ── Redis ──────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: robodj-redis
+    ports:
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # ── Backend (FastAPI) ──────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: infra/docker/dev.Dockerfile
+    container_name: robodj-backend
+    working_dir: /workspace
+    command: >
+      uvicorn backend.app:app
+      --host 0.0.0.0
+      --port 8000
+      --reload
+      --reload-dir backend
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ./backend:/workspace/backend
+      - ./config:/workspace/config
+      - ./alembic.ini:/workspace/alembic.ini
+      - ./scripts:/workspace/scripts
+    environment:
+      - ROBODJ_DATABASE_URL=postgresql://robodj:robodj_dev@db:5432/robodj
+      - ROBODJ_ALLOW_FILE_SECRET_FALLBACK=true
+      - ROBODJ_LOG_LEVEL=DEBUG
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
+
+  # ── Frontend (Next.js dev server) ──────────────────────────
+  frontend:
+    image: node:20-alpine
+    container_name: robodj-frontend
+    working_dir: /workspace
+    command: sh -c "npm install && npm run dev"
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - ./:/workspace
+      - /workspace/node_modules
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_TELEMETRY_DISABLED=1
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  robodj_pgdata:

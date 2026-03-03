@@ -1,0 +1,7 @@
+# Known vulnerability exceptions for pip-audit.
+# Format: one package==version per line.
+# Add entries here ONLY for verified false positives or accepted risks.
+# Each entry must include a comment explaining why it's acceptable.
+#
+# Example:
+# some-package==1.2.3  # False positive — see https://github.com/example/issue/123

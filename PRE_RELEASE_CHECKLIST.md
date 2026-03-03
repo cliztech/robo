@@ -6,23 +6,23 @@ Run the following commands in order before release sign-off.
 
 Dependency gate: verify current Python/Node/Docker toolchain versions satisfy `docs/product-specs/dependency-compatibility-contract.md` before sign-off.
 
-1. `python config/validate_config.py`  
+1. `python config/validate_config.py`
    Expected output string: `Configuration validation passed for schedules.json and prompt_variables.json.`
-2. `python config/check_runtime_secrets.py --require-env-only`  
+2. `python config/check_runtime_secrets.py --require-env-only`
    Expected output string: `Secret integrity check passed (key material redacted).`
 3. `ts=$(date +%Y%m%d_%H%M%S)`
 4. `mkdir -p config/backups/$ts`
-5. `cp config/schedules.json config/prompt_variables.json config/backups/$ts/`  
+5. `cp config/schedules.json config/prompt_variables.json config/backups/$ts/`
    Expected output string: _(no output; command exits successfully)_
-6. `python -c "from pathlib import Path; p=Path('config/logs/autonomy_audit_events.jsonl'); p.parent.mkdir(parents=True, exist_ok=True); p.touch(exist_ok=True); open(p,'a',encoding='utf-8').write('{\"event\":\"pre_release_write_check\"}\n'); print('OK:', p)"`  
+6. `python -c "from pathlib import Path; p=Path('config/logs/autonomy_audit_events.jsonl'); p.parent.mkdir(parents=True, exist_ok=True); p.touch(exist_ok=True); open(p,'a',encoding='utf-8').write('{\"event\":\"pre_release_write_check\"}\n'); print('OK:', p)"`
    Expected output string: `OK: config/logs/autonomy_audit_events.jsonl`
-7. `latest=$(ls -1dt config/backups/* 2>/dev/null | head -n1); echo "$latest"; ls -la "$latest"`  
+7. `latest=$(ls -1dt config/backups/* 2>/dev/null | head -n1); echo "$latest"; ls -la "$latest"`
    Expected output string: `config/backups/<timestamp>`
-8. `echo cp "$latest"/schedules.json config/schedules.json && echo cp "$latest"/prompt_variables.json config/prompt_variables.json`  
+8. `echo cp "$latest"/schedules.json config/schedules.json && echo cp "$latest"/prompt_variables.json config/prompt_variables.json`
    Expected output string: `cp config/backups/<timestamp>/...`
-9. `cp "$latest"/schedules.json config/schedules.json && cp "$latest"/prompt_variables.json config/prompt_variables.json`  
+9. `cp "$latest"/schedules.json config/schedules.json && cp "$latest"/prompt_variables.json config/prompt_variables.json`
    Expected output string: _(no output; command exits successfully)_
-10. `python config/validate_config.py`  
+10. `python config/validate_config.py`
     Expected output string: `Configuration validation passed for schedules.json and prompt_variables.json.`
 
 ---
@@ -31,13 +31,13 @@ Dependency gate: verify current Python/Node/Docker toolchain versions satisfy `d
 
 ### A. Configuration + secret integrity
 
-- [ ] **Config schema validation passes.**  
-  Command: `python config/validate_config.py`  
+- [ ] **Config schema validation passes.**
+  Command: `python config/validate_config.py`
   Canonical expected output: `Configuration validation passed for schedules.json and prompt_variables.json.`
-- [ ] **Runtime secret preflight passes.**  
-  Command: `python config/check_runtime_secrets.py --require-env-only`  
+- [ ] **Runtime secret preflight passes.**
+  Command: `python config/check_runtime_secrets.py --require-env-only`
   Canonical expected output: `Secret integrity check passed (key material redacted).`
-- [ ] **Negative validation behavior is confirmed.**  
+- [ ] **Negative validation behavior is confirmed.**
   Command sequence:
   1. `cp config/schedules.json config/backups/schedules.pre_validation_gate.json`
   2. `printf '{"broken": true' > config/schedules.json`
@@ -45,7 +45,7 @@ Dependency gate: verify current Python/Node/Docker toolchain versions satisfy `d
   4. `mv config/backups/schedules.pre_validation_gate.json config/schedules.json`
 
   Canonical expected output from step 3: `Configuration validation failed:`
-- [ ] **Secret hygiene check is clean in staged changes.**  
+- [ ] **Secret hygiene check is clean in staged changes.**
   Commands:
   - `git diff --cached --name-only`
   - `git diff --cached | rg -n -i '(api[_-]?key|secret|token|password|private[_-]?key)'`
@@ -55,7 +55,7 @@ Dependency gate: verify current Python/Node/Docker toolchain versions satisfy `d
 
 ### B. Backup, audit-log path, and rollback readiness
 
-- [ ] **Timestamped backup exists for changed config files.**  
+- [ ] **Timestamped backup exists for changed config files.**
   Commands:
   - `ts=$(date +%Y%m%d_%H%M%S)`
   - `mkdir -p config/backups/$ts`
@@ -63,34 +63,34 @@ Dependency gate: verify current Python/Node/Docker toolchain versions satisfy `d
   - `git diff --name-only main... HEAD -- 'config/*.json' | xargs -I {} cp -- {} "config/backups/$ts/"`
 
   Canonical expected output: A backup for each changed `.json` file in `config/` exists in the new timestamped backup directory.
-- [ ] **Autonomy audit-log write path is writable.**  
+- [ ] **Autonomy audit-log write path is writable.**
   Command: `python config/scripts/check_audit_log_writable.py`
   Canonical expected output: `OK: config/logs/autonomy_audit_events.jsonl`
-- [ ] **Latest snapshot is discoverable and complete.**  
-  Command: `latest=$(ls -1dt config/backups/* 2>/dev/null | head -n1); echo "$latest"; ls -la "$latest"`  
+- [ ] **Latest snapshot is discoverable and complete.**
+  Command: `latest=$(ls -1dt config/backups/* 2>/dev/null | head -n1); echo "$latest"; ls -la "$latest"`
   Canonical expected output: `config/backups/<timestamp>` followed by listing including schedule/prompt backup files.
-- [ ] **Rollback commands resolve correctly (dry run).**  
-  Command: `echo cp "$latest"/schedules.json config/schedules.json && echo cp "$latest"/prompt_variables.json config/prompt_variables.json`  
+- [ ] **Rollback commands resolve correctly (dry run).**
+  Command: `echo cp "$latest"/schedules.json config/schedules.json && echo cp "$latest"/prompt_variables.json config/prompt_variables.json`
   Canonical expected output: `cp config/backups/<timestamp>/...`
-- [ ] **Rollback drill executes and re-validates.** *(staging/non-production only)*  
+- [ ] **Rollback drill executes and re-validates.** *(staging/non-production only)*
   Commands:
   - `cp "$latest"/schedules.json config/schedules.json && cp "$latest"/prompt_variables.json config/prompt_variables.json`
   - `python config/validate_config.py`
 
   Canonical expected output (step 2): `Configuration validation passed for schedules.json and prompt_variables.json.`
-- [ ] **Backup/restore contract conformance is verified.**  
+- [ ] **Backup/restore contract conformance is verified.**
   Contract: `config/BACKUP_RESTORE_CONTRACT.md`
 
 ### C. Operator startup preflight behavior
 
-- [ ] **Launcher validation gate behavior is verified.**  
-  Command: `./RoboDJ_Launcher.bat`  
+- [ ] **Launcher validation gate behavior is verified.**
+  Command: `./DGN-DJ_Launcher.bat`
   Canonical expected output (success path): `Configuration validation passed for schedules.json and prompt_variables.json.`
-- [ ] **Blocked-start behavior is verified for failed validation.**  
+- [ ] **Blocked-start behavior is verified for failed validation.**
   Canonical expected output strings:
   - `Configuration validation failed:`
   - `Fix the fields above, then rerun: python config/validate_config.py`
-  - `[RoboDJ] ERROR: Startup blocked because configuration validation failed.`
+  - `[DGN-DJ] ERROR: Startup blocked because configuration validation failed.`
 - **Checklist owner:** ____________________
 - **Sign-off (name + date/time):** ____________________
 ## Launcher workflow pre-run gate (all release paths)
@@ -123,25 +123,25 @@ Roadmap cross-links: [v1.1 heading](FEATURE_HEAVY_ROADMAP_TODO.md#v11--reliabili
 
 ### v1.1 Must gates
 
-- [ ] **Startup diagnostics panel checks are all PASS before startup completion.**  
-  Command: `./RoboDJ_Launcher.bat`  
+- [ ] **Startup diagnostics panel checks are all PASS before startup completion.**
+  Command: `./DGN-DJ_Launcher.bat`
   Canonical expected output: `database=PASS`, `key_integrity=PASS`, `audio_device=PASS`
-- [ ] **Launch-time config validator blocks malformed JSON and allows valid JSON.**  
-  Command: `python config/validate_config.py`  
-  Canonical expected output (pass): `Configuration validation passed for schedules.json and prompt_variables.json.`  
+- [ ] **Launch-time config validator blocks malformed JSON and allows valid JSON.**
+  Command: `python config/validate_config.py`
+  Canonical expected output (pass): `Configuration validation passed for schedules.json and prompt_variables.json.`
   Canonical expected output (blocked invalid): `Configuration validation failed:`
-- [ ] **Crash recovery restores last-known-good config snapshot.**  
-  Command: `latest=$(ls -1dt config/backups/* 2>/dev/null | head -n1); cp "$latest"/schedules.json config/schedules.json && cp "$latest"/prompt_variables.json config/prompt_variables.json && python config/validate_config.py`  
+- [ ] **Crash recovery restores last-known-good config snapshot.**
+  Command: `latest=$(ls -1dt config/backups/* 2>/dev/null | head -n1); cp "$latest"/schedules.json config/schedules.json && cp "$latest"/prompt_variables.json config/prompt_variables.json && python config/validate_config.py`
   Canonical expected output: `Configuration validation passed for schedules.json and prompt_variables.json.`
-- [ ] **One-click timestamped backup snapshot is created before risky edits.**  
-  Command: `ts=$(date +%Y%m%d_%H%M%S); mkdir -p config/backups/$ts; cp config/schedules.json config/prompt_variables.json config/backups/$ts/; echo "$ts"`  
+- [ ] **One-click timestamped backup snapshot is created before risky edits.**
+  Command: `ts=$(date +%Y%m%d_%H%M%S); mkdir -p config/backups/$ts; cp config/schedules.json config/prompt_variables.json config/backups/$ts/; echo "$ts"`
   Canonical expected output: `<timestamp>`
 
 ### v1.1 Exit criteria gates
 
-- [ ] **Recovery-time SLO passes.**  
+- [ ] **Recovery-time SLO passes.**
   Canonical expected output: `t_recover <= 120s`
-- [ ] **Validation-block gate passes (invalid config cannot proceed to runtime).**  
+- [ ] **Validation-block gate passes (invalid config cannot proceed to runtime).**
   Canonical expected output: `Configuration validation failed:`
 
 ## v1.2 gates — Scheduling 2.0
@@ -199,22 +199,22 @@ Roadmap cross-links: [v2.0 heading](FEATURE_HEAVY_ROADMAP_TODO.md#v20--enterpris
   - Full-day simulation catches schedule/content errors before air.
 ## Startup Preflight Failure Runbook
 
-When launching via `RoboDJ_Launcher.bat`, startup now runs config validation before opening the app.
+When launching via `DGN-DJ_Launcher.bat`, startup now runs config validation before opening the app.
 
 1. If preflight fails, startup is blocked and the launcher prints:
    - `Configuration validation failed:`
    - One or more ` - [target] ...` error lines with JSON paths and expected values/types.
    - `Fix the fields above, then rerun: python config/validate_config.py`
-   - `[RoboDJ] ERROR: Startup blocked because configuration validation failed.`
+   - `[DGN-DJ] ERROR: Startup blocked because configuration validation failed.`
 2. Fix only the reported config fields (`config/schedules.json`, `config/prompt_variables.json`).
 3. Re-run `python config/validate_config.py` until the expected success string appears exactly:
    - `Configuration validation passed for schedules.json and prompt_variables.json.`
-4. Relaunch using `RoboDJ_Launcher.bat`.
+4. Relaunch using `DGN-DJ_Launcher.bat`.
 - [ ] Verify backup/restore operations align with `config/BACKUP_RESTORE_CONTRACT.md` (scope, retention, confirmations, rollback).
 
 ## Startup preflight behavior (operator runbook)
 
-- `RoboDJ_Launcher.bat` now runs `config/validate_config.py` and `config/check_runtime_secrets.py --require-env-only` before launching the app.
+- `DGN-DJ_Launcher.bat` now runs `config/validate_config.py` and `config/check_runtime_secrets.py --require-env-only` before launching the app.
 - Startup continues only when validation prints:
   `Configuration validation passed for schedules.json and prompt_variables.json.`
 - If validation fails, startup is blocked and the launcher keeps the actionable validator output visible.
@@ -222,7 +222,7 @@ When launching via `RoboDJ_Launcher.bat`, startup now runs config validation bef
 - Operator actions on failure:
   1. Read each listed `[target]` error and fix the referenced field(s) in the matching config JSON.
   2. Re-run `python config/validate_config.py` until it prints the expected success string exactly.
-  3. Re-launch `RoboDJ_Launcher.bat`.
+  3. Re-launch `DGN-DJ_Launcher.bat`.
 - If startup is blocked because Python is missing, install Python 3 (or expose `py`/`python` on `PATH`) and rerun the launcher.
 ## Required Before Release Candidate
 
@@ -270,6 +270,15 @@ When launching via `RoboDJ_Launcher.bat`, startup now runs config validation bef
 | Key-rotation/env-only secret readiness |  |  | SecOps Compliance Agent |  |
 | Artifact review/sign-off completeness |  |  | Release Manager Agent + SecOps Compliance Agent |  |
 
+- [ ] **PASS/FAIL:** TI-041 deterministic security smoke matrix is green.
+  - Commands:
+    - `pnpm test:security -- --case authn-invalid-password`
+    - `pnpm test:security -- --case authz-role-deny`
+    - `pnpm test:security -- --case lockout-threshold`
+    - `pnpm test:security -- --case privileged-action-block`
+  - Pass criteria: all four commands exit 0 and emit expected TI-041 markers.
+  - Fail criteria: any command exits non-zero or is missing the required marker output.
+
 - [ ] **PASS/FAIL:** Security gate sign-off recorded.
   - Required signers: **Release Manager Agent** and **SecOps Compliance Agent**
   - Pass criteria: all rows in the sign-off record are completed with PASS and UTC timestamps before release candidate creation.
@@ -288,3 +297,16 @@ When launching via `RoboDJ_Launcher.bat`, startup now runs config validation bef
 
 - **Checklist owner:** ____________________
 - **Sign-off (name + date/time):** ____________________
+
+## CI security severity gate verification (required)
+
+- [ ] **PASS/FAIL:** Branch-aware CI security policy is in effect.
+  - Release-enforced refs: `main`, `release/*`, and PRs targeting those refs.
+  - Feature refs: report-only mode with warnings.
+- [ ] **PASS/FAIL:** Release-enforced refs block on:
+  - `npm audit` high/critical vulnerabilities.
+  - Python SAST (`bandit`) HIGH severity findings.
+  - `pip-audit` high/critical findings, or unscored vulnerabilities.
+- [ ] **PASS/FAIL:** Security report artifacts are uploaded for every run (including failed gates).
+  - Expected artifacts: `pip-audit.json`, `python-sast-bandit.json`, `npm-audit.json`.
+- [ ] **PASS/FAIL:** Failure behavior has been simulated with intentionally vulnerable dependencies and documented in release evidence.

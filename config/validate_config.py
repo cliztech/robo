@@ -9,9 +9,11 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import base64
 import json
 import re
 import sys
+from hashlib import sha256
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -21,6 +23,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from backend.security.config_crypto import ConfigCryptoError, decrypt_config_payload
 from pydantic import ValidationError as PydanticValidationError
 
 from backend.scheduling.schedule_conflict_detection import detect_schedule_conflicts
@@ -112,6 +115,115 @@ TARGETS = [
         "schema": SCHEMA_DIR / "editorial_pipeline_config.schema.json",
     },
 ]
+
+ENCRYPTION_TARGET_FIELDS: dict[str, set[str]] = {
+    "prompt_variables": {"openai_api_key", "tts_api_key"},
+    "schedules": {
+        "webhook_auth_token",
+        "stream_fallback_password",
+        "remote_ingest_secret",
+    },
+}
+
+KID_PATTERN = re.compile(r"^kms://dgn-dj/config/[A-Za-z0-9][A-Za-z0-9._:-]{2,127}$")
+BASE64_PATTERN = re.compile(r"^[A-Za-z0-9+/]+={0,2}$")
+
+
+def _is_base64(value: str) -> bool:
+    if not isinstance(value, str) or not value:
+        return False
+    if len(value) % 4 != 0 or not BASE64_PATTERN.fullmatch(value):
+        return False
+    try:
+        base64.b64decode(value, validate=True)
+        return True
+    except ValueError:
+        return False
+
+
+def _collect_sensitive_fields(payload: Any, target_keys: set[str], path: str = "$") -> list[tuple[str, str, Any]]:
+    matches: list[tuple[str, str, Any]] = []
+    if isinstance(payload, dict):
+        for key, value in payload.items():
+            current_path = _path_join(path, key)
+            if key in target_keys:
+                matches.append((key, current_path, value))
+            matches.extend(_collect_sensitive_fields(value, target_keys, current_path))
+    elif isinstance(payload, list):
+        for idx, value in enumerate(payload):
+            matches.extend(_collect_sensitive_fields(value, target_keys, _path_join(path, idx)))
+    return matches
+
+
+def _validate_encryption_envelope(
+    target: str,
+    field_name: str,
+    path: str,
+    value: Any,
+) -> list[str]:
+    errors: list[str] = []
+    if not isinstance(value, dict):
+        return [
+            f"[{target}] {path}: sensitive field '{field_name}' must be encryption envelope object, got {_json_type(value)}"
+        ]
+
+    required_keys = {"enc_v", "alg", "kid", "nonce_b64", "ciphertext_b64", "tag_b64", "aad"}
+    missing = sorted(required_keys - set(value.keys()))
+    if missing:
+        errors.append(f"[{target}] {path}: missing encryption envelope keys {missing}")
+
+    if value.get("enc_v") != "v1":
+        errors.append(f"[{target}] {path}.enc_v: expected 'v1'")
+    if value.get("alg") != "AES-256-GCM":
+        errors.append(f"[{target}] {path}.alg: expected 'AES-256-GCM'")
+
+    kid = value.get("kid")
+    if not isinstance(kid, str) or not KID_PATTERN.fullmatch(kid):
+        errors.append(f"[{target}] {path}.kid: expected kms://dgn-dj/config/<key-id>")
+
+    for b64_key in ("nonce_b64", "ciphertext_b64", "tag_b64"):
+        b64_value = value.get(b64_key)
+        if not isinstance(b64_value, str) or not _is_base64(b64_value):
+            errors.append(f"[{target}] {path}.{b64_key}: expected valid base64 string")
+
+    aad = value.get("aad")
+    if not isinstance(aad, dict):
+        errors.append(f"[{target}] {path}.aad: expected object")
+        return errors
+
+    expected_field_ref = f"config/{target}.json:{field_name}"
+    if aad.get("field_ref") != expected_field_ref:
+        errors.append(
+            f"[{target}] {path}.aad.field_ref: expected '{expected_field_ref}'"
+        )
+
+    env = aad.get("env")
+    if not isinstance(env, str) or not env.strip():
+        errors.append(f"[{target}] {path}.aad.env: expected non-empty string")
+
+    issued_at = aad.get("issued_at")
+    if not isinstance(issued_at, str):
+        errors.append(f"[{target}] {path}.aad.issued_at: expected ISO-8601 UTC string")
+    else:
+        try:
+            parsed = datetime.fromisoformat(issued_at.replace("Z", "+00:00"))
+            if parsed.tzinfo is None:
+                raise ValueError
+        except ValueError:
+            errors.append(f"[{target}] {path}.aad.issued_at: expected ISO-8601 UTC string")
+
+    return errors
+
+
+def validate_encryption_targets(target: str, config: Any) -> list[str]:
+    if target not in ENCRYPTION_TARGET_FIELDS:
+        return []
+
+    matches = _collect_sensitive_fields(config, ENCRYPTION_TARGET_FIELDS[target])
+    errors: list[str] = []
+    for field_name, path, value in matches:
+        errors.extend(_validate_encryption_envelope(target, field_name, path, value))
+    return errors
 
 
 class ValidationError(Exception):
@@ -260,9 +372,12 @@ def _validate(instance: Any, schema: dict[str, Any], path: str, errors: list[str
 
 def _load_json(path: Path) -> Any:
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        return decrypt_config_payload(path, payload)
     except FileNotFoundError as exc:
         raise ValidationError(f"Missing file: {path}") from exc
+    except ConfigCryptoError as exc:
+        raise ValidationError(f"Encrypted config read failed for {path}: {exc}") from exc
     except json.JSONDecodeError as exc:
         raise ValidationError(
             f"Invalid JSON in {path}: line {exc.lineno}, column {exc.colno}: {exc.msg}"
@@ -525,11 +640,11 @@ def validate_schedules(config: Any) -> list[str]:
 def validate_target(name: str, config_path: Path, schema_path: Path) -> list[str]:
     config = _load_json(config_path)
     if name == "schedules":
-        return validate_schedules(config)
+        errors = validate_schedules(config)
+        errors.extend(validate_encryption_targets(name, config))
+        return errors
 
-    schema = _load_json(schema_path)
     try:
-        config = _load_json(config_path)
         schema = _load_json(schema_path)
     except ValidationError as exc:
         return [f"[{name}] {exc}"]
@@ -544,9 +659,25 @@ def validate_target(name: str, config_path: Path, schema_path: Path) -> list[str
             seen.add(error)
             unique_errors.append(error)
 
-    if unique_errors:
-        return [f"[{name}] {error}" for error in unique_errors]
-    return []
+    formatted_errors = [f"[{name}] {error}" for error in unique_errors]
+    formatted_errors.extend(validate_encryption_targets(name, config))
+    return formatted_errors
+
+
+def _emit_encryption_evidence() -> None:
+    for target, keys in ENCRYPTION_TARGET_FIELDS.items():
+        config_path = CONFIG_DIR / f"{target}.json"
+        config = _load_json(config_path)
+        for field_name, path, value in _collect_sensitive_fields(config, keys):
+            serialized = json.dumps(value, sort_keys=True, separators=(",", ":"))
+            field_hash = sha256(serialized.encode("utf-8")).hexdigest()
+            print(
+                "ENCRYPTION_EVIDENCE",
+                f"target={target}",
+                f"path={path}",
+                f"field_ref=config/{target}.json:{field_name}",
+                f"envelope_sha256={field_hash}",
+            )
 
 
 def main() -> int:
@@ -556,7 +687,12 @@ def main() -> int:
         action="store_true",
         help="Treat unknown files/targets as errors (reserved for future use).",
     )
-    parser.parse_args()
+    parser.add_argument(
+        "--encryption-evidence",
+        action="store_true",
+        help="Emit deterministic hash evidence lines for encrypted sensitive field values.",
+    )
+    args = parser.parse_args()
 
     all_errors: list[str] = []
     for target in TARGETS:
@@ -579,6 +715,8 @@ def main() -> int:
 
     validated_names = ", ".join(f"{target['name']}.json" for target in TARGETS)
     print(f"Configuration validation passed for: {validated_names}.")
+    if args.encryption_evidence:
+        _emit_encryption_evidence()
     return 0
 
 

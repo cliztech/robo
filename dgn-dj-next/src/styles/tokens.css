@@ -1,0 +1,86 @@
+/* ═══════════════════════════════════════════════════════════════
+   DGN-DJ Studio™ — Aether Design Tokens
+   Precision-Calibrated for High-Performance DJ Workflows
+   ═══════════════════════════════════════════════════════════════ */
+
+@theme {
+  /* ── Brand Colors (Aether Palette) ── */
+  --color-deck-a: #0091FF;      /* Sapphire Blue */
+  --color-deck-b: #FF5500;      /* Magma Orange */
+  --color-deck-c: #2ECC71;      /* Emerald Green */
+  --color-deck-d: #9B59B6;      /* Amethyst Purple */
+  
+  --color-primary-accent: #00BFD8;
+  --color-secondary-accent: #2C7BE5;
+  
+  /* ── Background & Surface ── */
+  --color-bg-base: #0F1216;     /* Obsidian Base */
+  --color-bg-master: #0D1117;
+  --color-panel-1: #14181E;
+  --color-panel-2: #1A1F28;
+  --color-panel-3: #222830;
+  --color-surface-glass: rgba(255, 255, 255, 0.03);
+  
+  /* ── Functional ── */
+  --color-meter-green: #2ECC71;
+  --color-meter-yellow: #F1C40F;
+  --color-meter-red: #E54848;
+  --color-alert-on-air: #FF3B30;
+  --color-alert-recording: #E53E3E;
+
+  /* ── Typography ── */
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* ── Spacing & Layout (8px Grid) ── */
+  --spacing-grid-unit: 8px;
+  --layout-gutter: 24px;
+  --layout-padding: 16px;
+
+  /* ── Animations ── */
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-pad-trigger: padTrigger 150ms ease-out;
+  --animate-pad-depress: padDepress 100ms ease-out forwards;
+  --animate-btn-press: btnPress 120ms ease-out forwards;
+  --animate-orb-pulse: orbPulse 2s ease-in-out infinite;
+  --animate-toast-in: toastIn 150ms ease-out forwards;
+  --animate-toast-out: toastOut 150ms ease-in forwards;
+  --animate-rec-pulse: recPulse 1.5s ease-in-out infinite;
+
+  /* ── Keyframes (Consolidated) ── */
+  @keyframes padTrigger {
+    0% { transform: scale(0.95); opacity: 1; }
+    50% { transform: scale(1.02); opacity: 0.9; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  @keyframes padDepress {
+    0% { transform: translateY(0); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); }
+    100% { transform: translateY(2px); box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.6); }
+  }
+
+  @keyframes btnPress {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(2px); box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.4); }
+  }
+
+  @keyframes orbPulse {
+    0%, 100% { opacity: 0.7; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.15); }
+  }
+
+  @keyframes toastIn {
+    0% { opacity: 0; transform: translateY(8px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes liveDot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  @keyframes sparkFade {
+    0% { opacity: 0; transform: translateX(4px); }
+    100% { opacity: 1; transform: translateX(0); }
+  }
+}

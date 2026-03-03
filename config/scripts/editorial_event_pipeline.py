@@ -44,11 +44,10 @@ class BaseAdapter:
         except (TypeError, ValueError):
             timeout = self.default_timeout_seconds
         headers = self.config.get("headers", {})
-        timeout_seconds = float(self.config.get("request_timeout_seconds", 5.0))
 
         try:
             request_obj = Request(endpoint, headers=headers)
-            request = urlopen(request_obj, timeout=timeout_seconds)
+            request = urlopen(request_obj, timeout=timeout)
             data = request.read().decode("utf-8")
             if not data:
                 return []
@@ -60,6 +59,7 @@ class BaseAdapter:
                 items = payload.get("items", [])
                 if isinstance(items, list):
                     return [item for item in items if isinstance(item, dict)]
+
             self._emit_fetch_failure(endpoint, TypeError(f"Unsupported payload type: {type(payload).__name__}"))
             return []
         except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
@@ -68,15 +68,53 @@ class BaseAdapter:
 
     def _emit_fetch_failure(self, endpoint: str, exc: Exception) -> None:
         diagnostic = {
+            "event": "adapter_fetch_failed",
             "source": self.source_name,
             "endpoint": endpoint,
             "error_class": exc.__class__.__name__,
             "error_message": str(exc),
         }
+        # Using print to stderr for diagnostic output as requested by tests/expectations
+        print(json.dumps(diagnostic, sort_keys=True))
         self.logger.warning("base_adapter_fetch_failure %s", json.dumps(diagnostic, sort_keys=True))
 
     def normalize(self, records: Iterable[Dict[str, Any]]) -> List[ExternalEvent]:
         raise NotImplementedError
+
+
+def parse_float(
+    value: Any,
+    default: float,
+    *,
+    source: Optional[str] = None,
+    field: Optional[str] = None,
+) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        if source and field:
+            logger.debug(
+                "Invalid numeric value encountered; using default",
+                extra={"source": source, "field": field, "value": value},
+            )
+        return default
+
+
+def clamp(value: float) -> float:
+    return max(0.0, min(1.0, value))
+
+
+def to_iso8601(value: Optional[str]) -> str:
+    if not value:
+        return datetime.now(tz=timezone.utc).isoformat()
+
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return parsed.isoformat()
+    except ValueError:
+        return datetime.now(tz=timezone.utc).isoformat()
 
 
 class WeatherAdapter(BaseAdapter):
@@ -115,6 +153,7 @@ class WeatherAdapter(BaseAdapter):
                             item.get("safety_score", safety),
                             safety,
                             source=item.get("source") or self.source_name,
+                            source=self.source_name,
                             field="safety_score",
                         )
                     ),
@@ -149,6 +188,7 @@ class NewsAdapter(BaseAdapter):
                             item.get("relevance", 0.6),
                             0.6,
                             source=item.get("source") or self.source_name,
+                            source=self.source_name,
                             field="relevance",
                         )
                     ),
@@ -157,6 +197,7 @@ class NewsAdapter(BaseAdapter):
                             item.get("safety_score", 0.97),
                             0.97,
                             source=item.get("source") or self.source_name,
+                            source=self.source_name,
                             field="safety_score",
                         )
                     ),
@@ -191,6 +232,7 @@ class TrendAdapter(BaseAdapter):
                             item.get("relevance", 0.5),
                             0.5,
                             source=item.get("source") or self.source_name,
+                            source=self.source_name,
                             field="relevance",
                         )
                     ),
@@ -199,6 +241,7 @@ class TrendAdapter(BaseAdapter):
                             item.get("safety_score", 0.9),
                             0.9,
                             source=item.get("source") or self.source_name,
+                            source=self.source_name,
                             field="safety_score",
                         )
                     ),

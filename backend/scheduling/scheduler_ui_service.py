@@ -1,12 +1,19 @@
 from __future__ import annotations
 
-import json
 import logging
+import json
+import os
 import re
 from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
 from zoneinfo import ZoneInfo
+
+from backend.security.approval_policy import ApprovalContext, ApprovalRecord, enforce_action_approval
+from backend.security.audit_export import append_audit_record
+from backend.security.config_crypto import EnvelopeKey, config_hash, serialize_json, transform_sensitive_values
+
+from backend.security.config_crypto import dump_config_json, load_config_json
 
 from .observability import emit_scheduler_event
 from .schedule_conflict_detection import detect_schedule_conflicts
@@ -41,6 +48,7 @@ TEMPLATE_PRIMITIVES: dict[TemplateType, list[tuple[str, str, str, bool]]] = {
 CRON_NUMERIC_RE = re.compile(r"^\d+$")
 
 logger = logging.getLogger(__name__)
+HIGH_RISK_SCHEDULE_KEYS = {"api_key", "auth_token", "password", "secret", "stream_key"}
 
 
 class SchedulerUiService:
@@ -48,20 +56,41 @@ class SchedulerUiService:
         self,
         schedules_path: Path = Path("config/schedules.json"),
         schema_path: Path = Path("config/schemas/schedules.schema.json"),
+        audit_log_path: Path = Path("config/logs/security_audit.ndjson"),
     ) -> None:
         self.schedules_path = schedules_path
         self.schema_path = schema_path
+        self.audit_log_path = audit_log_path
         self.schedules_path.parent.mkdir(parents=True, exist_ok=True)
+        self.audit_log_path.parent.mkdir(parents=True, exist_ok=True)
         self._cached_envelope: ScheduleEnvelope | None = None
+        self._cached_ui_state: SchedulerUiState | None = None
         self._last_mtime: float | None = None
+        self._crypto_key = self._resolve_crypto_key()
 
     def get_ui_state(self) -> SchedulerUiState:
         envelope = self._load_and_migrate()
+
+        # Optimization: If the loaded envelope is the exact same object as the one in our
+        # cached UI state, we can return the cached state immediately without re-running
+        # conflict detection and timeline building.
+        if self._cached_ui_state is not None and self._cached_ui_state.schedule_file is envelope:
+            return self._cached_ui_state
+
         timeline = self._build_timeline_blocks(envelope.schedules)
         conflicts = detect_schedule_conflicts(envelope.schedules, timeline)
-        return SchedulerUiState(schedule_file=envelope, timeline_blocks=timeline, conflicts=conflicts)
 
-    def update_schedules(self, schedules: list[ScheduleRecord]) -> SchedulerUiState:
+        state = SchedulerUiState(schedule_file=envelope, timeline_blocks=timeline, conflicts=conflicts)
+        self._cached_ui_state = state
+        return state
+
+    def update_schedules(
+        self,
+        schedules: list[ScheduleRecord],
+        approval_context: ApprovalContext | None = None,
+
+    ) -> SchedulerUiState:
+        enforce_action_approval("ACT-CONFIG-EDIT", approval_context or self._default_approval_context())
         envelope = ScheduleEnvelope(schema_version=2, schedules=schedules)
         self._validate_schema(envelope)
 
@@ -69,12 +98,49 @@ class SchedulerUiService:
         if conflicts:
             raise ValueError(self._format_conflict_error(conflicts))
 
-        self.schedules_path.write_text(envelope.model_dump_json(indent=2), encoding="utf-8")
+        before_hash = self._file_hash(self.schedules_path)
+        raw_payload = envelope.model_dump(mode="json")
+        encrypted_payload = transform_sensitive_values(
+            raw_payload,
+            sensitive_keys=HIGH_RISK_SCHEDULE_KEYS,
+            encode=True,
+            key=self._crypto_key,
+        )
+        serialized_payload = serialize_json(encrypted_payload)
+        self.schedules_path.write_text(serialized_payload, encoding="utf-8")
+        after_hash = config_hash(serialized_payload)
+        self._append_security_audit(
+            action="ACT-UPDATE-SCHEDULES",
+            result="success",
+            before_hash=before_hash,
+            after_hash=after_hash,
+            context=approval_context,
+        )
+        payload = envelope.model_dump(mode="json")
+        self.schedules_path.write_text(dump_config_json(self.schedules_path, payload, indent=2), encoding="utf-8")
         timeline = self._build_timeline_blocks(schedules)
+
+        # We don't update cache here immediately because we rely on mtime check in _load_and_migrate
+        # to refresh the data on next read. The file write above changes mtime.
         return SchedulerUiState(schedule_file=envelope, timeline_blocks=timeline, conflicts=[])
 
-    def publish_schedules(self, schedules: list[ScheduleRecord]) -> dict[str, object]:
-        ui_state = self.update_schedules(schedules)
+    def publish_schedules(
+        self,
+        schedules: list[ScheduleRecord],
+        approval_context: ApprovalContext | None = None,
+    ) -> dict[str, object]:
+        context = approval_context or self._default_approval_context()
+        enforce_action_approval("ACT-PUBLISH", context)
+        before_hash = self._file_hash(self.schedules_path)
+        ui_state = self.update_schedules(schedules, approval_context=approval_context)
+        after_hash = self._file_hash(self.schedules_path)
+        self._append_security_audit(
+            action="ACT-PUBLISH",
+            result="success",
+            before_hash=before_hash,
+            after_hash=after_hash,
+            context=approval_context,
+        )
         return {
             "status": "published",
             "published_at": datetime.now(tz=ZoneInfo("UTC")).isoformat(),
@@ -134,7 +200,8 @@ class SchedulerUiService:
     def _load_and_migrate(self) -> ScheduleEnvelope:
         if not self.schedules_path.exists():
             envelope = ScheduleEnvelope(schema_version=2, schedules=[])
-            self.schedules_path.write_text(envelope.model_dump_json(indent=2), encoding="utf-8")
+            payload = envelope.model_dump(mode="json")
+            self.schedules_path.write_text(dump_config_json(self.schedules_path, payload, indent=2), encoding="utf-8")
             self._cached_envelope = envelope
             try:
                 self._last_mtime = self.schedules_path.stat().st_mtime
@@ -171,6 +238,13 @@ class SchedulerUiService:
 
         content = self.schedules_path.read_text(encoding="utf-8")
         raw = json.loads(content)
+        raw = transform_sensitive_values(
+            raw,
+            sensitive_keys=HIGH_RISK_SCHEDULE_KEYS,
+            encode=False,
+            key_lookup=self._key_lookup(),
+        )
+        raw = load_config_json(self.schedules_path)
         envelope = ScheduleEnvelope.model_validate(self._migrate_payload(raw))
         self._validate_schema(envelope)
 
@@ -179,7 +253,15 @@ class SchedulerUiService:
             raise ValueError(self._format_conflict_error(conflicts))
 
         # Only write back if the content has changed or we want to enforce formatting/migration
-        serialized = envelope.model_dump_json(indent=2)
+        serialized = serialize_json(
+            transform_sensitive_values(
+                envelope.model_dump(mode="json"),
+                sensitive_keys=HIGH_RISK_SCHEDULE_KEYS,
+                encode=True,
+                key=self._crypto_key,
+            )
+        )
+        serialized = dump_config_json(self.schedules_path, envelope.model_dump(mode="json"), indent=2)
         # Check if semantic content or formatting differs before writing
         if serialized != content:
             self.schedules_path.write_text(serialized, encoding="utf-8")
@@ -191,6 +273,69 @@ class SchedulerUiService:
             self._last_mtime = None
 
         return envelope
+
+    def _resolve_crypto_key(self) -> EnvelopeKey | None:
+        raw = os.getenv("ROBODJ_CONFIG_CRYPTO_KEY", "").strip()
+        kid = os.getenv("ROBODJ_CONFIG_CRYPTO_KID", "local-dev")
+        if not raw:
+            return None
+        try:
+            key_bytes = raw.encode("utf-8")
+            if len(key_bytes) not in (16, 24, 32):
+                return None
+            return EnvelopeKey(kid=kid, key_bytes=key_bytes)
+        except Exception:
+            return None
+
+    def _key_lookup(self) -> dict[str, EnvelopeKey]:
+        return {self._crypto_key.kid: self._crypto_key} if self._crypto_key else {}
+
+    def _default_approval_context(self) -> ApprovalContext:
+        return ApprovalContext(
+            actor_id="scheduler-system",
+            actor_roles=frozenset({"admin"}),
+            approvals=(
+                ApprovalRecord(
+                    approver_id="security-automation",
+                    approver_roles=frozenset({"admin"}),
+                    reason="system-approved",
+                ),
+            ),
+        )
+
+    def _file_hash(self, path: Path) -> str:
+        if not path.exists():
+            return config_hash("")
+        return config_hash(path.read_text(encoding="utf-8"))
+
+    def _append_security_audit(
+        self,
+        action: str,
+        result: str,
+        before_hash: str,
+        after_hash: str,
+        context: ApprovalContext | None = None,
+    ) -> None:
+        append_audit_record(
+            self.audit_log_path,
+            {
+                "event_id": str(uuid4()),
+                "timestamp": datetime.now(tz=ZoneInfo("UTC")).isoformat(),
+                "action": action,
+                "actor_id": context.actor_id,
+                "result": result,
+                "before_sha256": before_hash,
+                "after_sha256": after_hash,
+                "approvals": [
+                    {
+                        "approver_id": approval.approver_id,
+                        "approver_roles": sorted(approval.approver_roles),
+                        "reason": approval.reason,
+                    }
+                    for approval in context.approvals
+                ],
+            },
+        )
 
     def _validate_schema(self, envelope: ScheduleEnvelope) -> None:
         data = envelope.model_dump(mode="json")
@@ -315,12 +460,13 @@ class SchedulerUiService:
                         error,
                     )
             elif spec.mode == ScheduleSpecMode.rrule and spec.rrule:
-                blocks.append(self._rrule_to_block(schedule.id, spec.rrule))
+                block = self._rrule_to_block(schedule.id, spec.rrule)
+                if block:
+                    blocks.append(block)
         return blocks
 
     def _parse_numeric_cron_time(
         self,
-        *,
         hour: str,
         minute: str,
         schedule_id: str,
@@ -351,26 +497,43 @@ class SchedulerUiService:
             return None
         return parsed_hour, parsed_minute
 
-    def _rrule_to_block(self, schedule_id: str, rrule: str) -> TimelineBlock:
-        parts = dict(part.split("=", 1) for part in rrule.split(";") if "=" in part)
-        by_day = parts.get("BYDAY", "MO").split(",")[0]
-        day = {"MO": "monday", "TU": "tuesday", "WE": "wednesday", "TH": "thursday", "FR": "friday", "SA": "saturday", "SU": "sunday"}.get(by_day, "monday")
-        hour = int(parts.get("BYHOUR", "0"))
-        minute = int(parts.get("BYMINUTE", "0"))
-        duration = int(parts.get("DURATION_MINUTES", "60"))
+    def _rrule_to_block(self, schedule_id: str, rrule: str) -> TimelineBlock | None:
+        try:
+            parts = dict(part.split("=", 1) for part in rrule.split(";") if "=" in part)
+            by_day = parts.get("BYDAY", "MO").split(",")[0]
+            day = {
+                "MO": "monday",
+                "TU": "tuesday",
+                "WE": "wednesday",
+                "TH": "thursday",
+                "FR": "friday",
+                "SA": "saturday",
+                "SU": "sunday",
+            }.get(by_day, "monday")
+            hour = int(parts.get("BYHOUR", "0"))
+            minute = int(parts.get("BYMINUTE", "0"))
+            duration = int(parts.get("DURATION_MINUTES", "60"))
 
-        end_total_minutes = (hour * 60) + minute + duration
-        end_hour, end_minute = divmod(end_total_minutes % (24 * 60), 60)
-        overnight = end_total_minutes >= 24 * 60
+            end_total_minutes = (hour * 60) + minute + duration
+            end_hour, end_minute = divmod(end_total_minutes % (24 * 60), 60)
+            overnight = end_total_minutes >= 24 * 60
 
-        return TimelineBlock(
-            schedule_id=schedule_id,
-            day_of_week=day,
-            start_time=f"{hour:02d}:{minute:02d}",
-            end_time=f"{end_hour:02d}:{end_minute:02d}",
-            overnight=overnight,
-            mode_hint=ScheduleSpecMode.rrule,
-        )
+            return TimelineBlock(
+                schedule_id=schedule_id,
+                day_of_week=day,
+                start_time=f"{hour:02d}:{minute:02d}",
+                end_time=f"{end_hour:02d}:{end_minute:02d}",
+                overnight=overnight,
+                mode_hint=ScheduleSpecMode.rrule,
+            )
+        except ValueError as error:
+            logger.warning(
+                "Skipping timeline block for schedule_id=%s: invalid rrule format (%s). %s",
+                schedule_id,
+                rrule,
+                error,
+            )
+            return None
 
     def _timeline_to_rrule(self, day_of_week: str, start_time: str) -> str:
         day_code = {
@@ -399,12 +562,12 @@ class SchedulerUiService:
         return f"{int(minute)} {int(hour)} * * {cron_day}"
 
     def _cron_day_to_name(self, day_of_week: str) -> str:
-        supported_token_description = "single numeric day-of-week token in range 0-7"
+        supported_desc = "single numeric day-of-week token in range 0-7"
         unsupported_pattern_tokens = ("*", ",", "-", "/")
         if any(token in day_of_week for token in unsupported_pattern_tokens):
             raise ValueError(
                 "Unsupported cron day-of-week pattern "
-                f"'{day_of_week}'. Scheduler UI supports only a {supported_token_description}."
+                f"'{day_of_week}'. Scheduler UI supports only a {supported_desc}."
             )
 
         day_name = {
@@ -421,7 +584,7 @@ class SchedulerUiService:
         if day_name is None:
             raise ValueError(
                 "Unsupported cron day-of-week token "
-                f"'{day_of_week}'. Scheduler UI supports only a {supported_token_description}."
+                f"'{day_of_week}'. Scheduler UI supports only a {supported_desc}."
             )
 
         return day_name

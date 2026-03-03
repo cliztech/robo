@@ -5,13 +5,9 @@ import { cn } from '../../lib/utils';
 import { TrackLibraryTrack, resolveTrackLibraryData } from '../../lib/degenDataAdapters';
 import {
     Search,
-    Filter,
     ArrowUpDown,
     Play,
-    Plus,
     Music2,
-    Clock,
-    Zap,
     ChevronDown,
 } from 'lucide-react';
 
@@ -66,7 +62,7 @@ export function DegenTrackList({
     const formatDur = (s: number) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
     const energyBar = (e: number) => {
-        const colors = e >= 8 ? 'hsl(var(--color-danger-bright))' : e >= 6 ? 'hsl(var(--color-warning))' : e >= 4 ? 'hsl(var(--color-deck-a))' : 'hsl(var(--color-deck-mic))';
+        const colors = e >= 8 ? 'hsl(var(--color-danger))' : e >= 6 ? 'hsl(var(--color-warning))' : 'hsl(var(--color-accent))';
         return (
             <div className="flex items-center gap-1.5 w-16">
                 <div className="flex-1 h-[3px] rounded-full bg-white/[0.04] overflow-hidden">
@@ -85,7 +81,7 @@ export function DegenTrackList({
             onClick={() => handleSort(field)}
             className={cn(
                 'flex items-center gap-1 text-[8px] font-black uppercase tracking-[0.12em] transition-colors',
-                sortField === field ? 'text-deck-a' : 'text-zinc-600 hover:text-zinc-400'
+                sortField === field ? 'text-accent' : 'text-zinc-600 hover:text-zinc-400'
             )}
             style={{ width }}
         >
@@ -104,7 +100,7 @@ export function DegenTrackList({
             {/* Header */}
             <div className="panel-header">
                 <div className="flex items-center gap-2">
-                    <Music2 size={12} className="text-[hsla(var(--color-deck-a),0.7)]" />
+                    <Music2 size={12} className="text-accent/70" />
                     <span className="panel-header-title">Track Library</span>
                 </div>
                 <span className="text-[9px] font-mono text-zinc-600">{filtered.length} tracks</span>
@@ -119,14 +115,14 @@ export function DegenTrackList({
                         placeholder="Search tracks, artists..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="w-full bg-black/30 border border-white/[0.05] rounded-md pl-8 pr-3 py-2 text-[11px] text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-lime-500/20 transition-colors"
+                        className="w-full bg-black/30 border border-white/[0.05] rounded-md pl-8 pr-3 py-2 text-[11px] text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-accent/20 transition-colors"
                     />
                 </div>
                 <div className="relative">
                     <select
                         value={genre}
                         onChange={(e) => setGenre(e.target.value)}
-                        className="appearance-none bg-black/30 border border-white/[0.05] rounded-md pl-3 pr-7 py-2 text-[10px] text-zinc-300 focus:outline-none focus:border-lime-500/20 cursor-pointer"
+                        className="appearance-none bg-black/30 border border-white/[0.05] rounded-md pl-3 pr-7 py-2 text-[10px] text-zinc-300 focus:outline-none focus:border-accent/20 cursor-pointer"
                     >
                         {GENRES.map((g) => (
                             <option key={g} value={g}>{g}</option>
@@ -164,7 +160,7 @@ export function DegenTrackList({
                             className={cn(
                                 'flex items-center gap-2 px-3 py-2 cursor-pointer transition-all duration-100 group border-b border-white/[0.02]',
                                 isSelected
-                                    ? 'bg-lime-500/[0.04] border-l-2 border-l-lime-500'
+                                    ? 'bg-accent/[0.04] border-l-2 border-l-accent'
                                     : 'hover:bg-white/[0.02] border-l-2 border-l-transparent'
                             )}
                             onClick={() => {
@@ -177,7 +173,7 @@ export function DegenTrackList({
                             {/* Play preview */}
                             <div className="w-7 flex items-center justify-center shrink-0">
                                 {isHovered ? (
-                                    <Play size={12} className="text-lime-400" fill="currentColor" />
+                                    <Play size={12} className="text-accent" fill="currentColor" />
                                 ) : (
                                     <span className="text-[9px] font-mono text-zinc-700 tabular-nums">{i + 1}</span>
                                 )}
@@ -222,7 +218,7 @@ export function DegenTrackList({
                             )}>
                                 <button
                                     onClick={(e) => { e.stopPropagation(); onTrackLoad?.(track, 'A'); }}
-                                    className="text-[7px] font-black px-2 py-1 rounded-sm border border-lime-500/20 text-lime-500 bg-lime-500/[0.06] hover:bg-lime-500/15 transition-colors"
+                                    className="text-[7px] font-black px-2 py-1 rounded-sm border border-accent/20 text-accent bg-accent/[0.06] hover:bg-accent/15 transition-colors"
                                 >
                                     A
                                 </button>

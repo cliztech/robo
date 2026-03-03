@@ -3,41 +3,43 @@
 # project_key: NOKEY
 # tracking_system: file-system
 # story_location: docs/exec-plans/active
+# state_authority: Canonical epic/story state source; reconcile TODO.md to this file when states disagree.
 
 generated: 2026-02-17
 project: DGN-DJ Product Readiness Tracks
 project_key: NOKEY
 tracking_system: file-system
 story_location: docs/exec-plans/active
+last_reconciled: 2026-02-27
 
 development_status:
-  epic-a1-role-based-security-controls: backlog
-  a1-1-role-aware-settings-visibility: backlog
-  a1-2-session-timeout-idle-lock-reauth: backlog
+  epic-a1-role-based-security-controls: in_progress
+  a1-1-role-aware-settings-visibility: completed
+  a1-2-session-timeout-idle-lock-reauth: completed
   a1-3-approval-workflow-immutable-audit-export: backlog
   epic-a1-retrospective: optional
 
-  epic-a2-secrets-lifecycle-and-data-protection: backlog
-  a2-1-key-rotation-workflow-cli-checklist: backlog
+  epic-a2-secrets-lifecycle-and-data-protection: in_progress
+  a2-1-key-rotation-workflow-cli-checklist: completed
   a2-2-config-at-rest-encryption-high-risk-fields: backlog
-  a2-3-redaction-denylist-enforcement-logs-api: backlog
+  a2-3-redaction-denylist-enforcement-logs-api: completed
   epic-a2-retrospective: optional
 
-  epic-a3-security-verification-and-release-gate-hardening: backlog
+  epic-a3-security-verification-and-release-gate-hardening: in_progress
   a3-1-security-smoke-script-authn-authz-lockout: backlog
-  a3-2-pre-release-security-gate-checklist: backlog
+  a3-2-pre-release-security-gate-checklist: completed
   epic-a3-retrospective: optional
 
-  epic-b1-agent-progression-ux-mvp-and-explainability: backlog
-  b1-1-stage-timeline-ui: backlog
-  b1-2-human-in-the-loop-checkpoints: backlog
+  epic-b1-agent-progression-ux-mvp-and-explainability: in_progress
+  b1-1-stage-timeline-ui: completed
+  b1-2-human-in-the-loop-checkpoints: completed
   b1-3-explain-this-decision-panel: backlog
   epic-b1-retrospective: optional
 
-  epic-b2-operator-assist-ux: backlog
-  b2-1-preset-task-templates: backlog
-  b2-2-one-click-rollback-assistant: backlog
-  b2-3-guided-troubleshooting-panel: backlog
+  epic-b2-operator-assist-ux: completed
+  b2-1-preset-task-templates: completed
+  b2-2-one-click-rollback-assistant: completed
+  b2-3-guided-troubleshooting-panel: completed
   epic-b2-retrospective: optional
 
   epic-b3-ux-metrics-and-instrumentation: backlog
@@ -51,20 +53,20 @@ development_status:
   c1-3-environment-profile-docs: completed
   epic-c1-retrospective: optional
 
-  epic-c2-contracts-and-api-governance: backlog
+  epic-c2-contracts-and-api-governance: in_progress
   c2-1-expanded-schema-contracts-and-ci-validation: backlog
-  c2-2-versioned-api-contract-change-policy: backlog
-  c2-3-breaking-change-checklist-gate: backlog
+  c2-2-versioned-api-contract-change-policy: completed
+  c2-3-breaking-change-checklist-gate: completed
   epic-c2-retrospective: optional
 
-  epic-c3-reliability-and-observability-stack: backlog
-  c3-1-slos-for-scheduling-latency-autonomy-throughput: backlog
-  c3-2-alert-thresholds-and-escalation-policy: backlog
-  c3-3-incident-runbook-and-postmortem-template: backlog
+  epic-c3-reliability-and-observability-stack: completed
+  c3-1-slos-for-scheduling-latency-autonomy-throughput: completed
+  c3-2-alert-thresholds-and-escalation-policy: completed
+  c3-3-incident-runbook-and-postmortem-template: completed
   epic-c3-retrospective: optional
 
-  epic-d1-release-maturity: backlog
-  d1-1-versioned-release-checklist-strict-gates: backlog
+  epic-d1-release-maturity: in_progress
+  d1-1-versioned-release-checklist-strict-gates: completed
   d1-2-upgrade-rollback-docs-and-compatibility-notes: backlog
   d1-3-golden-path-fresh-install-validation-test: backlog
   epic-d1-retrospective: optional
@@ -75,7 +77,7 @@ development_status:
   d2-3-support-triage-workflow-and-sla-targets: completed
   epic-d2-retrospective: optional
 
-  epic-d3-commercial-readiness: backlog
-  d3-1-product-packaging-definition-base-pro-gates: backlog
-  d3-2-telemetry-ethics-and-opt-in-policy: backlog
+  epic-d3-commercial-readiness: completed
+  d3-1-product-packaging-definition-base-pro-gates: completed
+  d3-2-telemetry-ethics-and-opt-in-policy: completed
   epic-d3-retrospective: optional

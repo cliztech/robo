@@ -9,7 +9,14 @@ from pathlib import Path
 from typing import List, Optional
 from uuid import uuid4
 
+from backend.security.approval_policy import ApprovalRecord
+from backend.security.audit_export import append_audit_record
+from backend.security.config_crypto import config_hash
+
 from pydantic import ValidationError
+
+from backend.security.approval_policy import ActionId, require_approval
+from backend.security.audit_export import AuditExportResult, deterministic_sha256, export_audit_events_ndjson
 
 from .autonomy_policy import (
     AutonomyPolicy,
@@ -47,8 +54,10 @@ class AutonomyPolicyService:
         self.policy_path = policy_path
         self.audit_log_path = audit_log_path
         self.event_log_path = Path("config/logs/scheduler_events.jsonl")
+        self.security_audit_log_path = Path("config/logs/security_audit.ndjson")
         self.policy_path.parent.mkdir(parents=True, exist_ok=True)
         self.audit_log_path.parent.mkdir(parents=True, exist_ok=True)
+        self.security_audit_log_path.parent.mkdir(parents=True, exist_ok=True)
         self._cached_policy: Optional[AutonomyPolicy] = None
         self._last_mtime: Optional[float] = None
 
@@ -56,9 +65,10 @@ class AutonomyPolicyService:
         started = time.perf_counter()
         if not self.policy_path.exists():
             default_policy = AutonomyPolicy()
-            self.update_policy(default_policy)
+            self.update_policy(default_policy, enforce_approval=False)
             duration_ms = int((time.perf_counter() - started) * 1000)
             emit_scheduler_event(
+                logger,
                 event_name="scheduler.startup_validation.succeeded",
                 level="info",
                 message="Autonomy policy bootstrap validation succeeded with default policy.",
@@ -105,6 +115,7 @@ class AutonomyPolicyService:
         except Exception as error:
             duration_ms = int((time.perf_counter() - started) * 1000)
             emit_scheduler_event(
+                logger,
                 event_name="scheduler.schedule_parse.failed",
                 level="error",
                 message="Failed to parse or validate autonomy policy during scheduler startup.",
@@ -152,7 +163,16 @@ class AutonomyPolicyService:
 
         return policy
 
-    def update_policy(self, policy: AutonomyPolicy) -> AutonomyPolicy:
+    def update_policy(
+        self,
+        policy: AutonomyPolicy,
+        *,
+        approval_chain: Optional[list[ApprovalRecord]] = None,
+        enforce_approval: bool = True,
+    ) -> AutonomyPolicy:
+        if enforce_approval:
+            require_approval(ActionId.ACT_CONFIG_EDIT, approval_chain or [])
+
         self.validate_policy(policy)
         payload = policy.model_copy(
             update={"updated_at": datetime.now(timezone.utc).isoformat()}
@@ -161,10 +181,13 @@ class AutonomyPolicyService:
         if self.policy_path.exists():
             snapshot_dir = self.policy_path.parent / "backups" / "autonomy_policy"
             snapshot_dir.mkdir(parents=True, exist_ok=True)
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+            backup_path = snapshot_dir / f"autonomy_policy_{timestamp}.json"
             backup_stamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
             backup_path = snapshot_dir / f"autonomy_policy_{backup_stamp}.json"
             shutil.copy2(self.policy_path, backup_path)
             emit_scheduler_event(
+                logger,
                 event_name="scheduler.backup.created",
                 level="info",
                 message="Autonomy policy backup created before policy update.",
@@ -176,9 +199,11 @@ class AutonomyPolicyService:
                 event_log_path=self.event_log_path,
             )
 
+        before_hash = config_hash(self.policy_path.read_text(encoding="utf-8")) if self.policy_path.exists() else config_hash("")
+        serialized_payload = payload.model_dump_json(indent=2)
         try:
             self.policy_path.write_text(
-                payload.model_dump_json(indent=2),
+                serialized_payload,
                 encoding="utf-8",
             )
         except OSError:
@@ -197,6 +222,27 @@ class AutonomyPolicyService:
                     event_log_path=self.event_log_path,
                 )
             raise
+
+        append_audit_record(
+            self.security_audit_log_path,
+            {
+                "event_id": str(uuid4()),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "action": "ACT-UPDATE-AUTONOMY-POLICY",
+                "actor_id": "api-key-actor",
+                "result": "success",
+                "before_sha256": before_hash,
+                "after_sha256": config_hash(serialized_payload),
+                "approvals": [
+                    {
+                        "principal": approval.principal,
+                        "role": approval.role.value,
+                        "approved_at_utc": approval.approved_at_utc,
+                    }
+                    for approval in (approval_chain or [])
+                ],
+            },
+        )
 
         # Proactively update cache after successful write
         self._cached_policy = payload
@@ -267,13 +313,38 @@ class AutonomyPolicyService:
         self,
         decision_type: DecisionType,
         origin: str,
+        action_id: ActionId,
+        actor_principal: str,
+        target_ref: str,
+        approval_chain: list[ApprovalRecord],
         show_id: Optional[str] = None,
         timeslot_id: Optional[str] = None,
         notes: Optional[str] = None,
+        export_batch_id: Optional[str] = None,
     ) -> PolicyAuditEvent:
+        require_approval(action_id, approval_chain)
         effective = self.resolve_effective_policy(show_id=show_id, timeslot_id=timeslot_id)
+        policy_payload = self.get_policy().model_dump(mode="json")
+        policy_hash = deterministic_sha256(policy_payload)
+
         event = PolicyAuditEvent(
             event_id=str(uuid4()),
+            action_id=action_id.value,
+            actor_principal=actor_principal,
+            target_ref=target_ref,
+            before_hash_sha256=policy_hash,
+            after_hash_sha256=policy_hash,
+            approval_chain=[
+                {
+                    "principal": record.principal,
+                    "role": record.role.value,
+                    "approved_at_utc": record.approved_at_utc,
+                }
+                for record in approval_chain
+            ],
+            decision="approved",
+            event_ts_utc=datetime.now(timezone.utc).isoformat(),
+            export_batch_id=export_batch_id,
             decision_type=decision_type,
             origin=origin,
             mode=effective.mode,
@@ -358,3 +429,8 @@ class AutonomyPolicyService:
             )
 
         return events
+
+
+    def export_audit_events(self, limit: int = 100, *, batch_id: Optional[str] = None) -> AuditExportResult:
+        events = [event.model_dump(mode="json") for event in self.list_audit_events(limit=limit)]
+        return export_audit_events_ndjson(events, batch_id=batch_id)
