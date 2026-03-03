@@ -1,12 +1,15 @@
 from __future__ import annotations
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from pathlib import Path
 
 import base64
 import hashlib
 import hmac
 import json
 import os
-from dataclasses import dataclass
+
 from typing import Any
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
@@ -120,13 +123,10 @@ def transform_sensitive_values(
 
 def serialize_json(payload: Any) -> str:
     return json.dumps(payload, indent=2, sort_keys=True)
-import json
-import os
-from dataclasses import dataclass
-from pathlib import Path
-from typing import Any
 
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+
+
 
 ENVELOPE_VERSION = "v1"
 ENVELOPE_ALGORITHM = "AES-256-GCM"
