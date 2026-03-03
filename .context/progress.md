@@ -236,3 +236,10 @@
 - [x] Refreshed TECH_STACK.md runtime/framework/tooling entries to current versions (including Next.js 15.5.10).
 - [x] Replaced backend operator-facing legacy RoboDJ naming in startup error text and FastAPI title with DGN-DJ branding.
 - [x] Added docs consistency check execution to CI and strengthened `scripts/ci/check_docs_consistency.py` with README title/index validation.
+
+## 2026-03-03 Config crypto contract hardening
+
+- [x] Replaced merge-corrupted `backend/security/config_crypto.py` with a single production implementation using AES-256-GCM envelope helpers.
+- [x] Implemented TI-040-compatible envelope fields (`enc_v`, `alg`, `kid`, `nonce_b64`, `ciphertext_b64`, `tag_b64`) and `aad` metadata emission for config payload encryption.
+- [x] Kept decode compatibility for legacy envelope representations (`nonce/ciphertext/tag` and `enc::` string payloads).
+- [x] Updated and passed crypto test coverage in `backend/tests/test_config_crypto.py` and `backend/tests/test_security_config_crypto.py`.
