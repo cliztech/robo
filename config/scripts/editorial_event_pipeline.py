@@ -1,4 +1,5 @@
 import argparse
+import concurrent.futures
 import json
 import logging
 import sys
@@ -151,6 +152,7 @@ class WeatherAdapter(BaseAdapter):
                         parse_float(
                             item.get("safety_score", safety),
                             safety,
+                            source=item.get("source") or self.source_name,
                             source=self.source_name,
                             field="safety_score",
                         )
@@ -185,6 +187,7 @@ class NewsAdapter(BaseAdapter):
                         parse_float(
                             item.get("relevance", 0.6),
                             0.6,
+                            source=item.get("source") or self.source_name,
                             source=self.source_name,
                             field="relevance",
                         )
@@ -193,6 +196,7 @@ class NewsAdapter(BaseAdapter):
                         parse_float(
                             item.get("safety_score", 0.97),
                             0.97,
+                            source=item.get("source") or self.source_name,
                             source=self.source_name,
                             field="safety_score",
                         )
@@ -227,6 +231,7 @@ class TrendAdapter(BaseAdapter):
                         parse_float(
                             item.get("relevance", 0.5),
                             0.5,
+                            source=item.get("source") or self.source_name,
                             source=self.source_name,
                             field="relevance",
                         )
@@ -235,6 +240,7 @@ class TrendAdapter(BaseAdapter):
                         parse_float(
                             item.get("safety_score", 0.9),
                             0.9,
+                            source=item.get("source") or self.source_name,
                             source=self.source_name,
                             field="safety_score",
                         )
@@ -243,6 +249,34 @@ class TrendAdapter(BaseAdapter):
                 )
             )
         return normalized
+
+
+def parse_float(value: Any, default: float, *, source: str = "unknown", field: str = "unknown") -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        logger.debug(
+            "Invalid numeric value encountered; using default",
+            extra={"source": source, "field": field, "value": value},
+        )
+        return default
+
+
+def clamp(value: float) -> float:
+    return max(0.0, min(1.0, value))
+
+
+def to_iso8601(value: Optional[str]) -> str:
+    if not value:
+        return datetime.now(tz=timezone.utc).isoformat()
+
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return parsed.isoformat()
+    except ValueError:
+        return datetime.now(tz=timezone.utc).isoformat()
 
 
 def age_in_hours(timestamp: str) -> float:
@@ -351,11 +385,25 @@ def run_pipeline(config: Dict[str, Any], sample_events_path: Optional[str]) -> L
         external_data = load_events_from_file(sample_events_path)
     else:
         external_data = {}
+        enabled_adapters = {}
         for name, adapter in adapters.items():
             if not sources.get(name, {}).get("enabled", False):
                 external_data[name] = []
                 continue
-            external_data[name] = adapter.fetch()
+            enabled_adapters[name] = adapter
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(enabled_adapters) or 1) as executor:
+            future_to_name = {
+                executor.submit(adapter.fetch): name
+                for name, adapter in enabled_adapters.items()
+            }
+            for future in concurrent.futures.as_completed(future_to_name):
+                name = future_to_name[future]
+                try:
+                    external_data[name] = future.result()
+                except Exception as exc:
+                    logger.warning("Adapter fetch failed for %s: %s", name, exc)
+                    external_data[name] = []
 
     normalized: List[ExternalEvent] = []
     for name, records in external_data.items():
