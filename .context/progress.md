@@ -112,6 +112,7 @@
 - [x] Updated `docs/massive_workflow_blueprint.md` branding to canonical `DGN-DJ by DGNradio`, with `RoboDJ` retained only as an explicit legacy alias in historical context.
 
 ## 2026-02-27 Progress Update
+- [x] Refreshed P1 security execution packet + TODO cross-link freshness note: TI-039/TI-041 now tracked as completed evidence references; TI-040 remains active unresolved scope.
 - [x] Tracked-issue hygiene hardening follow-up: split TI-007/TI-008/TI-009 into single-header/single-status docs, restored v1.2 scheduler UI ID mapping, and added strict tracked-issue structure validation in `scripts/roadmap_autopilot.py`.
 
 - Added Phase 8-inspired DJ console style pass: denser hardware panel treatment, deck-specific orange/cyan accents, and topbar session timer chip for high-density operator readability.
