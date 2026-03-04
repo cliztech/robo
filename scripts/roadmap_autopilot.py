@@ -61,6 +61,15 @@ DUE_ENTRY_PATTERN = re.compile(
     r"\(Owner:\s*(?P<owner>[^\)]+)\):\s*"
     r"(?P<summary>.*\S)\s*$"
 )
+CADENCE_ITEM_PATTERN = re.compile(
+    r"^\s*[-*]\s+\[(?P<state>[ xX])\]\s+Cadence item\s+—\s+"
+    r"Owner:\s*(?P<owner>[^|]+?)\s*\|\s*"
+    r"Due:\s*(?P<due>\d{4}-\d{2}-\d{2})\s*\|\s*"
+    r"Replacement Due:\s*(?P<replacement_due>[^|]+?)\s*\|\s*"
+    r"Status:\s*(?P<status>[^|]+?)\s*\|\s*"
+    r"Defer rationale:\s*(?P<defer_rationale>[^|]+?)\s*\|\s*"
+    r"(?P<summary>.*\S)\s*$"
+)
 
 
 @dataclass(frozen=True)
@@ -128,6 +137,20 @@ class DueReminder:
     is_overdue: bool
 
 
+@dataclass(frozen=True)
+class CadenceItem:
+    """Structured cadence row parsed from TODO.md tracking checklist."""
+
+    line_number: int
+    owner: str
+    due: dt.date
+    replacement_due: dt.date | None
+    status: str
+    defer_rationale: str
+    summary: str
+    is_complete: bool
+
+
 def collect_due_reminders(todo_path: Path, today: dt.date) -> list[DueReminder]:
     """Collect date-based TODO cadence reminders with overdue classification."""
     if not todo_path.exists():
@@ -135,6 +158,23 @@ def collect_due_reminders(todo_path: Path, today: dt.date) -> list[DueReminder]:
 
     reminders: list[DueReminder] = []
     for raw_line in todo_path.read_text(encoding="utf-8").splitlines():
+        cadence_match = CADENCE_ITEM_PATTERN.match(raw_line)
+        if cadence_match:
+            state = cadence_match.group("state").lower()
+            due_date = dt.date.fromisoformat(cadence_match.group("due"))
+            normalized_status = cadence_match.group("status").strip().lower()
+            is_complete = state == "x" or normalized_status == "completed"
+            reminders.append(
+                DueReminder(
+                    date=due_date,
+                    owner=cadence_match.group("owner").strip(),
+                    summary=cadence_match.group("summary").strip(),
+                    state="complete" if is_complete else normalized_status,
+                    is_overdue=(not is_complete and due_date < today),
+                )
+            )
+            continue
+
         match = DUE_ENTRY_PATTERN.match(raw_line)
         if not match:
             continue
@@ -154,6 +194,59 @@ def collect_due_reminders(todo_path: Path, today: dt.date) -> list[DueReminder]:
 
     reminders.sort(key=lambda item: (item.date, item.owner, item.summary))
     return reminders
+
+
+def collect_cadence_items(todo_path: Path) -> list[CadenceItem]:
+    """Collect structured cadence checklist rows from TODO.md."""
+    if not todo_path.exists():
+        return []
+
+    items: list[CadenceItem] = []
+    for line_number, raw_line in enumerate(todo_path.read_text(encoding="utf-8").splitlines(), start=1):
+        match = CADENCE_ITEM_PATTERN.match(raw_line)
+        if not match:
+            continue
+
+        replacement_raw = match.group("replacement_due").strip()
+        replacement_due: dt.date | None = None
+        if replacement_raw.lower() not in {"n/a", "na", "none", "-"}:
+            try:
+                replacement_due = dt.date.fromisoformat(replacement_raw)
+            except ValueError:
+                replacement_due = None
+
+        status = match.group("status").strip().lower()
+        state = match.group("state").lower()
+        is_complete = state == "x" or status == "completed"
+        items.append(
+            CadenceItem(
+                line_number=line_number,
+                owner=match.group("owner").strip(),
+                due=dt.date.fromisoformat(match.group("due")),
+                replacement_due=replacement_due,
+                status=status,
+                defer_rationale=match.group("defer_rationale").strip(),
+                summary=match.group("summary").strip(),
+                is_complete=is_complete,
+            )
+        )
+
+    return items
+
+
+def find_overdue_cadence_violations(items: list[CadenceItem], today: dt.date) -> list[CadenceItem]:
+    """Identify overdue cadence items lacking defer rationale + replacement due date."""
+    violations: list[CadenceItem] = []
+    for item in items:
+        if item.is_complete or item.due >= today:
+            continue
+
+        has_defer_rationale = item.defer_rationale.lower() not in {"", "n/a", "na", "none", "-"}
+        has_replacement_due = item.replacement_due is not None
+        if not (item.status == "deferred" and has_defer_rationale and has_replacement_due):
+            violations.append(item)
+
+    return violations
 
 
 def collect_open_tasks(markdown_path: Path) -> list[OpenTask]:
@@ -658,9 +751,13 @@ def run_once(
 
     print(render_queue(tasks, limit=limit))
 
+    reminder_source = next((path for path in todo_files if path.name == "TODO.md"), ROOT / "TODO.md")
+    today = dt.datetime.now(dt.timezone.utc).date()
+    due_reminders = collect_due_reminders(reminder_source, today=today)
+    cadence_items = collect_cadence_items(reminder_source)
+    cadence_violations = find_overdue_cadence_violations(cadence_items, today=today)
+
     if build_plan:
-        reminder_source = next((path for path in todo_files if path.name == "TODO.md"), ROOT / "TODO.md")
-        due_reminders = collect_due_reminders(reminder_source, today=dt.datetime.now(dt.timezone.utc).date())
         output_path = (ROOT / build_plan).resolve()
         try:
             output_path.relative_to(ROOT)
@@ -675,6 +772,19 @@ def run_once(
         )
         rel_output = output_path.relative_to(ROOT)
         print(f"\nWrote build plan: {rel_output}")
+
+    if cadence_violations:
+        print("\nerror: unresolved overdue cadence items detected in TODO.md:", file=sys.stderr)
+        for violation in cadence_violations:
+            print(
+                "- "
+                f"TODO.md:{violation.line_number} | due={violation.due.isoformat()} | "
+                f"status={violation.status or 'n/a'} | owner={violation.owner} | "
+                f"replacement_due={violation.replacement_due.isoformat() if violation.replacement_due else 'missing'} | "
+                f"defer_rationale={violation.defer_rationale!r} | {violation.summary}",
+                file=sys.stderr,
+            )
+        return 3
 
     return 0 if tasks else 1
 

@@ -25,6 +25,15 @@ This index lists active tracks, owners, and current status pointers. The status 
 
 > Defer log: backlog hygiene window due 2026-02-27 was deferred to 2026-03-01 to preserve Phase 5 stabilization throughput.
 
+### Next run window (compact)
+
+| Cadence item | Owner | Due (UTC) | Replacement due (UTC) | status |
+| --- | --- | --- | --- | --- |
+| Weekly readiness score refresh (`TI-035`) | Management Team (Project Coordinator) | 2026-03-03 | n/a | due |
+| Weekly backlog hygiene reconciliation (`TI-036`) | Management Team (Project Coordinator) | 2026-03-01 | 2026-03-03 | deferred |
+| Bi-weekly blocked-item pruning (`TI-037`) | Planner Agent | 2026-03-10 | n/a | due |
+| Monthly roadmap-variant reassessment (`TI-038`) | Management Team (Sprint Planner) | 2026-03-31 | n/a | due |
+
 ## Planning runbooks
 
 - [`BMAD Deep Research Runbook`](./bmad_deep_research_runbook.md) — Mandatory sequence and quality gates for Market Research → Domain Research → Technical Research → PRD → Architecture → Epics/Stories → Readiness Check.
