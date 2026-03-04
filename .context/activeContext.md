@@ -8,6 +8,7 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 ## Recent Decisions
 
+- Reconciled Track A security state authority on `docs/exec-plans/active/sprint-status.yaml`, aligned TI-039/TI-040/TI-041 tracked issue status + TODO state tags to backlog/open, and added roadmap autopilot consistency gating for canonical-vs-tracked issue drift.
 - Enforced tracked-issue one-to-one file structure: TI-007/TI-008/TI-009 now each contain exactly one issue header/status block (v1.2 scheduler UI), Track A security remains canonical in TI-039/TI-040/TI-041, and roadmap autopilot now fails on multi-header tracked-issue files.
 - Prioritized dashboard queue severity precedence: UI now treats `queue_depth.state` as authoritative and only falls back to threshold derivation when state is absent/malformed; added focused unit coverage and UI mapping docs update.
 - Added Phase 8-inspired DJ console style pass: denser hardware panel treatment, deck-specific orange/cyan accents, and topbar session timer chip for high-density operator readability.
@@ -227,3 +228,9 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Expanded CI docs consistency gate by wiring `scripts/ci/check_docs_consistency.py` into `.github/workflows/ci.yml` and adding README structure checks.
 
 - Updated TI-040/TI-041 tracked issue docs with dependency evidence snapshots and split implementation vs release-readiness status semantics; mirrored the same gating interpretation in TODO.md and docs/readiness_scorecard.md.
+## 2026-03-03 TI-040 encryption envelope alignment
+
+- Consolidated `backend/security/config_crypto.py` into a single AES-256-GCM implementation and removed conflicting legacy merge artifacts.
+- Aligned encrypted envelope contract to `enc_v='v1'` + `nonce_b64/ciphertext_b64/tag_b64` with optional `aad` metadata for TI-040 field provenance.
+- Added backward-compatible decode handling for legacy envelope key names and `enc::` payload strings while keeping decrypt fail-closed behavior.
+- Updated backend crypto tests to assert v1 envelope fields and nonce uniqueness using the new schema.
