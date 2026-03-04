@@ -23,7 +23,7 @@ Execution lane source of truth for unresolved P1 Security work. Do not close `do
 
 ### Completed evidence references (accepted as done)
 
-- [x] **TI-039 — per-action approval workflows + immutable audit export** (`closed`)
+- [x] **TI-039 — per-action approval workflows + immutable audit export** (`complete`)
   - Tracking issue: [`docs/exec-plans/active/tracked-issues/TI-039.md`](docs/exec-plans/active/tracked-issues/TI-039.md)
   - Evidence references: `artifacts/security/logs/ti-039-approval-enforcement.log`, `artifacts/security/reports/ti-039-immutable-audit-export.md`, `artifacts/security/audit_exports/<yyyy-mm-dd>/<batch_id>.sha256`
 - [x] **TI-041 — security smoke script (authN/authZ + lockout + privileged action checks)** (`complete`)
