@@ -227,6 +227,7 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Rebranded backend operator-facing startup/title strings from legacy RoboDJ naming to DGN-DJ naming.
 - Expanded CI docs consistency gate by wiring `scripts/ci/check_docs_consistency.py` into `.github/workflows/ci.yml` and adding README structure checks.
 
+- Updated TI-040/TI-041 tracked issue docs with dependency evidence snapshots and split implementation vs release-readiness status semantics; mirrored the same gating interpretation in TODO.md and docs/readiness_scorecard.md.
 ## 2026-03-03 TI-040 encryption envelope alignment
 
 - Consolidated `backend/security/config_crypto.py` into a single AES-256-GCM implementation and removed conflicting legacy merge artifacts.
