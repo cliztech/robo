@@ -225,3 +225,10 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Updated TECH_STACK.md to reflect current runtime/framework/tooling versions (Node 20.x, Next.js 15.5.10, React 18, Vitest 4.x, FastAPI/Python backend context).
 - Rebranded backend operator-facing startup/title strings from legacy RoboDJ naming to DGN-DJ naming.
 - Expanded CI docs consistency gate by wiring `scripts/ci/check_docs_consistency.py` into `.github/workflows/ci.yml` and adding README structure checks.
+
+## 2026-03-03 TI-040 encryption envelope alignment
+
+- Consolidated `backend/security/config_crypto.py` into a single AES-256-GCM implementation and removed conflicting legacy merge artifacts.
+- Aligned encrypted envelope contract to `enc_v='v1'` + `nonce_b64/ciphertext_b64/tag_b64` with optional `aad` metadata for TI-040 field provenance.
+- Added backward-compatible decode handling for legacy envelope key names and `enc::` payload strings while keeping decrypt fail-closed behavior.
+- Updated backend crypto tests to assert v1 envelope fields and nonce uniqueness using the new schema.
