@@ -27,6 +27,37 @@ When users issue short slash commands (for example, `/bmad build`) that are not 
 
 If no safe mapping is obvious, run `bmad-help` behavior and present nearest valid commands from `_bmad/_config/bmad-help.csv`.
 
+
+## Communication mode contract (persona|ops)
+
+All BMAD/core agents must declare `communication_mode: persona|ops` in activation rules and include a mode contract with explicit fallback behavior.
+
+### Ops Mode requirements
+
+When `communication_mode=ops`, responses must be operationally strict:
+
+- concise and action-oriented language;
+- no roleplay flourish or persona theatrics;
+- mandatory structured output blocks in this exact order: **Assumptions**, **Risks**, **Actions**, **Evidence**.
+
+### Automatic Ops Mode switching triggers
+
+Agents must automatically switch to `communication_mode=ops` when any of the following are true:
+
+1. **Incident handling** is active (live outage, security incident, or incident-command request).
+2. **Production risk** is present (potential user-impacting or data-impacting change, degraded SLOs, rollback in progress, or emergency mitigation).
+3. **Release gate failures** occur (any required release/security/quality gate reports fail status).
+
+Return to `persona` mode only after the trigger condition is explicitly resolved or the user overrides mode selection.
+
+### Validation command
+
+Run the repository lint check below before commit:
+
+```bash
+python scripts/validate_agent_communication_modes.py
+```
+
 ## Security smoke command signature (TI-041 canonical)
 
 Use this exact command form for CI/release security smoke verification:

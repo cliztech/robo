@@ -240,3 +240,9 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Aligned encrypted envelope contract to `enc_v='v1'` + `nonce_b64/ciphertext_b64/tag_b64` with optional `aad` metadata for TI-040 field provenance.
 - Added backward-compatible decode handling for legacy envelope key names and `enc::` payload strings while keeping decrypt fail-closed behavior.
 - Updated backend crypto tests to assert v1 envelope fields and nonce uniqueness using the new schema.
+
+## 2026-03-04 Communication Mode Contract Hardening
+- Added explicit `communication_mode: persona|ops` activation-step declarations across BMAD marketing agents and core master agent definitions.
+- Standardized per-agent communication mode contract blocks with explicit Ops Mode requirements (concise + non-roleplay + required Assumptions/Risks/Actions/Evidence blocks) and fallback behavior.
+- Updated `docs/operations/agent_execution_commands.md` with automatic Ops Mode switch triggers for incidents, production risk, and release gate failures.
+- Added `scripts/validate_agent_communication_modes.py` lint check to enforce contract, ops behavior, and fallback coverage across all BMAD/core agent markdown definitions.

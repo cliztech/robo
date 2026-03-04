@@ -254,3 +254,9 @@
 - [x] Implemented TI-040-compatible envelope fields (`enc_v`, `alg`, `kid`, `nonce_b64`, `ciphertext_b64`, `tag_b64`) and `aad` metadata emission for config payload encryption.
 - [x] Kept decode compatibility for legacy envelope representations (`nonce/ciphertext/tag` and `enc::` string payloads).
 - [x] Updated and passed crypto test coverage in `backend/tests/test_config_crypto.py` and `backend/tests/test_security_config_crypto.py`.
+
+## 2026-03-04 Communication Mode Contract Hardening
+- [x] Added `communication_mode: persona|ops` activation declarations to all files under `_bmad/bmm/agents/*.md` (including nested `tech-writer`) and `_bmad/core/agents/*.md`.
+- [x] Added Ops Mode contract requirements (concise, no roleplay flourish, mandatory `Assumptions`/`Risks`/`Actions`/`Evidence` output blocks).
+- [x] Added automatic Ops Mode switching trigger policy to `docs/operations/agent_execution_commands.md` for incident, production-risk, and release-gate-failure conditions.
+- [x] Added and passed `python scripts/validate_agent_communication_modes.py` lint check to verify activation declaration + mode behavior + fallback in every BMAD/core agent file.
