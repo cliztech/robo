@@ -254,3 +254,10 @@
 - [x] Implemented TI-040-compatible envelope fields (`enc_v`, `alg`, `kid`, `nonce_b64`, `ciphertext_b64`, `tag_b64`) and `aad` metadata emission for config payload encryption.
 - [x] Kept decode compatibility for legacy envelope representations (`nonce/ciphertext/tag` and `enc::` string payloads).
 - [x] Updated and passed crypto test coverage in `backend/tests/test_config_crypto.py` and `backend/tests/test_security_config_crypto.py`.
+
+## 2026-03-04 MCP Runtime Config Authority
+- [x] Added `scripts/generate_mcp_runtime_config.py` to generate `.mcp.json` from `infra/mcp/servers.json` and referenced server manifests.
+- [x] Added optional `.mcp.local.json` merge behavior (deep merge for objects; local replacement for arrays/scalars).
+- [x] Added CI/PR checks in `.github/workflows/skills-validate.yml` to enforce MCP schema validation and `.mcp.json` parity with generated output.
+- [x] Added explicit CI drift-ignore escape hatch via `MCP_RUNTIME_CONFIG_IGNORE=1`.
+- [x] Updated `infra/mcp/README.md` with exact startup flow commands for MCP validation and generation.
