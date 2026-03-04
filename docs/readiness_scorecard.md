@@ -60,9 +60,9 @@ This scorecard provides a versioned, repeatable way to track progress from roadm
   - Owner: Management Team (Project Coordinator)
   - Changed metrics: weighted total remains `63%`; security blockers now mapped to split status semantics (`implementation_status` vs `release_readiness_status`)
   - Blockers:
-    - TI-039 implementation_status: `open`; release_readiness_status: `blocked` (target 2026-03-07)
-    - TI-040 implementation_status: `in_progress`; release_readiness_status: `blocked` (DEP-TI040-01..03 unresolved; target 2026-03-10)
-    - TI-041 implementation_status: `complete`; release_readiness_status: `blocked` (pending TI040-ART-LOG/TI040-ART-REPORT/TI040-ART-HASH)
+    - TI-039 implementation_status: open; release_readiness_status: blocked (target 2026-03-07)
+    - TI-040 implementation_status: in_progress; release_readiness_status: blocked (DEP-TI040-01..03 unresolved; target 2026-03-10)
+    - TI-041 implementation_status: complete; release_readiness_status: blocked (pending TI040-ART-LOG/TI040-ART-REPORT/TI040-ART-HASH)
   - Next step: complete weekly backlog hygiene reconciliation and publish deferred-item rationale in the cadence table
 
 ## Weekly update workflow
