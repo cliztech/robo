@@ -254,3 +254,10 @@
 - [x] Implemented TI-040-compatible envelope fields (`enc_v`, `alg`, `kid`, `nonce_b64`, `ciphertext_b64`, `tag_b64`) and `aad` metadata emission for config payload encryption.
 - [x] Kept decode compatibility for legacy envelope representations (`nonce/ciphertext/tag` and `enc::` string payloads).
 - [x] Updated and passed crypto test coverage in `backend/tests/test_config_crypto.py` and `backend/tests/test_security_config_crypto.py`.
+
+## 2026-03-04 Subagent Governance Playbook Update
+- [x] Added stage-by-route RACI matrix for Intake/Planner/Executor/Verifier/Handoff across QA/Proposal/Change routes in `docs/operations/subagent_execution_playbook.md`.
+- [x] Added explicit conflict-class tie-break authority and escalation governance (safety, scope, schedule, UX, compliance).
+- [x] Added packet SLA schema fields for escalation response windows and stalled-packet reassignment, plus required packet metadata fields (`decision_owner`, `consulted_roles`, `approval_deadline_utc`).
+- [x] Updated packet examples in `docs/operations/agent_execution_commands.md` to include the new ownership/consultation/deadline fields.
+
