@@ -240,3 +240,9 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Aligned encrypted envelope contract to `enc_v='v1'` + `nonce_b64/ciphertext_b64/tag_b64` with optional `aad` metadata for TI-040 field provenance.
 - Added backward-compatible decode handling for legacy envelope key names and `enc::` payload strings while keeping decrypt fail-closed behavior.
 - Updated backend crypto tests to assert v1 envelope fields and nonce uniqueness using the new schema.
+
+## 2026-03-04 BMAD deep research runbook evidence governance update
+- Added a mandatory evidence schema for every research claim (source type, publication date, confidence, relevance score, decision impact).
+- Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
+- Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
+- Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
