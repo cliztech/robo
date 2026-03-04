@@ -112,6 +112,7 @@
 - [x] Updated `docs/massive_workflow_blueprint.md` branding to canonical `DGN-DJ by DGNradio`, with `RoboDJ` retained only as an explicit legacy alias in historical context.
 
 ## 2026-02-27 Progress Update
+- [x] Refreshed P1 security execution packet + TODO cross-link freshness note: TI-039/TI-041 now tracked as completed evidence references; TI-040 remains active unresolved scope.
 - [x] Tracked-issue hygiene hardening follow-up: split TI-007/TI-008/TI-009 into single-header/single-status docs, restored v1.2 scheduler UI ID mapping, and added strict tracked-issue structure validation in `scripts/roadmap_autopilot.py`.
 
 - Added Phase 8-inspired DJ console style pass: denser hardware panel treatment, deck-specific orange/cyan accents, and topbar session timer chip for high-density operator readability.
@@ -242,3 +243,14 @@
 - [x] Added task/reminder de-duplication keyed by `(source_file, line_ref, normalized_task_text)` before markdown rendering.
 - [x] Regenerated `docs/exec-plans/active/unfinished-task-build-plan.md`; confirmed single generation header, unique cadence reminders, and no duplicate task rows.
 - [x] Extended docs consistency CI check to fail on duplicate autopilot generated-header blocks and duplicate build-plan keys.
+- [x] Aligned TI-040/TI-041 status semantics: TI-040 dependency checkpoints now include explicit evidence links/downstream impact, TI-041 carries implementation vs release-readiness split, and TODO/readiness scorecard now consume the same release-gate interpretation.
+## 2026-03-03 Security State Reconciliation
+- [x] Selected `docs/exec-plans/active/sprint-status.yaml` as authoritative security story state source and reconciled TODO + tracked issue status for TI-039/TI-040/TI-041.
+- [x] Added roadmap autopilot consistency gate to fail generation when sprint-status task state disagrees with linked tracked issue status and TODO tracking tags.
+- [x] Regenerated `docs/exec-plans/active/unfinished-task-build-plan.md` after reconciliation; P1 entries now reference unresolved TI-039/TI-040/TI-041 only.
+## 2026-03-03 Config crypto contract hardening
+
+- [x] Replaced merge-corrupted `backend/security/config_crypto.py` with a single production implementation using AES-256-GCM envelope helpers.
+- [x] Implemented TI-040-compatible envelope fields (`enc_v`, `alg`, `kid`, `nonce_b64`, `ciphertext_b64`, `tag_b64`) and `aad` metadata emission for config payload encryption.
+- [x] Kept decode compatibility for legacy envelope representations (`nonce/ciphertext/tag` and `enc::` string payloads).
+- [x] Updated and passed crypto test coverage in `backend/tests/test_config_crypto.py` and `backend/tests/test_security_config_crypto.py`.
