@@ -1,12 +1,8 @@
 import { NextRequest } from 'next/server';
 import { proxyDashboardRequest } from '../../../_shared/proxy';
 
-interface AlertAckParams {
-  params: Promise<{ alertId: string }>;
-}
-
-export async function POST(request: NextRequest, { params }: { params: { alertId: string } }) {
-  const { alertId } = params;
+export async function POST(request: NextRequest, { params }: { params: Promise<{ alertId: string }> }) {
+  const { alertId } = await params;
   return proxyDashboardRequest(
     request,
     `/api/v1/status/dashboard/alerts/${encodeURIComponent(alertId)}/ack`,

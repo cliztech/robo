@@ -1,4 +1,4 @@
-// File: E:\onedrive\2nd music\robo\src\app\gear\page.tsx
+// File: /mnt/e/onedrive/2nd music/robo/src/app/gear/page.tsx
 import * as entry from '../../../../src/app/gear/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

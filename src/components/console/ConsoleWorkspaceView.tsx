@@ -18,7 +18,6 @@ import {
 } from "@/lib/layout/types";
 import { DashboardView } from "./DashboardView";
 import { SkinManagerPanel } from '@/components/theme/SkinManagerPanel';
-import { DEFAULT_DASHBOARD_TELEMETRY } from "./dashboard.types";
 import { DJStudioSurface } from "./DJStudioSurface";
 import type { ConsoleViewMode } from "./types";
 

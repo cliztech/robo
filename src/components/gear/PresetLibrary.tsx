@@ -218,7 +218,7 @@ export const PresetLibrary: React.FC<PresetLibraryProps> = ({
       </div>
 
       {filtered.length === 0 && (
-        <div className="preset-empty">No presets match "{filter}"</div>
+        <div className="preset-empty">No presets match &quot;{filter}&quot;</div>
       )}
     </div>
   );

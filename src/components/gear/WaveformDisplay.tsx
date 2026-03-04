@@ -108,7 +108,7 @@ export const WaveformDisplay: React.FC<WaveformDisplayProps> = ({
         const highH = band.high * centerY * 0.85;
 
         // Upper half (mirrored)
-        let yPos = centerY;
+        const yPos = centerY;
 
         // Low frequencies (deep blue/purple)
         ctx.globalAlpha = opacity;
