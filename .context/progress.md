@@ -241,3 +241,9 @@
 - [x] Selected `docs/exec-plans/active/sprint-status.yaml` as authoritative security story state source and reconciled TODO + tracked issue status for TI-039/TI-040/TI-041.
 - [x] Added roadmap autopilot consistency gate to fail generation when sprint-status task state disagrees with linked tracked issue status and TODO tracking tags.
 - [x] Regenerated `docs/exec-plans/active/unfinished-task-build-plan.md` after reconciliation; P1 entries now reference unresolved TI-039/TI-040/TI-041 only.
+## 2026-03-03 Config crypto contract hardening
+
+- [x] Replaced merge-corrupted `backend/security/config_crypto.py` with a single production implementation using AES-256-GCM envelope helpers.
+- [x] Implemented TI-040-compatible envelope fields (`enc_v`, `alg`, `kid`, `nonce_b64`, `ciphertext_b64`, `tag_b64`) and `aad` metadata emission for config payload encryption.
+- [x] Kept decode compatibility for legacy envelope representations (`nonce/ciphertext/tag` and `enc::` string payloads).
+- [x] Updated and passed crypto test coverage in `backend/tests/test_config_crypto.py` and `backend/tests/test_security_config_crypto.py`.
