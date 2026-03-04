@@ -1,0 +1,10 @@
+{
+  "/api/ai/analyze-track/route": "app/api/ai/analyze-track/route.js",
+  "/api/ai/batch-analyze/route": "app/api/ai/batch-analyze/route.js",
+  "/api/v1/status/dashboard/alerts/route": "app/api/v1/status/dashboard/alerts/route.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/v1/status/dashboard/route": "app/api/v1/status/dashboard/route.js",
+  "/api/v1/status/dashboard/alerts/[alertId]/ack/route": "app/api/v1/status/dashboard/alerts/[alertId]/ack/route.js",
+  "/gear/page": "app/gear/page.js",
+  "/page": "app/page.js"
+}
