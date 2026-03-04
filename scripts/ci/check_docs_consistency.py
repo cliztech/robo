@@ -91,8 +91,8 @@ def _check_unfinished_build_plan() -> list[str]:
             f'(found {generated_header_count}).'
         )
 
-    task_keys: dict[tuple[str, int, str], int] = {}
-    reminder_keys: dict[tuple[str, int, str], int] = {}
+    task_keys: Counter[tuple[str, int, str]] = Counter()
+    reminder_keys: Counter[tuple[str, int, str]] = Counter()
     in_reminder_section = False
 
     for line in lines:
