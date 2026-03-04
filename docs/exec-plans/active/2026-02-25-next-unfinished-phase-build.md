@@ -28,18 +28,18 @@ Execution lane source of truth for TI-039 → TI-040 → TI-041. Do not close `d
   - State gates: [x] ready · [x] in-progress · [ ] done
   - Required evidence before `done`: `artifacts/security/logs/ti-039-approval-enforcement.log`, `artifacts/security/reports/ti-039-immutable-audit-export.md`, `artifacts/security/audit_exports/<yyyy-mm-dd>/<batch_id>.sha256`
 
-- [ ] **TI-040 — config-at-rest encryption for high-risk JSON fields** (`ready`)
+- [ ] **TI-040 — config-at-rest encryption for high-risk JSON fields** (`blocked`)
   - Tracking issue: [`docs/exec-plans/active/tracked-issues/TI-040.md`](docs/exec-plans/active/tracked-issues/TI-040.md)
   - Owner: **Security Engineer**
   - Target date: **2026-03-05**
-  - State gates: [x] ready · [ ] in-progress · [ ] done
+  - State gates: [ ] ready · [ ] in-progress · [ ] done
   - Required evidence before `done`: `artifacts/security/logs/ti-040-config-encryption.log`, `artifacts/security/reports/ti-040-high-risk-field-inventory.md`, `artifacts/security/hashes/ti-040-config-before-after.sha256`
 
-- [ ] **TI-041 — security smoke script (authN/authZ + lockout + privileged action checks)** (`blocked`)
+- [x] **TI-041 — security smoke script (authN/authZ + lockout + privileged action checks)** (`done`)
   - Tracking issue: [`docs/exec-plans/active/tracked-issues/TI-041.md`](docs/exec-plans/active/tracked-issues/TI-041.md)
   - Owner: **QA Engineer**
   - Target date: **2026-03-07**
-  - State gates: [ ] ready · [ ] in-progress · [ ] done
+  - State gates: [x] ready · [x] in-progress · [x] done
   - Required evidence before `done`: `artifacts/security/logs/ti-041-security-smoke.log`, `artifacts/security/reports/ti-041-smoke-matrix-report.md`, `artifacts/security/hashes/ti-041-smoke-output.sha256`
 
 ### Dependency gates (explicit)

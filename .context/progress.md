@@ -236,3 +236,4 @@
 - [x] Refreshed TECH_STACK.md runtime/framework/tooling entries to current versions (including Next.js 15.5.10).
 - [x] Replaced backend operator-facing legacy RoboDJ naming in startup error text and FastAPI title with DGN-DJ branding.
 - [x] Added docs consistency check execution to CI and strengthened `scripts/ci/check_docs_consistency.py` with README title/index validation.
+- [x] 2026-03-03: Weekly hygiene reconciliation completed for TI-039/TI-040/TI-041; synchronized sprint-status/TODO/phase-build/execution-index and added roadmap_autopilot parity failure gate for tracked issue status drift.
