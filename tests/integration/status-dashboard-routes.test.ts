@@ -87,7 +87,7 @@ describe('dashboard status proxy route handlers', () => {
       expect.objectContaining({
         method: 'GET',
         headers: expect.objectContaining({
-          Authorization: 'Bearer token-abc',
+          Authorization: 'Bearer mock-token-abc',
           'X-User-Id': 'user-1',
         }),
       })

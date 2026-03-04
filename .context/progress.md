@@ -236,3 +236,19 @@
 - [x] Refreshed TECH_STACK.md runtime/framework/tooling entries to current versions (including Next.js 15.5.10).
 - [x] Replaced backend operator-facing legacy RoboDJ naming in startup error text and FastAPI title with DGN-DJ branding.
 - [x] Added docs consistency check execution to CI and strengthened `scripts/ci/check_docs_consistency.py` with README title/index validation.
+
+## 2026-03-03 DJ Console Hardware Realism Update
+- [x] Reworked deck transport surfaces into dual-device layouts: DGJ-3000X media player + DGN Technical-1200SN-inspired turntable visuals for both Deck A/B.
+- [x] Added detailed control affordances (vinyl platter rings, center labels, pitch strip/fader, tonearm assembly) to improve hardware realism without introducing runtime behavior changes.
+- [x] Updated global deck styling rules for responsive side-by-side hardware composition and mobile-safe fallback sizing.
+
+## 2026-03-03 Transport/Test Blocker Fix Update
+- [x] Resolved `src/components/audio/DegenTransport.tsx` merge-corruption (duplicate imports/exports) by restoring a single valid component export with unified props (`currentTrack`, `telemetry`, `onSeek`, transport callbacks).
+- [x] Restored transport test contract support (`data-testid="degen-transport"` and `transport-progress-fill`) to unblock console visual and seek tests.
+- [x] Fixed duplicate `transportSurface` declaration in `tests/ui/console-skin-visual.test.tsx` so targeted visual regression runs execute.
+
+## 2026-03-03 UI Stability + Dashboard/Route Repair Update
+- [x] Repaired compile blockers by rewriting `DashboardView` into a single coherent implementation (removed merge-conflict corruption, duplicated imports/types, and duplicate component exports).
+- [x] Fixed dashboard alerts ack route import traversal to canonical `../../../_shared/proxy`, unblocking integration route test resolution.
+- [x] Restored waveform cue accessibility/interaction by adding labeled cue buttons that seek on click, resolving the failing DJ controls cue test while improving operator UX.
+- [x] Replaced corrupted test files (`dashboard-view`, `analysis-queue`, `degenDataAdapters`) with deterministic, contract-focused suites and aligned status-route auth token expectations.
