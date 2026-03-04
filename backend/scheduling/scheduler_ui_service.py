@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 import json
-import os
 import re
 from datetime import datetime
 from pathlib import Path
@@ -11,9 +10,7 @@ from zoneinfo import ZoneInfo
 
 from backend.security.approval_policy import ApprovalContext, ApprovalRecord, enforce_action_approval
 from backend.security.audit_export import append_audit_record
-from backend.security.config_crypto import EnvelopeKey, config_hash, serialize_json, transform_sensitive_values
-
-from backend.security.config_crypto import dump_config_json, load_config_json
+from backend.security.config_crypto import config_hash, dump_config_json, load_config_json
 
 from .observability import emit_scheduler_event
 from .schedule_conflict_detection import detect_schedule_conflicts
@@ -48,7 +45,6 @@ TEMPLATE_PRIMITIVES: dict[TemplateType, list[tuple[str, str, str, bool]]] = {
 CRON_NUMERIC_RE = re.compile(r"^\d+$")
 
 logger = logging.getLogger(__name__)
-HIGH_RISK_SCHEDULE_KEYS = {"api_key", "auth_token", "password", "secret", "stream_key"}
 
 
 class SchedulerUiService:
@@ -66,7 +62,6 @@ class SchedulerUiService:
         self._cached_envelope: ScheduleEnvelope | None = None
         self._cached_ui_state: SchedulerUiState | None = None
         self._last_mtime: float | None = None
-        self._crypto_key = self._resolve_crypto_key()
 
     def get_ui_state(self) -> SchedulerUiState:
         envelope = self._load_and_migrate()
@@ -99,14 +94,7 @@ class SchedulerUiService:
             raise ValueError(self._format_conflict_error(conflicts))
 
         before_hash = self._file_hash(self.schedules_path)
-        raw_payload = envelope.model_dump(mode="json")
-        encrypted_payload = transform_sensitive_values(
-            raw_payload,
-            sensitive_keys=HIGH_RISK_SCHEDULE_KEYS,
-            encode=True,
-            key=self._crypto_key,
-        )
-        serialized_payload = serialize_json(encrypted_payload)
+        serialized_payload = dump_config_json(self.schedules_path, envelope.model_dump(mode="json"), indent=2)
         self.schedules_path.write_text(serialized_payload, encoding="utf-8")
         after_hash = config_hash(serialized_payload)
         self._append_security_audit(
@@ -116,8 +104,6 @@ class SchedulerUiService:
             after_hash=after_hash,
             context=approval_context,
         )
-        payload = envelope.model_dump(mode="json")
-        self.schedules_path.write_text(dump_config_json(self.schedules_path, payload, indent=2), encoding="utf-8")
         timeline = self._build_timeline_blocks(schedules)
 
         # We don't update cache here immediately because we rely on mtime check in _load_and_migrate
@@ -237,13 +223,6 @@ class SchedulerUiService:
             )
 
         content = self.schedules_path.read_text(encoding="utf-8")
-        raw = json.loads(content)
-        raw = transform_sensitive_values(
-            raw,
-            sensitive_keys=HIGH_RISK_SCHEDULE_KEYS,
-            encode=False,
-            key_lookup=self._key_lookup(),
-        )
         raw = load_config_json(self.schedules_path)
         envelope = ScheduleEnvelope.model_validate(self._migrate_payload(raw))
         self._validate_schema(envelope)
@@ -253,14 +232,6 @@ class SchedulerUiService:
             raise ValueError(self._format_conflict_error(conflicts))
 
         # Only write back if the content has changed or we want to enforce formatting/migration
-        serialized = serialize_json(
-            transform_sensitive_values(
-                envelope.model_dump(mode="json"),
-                sensitive_keys=HIGH_RISK_SCHEDULE_KEYS,
-                encode=True,
-                key=self._crypto_key,
-            )
-        )
         serialized = dump_config_json(self.schedules_path, envelope.model_dump(mode="json"), indent=2)
         # Check if semantic content or formatting differs before writing
         if serialized != content:
@@ -273,22 +244,6 @@ class SchedulerUiService:
             self._last_mtime = None
 
         return envelope
-
-    def _resolve_crypto_key(self) -> EnvelopeKey | None:
-        raw = os.getenv("ROBODJ_CONFIG_CRYPTO_KEY", "").strip()
-        kid = os.getenv("ROBODJ_CONFIG_CRYPTO_KID", "local-dev")
-        if not raw:
-            return None
-        try:
-            key_bytes = raw.encode("utf-8")
-            if len(key_bytes) not in (16, 24, 32):
-                return None
-            return EnvelopeKey(kid=kid, key_bytes=key_bytes)
-        except Exception:
-            return None
-
-    def _key_lookup(self) -> dict[str, EnvelopeKey]:
-        return {self._crypto_key.kid: self._crypto_key} if self._crypto_key else {}
 
     def _default_approval_context(self) -> ApprovalContext:
         return ApprovalContext(

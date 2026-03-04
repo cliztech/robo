@@ -240,3 +240,5 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Aligned encrypted envelope contract to `enc_v='v1'` + `nonce_b64/ciphertext_b64/tag_b64` with optional `aad` metadata for TI-040 field provenance.
 - Added backward-compatible decode handling for legacy envelope key names and `enc::` payload strings while keeping decrypt fail-closed behavior.
 - Updated backend crypto tests to assert v1 envelope fields and nonce uniqueness using the new schema.
+
+- Completed TI-040 config-at-rest hardening: unified config read/write encryption envelope handling in `config_crypto`, `ai_service`, and `scheduler_ui_service`; added validator regression tests for plaintext/malformed envelope rejection; published TI-040 evidence artifacts (`ti-040-config-encryption.log`, `ti-040-high-risk-field-inventory.md`, `ti-040-config-before-after.sha256`) and closed dependency checkpoints DEP-TI040-01..03.
