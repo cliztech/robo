@@ -58,3 +58,6 @@ config/secret_v2.key
 config/robodj.lock
 config/scheduler.signal
 config/.robodj_trial
+
+# Local MCP runtime overrides
+.mcp.local.json

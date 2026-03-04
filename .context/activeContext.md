@@ -240,3 +240,9 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Aligned encrypted envelope contract to `enc_v='v1'` + `nonce_b64/ciphertext_b64/tag_b64` with optional `aad` metadata for TI-040 field provenance.
 - Added backward-compatible decode handling for legacy envelope key names and `enc::` payload strings while keeping decrypt fail-closed behavior.
 - Updated backend crypto tests to assert v1 envelope fields and nonce uniqueness using the new schema.
+
+## 2026-03-04 MCP Runtime Config Authority Update
+- Established `infra/mcp/servers.json` as the authoritative MCP source by adding `scripts/generate_mcp_runtime_config.py` to emit root `.mcp.json` from indexed manifests.
+- Added optional `.mcp.local.json` deep-merge support for local developer overrides without mutating source manifests.
+- Extended PR validation workflow to enforce MCP schema checks and `.mcp.json` generation parity (with explicit `MCP_RUNTIME_CONFIG_IGNORE=1` escape hatch).
+- Updated `infra/mcp/README.md` with exact startup/validation commands for manifest validation, generation, and drift checks.
