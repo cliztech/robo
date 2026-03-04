@@ -7,6 +7,7 @@ Executing "Phase 6: Playlist Generation" hardening and preparing Phase 7 broadca
 Building the next unfinished execution plans from the roadmap queue, starting with P1 Security items (TI-039/TI-040/TI-041).
 
 ## Recent Decisions
+- Added continuous improvement governance docs: new `docs/operations/continuous_improvement_loop.md`, monthly Agent Capability Review template in `docs/operations/artifacts.md`, breach execution hook in `docs/operations/subagent_execution_playbook.md`, and historical scorecard path `docs/metrics/agent_capability_scorecard.md`.
 - Refreshed `2026-02-25-next-unfinished-phase-build.md` to reflect current unresolved sequence only (TI-040), moved TI-039/TI-041 to completed evidence references, and added packet freshness metadata (as-of date + sprint-status blob reference).
 
 - Reconciled Track A security state authority on `docs/exec-plans/active/sprint-status.yaml`, aligned TI-039/TI-040/TI-041 tracked issue status + TODO state tags to backlog/open, and added roadmap autopilot consistency gating for canonical-vs-tracked issue drift.

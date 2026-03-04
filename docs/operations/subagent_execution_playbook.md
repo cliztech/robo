@@ -216,3 +216,16 @@ The command fails if required BMAD config files are missing, if `_bmad/bmm/confi
   - `backend/scheduling/scheduler_ui_api.py` + `backend/scheduling/scheduler_ui_service.py` for publish/config writes.
   - `backend/scheduling/api.py` + `backend/scheduling/autonomy_service.py` for autonomy policy updates and audit event writes.
   - `config/scripts/memory_service.py reset` for delete operations.
+
+## 8) Continuous improvement breach hook
+
+When operational indicators breach thresholds defined in `docs/operations/continuous_improvement_loop.md`, runbook execution must include a same-sprint capability update.
+
+Mandatory closure condition for a breach item:
+
+- Commit at least one capability update in `_bmad/*agents*` and/or `SKILLS.md`.
+- Record the intervention and evidence in `docs/metrics/agent_capability_scorecard.md`.
+- Attach monthly review evidence artifact using the template in `docs/operations/artifacts.md`.
+
+Breach records cannot be closed as monitoring-only without one of the required capability updates above.
+
