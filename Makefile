@@ -1,15 +1,15 @@
-.PHONY: help build build-all build-modules build-airwaves build-robo-rippa package-config qa smoke run-airwaves run-robo-rippa check distcheck
-.PHONY: help build build-all build-modules package-config qa smoke run-airwaves run-robo-rippa check distcheck
+.PHONY: help build build-all build-modules package-config qa smoke run-airwaves run-robo-rippa check distcheck install-deps
+.PHONY: help build build-all build-modules package-config qa smoke run-airwaves run-robo-rippa check distcheck install-deps
 
 PYTHON ?= python3
 ARTIFACT_DIR ?= .artifacts
 CONFIG_ARCHIVE ?= $(ARTIFACT_DIR)/dgn-dj-studio-config.tgz
 
+PY_SOURCES = backend/ dgn-airwaves/src dgn-robo-rippa/src config/ scripts/
+
 help:
 	@echo "Targets:"
 	@echo "  build / build-all / build-modules  Build all modules and package config artifact"
-	@echo "  build-airwaves                    Build dgn-airwaves only"
-	@echo "  build-robo-rippa                  Build dgn-robo-rippa only"
 	@echo "  qa                                Run lint and basic Python checks"
 	@echo "  smoke                             Validate required runtime files exist"
 	@echo "  run-airwaves                      Run dgn-airwaves stub"
@@ -17,16 +17,11 @@ help:
 	@echo "  check                             Run all validation checks"
 	@echo "  distcheck                         Alias of check for CI compatibility"
 
-build: build-modules package-config
+build: check package-config
 build-all: build
 
-build-modules: build-airwaves build-robo-rippa
-
-build-airwaves:
-	$(PYTHON) -m compileall -q dgn-airwaves/src
-
-build-robo-rippa:
-	$(PYTHON) -m compileall -q dgn-robo-rippa/src
+build-modules:
+	$(PYTHON) -m compileall -q $(PY_SOURCES)
 
 package-config:
 	@test -f "DGN-DJ_Launcher.bat"
@@ -50,7 +45,7 @@ run-airwaves:
 run-robo-rippa:
 	PYTHONPATH=dgn-robo-rippa/src $(PYTHON) -m dgn_robo_rippa.main
 
-check: build
+check: build-modules lint-backend secret-scan
 	$(PYTHON) -m json.tool docs/architecture/event-schema.json > /dev/null
 
 distcheck: check
@@ -70,7 +65,11 @@ test-frontend:
 	npm run test
 
 lint-backend:
-	$(PYTHON) -m ruff check backend/ --output-format=full
+	$(PYTHON) -m ruff --version || $(MAKE) install-deps
+	$(PYTHON) -m ruff check $(PY_SOURCES) --output-format=full
+
+install-deps:
+	$(PYTHON) -m pip install -r backend/requirements.lock
 
 lint-frontend:
 	npm run lint
