@@ -59,7 +59,7 @@ export const VintageMixer: React.FC<Partial<GearUnitProps>> = ({
                 min={0}
                 max={100}
                 value={vol}
-                orient="vertical"
+                {...({ orient: "vertical" } as any)}
                 onChange={(e) => updateChannel(i, Number(e.target.value))}
                 aria-label={`Channel ${i + 1} volume`}
               />
