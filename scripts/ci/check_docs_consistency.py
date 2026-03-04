@@ -24,9 +24,13 @@ REMINDER_ROW_PATTERN = re.compile(r'^- (\d{4}-\d{2}-\d{2}) \| [^|]+ \| Owner: [^
 
 
 def _normalize_task_text(text: str) -> str:
+    """Normalizes task text to match the logic in roadmap_autopilot.py."""
     lowered = text.lower()
+    # NOTE: This logic should be kept in sync with normalized_title_fingerprint()
     stripped_links = re.sub(r'\[[^\]]+\]\([^\)]+\)', ' ', lowered)
-    stripped_format = re.sub(r'[`*_#>]', ' ', stripped_links)
+    stripped_ti = re.sub(r'\bti-\d{3}\b', ' ', stripped_links, flags=re.IGNORECASE)
+    stripped_meta = re.sub(r'\([^\)]*\)', ' ', stripped_ti)
+    stripped_format = re.sub(r'[`*_#>]', ' ', stripped_meta)
     collapsed = re.sub(r'[^a-z0-9]+', ' ', stripped_format)
     return ' '.join(collapsed.split())
 
