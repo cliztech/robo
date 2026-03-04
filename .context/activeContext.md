@@ -240,3 +240,10 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Aligned encrypted envelope contract to `enc_v='v1'` + `nonce_b64/ciphertext_b64/tag_b64` with optional `aad` metadata for TI-040 field provenance.
 - Added backward-compatible decode handling for legacy envelope key names and `enc::` payload strings while keeping decrypt fail-closed behavior.
 - Updated backend crypto tests to assert v1 envelope fields and nonce uniqueness using the new schema.
+
+## 2026-03-04 Roadmap Autopilot TI Projection Sanity Update
+- Inspected `scripts/roadmap_autopilot.py` build-plan assembly and retained atomic full-file rewrite while adding pre-render generated-header de-duplication as a defensive guard against repeated preamble emission.
+- Normalized tracked-issue status parsing to strip markdown formatting and map legacy vocabulary (`Open/Closed/Complete/Done/partial`) before deriving dependency labels (`ready/blocked/in-progress`) for TI-linked queue rows.
+- Added post-generation sanity validation that cross-checks emitted TI queue status projection markers against canonical tracked-issue status for matching TI IDs.
+- Tightened TI reconciliation to use only the lead TI reference per task line (avoids false carry-forward caused by dependency prose mentioning other TI IDs).
+- Cleaned `docs/exec-plans/active/tracked-issues/TI-041.md` to a single canonical `Status` block so tracked-issue structure validation remains deterministic.
