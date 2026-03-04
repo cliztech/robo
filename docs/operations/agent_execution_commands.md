@@ -541,3 +541,22 @@ Expected fail signatures:
 - Any required marker is missing.
 - `PRIV_ACTION_EXECUTED` appears in output.
 - Contract validation fails for TI-002/TI-003/TI-039 references.
+
+## 9) Continuous improvement breach execution hook
+
+When any indicator in `docs/operations/continuous_improvement_loop.md` crosses breach threshold for two consecutive periods, run this closure sequence in the same sprint:
+
+```bash
+# 1) Confirm capability targets to update
+rg -n "subagent|persona|checklist|skill" docs/operations/continuous_improvement_loop.md SKILLS.md _bmad
+
+# 2) Apply at least one capability update
+#    - _bmad/*agents* (new/adjusted subagent policy/workflow), and/or
+#    - SKILLS.md (new skill/checklist/tool contract)
+
+# 3) Record monthly scorecard and review evidence
+git diff -- docs/metrics/agent_capability_scorecard.md docs/operations/artifacts.md docs/operations/subagent_execution_playbook.md
+```
+
+Breach items must not close with "monitor only" status unless step 2 is committed.
+
