@@ -254,3 +254,8 @@
 - [x] Implemented TI-040-compatible envelope fields (`enc_v`, `alg`, `kid`, `nonce_b64`, `ciphertext_b64`, `tag_b64`) and `aad` metadata emission for config payload encryption.
 - [x] Kept decode compatibility for legacy envelope representations (`nonce/ciphertext/tag` and `enc::` string payloads).
 - [x] Updated and passed crypto test coverage in `backend/tests/test_config_crypto.py` and `backend/tests/test_security_config_crypto.py`.
+
+## 2026-03-04 Agent Governance Canonicalization
+- [x] Added canonical governance source (`docs/operations/agent_governance_canonical.md`) covering topology, route policy, completion gates, escalation, communication rules, and changelog ownership metadata.
+- [x] Added derived governance views for `AGENTS.md` and `docs/operations/agent_execution_commands.md` and linked both primary docs to canonical references.
+- [x] Added `scripts/validate_agent_governance_consistency.py` and a targeted PR workflow (`.github/workflows/agent-governance-consistency.yml`) to fail on governance drift when governance-related paths change.

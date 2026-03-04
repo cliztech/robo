@@ -7,6 +7,13 @@
 
 These instructions apply to the entire repository unless a deeper `AGENTS.md` overrides them.
 
+## Governance canonical references
+
+To avoid governance drift, use canonical + derived views instead of restating policies:
+
+- Canonical governance source: `docs/operations/agent_governance_canonical.md`
+- AGENTS derived governance view: `docs/operations/derived/agents_governance_view.md`
+
 ## Project Startup Instruction Block (Codex/Gemini/Jules)
 
 > **Mandatory bootstrap for all new sessions in this repo**

@@ -2,6 +2,13 @@
 
 Short, runnable command sequences for execution workflows, plus an operational matrix for all DGN-DJ teams (managers, subagents, tools, skills, personalities, tech stack, and trusted references).
 
+## Governance canonical references
+
+This playbook references canonical governance policy rather than duplicating it:
+
+- Canonical governance source: `docs/operations/agent_governance_canonical.md`
+- Execution derived governance view: `docs/operations/derived/agent_execution_governance_view.md`
+
 ## Canonical BMAD startup policy (Codex/Gemini/Jules)
 
 Use this as the single startup snippet for repository-level agent bootstrap instructions.
