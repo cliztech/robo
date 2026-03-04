@@ -237,6 +237,10 @@
 - [x] Replaced backend operator-facing legacy RoboDJ naming in startup error text and FastAPI title with DGN-DJ branding.
 - [x] Added docs consistency check execution to CI and strengthened `scripts/ci/check_docs_consistency.py` with README title/index validation.
 
+## 2026-03-03 Security State Reconciliation
+- [x] Selected `docs/exec-plans/active/sprint-status.yaml` as authoritative security story state source and reconciled TODO + tracked issue status for TI-039/TI-040/TI-041.
+- [x] Added roadmap autopilot consistency gate to fail generation when sprint-status task state disagrees with linked tracked issue status and TODO tracking tags.
+- [x] Regenerated `docs/exec-plans/active/unfinished-task-build-plan.md` after reconciliation; P1 entries now reference unresolved TI-039/TI-040/TI-041 only.
 ## 2026-03-03 Config crypto contract hardening
 
 - [x] Replaced merge-corrupted `backend/security/config_crypto.py` with a single production implementation using AES-256-GCM envelope helpers.

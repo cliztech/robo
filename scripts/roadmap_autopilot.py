@@ -49,6 +49,8 @@ ACTION_TEXT_PATTERN = re.compile(
 TI_REFERENCE_PATTERN = re.compile(r"\bTI-\d{3}\b", re.IGNORECASE)
 TRACKED_ISSUE_HEADER_PATTERN = re.compile(r"^#\s+TI-\d{3}\b", re.IGNORECASE)
 TRACKED_ISSUE_STATUS_PATTERN = re.compile(r"^-\s+\*\*Status:\*\*", re.IGNORECASE)
+TRACKED_ISSUE_KEY_PATTERN = re.compile(r"Task\s+([A-D]\d+\.\d+)", re.IGNORECASE)
+TRACKING_STATE_PATTERN = re.compile(r"\*\*\[(?P<state>[^\]]+)\]\*\*")
 CANONICAL_TASK_KEY_PATTERN = re.compile(
     r"\b(?:canonical[_ -]?task[_ -]?key|task[_ -]?key)\s*[:=]\s*([a-z0-9_.-]+)",
     re.IGNORECASE,
@@ -246,6 +248,123 @@ def extract_ti_references(text: str) -> set[str]:
 
 def extract_canonical_task_keys(text: str) -> set[str]:
     return {match.group(1).lower() for match in CANONICAL_TASK_KEY_PATTERN.finditer(text)}
+
+
+
+
+def parse_sprint_status_map(sprint_status_path: Path) -> dict[str, str]:
+    """Parse development_status state map from sprint-status.yaml."""
+    if not sprint_status_path.exists():
+        return {}
+
+    in_dev_status = False
+    result: dict[str, str] = {}
+    for raw_line in sprint_status_path.read_text(encoding="utf-8").splitlines():
+        stripped = raw_line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if stripped == "development_status:":
+            in_dev_status = True
+            continue
+        if in_dev_status and not raw_line.startswith("  "):
+            break
+        if in_dev_status:
+            if ":" not in stripped:
+                continue
+            key, value = stripped.split(":", 1)
+            result[key.strip().lower()] = value.strip().lower()
+
+    return result
+
+
+def parse_tracked_issue_metadata(issue_path: Path) -> tuple[str | None, str | None]:
+    """Return canonical task key + tracked issue status from a TI markdown file."""
+    task_key: str | None = None
+    status_value: str | None = None
+
+    for raw_line in issue_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if task_key is None and line.startswith("# "):
+            key_match = TRACKED_ISSUE_KEY_PATTERN.search(line)
+            if key_match:
+                section = key_match.group(1).lower()
+                task_key = section.replace('.', '-')
+
+        if status_value is None and TRACKED_ISSUE_STATUS_PATTERN.match(line):
+            _, status_raw = line.split(":", 1)
+            status_value = status_raw.strip().lower()
+
+        if task_key and status_value:
+            break
+
+    return task_key, status_value
+
+
+def canonical_status_family(status: str) -> str:
+    value = status.strip().lower().replace("-", "_").replace(" ", "_")
+    if value in {"completed", "complete", "closed", "done"}:
+        return "completed"
+    if value in {"in_progress", "active"}:
+        return "in_progress"
+    if value in {"backlog", "open", "ready", "blocked", "todo", "optional"}:
+        return "backlog"
+    return value
+
+
+def validate_security_state_consistency(
+    todo_path: Path,
+    sprint_status_path: Path,
+    tracked_issues_dir: Path = TRACKED_ISSUES_DIR,
+) -> None:
+    """Fail when TODO/tracked issue state diverges from sprint-status authority."""
+    if not todo_path.exists() or not sprint_status_path.exists() or not tracked_issues_dir.exists():
+        return
+
+    canonical_map = parse_sprint_status_map(sprint_status_path)
+    if not canonical_map:
+        return
+
+    violations: list[str] = []
+    for line_number, raw_line in enumerate(todo_path.read_text(encoding="utf-8").splitlines(), start=1):
+        ti_refs = sorted(extract_ti_references(raw_line))
+        if not ti_refs:
+            continue
+
+        tracking_state_match = TRACKING_STATE_PATTERN.search(raw_line)
+        todo_tracking_state = tracking_state_match.group("state").strip().lower() if tracking_state_match else None
+
+        for ti_ref in ti_refs:
+            issue_path = tracked_issues_dir / f"{ti_ref}.md"
+            if not issue_path.exists():
+                continue
+
+            task_key, tracked_status = parse_tracked_issue_metadata(issue_path)
+            if not task_key or not tracked_status:
+                continue
+
+            canonical_state = canonical_map.get(task_key.lower())
+            if canonical_state is None:
+                continue
+
+            canonical_family = canonical_status_family(canonical_state)
+            tracked_family = canonical_status_family(tracked_status)
+            if canonical_family != tracked_family:
+                violations.append(
+                    f"- TODO.md:{line_number} -> {ti_ref} ({task_key}): sprint-status={canonical_state}, tracked-issue={tracked_status}"
+                )
+
+            if todo_tracking_state is not None:
+                todo_family = canonical_status_family(todo_tracking_state)
+                if canonical_family != todo_family:
+                    violations.append(
+                        f"- TODO.md:{line_number} -> {ti_ref} ({task_key}): sprint-status={canonical_state}, TODO-tag={todo_tracking_state}"
+                    )
+
+    if violations:
+        raise RuntimeError(
+            "state consistency gate failed (sprint-status.yaml is authoritative):\n"
+            + "\n".join(sorted(set(violations)))
+        )
 
 
 def validate_tracked_issue_files(tracked_issues_dir: Path = TRACKED_ISSUES_DIR) -> None:
@@ -618,6 +737,10 @@ def run_once(
     build_plan: str = "",
 ) -> int:
     validate_tracked_issue_files()
+    validate_security_state_consistency(
+        todo_path=ROOT / "TODO.md",
+        sprint_status_path=ROOT / "docs" / "exec-plans" / "active" / "sprint-status.yaml",
+    )
 
     tasks: list[QueueItem] = []
     missing_files: list[Path] = []
