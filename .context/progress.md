@@ -236,3 +236,8 @@
 - [x] Refreshed TECH_STACK.md runtime/framework/tooling entries to current versions (including Next.js 15.5.10).
 - [x] Replaced backend operator-facing legacy RoboDJ naming in startup error text and FastAPI title with DGN-DJ branding.
 - [x] Added docs consistency check execution to CI and strengthened `scripts/ci/check_docs_consistency.py` with README title/index validation.
+
+## 2026-03-03 TI-040/TI-041 Dependency Evidence Update
+- [x] Completed TI-040 dependency checkpoint documentation with explicit evidence references for `DEP-TI040-01..03` in `docs/exec-plans/active/tracked-issues/TI-040.md`.
+- [x] Recorded blocker evidence that `DEP-TI040-03` is not currently satisfiable due to missing high-risk key paths in `config/prompt_variables.json` and `config/schedules.json`.
+- [x] Downgraded TI-041 status to Blocked, updated `SMK-AUTHZ-01` and `SMK-PRIV-01` evidence requirements to include TI-040 encrypted-field hash linkage, and mirrored dependency state in sprint/TODO artifacts.
