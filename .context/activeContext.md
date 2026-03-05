@@ -246,3 +246,5 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+- Hardened telemetry typing boundaries for Supabase server cookies, DegenMixer channel telemetry coercion, and DashboardView telemetry DTO; added strict-module TypeScript config + telemetry mismatch fallback tests.
