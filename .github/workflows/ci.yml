@@ -10,6 +10,47 @@ permissions:
   contents: read
 
 jobs:
+  env-contract:
+    name: Env Contract — Parity Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect env/docs/compose/config changes
+        id: changed
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            env_contract_scope:
+              - '.env.example'
+              - 'config/env_contract.json'
+              - '**/docker-compose*.yml'
+              - 'docs/**/*.md'
+
+      - name: Set up Python
+        if: steps.changed.outputs.env_contract_scope == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate env contract parity
+        if: steps.changed.outputs.env_contract_scope == 'true'
+        run: python scripts/ci/validate_env_contract.py
+
+      - name: Upload env contract report
+        if: always() && steps.changed.outputs.env_contract_scope == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: env-contract-report
+          path: .artifacts/ci/env-contract-report.json
+
+      - name: Skip message
+        if: steps.changed.outputs.env_contract_scope != 'true'
+        run: echo "No env/docs/compose/config contract changes detected; skipping parity check."
+
   # ── Backend (Python) ────────────────────────────────────────
   backend:
     name: Backend — Lint + Test
