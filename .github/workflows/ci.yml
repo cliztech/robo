@@ -79,6 +79,11 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Validate runtime env contract (ci context)
+        env:
+          ROBODJ_ENV: development
+        run: python config/check_runtime_env.py --context ci
+
       - name: Validate JSON syntax
         run: |
           python -m json.tool config/prompt_variables.json > /dev/null

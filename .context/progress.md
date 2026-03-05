@@ -260,3 +260,9 @@
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+
+## 2026-03-05 Environment Contract Preflight Update
+- [x] Wired `python config/check_runtime_env.py --context <context>` into bootstrap preflight (`desktop_app`, `docker_stack`), codex doctor (`desktop_app`), and CI workflows (`ci`).
+- [x] Added `make env-check-desktop`, `make env-check-docker`, and `make env-check-ci` convenience targets.
+- [x] Consolidated `docs/DEVELOPMENT_ENV_SETUP.md` into one canonical preflight sequence and explicit context mapping.

@@ -7,6 +7,8 @@ Executing "Phase 6: Playlist Generation" hardening and preparing Phase 7 broadca
 Building the next unfinished execution plans from the roadmap queue, starting with P1 Security items (TI-039/TI-040/TI-041).
 
 ## Recent Decisions
+
+- Completed environment-contract wiring follow-up: bootstrap/codex doctor/CI now invoke `config/check_runtime_env.py` with explicit context mapping (`desktop_app`, `docker_stack`, `ci`); added Makefile env-check targets and consolidated canonical preflight in `docs/DEVELOPMENT_ENV_SETUP.md`.
 - Refreshed `2026-02-25-next-unfinished-phase-build.md` to reflect current unresolved sequence only (TI-040), moved TI-039/TI-041 to completed evidence references, and added packet freshness metadata (as-of date + sprint-status blob reference).
 
 - Reconciled Track A security state authority on `docs/exec-plans/active/sprint-status.yaml`, aligned TI-039/TI-040/TI-041 tracked issue status + TODO state tags to backlog/open, and added roadmap autopilot consistency gating for canonical-vs-tracked issue drift.
@@ -49,6 +51,8 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 ## Recent Decisions
 
+- Completed environment-contract wiring follow-up: bootstrap/codex doctor/CI now invoke `config/check_runtime_env.py` with explicit context mapping (`desktop_app`, `docker_stack`, `ci`); added Makefile env-check targets and consolidated canonical preflight in `docs/DEVELOPMENT_ENV_SETUP.md`.
+
 - Standardized phase naming contracts across planning artifacts: `Delivery Phase N` for delivery context and `Workflow Phase N` for workflow context, plus namespace-required packet/build-plan metadata.
 
 - Completed shared canonical track-analysis contract extraction (`backend/ai/contracts/track_analysis.py`) and aligned service/API/tests with temporary legacy adapter removal criteria for Phase 5 story P5-05.
@@ -76,6 +80,8 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Consolidated AI track-analysis API surface on `/api/v1/ai/track-analysis`, removed duplicate router mounting, and aligned auth/tests to canonical API-key policy.
 
 ## Recent Decisions
+
+- Completed environment-contract wiring follow-up: bootstrap/codex doctor/CI now invoke `config/check_runtime_env.py` with explicit context mapping (`desktop_app`, `docker_stack`, `ci`); added Makefile env-check targets and consolidated canonical preflight in `docs/DEVELOPMENT_ENV_SETUP.md`.
 
 - Standardized phase naming contracts across planning artifacts: `Delivery Phase N` for delivery context and `Workflow Phase N` for workflow context, plus namespace-required packet/build-plan metadata.
 
