@@ -21,7 +21,7 @@ export async function batchAnalyzeTracks(options: BatchAnalysisOptions): Promise
 }> {
   const { stationId, concurrency = 3, onProgress, onError } = options
 
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
 
   // Get unanalyzed tracks
   const { data: tracks, error } = await supabase

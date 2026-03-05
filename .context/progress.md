@@ -266,3 +266,5 @@
 - [x] Removed accidental `src/UNKNOWN.egg-info/` artifact directory from the working tree.
 - [x] Added `scripts/ci/build_python_wheels.sh` to keep Python packaging outputs in `.artifacts/python-packaging` instead of app source paths.
 - [x] Added CI guard script `scripts/ci/check_generated_artifacts.py` and wired it into `.github/workflows/ci.yml` config job.
+
+- Hardened typed boundaries for Supabase server cookies, mixer telemetry channel mapping, and DashboardView API contracts; added malformed cookie/telemetry fallback tests to lock graceful degradation behavior.
