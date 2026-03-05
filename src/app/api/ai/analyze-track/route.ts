@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { analyzeTrack } from '@/lib/ai/analyze-track'
 import { logAIDecision } from '@/lib/ai/log-decision'
+import { consumeSlidingWindowToken, resolveApiLimits, toRateLimitErrorPayload } from '@/lib/api/request-controls'
 
 export async function POST(request: NextRequest) {
   try {
@@ -47,6 +48,23 @@ export async function POST(request: NextRequest) {
           genre: track.ai_genre,
           mood: track.ai_mood,
           energyLevel: track.ai_energy_level,
+        },
+      })
+    }
+
+    const limits = resolveApiLimits()
+    const routeKey = [session.user.id, track.stations.id, '/api/ai/analyze-track'].join(':')
+    const rateLimit = consumeSlidingWindowToken({
+      key: routeKey,
+      maxHits: limits.analyzeTrack.max,
+      windowMs: limits.analyzeTrack.windowMs,
+    })
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(toRateLimitErrorPayload(rateLimit), {
+        status: 429,
+        headers: {
+          'Retry-After': String(rateLimit.retryAfterSeconds),
         },
       })
     }

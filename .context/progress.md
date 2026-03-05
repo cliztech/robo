@@ -260,3 +260,9 @@
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 AI API request controls
+- [x] Added `src/lib/api/request-controls.ts` for sliding-window throttling, standardized 429 payloads, and idempotency fingerprint cache helpers.
+- [x] Enforced route-keyed `{userId, stationId, route}` limits in `src/app/api/ai/analyze-track/route.ts` and `src/app/api/ai/batch-analyze/route.ts` before expensive AI operations.
+- [x] Implemented `Idempotency-Key` replay handling for batch analysis with short-lived fingerprint persistence and mismatch protection.
+- [x] Added integration tests in `tests/integration/ai-rate-limit-idempotency-routes.test.ts` validating repeated call throttling, idempotent replay, and key reuse conflict semantics.
