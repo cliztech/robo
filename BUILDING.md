@@ -60,3 +60,18 @@ docker compose --profile smoke run --rm runtime
   - `qa_apt_cache:/var/cache/apt`
 
 These volumes speed up repeat builds/checks across machines and fresh environments.
+
+## Python packaging artifact directories
+
+Python packaging outputs must be written outside source trees (`src/`, `backend/`).
+
+- Wheel/sdist output: `.artifacts/python/`
+- Build intermediates: `.artifacts/build/`
+- Tool caches: `.artifacts/cache/`
+
+Do not allow packaging metadata (for example `*.egg-info/`, `*.dist-info/`, or `__pycache__/`) under `src/` or `backend/`.
+CI enforces this with:
+
+```bash
+python scripts/ci/check_generated_artifacts.py
+```

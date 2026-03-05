@@ -246,3 +246,9 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 Python artifact hygiene guardrails
+- Added recursive `**/*.egg-info/` ignore rule to prevent nested package metadata from entering version control.
+- Removed stray `src/UNKNOWN.egg-info/` from the workspace and added CI enforcement to block generated metadata under `src/` and `backend/`.
+- Added `scripts/ci/check_generated_artifacts.py` and wired it into CI config validation + release readiness gate checks.
+- Documented approved Python packaging output directories in `BUILDING.md` to keep build outputs outside source trees.

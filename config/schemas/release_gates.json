@@ -28,6 +28,12 @@
       "name": "Documentation consistency check",
       "command": "python scripts/ci/check_docs_consistency.py",
       "artifact": "artifacts/release-readiness/docs-consistency.log"
+    },
+    {
+      "id": "generated_artifacts",
+      "name": "Generated artifact guard",
+      "command": "python scripts/ci/check_generated_artifacts.py",
+      "artifact": "artifacts/release-readiness/generated-artifacts.log"
     }
   ]
 }
