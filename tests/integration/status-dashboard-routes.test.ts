@@ -87,7 +87,7 @@ describe('dashboard status proxy route handlers', () => {
       expect.objectContaining({
         method: 'GET',
         headers: expect.objectContaining({
-          Authorization: 'Bearer token-abc',
+          Authorization: 'Bearer mock-token-abc',
           'X-User-Id': 'user-1',
         }),
       })
@@ -154,13 +154,82 @@ describe('dashboard status proxy route handlers', () => {
       )
     );
 
-    const response = await postAck(new NextRequest('http://localhost/api/v1/status/dashboard/alerts/alert%2F1/ack', { method: 'POST' }), {
-      params: { alertId: 'alert/1' },
-    });
+    const response = await postAck(
+      new NextRequest('http://localhost/api/v1/status/dashboard/alerts/alert%2F1/ack', {
+        method: 'POST',
+      }),
+      {
+        params: Promise.resolve({ alertId: 'alert/1' }),
+      }
+    );
 
     expect(response.status).toBe(200);
     expect(fetchSpy).toHaveBeenCalledWith(
       'http://dashboard-service.internal/api/v1/status/dashboard/alerts/alert%2F1/ack',
+      expect.objectContaining({ method: 'POST' })
+    );
+  });
+
+  it('returns 400 when alertId is empty or whitespace', async () => {
+    getSessionMock.mockResolvedValue({
+      data: {
+        session: {
+          user: { id: 'user-4' },
+          access_token: 'mock-token-jkl',
+        },
+      },
+    });
+
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+
+    const response = await postAck(
+      new NextRequest('http://localhost/api/v1/status/dashboard/alerts/%20/ack', {
+        method: 'POST',
+      }),
+      {
+        params: Promise.resolve({ alertId: '   ' }),
+      }
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body).toEqual({
+      status: 400,
+      detail: 'Invalid alertId',
+      code: 'INVALID_ALERT_ID',
+    });
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('encodes special characters in alertId before proxying acknowledge path', async () => {
+    getSessionMock.mockResolvedValue({
+      data: {
+        session: {
+          user: { id: 'user-5' },
+          access_token: 'mock-token-mno',
+        },
+      },
+    });
+
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response('{}', {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      })
+    );
+
+    const response = await postAck(
+      new NextRequest('http://localhost/api/v1/status/dashboard/alerts/ops%3Fcritical%23A/ack', {
+        method: 'POST',
+      }),
+      {
+        params: Promise.resolve({ alertId: 'ops?critical#A' }),
+      }
+    );
+
+    expect(response.status).toBe(200);
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'http://dashboard-service.internal/api/v1/status/dashboard/alerts/ops%3Fcritical%23A/ack',
       expect.objectContaining({ method: 'POST' })
     );
   });

@@ -247,3 +247,8 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
 - Added repository hygiene guardrails for generated Python packaging artifacts: ignore `*.egg-info`, removed accidental `src/UNKNOWN.egg-info/`, added CI scanner (`scripts/ci/check_generated_artifacts.py`), and added isolated wheel-build script outputting to `.artifacts/python-packaging`.
+
+## 2026-03-05 Status dashboard route contract hardening
+- Standardized status dashboard proxy handlers on shared route typing contracts (`StatusProxyRouteHandler`, `AppRouteParamsContext`) for Next.js app-route consistency.
+- Hardened `alerts/[alertId]/ack` with early 400 validation for empty/whitespace `alertId` and prevented upstream proxy calls when invalid.
+- Expanded integration coverage for invalid `alertId` rejection and special-character path encoding in acknowledge proxy behavior.

@@ -266,3 +266,9 @@
 - [x] Removed accidental `src/UNKNOWN.egg-info/` artifact directory from the working tree.
 - [x] Added `scripts/ci/build_python_wheels.sh` to keep Python packaging outputs in `.artifacts/python-packaging` instead of app source paths.
 - [x] Added CI guard script `scripts/ci/check_generated_artifacts.py` and wired it into `.github/workflows/ci.yml` config job.
+
+## 2026-03-05 Status dashboard route contract hardening
+- [x] Removed unused ack params interface and replaced ad hoc route-context typing with shared canonical app-route params context.
+- [x] Added route-level `alertId` validation (`INVALID_ALERT_ID`, HTTP 400) before downstream proxy execution.
+- [x] Extended integration tests to verify invalid alertId short-circuit behavior and correct encoded proxy path construction.
+- [x] Applied shared status proxy handler typing across adjacent dashboard and alerts status routes.
