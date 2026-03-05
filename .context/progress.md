@@ -260,3 +260,9 @@
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 Supabase env canonicalization
+- [x] Updated `.env.example` with canonical Next.js Supabase keys and explicit deprecated aliases.
+- [x] Added migration guidance in `docs/DEVELOPMENT_ENV_SETUP.md` and `docs/CODEX_ENVIRONMENT_CONTRACT.md`.
+- [x] Implemented server runtime compatibility fallback + deprecation warning in `src/lib/supabase/server.ts`.
+- [x] Added canonical Supabase keys to `config/env_contract.json` for desktop, docker, and CI contexts.
