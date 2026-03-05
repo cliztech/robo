@@ -254,3 +254,9 @@
 - [x] Implemented TI-040-compatible envelope fields (`enc_v`, `alg`, `kid`, `nonce_b64`, `ciphertext_b64`, `tag_b64`) and `aad` metadata emission for config payload encryption.
 - [x] Kept decode compatibility for legacy envelope representations (`nonce/ciphertext/tag` and `enc::` string payloads).
 - [x] Updated and passed crypto test coverage in `backend/tests/test_config_crypto.py` and `backend/tests/test_security_config_crypto.py`.
+
+## 2026-03-04 Skill spec compliance updates
+- [x] Replaced `scope-resolver` AGENTS discovery command with `rg --files -g '**/AGENTS.md'` in `SKILLS.md`.
+- [x] Replaced `qa-issue-emitter` legacy task-stub bullet format with canonical markdown directive format.
+- [x] Added route-level authority notes to relevant skills, explicitly preserving QA read-only/no-edit constraints.
+- [x] Added one concrete issue + task-stub example under `qa-issue-emitter` to seed future compliant output.

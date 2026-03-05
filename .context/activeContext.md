@@ -240,3 +240,8 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Aligned encrypted envelope contract to `enc_v='v1'` + `nonce_b64/ciphertext_b64/tag_b64` with optional `aad` metadata for TI-040 field provenance.
 - Added backward-compatible decode handling for legacy envelope key names and `enc::` payload strings while keeping decrypt fail-closed behavior.
 - Updated backend crypto tests to assert v1 envelope fields and nonce uniqueness using the new schema.
+
+## 2026-03-04 Skills Registry QA-format alignment
+- Updated `SKILLS.md` to use `rg --files -g '**/AGENTS.md'` for scope discovery guidance in `scope-resolver`.
+- Migrated `qa-issue-emitter` task-stub output from legacy bullets to canonical `:::task-stub{title="..."}` directive format with a concrete compliant example block.
+- Added explicit route-authority notes in `scope-resolver`, `intake-router`, and `qa-issue-emitter` that QA mode is read-only/no-edits.
