@@ -260,3 +260,9 @@
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 AI track-analysis logging hardening
+- [x] Removed analyze-track local stub logger and moved all track-analysis decision persistence to shared `log-decision` facade.
+- [x] Normalized persisted decision payload schema with required observability fields (track/station/model/latency/token-cost/confidence/outcome).
+- [x] Implemented non-fatal decision logging path with structured warning telemetry emission on persistence failure.
+- [x] Added unit tests asserting one persisted decision record per successful call and expected payload fields.
