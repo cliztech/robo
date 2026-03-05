@@ -246,3 +246,9 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 Environment hardening implementation
+- Added shared env utilities in `src/lib/env.ts` for required var enforcement, fallback resolution, boolean parsing, and normalized app environment selection.
+- Hardened server-side env usage by migrating Supabase client bootstrap and dashboard status proxy base URL resolution to typed env helpers.
+- Normalized demo-data environment flag evaluation in `src/lib/degenDataAdapters.ts` to avoid brittle string comparisons.
+- Added unit coverage in `tests/unit/env.test.ts` and expanded repo ignore policy for Python package metadata artifacts (`*.egg-info/`).

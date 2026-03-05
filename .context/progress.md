@@ -260,3 +260,9 @@
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 Environment hardening implementation
+- [x] Added `src/lib/env.ts` with production-safe env access primitives (`requireEnv`, `getEnv`, `getBooleanEnv`, `resolveAppEnvironment`).
+- [x] Updated `src/lib/supabase/server.ts` and `src/app/api/v1/status/dashboard/_shared/proxy.ts` to use centralized env resolution.
+- [x] Updated `src/lib/degenDataAdapters.ts` to gate demo data via normalized environment parsing.
+- [x] Added `tests/unit/env.test.ts` for env helper behavior and updated `.gitignore` to ignore `*.egg-info/` artifacts.
