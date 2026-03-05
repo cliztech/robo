@@ -55,6 +55,7 @@ export async function batchAnalyzeTracks(options: BatchAnalysisOptions): Promise
         })
 
         const result = await analyzeTrack({
+          stationId,
           trackId: track.id,
           metadata: {
             title: track.title,
