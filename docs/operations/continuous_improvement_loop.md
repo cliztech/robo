@@ -19,10 +19,10 @@ When any threshold is breached for **2 consecutive measurement periods** (weekly
 
 | Indicator | Warning threshold | Breach threshold | Required intervention |
 | --- | --- | --- | --- |
-| Regression recurrence rate | `>= 8%` | `>= 12%` | Add targeted checklist/tooling guardrail (tests, lint/check, or regression detector). If still breaching next month, create a new specialist subagent for highest-frequency defect class. |
-| Review rejection rate | `>= 15%` | `>= 22%` | Retrain prompt/persona guidance for the responsible team and add stricter pre-submit checklist. If still breaching next month, add a dedicated reviewer subagent for that scope. |
-| Incident MTTR | `> 45 min` | `> 75 min` | Add incident triage checklist/tool automation first; then create on-call incident coordinator subagent if MTTR breach persists. |
-| Handoff failure rate | `>= 10%` | `>= 18%` | Add/refresh handoff contract checklist and packet validator tool. If persistent, retrain planner/handoff persona prompts and split overloaded roles into a new handoff QA subagent. |
+| Regression recurrence rate | `>= 8%` | `>= 12%` | <ul><li>Add targeted checklist/tooling guardrail (tests, lint/check, or regression detector).</li><li>If still breaching next month, create a new specialist subagent for highest-frequency defect class.</li></ul> |
+| Review rejection rate | `>= 15%` | `>= 22%` | <ul><li>Retrain prompt/persona guidance for the responsible team and add stricter pre-submit checklist.</li><li>If still breaching next month, add a dedicated reviewer subagent for that scope.</li></ul> |
+| Incident MTTR | `> 45 min` | `> 75 min` | <ul><li>Add incident triage checklist/tool automation first.</li><li>Then create on-call incident coordinator subagent if MTTR breach persists.</li></ul> |
+| Handoff failure rate | `>= 10%` | `>= 18%` | <ul><li>Add/refresh handoff contract checklist and packet validator tool.</li><li>If persistent, retrain planner/handoff persona prompts and split overloaded roles into a new handoff QA subagent.</li></ul> |
 
 ### Allowed intervention types
 
