@@ -260,3 +260,11 @@
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+
+## 2026-03-05 Webpack workflow CI normalization
+- [x] Removed duplicate `run` keys from `.github/workflows/webpack.yml` Build step.
+- [x] Replaced `npm install` with `npm ci` for deterministic lockfile installs.
+- [x] Aligned Node matrix to supported runtime policy (`20.x`).
+- [x] Added `cache: npm` in `actions/setup-node@v4` for faster repeat CI runs.
+- [x] Validated workflow YAML syntax with `npx --yes yaml-lint .github/workflows/webpack.yml`.
