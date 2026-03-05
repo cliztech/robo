@@ -260,3 +260,9 @@
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 Artifact hygiene + packaging path hardening
+- [x] Added `.gitignore` coverage for Python packaging/build artifacts (`*.egg-info/`, `.eggs/`, `pip-wheel-metadata/`, `*.egg`, `.tmp/`).
+- [x] Added CI generated-artifact preflight guard script and enforced it in CI workflows.
+- [x] Updated packaging build commands to direct outputs into dedicated `dist/` paths outside source trees.
+- [x] Added bootstrap cleanup guidance/automation via `scripts/bootstrap_dev_environment.sh --cleanup-artifacts`.

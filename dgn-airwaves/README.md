@@ -10,5 +10,5 @@
 
 ## Build Targets
 From the repository root:
-- `make build-airwaves` — validate/compile the module source tree.
+- `make build-airwaves` — build sdist/wheel into `dist/dgn-airwaves/` (no source-tree artifacts).
 - `make run-airwaves` — run the module stub entrypoint.

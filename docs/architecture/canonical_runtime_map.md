@@ -10,7 +10,7 @@ This document is the canonical declaration of runtime entrypoints, owned subproj
 | Windows desktop launcher | Windows batch + bundled Python runtime | `./RoboDJ_Launcher.bat` | Windows desktop operators (packaged EXE flow) | Root workspace owner (`/`) |
 | DJ Console | Node.js 20.x + Vite 5.4.8 | `npm --prefix apps/dj-console run dev` | Browser UI in local/dev artifacts | `apps/dj-console/` owner |
 | Radio Agentic stack | Node.js 20.x monorepo (pnpm workspace) | `pnpm --dir radio-agentic install && docker compose -f radio-agentic/docker-compose.yml up --build` | Containerized service topology | `radio-agentic/` owner |
-| DGN Airwaves package | Python 3.11-compatible package (`requires-python >=3.10`) | `python -m pip install -e dgn-airwaves` | Python library/runtime extension | `dgn-airwaves/` owner |
+| DGN Airwaves package | Python 3.11-compatible package (`requires-python >=3.10`) | `python -m build --wheel --outdir dist/dgn-airwaves dgn-airwaves && python -m pip install dist/dgn-airwaves/*.whl` | Python library/runtime extension | `dgn-airwaves/` owner |
 
 ## Owned subprojects
 

@@ -246,3 +246,9 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 Artifact hygiene + packaging path hardening
+- Added repo-wide ignore coverage for Python packaging artifacts (`*.egg-info/`, `.eggs/`, `pip-wheel-metadata/`, `*.egg`) and temp build roots.
+- Added CI preflight guard (`scripts/ci/check_generated_artifacts.py`) and wired it into `ci.yml` + `ci-validate.yml` to fail on generated artifacts under `src/`, `backend/`, `apps/`, and Python app source roots.
+- Updated module build commands to emit package outputs into dedicated `dist/dgn-airwaves` and `dist/dgn-robo-rippa` directories instead of generating source-tree artifacts.
+- Extended `scripts/bootstrap_dev_environment.sh` with `--cleanup-artifacts` for accidental generated-file cleanup and post-clean verification.

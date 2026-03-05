@@ -23,10 +23,18 @@ build-all: build
 build-modules: build-airwaves build-robo-rippa
 
 build-airwaves:
-	$(PYTHON) -m compileall -q dgn-airwaves/src
+	@mkdir -p dist/dgn-airwaves .tmp/build .tmp/egg-info/dgn-airwaves
+	$(PYTHON) -m pip install --quiet build
+	TMPDIR=$(CURDIR)/.tmp/build $(PYTHON) -m build --sdist --wheel --outdir dist/dgn-airwaves dgn-airwaves
+	@find dgn-airwaves/src -maxdepth 1 -type d -name '*.egg-info' -exec rm -rf {} +
+	@rm -rf dgn-airwaves/build
 
 build-robo-rippa:
-	$(PYTHON) -m compileall -q dgn-robo-rippa/src
+	@mkdir -p dist/dgn-robo-rippa .tmp/build .tmp/egg-info/dgn-robo-rippa
+	$(PYTHON) -m pip install --quiet build
+	TMPDIR=$(CURDIR)/.tmp/build $(PYTHON) -m build --sdist --wheel --outdir dist/dgn-robo-rippa dgn-robo-rippa
+	@find dgn-robo-rippa/src -maxdepth 1 -type d -name '*.egg-info' -exec rm -rf {} +
+	@rm -rf dgn-robo-rippa/build
 
 package-config:
 	@test -f "DGN-DJ_Launcher.bat"

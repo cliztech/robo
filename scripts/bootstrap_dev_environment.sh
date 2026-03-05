@@ -2,19 +2,24 @@
 set -euo pipefail
 
 WITH_PREFLIGHT=0
+CLEANUP_ARTIFACTS=0
 
 for arg in "$@"; do
     case "$arg" in
         --with-preflight)
             WITH_PREFLIGHT=1
             ;;
+        --cleanup-artifacts)
+            CLEANUP_ARTIFACTS=1
+            ;;
         -h|--help)
             cat <<'EOF'
-Usage: scripts/bootstrap_dev_environment.sh [--with-preflight]
+Usage: scripts/bootstrap_dev_environment.sh [--with-preflight] [--cleanup-artifacts]
 
 Options:
-  --with-preflight  Run config validation and runtime secret environment checks.
-  -h, --help        Show this help message.
+  --with-preflight    Run config validation and runtime secret environment checks.
+  --cleanup-artifacts Remove generated build artifacts from source/app roots.
+  -h, --help          Show this help message.
 EOF
             exit 0
             ;;
@@ -107,6 +112,18 @@ if [[ "$WITH_PREFLIGHT" -eq 1 ]]; then
         echo "[error] One or more preflight checks failed." >&2
         exit 1
     fi
+fi
+
+if [[ "$CLEANUP_ARTIFACTS" -eq 1 ]]; then
+    printf '\n== Generated artifact cleanup ==\n'
+    echo "[info] Removing accidental generated artifacts from source/app roots."
+    find src backend apps dgn-airwaves/src dgn-robo-rippa/src \
+        \( -name '*.egg-info' -o -name '.eggs' -o -name 'pip-wheel-metadata' -o -name '__pycache__' -o -name '.pytest_cache' -o -name 'build' -o -name 'dist' -o -name '.next' -o -name 'coverage' \) \
+        -prune -exec rm -rf {} + 2>/dev/null || true
+    find src backend apps dgn-airwaves/src dgn-robo-rippa/src -name '*.pyc' -delete 2>/dev/null || true
+    find src backend apps dgn-airwaves/src dgn-robo-rippa/src -name '*.tsbuildinfo' -delete 2>/dev/null || true
+
+    python scripts/ci/check_generated_artifacts.py
 fi
 
 printf '\nEnvironment check complete.\n'

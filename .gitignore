@@ -14,6 +14,10 @@ dump/
 # Python
 __pycache__/
 *.py[cod]
+*.egg
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
 *$py.class
 .env
 .env.local
@@ -48,6 +52,7 @@ desktop.ini
 node_modules/
 dist/
 build/
+.tmp/
 
 # Secrets (local runtime only)
 config/secret.key
