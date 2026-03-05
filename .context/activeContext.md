@@ -246,3 +246,8 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 CI Reliability Update
+
+- Fixed `backend/scheduling/scheduler_ui_api.py` merge-corruption syntax/runtime issues (duplicate except/import blocks) that were causing scheduled `codex-ralph-loop` compile gate failures.
+- Re-aligned scheduler UI approval-context plumbing so state update/publish endpoints consistently pass `ApprovalContext` into `SchedulerUiService` for both header-driven and payload approval chains.
