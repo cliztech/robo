@@ -110,6 +110,12 @@ Use this table to map the intake route (`QA`, `Proposal`, `Change`) to the corre
 3. **Never skip mandatory verification:** whenever edits happen, include Sections `6` and `7` before PR readiness in Section `3`.
 4. **Escalate only after prerequisites are satisfied:** if uncertain between two commands, execute the earlier prerequisite command and re-evaluate with its output.
 
+#### Policy conflict resolution (route/state tie-break)
+
+- If two policies conflict, apply precedence in this order: system/developer/user instructions → nearest `AGENTS.md` scope → route template rules.
+- `QA` route remains read-only; never edit `.context/activeContext.md` or `.context/progress.md` during QA execution.
+- Apply state-file updates only when `Change`/`Proposal` outputs actually modify project state; otherwise, emit a "state update suggestion" in the response.
+
 ### Deterministic phrase routing for agent-team GUI/music-console requests
 
 Use this override table when intake text explicitly asks to create/compose an agent team for GUI/music console work. This removes ambiguity between planning vs implementation phrasing.

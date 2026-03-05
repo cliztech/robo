@@ -6,7 +6,8 @@
 - Scope: list files/surfaces under review.
 - Checks: quality, regression, security, and docs consistency.
 - Output: ranked findings with severity and remediation stubs.
-- Gate: no file edits in QA route.
+- Gate: no file edits in QA route, including `.context/activeContext.md` and `.context/progress.md`.
+- Gate: include a "state update suggestion" in QA output when follow-up state tracking is advisable.
 
 ## Change Route
 
@@ -16,6 +17,7 @@
 - Execute: apply focused edits and keep behavior parity where required.
 - Verify: run build/tests/linters relevant to touched areas.
 - Output: changed files, commands run, residual risks.
+- Gate: update `.context/activeContext.md` and `.context/progress.md` only when this Change output modifies project state.
 
 ## Proposal Route
 

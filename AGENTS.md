@@ -36,7 +36,8 @@ These instructions apply to the entire repository unless a deeper `AGENTS.md` ov
 >    - **Architecture:** How does this fit the system patterns?
 >    - **Edge Cases:** What happens at the boundaries?
 >    - **The Twist:** What is the 10% innovation that makes this inevitable?
->    - **Update State:** When a task is completed, update `activeContext.md` and `progress.md`.
+>    - **Update State:** When a task is completed, update `activeContext.md` and `progress.md` only for `Change`/`Proposal` outputs that modify project state.
+>    - **QA Exception:** For `QA` route outputs, do not edit state files; include a "state update suggestion" section in the response instead.
 >
 > 3. **Adoption Playbook:**
 >    - **Phase 1 (Obedience):** Enumerate files, follow authority.

@@ -254,3 +254,8 @@
 - [x] Implemented TI-040-compatible envelope fields (`enc_v`, `alg`, `kid`, `nonce_b64`, `ciphertext_b64`, `tag_b64`) and `aad` metadata emission for config payload encryption.
 - [x] Kept decode compatibility for legacy envelope representations (`nonce/ciphertext/tag` and `enc::` string payloads).
 - [x] Updated and passed crypto test coverage in `backend/tests/test_config_crypto.py` and `backend/tests/test_security_config_crypto.py`.
+
+## 2026-03-04 Route State-Update Policy Clarification
+- Updated bootstrap/state-management policy to make `.context` updates conditional on `Change`/`Proposal` outputs that modify project state.
+- Added explicit QA-route exception requiring a "state update suggestion" in output instead of editing state files.
+- Synced task-route templates and BMAD tie-break policy notes with the same conditional and precedence behavior.
