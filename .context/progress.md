@@ -254,3 +254,9 @@
 - [x] Implemented TI-040-compatible envelope fields (`enc_v`, `alg`, `kid`, `nonce_b64`, `ciphertext_b64`, `tag_b64`) and `aad` metadata emission for config payload encryption.
 - [x] Kept decode compatibility for legacy envelope representations (`nonce/ciphertext/tag` and `enc::` string payloads).
 - [x] Updated and passed crypto test coverage in `backend/tests/test_config_crypto.py` and `backend/tests/test_security_config_crypto.py`.
+
+## 2026-03-04 BMAD deep research runbook evidence governance update
+- Added a mandatory evidence schema for every research claim (source type, publication date, confidence, relevance score, decision impact).
+- Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
+- Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
+- Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
