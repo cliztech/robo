@@ -56,7 +56,7 @@ Scope: DJ console hardware realism and live-broadcast operational safety
 
 ## 3. Broadcast Chain Interaction Model
 
-## 3.1 Signal path and operator observability
+### 3.1 Signal path and operator observability
 
 Canonical chain:
 
