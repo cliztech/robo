@@ -10,6 +10,6 @@ Historical monthly scorecard for agent-system capability health.
 
 ## Monthly scorecard log
 
-| Month (UTC) | Regression recurrence rate | Review rejection rate | Incident MTTR (minutes) | Handoff failure rate | Threshold breaches | Interventions shipped (`_bmad/*agents*` or `SKILLS.md`) | Owner | Evidence |
+| Month (UTC) | Regression recurrence rate | Review rejection rate | Incident MTTR (minutes) | Handoff failure rate | Threshold breaches | Interventions Shipped | Owner | Evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | _TBD_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ | _TBD_ |
