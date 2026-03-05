@@ -247,3 +247,9 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
 - Added repository hygiene guardrails for generated Python packaging artifacts: ignore `*.egg-info`, removed accidental `src/UNKNOWN.egg-info/`, added CI scanner (`scripts/ci/check_generated_artifacts.py`), and added isolated wheel-build script outputting to `.artifacts/python-packaging`.
+
+## 2026-03-05 Legacy `/analyze-track` sunset enforcement
+- Added runtime-configurable cutoff gate (`ROBODJ_LEGACY_AI_ROUTE_CUTOFF`) for deprecated `POST /api/v1/ai/analyze-track`.
+- Added structured in-process telemetry for deprecated route calls (usage counter + API-key fingerprint + optional tenant ID + phase state).
+- Added migration guidance protocol via `Deprecation`, `Warning`, `Sunset`, and `Link` headers, plus `410 Gone` migration error body after cutoff.
+- Extended API tests to cover pre-cutoff, near-cutoff, and post-cutoff behavior while proving canonical `/track-analysis` remains unaffected.

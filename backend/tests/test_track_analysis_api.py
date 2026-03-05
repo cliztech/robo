@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timedelta, timezone
 from unittest import mock
 
 import pytest
@@ -6,6 +7,7 @@ from fastapi.testclient import TestClient
 
 from backend.ai.contracts.track_analysis import AnalysisStatus
 from backend.app import app
+from backend.ai_api import get_legacy_analyze_track_telemetry
 
 TEST_API_KEY = os.environ.get("TEST_API_KEY", "valid_api_key_for_testing")
 
@@ -79,6 +81,66 @@ def test_legacy_alias_forwards_to_canonical_contract_with_deprecation_headers() 
     assert response.headers["X-Correlation-ID"] == "corr-legacy"
     assert response.headers["Deprecation"] == "true"
     assert "Deprecated endpoint: use /api/v1/ai/track-analysis" in response.headers["Warning"]
+    telemetry = get_legacy_analyze_track_telemetry()
+    assert telemetry["phase"] == "deprecated"
+    assert telemetry["caller"].startswith("sha256:")
+
+
+def test_legacy_alias_adds_migration_guidance_when_nearing_cutoff() -> None:
+    cutoff = (datetime.now(timezone.utc) + timedelta(days=3)).isoformat()
+    client = TestClient(app)
+
+    with mock.patch.dict(os.environ, {"ROBODJ_LEGACY_AI_ROUTE_CUTOFF": cutoff}, clear=False):
+        response = client.post(
+            "/api/v1/ai/analyze-track",
+            json=_canonical_payload(),
+            headers={"X-API-Key": TEST_API_KEY, "X-Tenant-ID": "tenant-42"},
+        )
+
+    assert response.status_code == 200
+    assert response.headers["Deprecation"] == "true"
+    assert response.headers["Sunset"]
+    assert "successor-version" in response.headers["Link"]
+    telemetry = get_legacy_analyze_track_telemetry()
+    assert telemetry["phase"] == "nearing_sunset"
+    assert telemetry["tenant_id"] == "tenant-42"
+
+
+def test_legacy_alias_returns_410_after_cutoff_with_migration_guidance() -> None:
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+    client = TestClient(app)
+
+    with mock.patch.dict(os.environ, {"ROBODJ_LEGACY_AI_ROUTE_CUTOFF": cutoff}, clear=False):
+        response = client.post(
+            "/api/v1/ai/analyze-track",
+            json=_canonical_payload(),
+            headers={"X-API-Key": TEST_API_KEY},
+        )
+
+    assert response.status_code == 410
+    body = response.json()
+    assert body["detail"]["code"] == "legacy_route_sunset"
+    assert body["detail"]["migration_target"] == "/api/v1/ai/track-analysis"
+    assert response.headers["Deprecation"] == "true"
+    assert response.headers["Sunset"]
+    assert "successor-version" in response.headers["Link"]
+
+
+def test_canonical_track_analysis_route_works_after_legacy_cutoff() -> None:
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+    client = TestClient(app)
+
+    with mock.patch.dict(os.environ, {"ROBODJ_LEGACY_AI_ROUTE_CUTOFF": cutoff}, clear=False):
+        response = client.post(
+            "/api/v1/ai/track-analysis",
+            json=_canonical_payload(),
+            headers={"X-API-Key": TEST_API_KEY, "X-Correlation-ID": "corr-canonical-cutoff"},
+        )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "success"
+    assert body["correlation_id"] == "corr-canonical-cutoff"
 
 
 def test_track_analysis_requires_api_key() -> None:
