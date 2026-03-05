@@ -254,3 +254,9 @@
 - [x] Implemented TI-040-compatible envelope fields (`enc_v`, `alg`, `kid`, `nonce_b64`, `ciphertext_b64`, `tag_b64`) and `aad` metadata emission for config payload encryption.
 - [x] Kept decode compatibility for legacy envelope representations (`nonce/ciphertext/tag` and `enc::` string payloads).
 - [x] Updated and passed crypto test coverage in `backend/tests/test_config_crypto.py` and `backend/tests/test_security_config_crypto.py`.
+
+## 2026-03-04 Instruction Governance Consolidation
+- [x] Added `docs/operations/agent_governance_map.md` with domain-to-source mapping for routing, boundaries, skill usage, and quality gates.
+- [x] Replaced duplicated routing policy text in `docs/operations/task_route_templates.md` with concise summary and canonical links.
+- [x] Added instruction-file PR drift checklist in `CONTRIBUTING.md`.
+- [x] Added monthly instruction-doc hygiene task to `docs/operations/execution_index.md` cadence operations table.

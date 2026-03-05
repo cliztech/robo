@@ -240,3 +240,9 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Aligned encrypted envelope contract to `enc_v='v1'` + `nonce_b64/ciphertext_b64/tag_b64` with optional `aad` metadata for TI-040 field provenance.
 - Added backward-compatible decode handling for legacy envelope key names and `enc::` payload strings while keeping decrypt fail-closed behavior.
 - Updated backend crypto tests to assert v1 envelope fields and nonce uniqueness using the new schema.
+
+## 2026-03-04 Instruction governance consolidation
+- Added `docs/operations/agent_governance_map.md` to define single-source authority for routing, boundaries, skills, and quality gates.
+- Converted non-authoritative routing template content into summary+link format in `docs/operations/task_route_templates.md`.
+- Added instruction-file PR drift checklist to `CONTRIBUTING.md` (references current, no policy duplication, route consistency check).
+- Added a monthly instruction-doc hygiene cadence item to `docs/operations/execution_index.md`.

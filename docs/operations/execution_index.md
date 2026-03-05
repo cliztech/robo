@@ -22,6 +22,7 @@ This index lists active tracks, owners, and current status pointers. The status 
 | Weekly backlog hygiene reconciliation (`TODO.md` ↔ tracked issues) | Management Team (Project Coordinator) | Weekly | 2026-03-01 | 2026-02-24 |
 | Bi-weekly blocked-item pruning (`TI-037`) | Planner Agent | Bi-weekly | 2026-03-10 | 2026-02-24 |
 | Monthly roadmap-variant reassessment (`TI-038`) | Management Team (Sprint Planner) | Monthly | 2026-03-31 | 2026-02-24 |
+| Monthly instruction-doc hygiene sweep (`agent_governance_map` drift check) | Management Team (Project Coordinator) | Monthly | 2026-03-31 | 2026-03-04 |
 
 > Defer log: backlog hygiene window due 2026-02-27 was deferred to 2026-03-01 to preserve Phase 5 stabilization throughput.
 
