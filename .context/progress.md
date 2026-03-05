@@ -1,5 +1,10 @@
 # Progress
 
+## 2026-03-04 Security Reconciliation Sync
+- [x] Reconciled TI-039/TI-040/TI-041 status authority: `docs/exec-plans/active/sprint-status.yaml` is canonical and now reflected in `TODO.md` inline state tags/checkboxes.
+- [x] Reopened TI-041 explicitly as dependency-blocked with missing deliverables (`TI040-ART-LOG`, `TI040-ART-REPORT`, `TI040-ART-HASH`) documented in tracked issue notes.
+- [x] Regenerated roadmap queue via `python scripts/roadmap_autopilot.py --limit 25 --build-plan docs/exec-plans/active/unfinished-task-build-plan.md`.
+
 ## Completed (Phases 0-4)
 
 - [x] **Delivery Phase 0: Project Setup** (Environment, Next.js, Git)
