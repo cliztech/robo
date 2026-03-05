@@ -247,3 +247,4 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
 - Added repository hygiene guardrails for generated Python packaging artifacts: ignore `*.egg-info`, removed accidental `src/UNKNOWN.egg-info/`, added CI scanner (`scripts/ci/check_generated_artifacts.py`), and added isolated wheel-build script outputting to `.artifacts/python-packaging`.
+- Hardened status telemetry ingestion with safe field parsers + structured fallback logging, added tolerant service-health enum mapping in status API, and introduced corruption-focused tests (malformed JSON, invalid timestamps/depth, unknown status fallback).

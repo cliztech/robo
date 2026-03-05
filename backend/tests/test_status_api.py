@@ -191,3 +191,33 @@ def test_alerts_and_acknowledge_endpoint_auth(tmp_path: Path):
         assert ack.json()["acknowledged"] is True
 
     _clear_dependency_overrides()
+
+
+def test_dashboard_unknown_service_status_falls_back_to_degraded(tmp_path: Path):
+    now = datetime.now(timezone.utc)
+    thresholds = StatusThresholds(queue_warning=30, queue_critical=50, rotation_stale_after_minutes=30)
+
+    with mock.patch.dict(os.environ, {"ROBODJ_SECRET_KEY": "test-secret-key"}):
+        _set_dependency_overrides(
+            tmp_path,
+            StubTelemetryProvider(
+                queue_depth=5,
+                queue_observed_at=now,
+                rotation_minutes_ago=1,
+                service_status="UNKNOWN",
+                service_reason="runtime probe mismatch",
+            ),
+            thresholds,
+        )
+        response = client.get(
+            "/api/v1/status/dashboard",
+            headers={"X-API-Key": "test-secret-key"},
+        )
+
+    _clear_dependency_overrides()
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["service_health"]["status"] == "degraded"
+    assert "runtime probe mismatch" in payload["service_health"]["reason"]
+    assert "invalid service_health status" in payload["service_health"]["reason"]
