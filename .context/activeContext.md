@@ -246,3 +246,9 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 Lint gate modernization update
+- Replaced Next-integrated lint bypass by removing `eslint.ignoreDuringBuilds` from `next.config.js` and moving CI enforcement to standalone ESLint flat-config execution.
+- Added `eslint.config.mjs` and `scripts/ci/lint_gate.mjs` to run deterministic lint checks, enforce temporary allowlist metadata (`owner` + `expires_on`), and print/fail on lint error-budget overruns.
+- Added `config/lint-allowlist.json` as temporary tracked debt inventory with explicit expiry and ownership.
+- Updated CI frontend job to require `npm run lint:ci` and documented contributor local workflow in `CONTRIBUTING.md`.

@@ -54,8 +54,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint (ESLint)
-        run: npm run lint
+      - name: Lint gate (ESLint flat config + budget)
+        run: npm run lint:ci
 
       - name: Build (Next.js)
         run: npm run build

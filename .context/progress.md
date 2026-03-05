@@ -260,3 +260,11 @@
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 Lint quality gate hardening
+- [x] Removed root Next lint bypass (`eslint.ignoreDuringBuilds`) from `next.config.js`.
+- [x] Added flat-config ESLint stack (`eslint.config.mjs`) and switched scripts to standalone CLI (`npm run lint`) plus CI lint gate (`npm run lint:ci`).
+- [x] Implemented CI lint budget/allowlist enforcement in `scripts/ci/lint_gate.mjs` with explicit owner/expiry validation.
+- [x] Added temporary lint debt allowlist with metadata and budget controls in `config/lint-allowlist.json`.
+- [x] Updated `.github/workflows/ci.yml` to make lint gate a required frontend CI step.
+- [x] Documented local/CI lint workflow and allowlist policy in `CONTRIBUTING.md`.
