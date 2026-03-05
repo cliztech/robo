@@ -260,3 +260,10 @@
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 AI Decision Logging Contract Hardening
+- [x] Removed local `logAIDecision` stub from `src/lib/ai/analyze-track.ts` and switched to shared `src/lib/ai/log-decision.ts` import.
+- [x] Updated track analysis logging payload to conform to `AIDecisionLog` (including `stationId`, `decisionData`, `reasoning`, `status`).
+- [x] Added explicit fail-open policy: decision logging failures now emit structured warning telemetry and do not fail successful analysis responses.
+- [x] Eliminated duplicate persistence path by removing route-level AI decision insert and routing all analysis decision writes through `analyzeTrack`.
+- [x] Added tests proving one persisted decision event per successful analysis plus warning telemetry on logging failure.

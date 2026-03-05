@@ -246,3 +246,8 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 Session Update
+- Hardened `src/lib/ai/analyze-track.ts` to use shared `logAIDecision` contract with `stationId`, structured decision payload, and non-blocking warning telemetry when decision logging fails.
+- Removed duplicate route-level decision insert in `src/app/api/ai/analyze-track/route.ts` and passed `stationId` into analyzer calls to enforce one persisted decision event per successful analysis.
+- Added focused unit coverage in `tests/integration/analyze-track-route-logging.test.ts` validating exactly one decision log write on success and fail-open behavior on logging errors.

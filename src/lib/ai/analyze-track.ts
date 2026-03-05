@@ -2,6 +2,7 @@ import { generateObject } from 'ai'
 import { openai } from '@ai-sdk/openai'
 import { z } from 'zod'
 import { AI_CONFIG } from './config'
+import { logAIDecision } from '@/lib/ai/log-decision'
 
 // Zod schema for track analysis
 const TrackAnalysisSchema = z.object({
@@ -69,6 +70,7 @@ const TrackAnalysisSchema = z.object({
 export type TrackAnalysis = z.infer<typeof TrackAnalysisSchema>
 
 export interface AnalyzeTrackOptions {
+  stationId: string
   trackId: string
   metadata: {
     title?: string
@@ -91,7 +93,7 @@ export async function analyzeTrack(options: AnalyzeTrackOptions): Promise<{
   tokensUsed: number
   costUSD: number
 }> {
-  const { trackId, metadata, audioFeatures } = options
+  const { stationId, trackId, metadata, audioFeatures } = options
 
   try {
     // Build context prompt
@@ -132,17 +134,32 @@ Be precise and confident in your classifications. Use your training on millions 
       throw new Error(`Low confidence score: ${result.object.confidenceScore}`)
     }
 
-    // Log analysis
-    await logAIDecision({
-      trackId,
-      decisionType: 'track_analysis',
-      modelUsed: AI_CONFIG.models.analysis,
-      tokensUsed,
-      costUSD,
-      latencyMs,
-      confidenceScore: result.object.confidenceScore,
-      result: result.object,
-    })
+    try {
+      await logAIDecision({
+        stationId,
+        decisionType: 'track_analysis',
+        decisionData: {
+          trackId,
+          analysis: result.object,
+          metadata,
+        },
+        reasoning: result.object.reasoning,
+        confidenceScore: result.object.confidenceScore,
+        modelUsed: AI_CONFIG.models.analysis,
+        tokensUsed,
+        costUSD,
+        latencyMs,
+        status: 'auto_applied',
+      })
+    } catch (error) {
+      console.warn('[ai.track_analysis.log_failure]', {
+        trackId,
+        stationId,
+        decisionType: 'track_analysis',
+        modelUsed: AI_CONFIG.models.analysis,
+        errorMessage: error instanceof Error ? error.message : 'Unknown logging error',
+      })
+    }
 
     return {
       analysis: result.object,
@@ -202,18 +219,4 @@ function calculateCost(tokens: number, model: string): number {
   const outputTokens = Math.floor(tokens * 0.4)
 
   return inputTokens * modelPricing.input + outputTokens * modelPricing.output
-}
-
-async function logAIDecision(data: {
-  trackId: string
-  decisionType: string
-  modelUsed: string
-  tokensUsed: number
-  costUSD: number
-  latencyMs: number
-  confidenceScore: number
-  result: any
-}): Promise<void> {
-  // Log to database for transparency
-  // Implementation in Step 3
 }
