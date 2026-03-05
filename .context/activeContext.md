@@ -247,3 +247,6 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
 - Added repository hygiene guardrails for generated Python packaging artifacts: ignore `*.egg-info`, removed accidental `src/UNKNOWN.egg-info/`, added CI scanner (`scripts/ci/check_generated_artifacts.py`), and added isolated wheel-build script outputting to `.artifacts/python-packaging`.
+
+- Resolved merge-corrupted `DashboardView` by unifying typed API imports/props, collapsing to one polling effect + abort path, and removing undefined dashboard identifiers; added deterministic polling override for testability.
+- Replaced `tests/ui/dashboard-view.test.tsx` with focused UI coverage for initial load, failed load, polling refresh, acknowledge rollback on error, and duplicate request prevention.
