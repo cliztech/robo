@@ -246,3 +246,10 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 Typed Telemetry Contract Hardening
+- Replaced `cookies() as any` with typed async cookie-store handling in `src/lib/supabase/server.ts` and updated call sites to await server client creation.
+- Defined concrete audio telemetry channel IDs/interfaces in `src/lib/audio/telemetry.ts` and removed `any` channel mapping in `src/components/audio/DegenMixer.tsx`.
+- Rebuilt `src/components/console/DashboardView.tsx` with strict fallback telemetry DTO parsing, typed API injection, and queue severity contract helpers.
+- Added module-scoped TypeScript enforcement via `tsconfig.telemetry-dashboard.json` and `npm run typecheck:telemetry-dashboard`.
+- Added targeted dashboard telemetry tests for malformed fallback input and fallback rendering when API status loading fails.

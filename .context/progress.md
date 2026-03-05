@@ -260,3 +260,10 @@
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 Telemetry + Dashboard type enforcement
+- [x] Eliminated `cookies() as any` in server Supabase client by using typed async cookies store and updating dependent call sites.
+- [x] Tightened mixer telemetry channel typing with explicit `TelemetryChannelId` + `MixerChannelTelemetry` contracts.
+- [x] Replaced duplicated/corrupted dashboard telemetry wiring with strict `DashboardTelemetryFallback` parsing and typed API interface.
+- [x] Added dedicated typecheck gate (`npm run typecheck:telemetry-dashboard`) for affected modules.
+- [x] Added targeted unit coverage for malformed telemetry fallback DTOs and fallback rendering behavior.

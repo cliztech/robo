@@ -5,7 +5,7 @@ import { logAIDecision } from '@/lib/ai/log-decision'
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
 
     // Check authentication
     const {

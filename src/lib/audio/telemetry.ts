@@ -1,6 +1,8 @@
 import { AudioAnalyzer } from './analyzer';
 import type { AudioMetrics, Track } from './engine';
 
+export type TelemetryChannelId = 'deck-a' | 'deck-b' | 'mic' | 'aux' | 'master';
+
 export interface StudioTelemetrySnapshot {
   waveformPosition: number;
   durationSeconds: number;
@@ -23,7 +25,7 @@ export interface StereoLevelTelemetry {
 }
 
 export interface MixerChannelTelemetry {
-  id: string;
+  id: TelemetryChannelId;
   level: number;
   peak: number;
 }
@@ -46,7 +48,7 @@ export interface DJTelemetry {
   signalFlags: SignalFlagsTelemetry;
 }
 
-const DEFAULT_WAVEFORM_SAMPLE_SIZE = 250;
+export const DEFAULT_WAVEFORM_SAMPLE_SIZE = 250;
 const DETERMINISTIC_WAVEFORM_SEED = 1337;
 const LIMITER_THRESHOLD = 0.9;
 
