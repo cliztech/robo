@@ -7,6 +7,10 @@ Executing "Phase 6: Playlist Generation" hardening and preparing Phase 7 broadca
 Building the next unfinished execution plans from the roadmap queue, starting with P1 Security items (TI-039/TI-040/TI-041).
 
 ## Recent Decisions
+
+- Added CI env-contract parity guard (`scripts/ci/validate_env_contract.py`) to compare required contract vars, `.env.example`, and compose `${VAR}` references with JSON artifact output for PR diagnostics.
+- Wired PR-scoped CI execution and artifact upload in `.github/workflows/ci.yml` for env/docs/compose/contract changes and documented remediation flow in `docs/DEVELOPMENT_ENV_SETUP.md`.
+
 - Refreshed `2026-02-25-next-unfinished-phase-build.md` to reflect current unresolved sequence only (TI-040), moved TI-039/TI-041 to completed evidence references, and added packet freshness metadata (as-of date + sprint-status blob reference).
 
 - Reconciled Track A security state authority on `docs/exec-plans/active/sprint-status.yaml`, aligned TI-039/TI-040/TI-041 tracked issue status + TODO state tags to backlog/open, and added roadmap autopilot consistency gating for canonical-vs-tracked issue drift.
