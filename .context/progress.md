@@ -254,3 +254,9 @@
 - [x] Implemented TI-040-compatible envelope fields (`enc_v`, `alg`, `kid`, `nonce_b64`, `ciphertext_b64`, `tag_b64`) and `aad` metadata emission for config payload encryption.
 - [x] Kept decode compatibility for legacy envelope representations (`nonce/ciphertext/tag` and `enc::` string payloads).
 - [x] Updated and passed crypto test coverage in `backend/tests/test_config_crypto.py` and `backend/tests/test_security_config_crypto.py`.
+
+## 2026-03-04 Workflow quality gate rubric alignment
+- [x] Updated `AGENTS.md` Workflow Quality Gates with measurable required fields and hard pass criteria while preserving strict 100% thresholds.
+- [x] Added canonical rubric at `docs/operations/quality_gate_rubric.md` for scoring definitions and evidence contracts.
+- [x] Linked `AGENTS.md`, `docs/operations/subagent_execution_playbook.md`, and `docs/operations/execution_index.md` to the rubric to avoid duplicated semantics.
+- [x] Added compact minimum evidence schema tables in both `AGENTS.md` (quick-reference) and the canonical rubric (normative contract).

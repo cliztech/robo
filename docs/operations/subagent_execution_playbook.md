@@ -2,6 +2,8 @@
 
 This runbook is the **normative execution source** for converting roadmap concepts into delivery actions. Use it with `AGENTS.md` (pipeline/route constraints) and `SKILLS.md` (skill activation).
 
+Canonical quality-gate scoring, required checklist keys, and evidence pass/fail criteria are defined in [`docs/operations/quality_gate_rubric.md`](./quality_gate_rubric.md).
+
 ## 1) Spawn Decision: Subagents vs Main Agent
 
 Use the decision table below to decide whether work stays with the main agent or is delegated.
@@ -103,8 +105,9 @@ task_packet:
 1. Scope is explicit and non-overlapping with sibling packets.
 2. Dependencies are complete and reference packet IDs.
 3. Acceptance criteria are testable.
-4. Evidence format defines exact commands/artifacts.
+4. Evidence format defines exact commands/artifacts and satisfies the rubric minimum evidence schema fields.
 5. If a packet references a phase, it must include both `phase_namespace` and `phase_id` (plain `Phase N` is invalid).
+6. Dispatch is blocked unless all required rubric checklist keys evaluate to `100%` completion.
 
 ## 3.1) High-risk stage-gate enforcement hook (TI-039)
 
