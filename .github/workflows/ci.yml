@@ -10,10 +10,156 @@ permissions:
   contents: read
 
 jobs:
+  preflight:
+    name: Preflight — CI Gate Contract
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Derive branch gate policy
+        id: policy
+        run: |
+          BRANCH_CLASS="feature"
+          ENFORCE=false
+          if [[ "${GITHUB_REF}" == refs/heads/main ]] || [[ "${GITHUB_REF}" == refs/heads/release/* ]] || [[ "${GITHUB_BASE_REF}" == main ]] || [[ "${GITHUB_BASE_REF}" == release/* ]]; then
+            BRANCH_CLASS="main_or_release"
+            ENFORCE=true
+          fi
+
+          echo "branch_class=${BRANCH_CLASS}" >> "$GITHUB_OUTPUT"
+          echo "enforce=${ENFORCE}" >> "$GITHUB_OUTPUT"
+          echo "CI gate policy: ${BRANCH_CLASS} (enforce=${ENFORCE})"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install Node.js dependencies
+        run: npm ci
+
+      - name: Run mandatory CI gate checks (fail-fast)
+        id: gates
+        run: |
+          mkdir -p ci-reports
+
+          python - <<'PY'
+          import json
+          import os
+          import subprocess
+          import time
+          from pathlib import Path
+
+          enforce = os.environ.get("ENFORCE") == "true"
+          branch_class = os.environ.get("BRANCH_CLASS", "feature")
+
+          checks = [
+              {
+                  "id": "runtime_versions",
+                  "command": ["python", "scripts/validate_runtime_versions.py"],
+                  "severity": "error" if enforce else "warning",
+              },
+              {
+                  "id": "product_naming",
+                  "command": ["python", "scripts/check_product_naming.py"],
+                  "severity": "error" if enforce else "warning",
+              },
+              {
+                  "id": "design_tokens",
+                  "command": ["npm", "run", "check:tokens"],
+                  "severity": "error" if enforce else "warning",
+              },
+              {
+                  "id": "runtime_secrets_env_only",
+                  "command": ["python", "config/check_runtime_secrets.py", "--require-env-only"],
+                  "severity": "error" if enforce else "warning",
+              },
+          ]
+
+          results = []
+          should_fail = False
+
+          for check in checks:
+              started = time.time()
+              proc = subprocess.run(check["command"], capture_output=True, text=True)
+              elapsed = int((time.time() - started) * 1000)
+
+              status = "passed" if proc.returncode == 0 else "failed"
+              if status == "failed" and check["severity"] == "error":
+                  should_fail = True
+
+              results.append(
+                  {
+                      "id": check["id"],
+                      "command": " ".join(check["command"]),
+                      "severity": check["severity"],
+                      "status": status,
+                      "exit_code": proc.returncode,
+                      "duration_ms": elapsed,
+                      "stdout": proc.stdout[-4000:],
+                      "stderr": proc.stderr[-4000:],
+                  }
+              )
+
+          summary = {
+              "policy": {
+                  "branch_class": branch_class,
+                  "enforce": enforce,
+                  "hard_fail_on": ["main", "release/**"],
+                  "warn_only_on": ["feature/**", "non-release refs"],
+              },
+              "generated_at_unix": int(time.time()),
+              "results": results,
+          }
+
+          out = Path("ci-reports/ci-gates-summary.json")
+          out.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+
+          md_lines = [
+              "## CI gate contract summary",
+              f"Policy class: `{branch_class}` (enforce hard-fail: `{enforce}`)",
+              "",
+              "| Check | Severity | Status | Command |",
+              "|---|---|---|---|",
+          ]
+          for item in results:
+              icon = "✅" if item["status"] == "passed" else ("❌" if item["severity"] == "error" else "⚠️")
+              md_lines.append(
+                  f"| {item['id']} | {item['severity']} | {icon} {item['status']} | `{item['command']}` |"
+              )
+
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as fh:
+              fh.write("\n".join(md_lines) + "\n")
+
+          if should_fail:
+              raise SystemExit("Blocking CI gate checks failed under main/release policy.")
+          PY
+        env:
+          ENFORCE: ${{ steps.policy.outputs.enforce }}
+          BRANCH_CLASS: ${{ steps.policy.outputs.branch_class }}
+
+      - name: Upload CI gate summary artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-gates-summary-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ci-reports/ci-gates-summary.json
+          if-no-files-found: error
+          retention-days: 14
+
   # ── Backend (Python) ────────────────────────────────────────
   backend:
     name: Backend — Lint + Test
     runs-on: ubuntu-latest
+    needs: preflight
 
     steps:
       - name: Checkout
@@ -40,6 +186,7 @@ jobs:
   frontend:
     name: Frontend — Lint + Build + Test
     runs-on: ubuntu-latest
+    needs: preflight
 
     steps:
       - name: Checkout
@@ -69,6 +216,7 @@ jobs:
   config:
     name: Config — JSON + Schema Validation
     runs-on: ubuntu-latest
+    needs: preflight
 
     steps:
       - name: Checkout
@@ -113,6 +261,7 @@ jobs:
   security:
     name: Security — Dependency Audit + Secret Scan
     runs-on: ubuntu-latest
+    needs: preflight
 
     steps:
       - name: Checkout

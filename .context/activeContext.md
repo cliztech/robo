@@ -247,3 +247,8 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
 - Added repository hygiene guardrails for generated Python packaging artifacts: ignore `*.egg-info`, removed accidental `src/UNKNOWN.egg-info/`, added CI scanner (`scripts/ci/check_generated_artifacts.py`), and added isolated wheel-build script outputting to `.artifacts/python-packaging`.
+## 2026-03-05 CI gate contract enforcement update
+- Added a new fail-fast `preflight` job in `.github/workflows/ci.yml` to run runtime-version, product-naming, design-token, and env-only secret integrity checks before build/test jobs.
+- Codified branch-aware severity policy: hard-fail on `main`/`release/**`, warning-only on non-release refs.
+- Added machine-readable CI gate summary artifact upload (`ci-reports/ci-gates-summary.json`) for audit evidence.
+- Documented mandatory CI gate contract + local preflight equivalent in `CONTRIBUTING.md`.
