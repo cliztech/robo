@@ -20,7 +20,25 @@ describe('dashboard status proxy route handlers', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     getSessionMock.mockReset();
+    vi.stubEnv('ROBODJ_RUNTIME_CONTEXT', 'ci');
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://supabase.example.co');
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'supabase-anon-key');
     vi.stubEnv('DASHBOARD_STATUS_BACKEND_URL', 'http://dashboard-service.internal');
+  });
+
+  it('fails fast with structured diagnostics when runtime context env is missing', async () => {
+    vi.unstubAllEnvs();
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://supabase.example.co');
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'supabase-anon-key');
+    vi.stubEnv('DASHBOARD_STATUS_BACKEND_URL', 'http://dashboard-service.internal');
+    getSessionMock.mockResolvedValue({ data: { session: null } });
+
+    const response = await getDashboard(new NextRequest('http://localhost/api/v1/status/dashboard'));
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body.code).toBe('RUNTIME_ENV_INVALID');
+    expect(body.diagnostics.missing_keys).toEqual(['ROBODJ_RUNTIME_CONTEXT']);
   });
 
   it('returns 401 with normalized envelope when auth session is missing', async () => {
@@ -87,7 +105,7 @@ describe('dashboard status proxy route handlers', () => {
       expect.objectContaining({
         method: 'GET',
         headers: expect.objectContaining({
-          Authorization: 'Bearer token-abc',
+          Authorization: 'Bearer mock-token-abc',
           'X-User-Id': 'user-1',
         }),
       })

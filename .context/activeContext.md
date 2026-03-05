@@ -246,3 +246,9 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 Runtime context env-contract enforcement
+- Added runtime context contract enforcement across backend startup and Next.js dashboard server routes via explicit `ROBODJ_RUNTIME_CONTEXT` selection (`desktop_app`, `docker_stack`, `ci`).
+- Added structured non-secret diagnostics and log summaries for invalid/missing env contracts (missing key names only).
+- Extended CI pipeline jobs with env-only runtime secret contract checks using `python config/check_runtime_secrets.py --require-env-only`.
+- Added backend and route-level/env-contract tests to lock pass/fail behavior for runtime context validation.
