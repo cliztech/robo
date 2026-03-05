@@ -1,5 +1,10 @@
 # Progress
 
+## 2026-03-05 API Request Validation Hardening
+- [x] Added shared API error helper (`src/lib/api/error.ts`) returning deterministic `{ error_code, message, details }` envelopes.
+- [x] Added `application/json` content-type enforcement and bounded request-body size checks for AI analyze-track and batch-analyze routes.
+- [x] Added Zod request schemas + `safeParse` handling for `trackId`/`stationId` inputs with structured 400 validation detail responses.
+
 ## Completed (Phases 0-4)
 
 - [x] **Delivery Phase 0: Project Setup** (Environment, Next.js, Git)
