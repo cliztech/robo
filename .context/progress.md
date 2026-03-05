@@ -266,3 +266,8 @@
 - [x] Removed accidental `src/UNKNOWN.egg-info/` artifact directory from the working tree.
 - [x] Added `scripts/ci/build_python_wheels.sh` to keep Python packaging outputs in `.artifacts/python-packaging` instead of app source paths.
 - [x] Added CI guard script `scripts/ci/check_generated_artifacts.py` and wired it into `.github/workflows/ci.yml` config job.
+
+## 2026-03-05 AI API abort-timeout hardening
+- [x] Replaced `Promise.race` timeout wrapping in `src/lib/aiApi.ts` with `AbortController` + fetch `signal` wiring.
+- [x] Added typed deterministic client error mapping (`AI_API_TIMEOUT`, `AI_API_ABORTED`, `AI_API_HTTP_ERROR`, `AI_API_NETWORK_ERROR`) with correlation-id retention and abort reason diagnostics.
+- [x] Added/updated `tests/unit/aiApi.test.ts` coverage for timeout cancellation semantics and no-unhandled-rejection behavior under late provider failures.
