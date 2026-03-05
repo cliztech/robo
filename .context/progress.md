@@ -260,3 +260,8 @@
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 CI runtime contract gate update
+- [x] Added dedicated `runtime-contract` job in `.github/workflows/ci.yml` to run `python config/check_runtime_env.py --context ci` with deterministic CI-safe non-secret env values.
+- [x] Added protected-ref gated runtime secret validation step `python config/check_runtime_secrets.py --require-env-only` in the security job.
+- [x] Documented CI runtime contract validation commands in `docs/DEVELOPMENT_ENV_SETUP.md`.

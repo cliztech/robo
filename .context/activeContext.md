@@ -246,3 +246,8 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 CI runtime contract gate update
+- Added dedicated CI runtime-contract validation in `.github/workflows/ci.yml` with deterministic non-secret CI env values for `python config/check_runtime_env.py --context ci`.
+- Added protected-ref runtime secret gate in CI using `python config/check_runtime_secrets.py --require-env-only` with explicit fail-fast shell settings and secret-backed env wiring.
+- Documented CI runtime contract gate commands in `docs/DEVELOPMENT_ENV_SETUP.md` for operator/developer parity.
