@@ -6,7 +6,7 @@ import { DegenVUMeter } from './DegenVUMeter';
 import { DegenKnob } from './DegenKnob';
 import { DEFAULT_MIXER_CHANNELS, type MixerChannel } from '@/lib/degenDataAdapters';
 import { useStudioStore } from '@/stores/studioState';
-import type { DJTelemetry } from '@/lib/audio/telemetry';
+import type { DJTelemetry, MixerChannelTelemetry } from '@/lib/audio/telemetry';
 
 interface DegenMixerProps {
   channels?: MixerChannel[];
@@ -24,14 +24,39 @@ interface ChannelStripProps {
   onEQChange: (band: 'hi' | 'mid' | 'low', value: number) => void;
 }
 
+function isMixerChannelTelemetry(value: unknown): value is MixerChannelTelemetry {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.id === 'string' &&
+    typeof candidate.level === 'number' &&
+    Number.isFinite(candidate.level) &&
+    typeof candidate.peak === 'number' &&
+    Number.isFinite(candidate.peak)
+  );
+}
+
+export function createTelemetryChannelMap(channels: unknown): Map<string, MixerChannelTelemetry> {
+  if (!Array.isArray(channels)) {
+    return new Map<string, MixerChannelTelemetry>();
+  }
+
+  const entries = channels
+    .filter(isMixerChannelTelemetry)
+    .map((channel) => [channel.id, channel] as const);
+
+  return new Map<string, MixerChannelTelemetry>(entries);
+}
+
 function ChannelStrip({ channel, gain, eq, telemetryLevel, telemetryPeak, onGainChange, onEQChange }: ChannelStripProps) {
   return (
     <div className="dj-channel-strip flex flex-col items-center gap-2 w-16 group relative" data-channel-id={channel.id} data-channel-type={channel.type}>
       <div className="absolute inset-0 skin-panel-muted rounded-md -z-10 opacity-0 group-hover:opacity-100 transition-opacity" />
       <div className="flex flex-col items-center gap-1.5 pt-2 pb-1 w-full border-b border-[hsla(var(--color-text),0.08)]">
-        <div className="dj-channel-label text-[9px] font-black uppercase tracking-wider mb-1 px-1.5 py-0.5 rounded-sm">
-          {channel.label}
-        </div>
+        <div className="dj-channel-label text-[9px] font-black uppercase tracking-wider mb-1 px-1.5 py-0.5 rounded-sm">{channel.label}</div>
         <DegenKnob value={eq.hi} onChange={(v) => onEQChange('hi', v)} label="HI" size={28} color="hsl(var(--channel-tone-hsl))" />
         <DegenKnob value={eq.mid} onChange={(v) => onEQChange('mid', v)} label="MID" size={28} color="hsl(var(--channel-tone-hsl))" />
         <DegenKnob value={eq.low} onChange={(v) => onEQChange('low', v)} label="LOW" size={28} color="hsl(var(--channel-tone-hsl))" />
@@ -69,11 +94,10 @@ export function DegenMixer({ channels = DEFAULT_MIXER_CHANNELS, telemetry, class
   const setCrossfader = useStudioStore((state) => state.setCrossfader);
 
   const activeTelemetry = telemetry ?? storeTelemetry;
-  const telemetryMap = useMemo(() => {
-    // Correctly map telemetry data
-    if (!activeTelemetry?.mixer?.channels) return new Map();
-    return new Map(activeTelemetry.mixer.channels.map((ch: any) => [ch.id, ch]));
-  }, [activeTelemetry]);
+  const telemetryMap = useMemo(
+    () => createTelemetryChannelMap(activeTelemetry?.mixer.channels),
+    [activeTelemetry]
+  );
 
   return (
     <div className={cn('glass-panel overflow-hidden', className)}>
@@ -86,6 +110,7 @@ export function DegenMixer({ channels = DEFAULT_MIXER_CHANNELS, telemetry, class
         {channels.map((channel) => {
           const state = mixer.channels[channel.id] ?? { gain: 70, eq: { hi: 50, mid: 50, low: 50 } };
           const channelTelemetry = telemetryMap.get(channel.id);
+
           return (
             <ChannelStrip
               key={channel.id}
