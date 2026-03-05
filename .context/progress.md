@@ -260,3 +260,4 @@
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+- [x] Hardened dashboard status proxy env contract: development-only localhost fallback, required non-dev backend URL declaration, startup URL validation, deployment docs update, and CI lint coverage for per-environment declarations.

@@ -242,6 +242,79 @@
           "description": "Secondary runtime secret key."
         }
       ]
+    },
+    "nextjs_development": {
+      "description": "Next.js dashboard proxy local development runtime.",
+      "variables": [
+        {
+          "name": "NODE_ENV",
+          "required": true,
+          "secret": false,
+          "type": "enum",
+          "allowed_values": [
+            "development"
+          ],
+          "allow_placeholder_values": false,
+          "description": "Next.js environment mode for local development."
+        },
+        {
+          "name": "DASHBOARD_STATUS_BACKEND_URL",
+          "required": false,
+          "secret": false,
+          "type": "string",
+          "allow_placeholder_values": false,
+          "description": "Optional dashboard status backend URL override in development; defaults to localhost when unset."
+        }
+      ]
+    },
+    "nextjs_staging": {
+      "description": "Next.js dashboard proxy staging runtime.",
+      "variables": [
+        {
+          "name": "NODE_ENV",
+          "required": true,
+          "secret": false,
+          "type": "enum",
+          "allowed_values": [
+            "staging",
+            "production"
+          ],
+          "allow_placeholder_values": false,
+          "description": "Next.js mode for non-local deployment environments."
+        },
+        {
+          "name": "DASHBOARD_STATUS_BACKEND_URL",
+          "required": true,
+          "secret": false,
+          "type": "string",
+          "allow_placeholder_values": false,
+          "description": "Required dashboard status backend URL for staging deployments."
+        }
+      ]
+    },
+    "nextjs_production": {
+      "description": "Next.js dashboard proxy production runtime.",
+      "variables": [
+        {
+          "name": "NODE_ENV",
+          "required": true,
+          "secret": false,
+          "type": "enum",
+          "allowed_values": [
+            "production"
+          ],
+          "allow_placeholder_values": false,
+          "description": "Next.js production mode."
+        },
+        {
+          "name": "DASHBOARD_STATUS_BACKEND_URL",
+          "required": true,
+          "secret": false,
+          "type": "string",
+          "allow_placeholder_values": false,
+          "description": "Required dashboard status backend URL for production deployments."
+        }
+      ]
     }
   },
   "placeholder_tokens": [
