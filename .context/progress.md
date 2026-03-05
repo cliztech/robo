@@ -260,3 +260,8 @@
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 Progress Update
+
+- [x] Eliminated scheduled GitHub Actions failure loop by repairing `backend/scheduling/scheduler_ui_api.py` syntax corruption (compile gate now passes under the workflow-equivalent `python -m compileall backend dgn-airwaves/src dgn-robo-rippa/src`).
+- [x] Restored scheduler UI API approval handling consistency by converting payload/header approvals into `ApprovalContext` before calling service layer update/publish paths.
