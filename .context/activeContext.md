@@ -247,3 +247,9 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
 - Added repository hygiene guardrails for generated Python packaging artifacts: ignore `*.egg-info`, removed accidental `src/UNKNOWN.egg-info/`, added CI scanner (`scripts/ci/check_generated_artifacts.py`), and added isolated wheel-build script outputting to `.artifacts/python-packaging`.
+
+## 2026-03-05 Track analysis cache hardening
+- Added TTL- and max-entry-bounded `InMemoryAnalysisCacheStore` with configurable LRU/FIFO eviction and stale-entry cleanup on both `get` and `set` paths.
+- Expanded track-analysis fingerprint versioning inputs to include `schema_version` alongside model/prompt versions to force safe cache invalidation on contract changes.
+- Added structured cache telemetry (`size`, `hits`, `misses`, `evictions`, `expirations`) into track-analysis cache hit/miss/write log events.
+- Added backend tests for TTL expiry, max-size LRU eviction behavior, and schema/model-version fingerprint invalidation.
