@@ -260,3 +260,10 @@
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 CI launcher + Windows smoke enforcement
+- [x] Added a matrix smoke job in `.github/workflows/ci.yml` for `ubuntu-latest` and `windows-latest` to enforce critical runtime contract checks.
+- [x] Added Windows launcher smoke validation for `DGN-DJ_Launcher.bat` and `RoboDJ_Launcher.bat` contract expectations (script presence, executable mapping, relative path resolution).
+- [x] Added Windows environment sanity gates (Node major version, Python version, required CI env vars) aligned to runtime expectations.
+- [x] Kept full lint/build/test suite jobs on Linux while introducing launcher-change-gated Windows smoke job for merge safety.
+- [x] Added launcher diagnostics artifact publishing to support CI regression triage.

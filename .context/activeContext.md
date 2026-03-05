@@ -246,3 +246,8 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 CI Cross-OS Launcher Smoke Gate Update
+- Added cross-OS runtime smoke matrix in `.github/workflows/ci.yml` across `ubuntu-latest` and `windows-latest` to enforce Node 20 + Python 3.11 runtime contract sanity checks.
+- Added launcher-focused Windows smoke gate with path-aware triggering for launcher-related PRs, validating launcher script existence, executable references, and `%~dp0` relative path resolution behavior.
+- Added always-on launcher diagnostics artifact upload (`launcher-diagnostics-*`) to simplify regression triage for launcher failures.
