@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     }
 
     const idempotencyKey = request.headers.get('Idempotency-Key')?.trim()
-    const requestFingerprint = fingerprintPayload({ stationId })
+    const requestFingerprint = fingerprintPayload(body)
     if (idempotencyKey) {
       const cached = getIdempotencyReplay({
         scopeKey: idempotencyScopeKey,
