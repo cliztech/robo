@@ -6,7 +6,7 @@ import { DegenVUMeter } from './DegenVUMeter';
 import { DegenKnob } from './DegenKnob';
 import { DEFAULT_MIXER_CHANNELS, type MixerChannel } from '@/lib/degenDataAdapters';
 import { useStudioStore } from '@/stores/studioState';
-import type { DJTelemetry, MixerChannelTelemetry, TelemetryChannelId } from '@/lib/audio/telemetry';
+import { coerceMixerChannelTelemetry, type DJTelemetry, type MixerChannelTelemetry } from '@/lib/audio/telemetry';
 
 interface DegenMixerProps {
   channels?: MixerChannel[];
@@ -75,9 +75,8 @@ export function DegenMixer({ channels = DEFAULT_MIXER_CHANNELS, telemetry, class
 
   const activeTelemetry = telemetry ?? storeTelemetry;
   const telemetryMap = useMemo(() => {
-    // Correctly map telemetry data
-    if (!activeTelemetry?.mixer?.channels) return new Map<TelemetryChannelId, MixerChannelTelemetry>();
-    return new Map<TelemetryChannelId, MixerChannelTelemetry>(activeTelemetry.mixer.channels.map((ch) => [ch.id, ch]));
+    const channels = coerceMixerChannelTelemetry(activeTelemetry?.mixer?.channels);
+    return new Map<string, MixerChannelTelemetry>(channels.map((ch) => [ch.id, ch]));
   }, [activeTelemetry]);
 
   return (

@@ -40,6 +40,29 @@ export interface SignalFlagsTelemetry {
   limiterEngaged: boolean;
 }
 
+
+function isMixerChannelTelemetry(value: unknown): value is MixerChannelTelemetry {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+  const channel = value as Partial<MixerChannelTelemetry>;
+  return (
+    typeof channel.id === 'string' &&
+    typeof channel.level === 'number' &&
+    Number.isFinite(channel.level) &&
+    typeof channel.peak === 'number' &&
+    Number.isFinite(channel.peak)
+  );
+}
+
+export function coerceMixerChannelTelemetry(channels: unknown): MixerChannelTelemetry[] {
+  if (!Array.isArray(channels)) {
+    return [];
+  }
+
+  return channels.filter(isMixerChannelTelemetry);
+}
+
 export interface DJTelemetry {
   transport: TransportTelemetry;
   stereoLevels: StereoLevelTelemetry;
