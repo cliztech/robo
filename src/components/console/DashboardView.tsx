@@ -180,7 +180,7 @@ export function DashboardView({ telemetry, api = defaultDashboardViewApi }: Dash
     <main className="space-y-4" data-testid="dashboard-view">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-400">Dashboard</h2>
-        <button type="button" className="inline-flex items-center gap-1 rounded border border-zinc-700 px-2 py-1 text-xs text-zinc-300" onClick={() => window.location.reload()}>
+        <button type="button" className="inline-flex items-center gap-1 rounded border border-zinc-700 px-2 py-1 text-xs text-zinc-300" onClick={() => setRefreshTick(tick => tick + 1)}>
           <RefreshCw size={12} /> Refresh
         </button>
       </div>
