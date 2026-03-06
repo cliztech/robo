@@ -15,15 +15,15 @@ export interface AIDecisionLog {
 }
 
 export interface TrackAnalysisDecisionPayload {
-  trackId: string
-  stationId: string
-  model: string
-  latencyMs: number
-  tokensUsed: number
-  costUSD: number
-  confidenceScore: number
-  outcomeStatus: 'success' | 'error'
-  analysis: Record<string, unknown>
+  trackId: string;
+  stationId: string;
+  model: string;
+  latencyMs: number;
+  tokensUsed: number;
+  costUSD: number;
+  confidenceScore: number;
+  outcomeStatus: 'success' | 'error';
+  analysis: TrackAnalysis;
 }
 
 export async function logAIDecision(log: AIDecisionLog): Promise<string> {
