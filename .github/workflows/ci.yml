@@ -131,6 +131,8 @@ jobs:
           set -euo pipefail
           echo "Running CI runtime contract gate (non-secret env vars)..."
           python config/check_runtime_env.py --context ci
+      - name: Guard generated artifacts in source paths
+        run: python scripts/ci/check_generated_artifacts.py
 
   # ── Security ───────────────────────────────────────────────
   security:

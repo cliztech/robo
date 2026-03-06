@@ -1,5 +1,10 @@
 # Progress
 
+## 2026-03-05 API Request Validation Hardening
+- [x] Added shared API error helper (`src/lib/api/error.ts`) returning deterministic `{ error_code, message, details }` envelopes.
+- [x] Added `application/json` content-type enforcement and bounded request-body size checks for AI analyze-track and batch-analyze routes.
+- [x] Added Zod request schemas + `safeParse` handling for `trackId`/`stationId` inputs with structured 400 validation detail responses.
+
 ## Completed (Phases 0-4)
 
 - [x] **Delivery Phase 0: Project Setup** (Environment, Next.js, Git)
@@ -265,3 +270,8 @@
 - [x] Added dedicated `runtime-contract` job in `.github/workflows/ci.yml` to run `python config/check_runtime_env.py --context ci` with deterministic CI-safe non-secret env values.
 - [x] Added protected-ref gated runtime secret validation step `python config/check_runtime_secrets.py --require-env-only` in the security job.
 - [x] Documented CI runtime contract validation commands in `docs/DEVELOPMENT_ENV_SETUP.md`.
+## 2026-03-05 Packaging artifact hygiene guard
+- [x] Added root `.gitignore` rule for `*.egg-info/` and `.artifacts/`.
+- [x] Removed accidental `src/UNKNOWN.egg-info/` artifact directory from the working tree.
+- [x] Added `scripts/ci/build_python_wheels.sh` to keep Python packaging outputs in `.artifacts/python-packaging` instead of app source paths.
+- [x] Added CI guard script `scripts/ci/check_generated_artifacts.py` and wired it into `.github/workflows/ci.yml` config job.
