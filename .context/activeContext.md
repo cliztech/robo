@@ -282,3 +282,9 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added protected-ref runtime secret gate in CI using `python config/check_runtime_secrets.py --require-env-only` with explicit fail-fast shell settings and secret-backed env wiring.
 - Documented CI runtime contract gate commands in `docs/DEVELOPMENT_ENV_SETUP.md` for operator/developer parity.
 - Added repository hygiene guardrails for generated Python packaging artifacts: ignore `*.egg-info`, removed accidental `src/UNKNOWN.egg-info/`, added CI scanner (`scripts/ci/check_generated_artifacts.py`), and added isolated wheel-build script outputting to `.artifacts/python-packaging`.
+
+## 2026-03-05 Audio Engine Cache Hardening (In Progress)
+- Implemented configurable audio-buffer cache controls in `src/lib/audio/engine.ts` with max-entry and max-byte limits plus decode concurrency guardrails.
+- Added LRU semantics with protected active track IDs to prevent eviction of current/next playback buffers.
+- Added `cache-telemetry` events (hit/miss/eviction) for runtime cache tuning and observability.
+- Added/updated unit tests in `tests/ui/audio-engine.test.ts` for LRU eviction correctness and non-eviction of active playback buffers.
