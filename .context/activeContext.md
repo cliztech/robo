@@ -282,3 +282,9 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added protected-ref runtime secret gate in CI using `python config/check_runtime_secrets.py --require-env-only` with explicit fail-fast shell settings and secret-backed env wiring.
 - Documented CI runtime contract gate commands in `docs/DEVELOPMENT_ENV_SETUP.md` for operator/developer parity.
 - Added repository hygiene guardrails for generated Python packaging artifacts: ignore `*.egg-info`, removed accidental `src/UNKNOWN.egg-info/`, added CI scanner (`scripts/ci/check_generated_artifacts.py`), and added isolated wheel-build script outputting to `.artifacts/python-packaging`.
+
+## 2026-03-05 Track analysis cache hardening
+- Added TTL- and max-entry-bounded `InMemoryAnalysisCacheStore` with configurable LRU/FIFO eviction and stale-entry cleanup on both `get` and `set` paths.
+- Expanded track-analysis fingerprint versioning inputs to include `schema_version` alongside model/prompt versions to force safe cache invalidation on contract changes.
+- Added structured cache telemetry (`size`, `hits`, `misses`, `evictions`, `expirations`) into track-analysis cache hit/miss/write log events.
+- Added backend tests for TTL expiry, max-size LRU eviction behavior, and schema/model-version fingerprint invalidation.

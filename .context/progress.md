@@ -294,3 +294,9 @@
 - [x] Removed accidental `src/UNKNOWN.egg-info/` artifact directory from the working tree.
 - [x] Added `scripts/ci/build_python_wheels.sh` to keep Python packaging outputs in `.artifacts/python-packaging` instead of app source paths.
 - [x] Added CI guard script `scripts/ci/check_generated_artifacts.py` and wired it into `.github/workflows/ci.yml` config job.
+
+## 2026-03-05 Track analysis cache TTL/eviction + version invalidation
+- [x] Added request-level version fields (`model_version`, `prompt_profile_version`, `schema_version`) to the track-analysis contract with safe defaults.
+- [x] Implemented in-memory cache constraints: TTL expiration, max-entry cap, LRU/FIFO eviction policy, and eager stale-entry cleanup on read/write.
+- [x] Added cache metric counters (`size`, `hits`, `misses`, `evictions`, `expirations`) and emitted them in structured cache hit/miss/write logs.
+- [x] Added regression tests covering TTL expiry, max-size eviction, and version-key fingerprint invalidation.
