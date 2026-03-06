@@ -7,6 +7,7 @@ Executing "Phase 6: Playlist Generation" hardening and preparing Phase 7 broadca
 Building the next unfinished execution plans from the roadmap queue, starting with P1 Security items (TI-039/TI-040/TI-041).
 
 ## Recent Decisions
+- Hardened `src/app/api/ai/analyze-track/route.ts` and `src/app/api/ai/batch-analyze/route.ts` with strict JSON content-type gates, request size checks, and Zod `safeParse` validation, and standardized deterministic API error payloads via new `src/lib/api/error.ts` helper.
 - Refreshed `2026-02-25-next-unfinished-phase-build.md` to reflect current unresolved sequence only (TI-040), moved TI-039/TI-041 to completed evidence references, and added packet freshness metadata (as-of date + sprint-status blob reference).
 
 - Reconciled Track A security state authority on `docs/exec-plans/active/sprint-status.yaml`, aligned TI-039/TI-040/TI-041 tracked issue status + TODO state tags to backlog/open, and added roadmap autopilot consistency gating for canonical-vs-tracked issue drift.
@@ -48,6 +49,7 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
   Executing "Phase 5: AI Integration" through a quick-dev next-phase plan that decomposes AI track analysis into sprintable stories (P5-01..P5-05).
 
 ## Recent Decisions
+- Hardened `src/app/api/ai/analyze-track/route.ts` and `src/app/api/ai/batch-analyze/route.ts` with strict JSON content-type gates, request size checks, and Zod `safeParse` validation, and standardized deterministic API error payloads via new `src/lib/api/error.ts` helper.
 
 - Standardized phase naming contracts across planning artifacts: `Delivery Phase N` for delivery context and `Workflow Phase N` for workflow context, plus namespace-required packet/build-plan metadata.
 
@@ -76,6 +78,7 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Consolidated AI track-analysis API surface on `/api/v1/ai/track-analysis`, removed duplicate router mounting, and aligned auth/tests to canonical API-key policy.
 
 ## Recent Decisions
+- Hardened `src/app/api/ai/analyze-track/route.ts` and `src/app/api/ai/batch-analyze/route.ts` with strict JSON content-type gates, request size checks, and Zod `safeParse` validation, and standardized deterministic API error payloads via new `src/lib/api/error.ts` helper.
 
 - Standardized phase naming contracts across planning artifacts: `Delivery Phase N` for delivery context and `Workflow Phase N` for workflow context, plus namespace-required packet/build-plan metadata.
 
@@ -248,3 +251,8 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
 
 - Hardened telemetry typing boundaries for Supabase server cookies, DegenMixer channel telemetry coercion, and DashboardView telemetry DTO; added strict-module TypeScript config + telemetry mismatch fallback tests.
+## 2026-03-05 CI runtime contract gate update
+- Added dedicated CI runtime-contract validation in `.github/workflows/ci.yml` with deterministic non-secret CI env values for `python config/check_runtime_env.py --context ci`.
+- Added protected-ref runtime secret gate in CI using `python config/check_runtime_secrets.py --require-env-only` with explicit fail-fast shell settings and secret-backed env wiring.
+- Documented CI runtime contract gate commands in `docs/DEVELOPMENT_ENV_SETUP.md` for operator/developer parity.
+- Added repository hygiene guardrails for generated Python packaging artifacts: ignore `*.egg-info`, removed accidental `src/UNKNOWN.egg-info/`, added CI scanner (`scripts/ci/check_generated_artifacts.py`), and added isolated wheel-build script outputting to `.artifacts/python-packaging`.
