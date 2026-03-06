@@ -1,5 +1,10 @@
 # Progress
 
+## 2026-03-05 API Request Validation Hardening
+- [x] Added shared API error helper (`src/lib/api/error.ts`) returning deterministic `{ error_code, message, details }` envelopes.
+- [x] Added `application/json` content-type enforcement and bounded request-body size checks for AI analyze-track and batch-analyze routes.
+- [x] Added Zod request schemas + `safeParse` handling for `trackId`/`stationId` inputs with structured 400 validation detail responses.
+
 ## Completed (Phases 0-4)
 
 - [x] **Delivery Phase 0: Project Setup** (Environment, Next.js, Git)
@@ -266,3 +271,20 @@
 - [x] Normalized persisted decision payload schema with required observability fields (track/station/model/latency/token-cost/confidence/outcome).
 - [x] Implemented non-fatal decision logging path with structured warning telemetry emission on persistence failure.
 - [x] Added unit tests asserting one persisted decision record per successful call and expected payload fields.
+- [x] Hardened `backend/security/auth.py` key handling with TTL cache refresh + rotation-event invalidation, dual-key grace window validation, source-change audit logging, and regression tests for rotation acceptance/expiry behavior.
+
+## 2026-03-05 AI API request controls
+- [x] Added `src/lib/api/request-controls.ts` for sliding-window throttling, standardized 429 payloads, and idempotency fingerprint cache helpers.
+- [x] Enforced route-keyed `{userId, stationId, route}` limits in `src/app/api/ai/analyze-track/route.ts` and `src/app/api/ai/batch-analyze/route.ts` before expensive AI operations.
+- [x] Implemented `Idempotency-Key` replay handling for batch analysis with short-lived fingerprint persistence and mismatch protection.
+- [x] Added integration tests in `tests/integration/ai-rate-limit-idempotency-routes.test.ts` validating repeated call throttling, idempotent replay, and key reuse conflict semantics.
+- Hardened telemetry typing boundaries for Supabase server cookies, DegenMixer channel telemetry coercion, and DashboardView telemetry DTO; added strict-module TypeScript config + telemetry mismatch fallback tests.
+## 2026-03-05 CI runtime contract gate update
+- [x] Added dedicated `runtime-contract` job in `.github/workflows/ci.yml` to run `python config/check_runtime_env.py --context ci` with deterministic CI-safe non-secret env values.
+- [x] Added protected-ref gated runtime secret validation step `python config/check_runtime_secrets.py --require-env-only` in the security job.
+- [x] Documented CI runtime contract validation commands in `docs/DEVELOPMENT_ENV_SETUP.md`.
+## 2026-03-05 Packaging artifact hygiene guard
+- [x] Added root `.gitignore` rule for `*.egg-info/` and `.artifacts/`.
+- [x] Removed accidental `src/UNKNOWN.egg-info/` artifact directory from the working tree.
+- [x] Added `scripts/ci/build_python_wheels.sh` to keep Python packaging outputs in `.artifacts/python-packaging` instead of app source paths.
+- [x] Added CI guard script `scripts/ci/check_generated_artifacts.py` and wired it into `.github/workflows/ci.yml` config job.

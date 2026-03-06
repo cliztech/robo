@@ -82,6 +82,24 @@
           "max": 60,
           "allow_placeholder_values": false,
           "description": "Grace period before requiring re-authentication for sensitive actions."
+        },
+        {
+          "name": "NEXT_PUBLIC_SUPABASE_URL",
+          "required": false,
+          "secret": false,
+          "type": "regex",
+          "pattern": "^https?://.+$",
+          "allow_placeholder_values": false,
+          "description": "Canonical Supabase project URL for Next.js client/server runtime parity."
+        },
+        {
+          "name": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+          "required": false,
+          "secret": false,
+          "type": "string",
+          "min_length": 20,
+          "allow_placeholder_values": false,
+          "description": "Canonical Supabase anon key for Next.js client/server runtime parity."
         }
       ]
     },
@@ -167,6 +185,24 @@
           "max": 60,
           "allow_placeholder_values": false,
           "description": "Grace period before requiring re-authentication for sensitive actions."
+        },
+        {
+          "name": "NEXT_PUBLIC_SUPABASE_URL",
+          "required": false,
+          "secret": false,
+          "type": "regex",
+          "pattern": "^https?://.+$",
+          "allow_placeholder_values": false,
+          "description": "Canonical Supabase project URL for Next.js client/server runtime parity."
+        },
+        {
+          "name": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+          "required": false,
+          "secret": false,
+          "type": "string",
+          "min_length": 20,
+          "allow_placeholder_values": false,
+          "description": "Canonical Supabase anon key for Next.js client/server runtime parity."
         }
       ]
     },
@@ -240,6 +276,24 @@
           "secret": true,
           "type": "secret",
           "description": "Secondary runtime secret key."
+        },
+        {
+          "name": "NEXT_PUBLIC_SUPABASE_URL",
+          "required": false,
+          "secret": false,
+          "type": "regex",
+          "pattern": "^https?://.+$",
+          "allow_placeholder_values": false,
+          "description": "Canonical Supabase project URL for Next.js client/server runtime parity."
+        },
+        {
+          "name": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+          "required": false,
+          "secret": false,
+          "type": "string",
+          "min_length": 20,
+          "allow_placeholder_values": false,
+          "description": "Canonical Supabase anon key for Next.js client/server runtime parity."
         }
       ]
     }
