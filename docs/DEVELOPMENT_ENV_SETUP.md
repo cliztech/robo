@@ -237,6 +237,11 @@ ROBODJ_ENV=staging \
 python config/check_runtime_env.py --context ci
 
 # Protected refs/environments only
+# This command requires ROBODJ_PROTECTED_ENV=true and all required secrets
+# to be set as environment variables for a successful dry-run.
+ROBODJ_PROTECTED_ENV=true \
+ROBODJ_SECRET_KEY=<your-key> \
+ROBODJ_SECRET_V2_KEY=<your-v2-key> \
 python config/check_runtime_secrets.py --require-env-only
 ```
 
