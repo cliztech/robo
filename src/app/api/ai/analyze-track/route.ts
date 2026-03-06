@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Perform AI analysis
-    const { analysis, tokensUsed, costUSD } = await analyzeTrack({
+    const { analysis, tokensUsed, costUSD, latencyMs } = await analyzeTrack({
       trackId: track.id,
       metadata: {
         title: track.title,
@@ -173,16 +173,12 @@ export async function POST(request: NextRequest) {
 
     if (updateError) throw updateError
 
+    await logTrackAnalysisDecisionSafely({
+      trackId,
     await logAIDecision({
       stationId: track.stations.id,
-      decisionType: 'track_analysis',
-      decisionData: {
-        trackId,
-        analysis,
-      },
-      reasoning: analysis.reasoning,
-      confidenceScore: analysis.confidenceScore,
-      modelUsed: 'gpt-4o',
+      model: AI_CONFIG.models.analysis,
+      latencyMs,
       tokensUsed,
       costUSD,
       latencyMs: 0,

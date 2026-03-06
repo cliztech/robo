@@ -252,6 +252,12 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 Track-analysis telemetry normalization
+- Removed local stub logger from `src/lib/ai/analyze-track.ts`; analysis now returns latency for caller-owned telemetry persistence.
+- Added shared telemetry facade in `src/lib/ai/log-decision.ts` to normalize track-analysis payload schema (`trackId`, `stationId`, `model`, `latencyMs`, `tokensUsed`, `costUSD`, `confidenceScore`, `outcomeStatus`).
+- Updated `/api/ai/analyze-track` route to use safe decision logging (`logTrackAnalysisDecisionSafely`) so telemetry write failures emit structured warning events and do not fail successful analysis responses.
+- Added unit coverage for normalized persisted decision fields and non-fatal warning telemetry behavior.
 - Added auth key-rotation runtime support: TTL-based secret cache + explicit invalidation hook, dual-key grace verification, and audit events for key source/rotation changes; updated runbook for zero-downtime rotation cutovers.
 
 ## 2026-03-05 AI API rate-limit + idempotency hardening
