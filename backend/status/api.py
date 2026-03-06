@@ -122,8 +122,10 @@ def read_dashboard_status(
         "rotation worker has not published a successful run" if is_rotation_stale else None
     )
 
-    service_health_status = ServiceHealth(service_health_snapshot.status)
-    reason = service_health_snapshot.reason
+    service_health_status, reason = _map_service_health_status(
+        service_health_snapshot.status,
+        service_health_snapshot.reason,
+    )
     if queue_state == AlertSeverity.critical and service_health_status == ServiceHealth.healthy:
         service_health_status = ServiceHealth.degraded
         reason = "queue depth above critical threshold"
@@ -156,6 +158,18 @@ def read_dashboard_status(
         ),
         alert_center=AlertCenter(items=repository.list_alerts()),
     )
+
+
+def _map_service_health_status(status: str, reason: str) -> tuple[ServiceHealth, str]:
+    normalized_status = (status or "").strip().lower()
+    mapped_status = ServiceHealth._value2member_map_.get(normalized_status)
+    if mapped_status is not None:
+        return mapped_status, reason
+
+    suffix = f"invalid service_health status: {status!r}"
+    if reason:
+        return ServiceHealth.degraded, f"{reason}; {suffix}"
+    return ServiceHealth.degraded, suffix
 
 
 @router.get("/dashboard/alerts", response_model=list[AlertCenterItem])
