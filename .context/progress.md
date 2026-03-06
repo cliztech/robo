@@ -260,3 +260,10 @@
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 Batch analyzer reliability + observability
+- [x] Reworked batch analysis to fetch tracks in bounded cursor pages rather than one bulk query.
+- [x] Enforced update error accounting semantics: increment `failed`, invoke `onError`, and never increment `successful` for failed updates.
+- [x] Added transient DB retry policy (bounded retries + jitter) scoped only to DB writes.
+- [x] Persisted per-run summary records (`total_tracks`, `successful`, `failed`, `total_cost_usd`, `total_tokens`, `elapsed_ms`, timestamps) in `ai_batch_analysis_runs`.
+- [x] Added integration tests validating partial update failures, large dataset pagination, and final counter stability.

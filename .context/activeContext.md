@@ -246,3 +246,9 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 Batch analyzer reliability hardening
+- Refactored `src/lib/ai/batch-analyzer.ts` to use cursor-based pagination (`id` keyset + page limit) so large unanalyzed track sets are processed without offset-skip drift while rows are being updated.
+- Added DB-update-only retry policy (bounded exponential backoff + jitter) that is isolated from AI inference retry behavior.
+- Added run-summary persistence to `ai_batch_analysis_runs` with totals/failures/cost/tokens/elapsed timing for operator visibility and postmortem evidence.
+- Added integration coverage for partial DB update failures, large pagination behavior, and final progress/counter consistency.
