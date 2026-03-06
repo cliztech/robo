@@ -88,13 +88,14 @@ export function toRateLimitErrorPayload(decision: RateLimitDecision) {
   }
 }
 
-function stableStringify(value: unknown): string {
+function stableStringify(value: unknown, depth = 0): string {
+  if (depth > 20) throw new Error('Max depth exceeded')
   if (value === null || typeof value !== 'object') return JSON.stringify(value)
-  if (Array.isArray(value)) return `[${value.map((entry) => stableStringify(entry)).join(',')}]`
+  if (Array.isArray(value)) return `[${value.map((entry) => stableStringify(entry, depth + 1)).join(',')}]`
 
   const objectValue = value as Record<string, unknown>
   const keys = Object.keys(objectValue).sort()
-  return `{${keys.map((key) => `${JSON.stringify(key)}:${stableStringify(objectValue[key])}`).join(',')}}`
+  return `{${keys.map((key) => `${JSON.stringify(key)}:${stableStringify(objectValue[key], depth + 1)}`).join(',')}}`
 }
 
 export function fingerprintPayload(payload: unknown): string {
