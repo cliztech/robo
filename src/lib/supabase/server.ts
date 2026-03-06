@@ -11,11 +11,11 @@ function resolveSupabaseEnv(canonicalKey: string, deprecatedAliasKey: string): s
 
   const aliasValue = process.env[deprecatedAliasKey]
   if (aliasValue) {
-    if (!hasLoggedSupabaseAliasWarning) {
+    if (!loggedSupabaseAliasWarnings.has(deprecatedAliasKey)) {
       console.warn(
         `[env-deprecation] ${deprecatedAliasKey} is deprecated; set ${canonicalKey} instead. Alias fallback support is temporary.`
-      )
-      hasLoggedSupabaseAliasWarning = true
+      );
+      loggedSupabaseAliasWarnings.add(deprecatedAliasKey);
     }
     return aliasValue
   }
