@@ -249,6 +249,10 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+## 2026-03-05 Webpack workflow CI normalization
+- Updated `.github/workflows/webpack.yml` to align Node matrix support with project runtime policy (`20.x` only).
+- Replaced lockfile-ignoring install commands with `npm ci` and enabled npm dependency caching in `actions/setup-node`.
+- Removed duplicate `run` keys in the Build step so the workflow has a single valid command block.
 
 - Hardened telemetry typing boundaries for Supabase server cookies, DegenMixer channel telemetry coercion, and DashboardView telemetry DTO; added strict-module TypeScript config + telemetry mismatch fallback tests.
 ## 2026-03-05 CI runtime contract gate update
