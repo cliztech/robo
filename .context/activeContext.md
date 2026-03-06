@@ -282,3 +282,5 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added protected-ref runtime secret gate in CI using `python config/check_runtime_secrets.py --require-env-only` with explicit fail-fast shell settings and secret-backed env wiring.
 - Documented CI runtime contract gate commands in `docs/DEVELOPMENT_ENV_SETUP.md` for operator/developer parity.
 - Added repository hygiene guardrails for generated Python packaging artifacts: ignore `*.egg-info`, removed accidental `src/UNKNOWN.egg-info/`, added CI scanner (`scripts/ci/check_generated_artifacts.py`), and added isolated wheel-build script outputting to `.artifacts/python-packaging`.
+
+- Hardened `src/lib/aiApi.ts` timeout handling by replacing Promise.race with AbortController-driven fetch cancellation, deterministic error codes, and abort-reason diagnostics; added unit coverage for timeout cancellation and unhandled-rejection safety.
