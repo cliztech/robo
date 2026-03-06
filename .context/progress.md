@@ -260,3 +260,9 @@
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 Typed env loader hardening
+- [x] Added `src/lib/env.ts` with typed/validated environment loading and structured remediation-first error payloads for missing/invalid vars.
+- [x] Replaced direct Supabase `process.env...!` access in `src/lib/supabase/server.ts` with validated env values.
+- [x] Reused shared env loader in dashboard status proxy backend URL resolution to keep fallback behavior consistent.
+- [x] Added unit coverage in `tests/lib/env.test.ts` for missing vars, malformed URLs, success normalization, and default backend fallback.

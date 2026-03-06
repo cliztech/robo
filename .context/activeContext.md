@@ -7,6 +7,9 @@ Executing "Phase 6: Playlist Generation" hardening and preparing Phase 7 broadca
 Building the next unfinished execution plans from the roadmap queue, starting with P1 Security items (TI-039/TI-040/TI-041).
 
 ## Recent Decisions
+
+- Added a shared typed env loader (`src/lib/env.ts`) with structured startup validation errors for Supabase and dashboard backend URL inputs; wired it into Supabase server client and dashboard status proxy to eliminate divergent runtime fallback behavior.
+
 - Refreshed `2026-02-25-next-unfinished-phase-build.md` to reflect current unresolved sequence only (TI-040), moved TI-039/TI-041 to completed evidence references, and added packet freshness metadata (as-of date + sprint-status blob reference).
 
 - Reconciled Track A security state authority on `docs/exec-plans/active/sprint-status.yaml`, aligned TI-039/TI-040/TI-041 tracked issue status + TODO state tags to backlog/open, and added roadmap autopilot consistency gating for canonical-vs-tracked issue drift.
