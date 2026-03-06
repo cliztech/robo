@@ -136,6 +136,10 @@ export function storeIdempotencyResult(params: {
 }) {
   const nowMs = params.nowMs ?? Date.now()
   const key = `${params.scopeKey}:${params.idempotencyKey}`
+  if (idempotencyStore.size >= 10000) {
+    const firstKey = idempotencyStore.keys().next().value
+    if (firstKey) idempotencyStore.delete(firstKey)
+  }
   idempotencyStore.set(key, {
     fingerprint: params.fingerprint,
     status: params.status,
