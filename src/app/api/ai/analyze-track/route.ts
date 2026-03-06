@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { analyzeTrack } from '@/lib/ai/analyze-track'
 import { logAIDecision } from '@/lib/ai/log-decision'
+import { consumeSlidingWindowToken, resolveApiLimits, toRateLimitErrorPayload } from '@/lib/api/request-controls'
 import { apiError } from '@/lib/api/error'
 
 const MAX_BODY_BYTES = 8 * 1024
@@ -106,6 +107,24 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    const limits = resolveApiLimits()
+    const routeKey = [session.user.id, track.stations.id, '/api/ai/analyze-track'].join(':')
+    const rateLimit = consumeSlidingWindowToken({
+      key: routeKey,
+      maxHits: limits.analyzeTrack.max,
+      windowMs: limits.analyzeTrack.windowMs,
+    })
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(toRateLimitErrorPayload(rateLimit), {
+        status: 429,
+        headers: {
+          'Retry-After': String(rateLimit.retryAfterSeconds),
+        },
+      })
+    }
+
+    // Perform AI analysis
     const { analysis, tokensUsed, costUSD } = await analyzeTrack({
       trackId: track.id,
       metadata: {

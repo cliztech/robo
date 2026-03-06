@@ -249,6 +249,12 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 AI API rate-limit + idempotency hardening
+- Added shared API request-controls helper with per-route sliding-window throttling keyed by `{userId, stationId, route}` and standardized `429` envelope + `Retry-After` support.
+- Applied pre-expensive-operation throttling to `/api/ai/analyze-track` and `/api/ai/batch-analyze` handlers.
+- Added batch idempotency-key replay support with short-lived request fingerprint persistence and key-reuse mismatch rejection.
+- Added integration coverage for rate-limit exhaustion, idempotent replay, and idempotency mismatch behavior.
 ## 2026-03-05 Webpack workflow CI normalization
 - Updated `.github/workflows/webpack.yml` to align Node matrix support with project runtime policy (`20.x` only).
 - Replaced lockfile-ignoring install commands with `npm ci` and enabled npm dependency caching in `actions/setup-node`.

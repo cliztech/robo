@@ -266,6 +266,11 @@
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
 
+## 2026-03-05 AI API request controls
+- [x] Added `src/lib/api/request-controls.ts` for sliding-window throttling, standardized 429 payloads, and idempotency fingerprint cache helpers.
+- [x] Enforced route-keyed `{userId, stationId, route}` limits in `src/app/api/ai/analyze-track/route.ts` and `src/app/api/ai/batch-analyze/route.ts` before expensive AI operations.
+- [x] Implemented `Idempotency-Key` replay handling for batch analysis with short-lived fingerprint persistence and mismatch protection.
+- [x] Added integration tests in `tests/integration/ai-rate-limit-idempotency-routes.test.ts` validating repeated call throttling, idempotent replay, and key reuse conflict semantics.
 - Hardened telemetry typing boundaries for Supabase server cookies, DegenMixer channel telemetry coercion, and DashboardView telemetry DTO; added strict-module TypeScript config + telemetry mismatch fallback tests.
 ## 2026-03-05 CI runtime contract gate update
 - [x] Added dedicated `runtime-contract` job in `.github/workflows/ci.yml` to run `python config/check_runtime_env.py --context ci` with deterministic CI-safe non-secret env values.
