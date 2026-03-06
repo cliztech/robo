@@ -265,6 +265,7 @@
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+- [x] Hardened `backend/security/auth.py` key handling with TTL cache refresh + rotation-event invalidation, dual-key grace window validation, source-change audit logging, and regression tests for rotation acceptance/expiry behavior.
 
 ## 2026-03-05 AI API request controls
 - [x] Added `src/lib/api/request-controls.ts` for sliding-window throttling, standardized 429 payloads, and idempotency fingerprint cache helpers.
