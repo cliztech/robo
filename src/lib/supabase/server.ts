@@ -1,7 +1,7 @@
 import { createServerClient as _createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-let hasLoggedSupabaseAliasWarning = false
+const loggedSupabaseAliasWarnings = new Set<string>();
 
 function resolveSupabaseEnv(canonicalKey: string, deprecatedAliasKey: string): string {
   const canonicalValue = process.env[canonicalKey]
