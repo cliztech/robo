@@ -56,6 +56,7 @@ async function parseJsonWithLimit(request: NextRequest): Promise<unknown> {
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createServerClient()
     const invalidContentType = ensureJsonContentType(request)
     if (invalidContentType) {
       return invalidContentType

@@ -266,6 +266,12 @@
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
 
+## 2026-03-05 Telemetry + Dashboard type enforcement
+- [x] Eliminated `cookies() as any` in server Supabase client by using typed async cookies store and updating dependent call sites.
+- [x] Tightened mixer telemetry channel typing with explicit `TelemetryChannelId` + `MixerChannelTelemetry` contracts.
+- [x] Replaced duplicated/corrupted dashboard telemetry wiring with strict `DashboardTelemetryFallback` parsing and typed API interface.
+- [x] Added dedicated typecheck gate (`npm run typecheck:telemetry-dashboard`) for affected modules.
+- [x] Added targeted unit coverage for malformed telemetry fallback DTOs and fallback rendering behavior.
 ## 2026-03-05 AI track-analysis logging hardening
 - [x] Removed analyze-track local stub logger and moved all track-analysis decision persistence to shared `log-decision` facade.
 - [x] Normalized persisted decision payload schema with required observability fields (track/station/model/latency/token-cost/confidence/outcome).

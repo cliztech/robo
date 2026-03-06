@@ -27,7 +27,7 @@ export interface TrackAnalysisDecisionPayload {
 }
 
 export async function logAIDecision(log: AIDecisionLog): Promise<string> {
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
 
   const { data, error } = await supabase
     .from('ai_decisions')
@@ -122,7 +122,7 @@ export async function getAIDecisions(
     status?: string
   } = {}
 ) {
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
 
   let query = supabase
     .from('ai_decisions')

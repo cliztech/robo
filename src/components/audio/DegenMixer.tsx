@@ -14,6 +14,11 @@ interface DegenMixerProps {
   className?: string;
 }
 
+
+function isTelemetryChannelId(id: string): id is TelemetryChannelId {
+  return id === 'deck-a' || id === 'deck-b' || id === 'mic' || id === 'aux' || id === 'master';
+}
+
 interface ChannelStripProps {
   channel: MixerChannel;
   gain: number;
@@ -84,7 +89,7 @@ export function DegenMixer({ channels = DEFAULT_MIXER_CHANNELS, telemetry, class
       <div className="flex gap-1.5 p-3 overflow-x-auto custom-scrollbar items-start">
         {channels.map((channel) => {
           const state = mixer.channels[channel.id] ?? { gain: 70, eq: { hi: 50, mid: 50, low: 50 } };
-          const channelTelemetry = telemetryMap.get(channel.id);
+          const channelTelemetry = isTelemetryChannelId(channel.id) ? telemetryMap.get(channel.id) : undefined;
           return (
             <ChannelStrip
               key={channel.id}

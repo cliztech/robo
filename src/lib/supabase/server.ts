@@ -1,6 +1,10 @@
 import { createServerClient as _createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
+type CookieStore = ReturnType<typeof cookies>
+
+export async function createServerClient() {
+  const cookieStore: Awaited<CookieStore> = await cookies()
 const loggedSupabaseAliasWarnings = new Set<string>();
 
 function resolveSupabaseEnv(canonicalKey: string, deprecatedAliasKey: string): string {
@@ -49,11 +53,11 @@ export async function createServerClient() {
         },
         set(name: string, value: string, options: CookieOptions) {
           try {
+            cookieStore.set({ name, value, ...options })
             cookieStore.set?.({ name, value, ...options })
           } catch {
             // The `set` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
+            // This can be ignored if middleware refreshes user sessions.
           }
         },
         remove(name: string, options: CookieOptions) {
@@ -61,8 +65,7 @@ export async function createServerClient() {
             cookieStore.set?.({ name, value: '', ...options })
           } catch {
             // The `delete` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
+            // This can be ignored if middleware refreshes user sessions.
           }
         },
       },
