@@ -7,6 +7,9 @@ Executing "Phase 6: Playlist Generation" hardening and preparing Phase 7 broadca
 Building the next unfinished execution plans from the roadmap queue, starting with P1 Security items (TI-039/TI-040/TI-041).
 
 ## Recent Decisions
+
+- Standardized Supabase env naming on `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`, documented deprecated alias migration (`SUPABASE_URL`, `SUPABASE_ANON_KEY`), and added temporary server fallback warning logging for transition safety.
+
 - Hardened `src/app/api/ai/analyze-track/route.ts` and `src/app/api/ai/batch-analyze/route.ts` with strict JSON content-type gates, request size checks, and Zod `safeParse` validation, and standardized deterministic API error payloads via new `src/lib/api/error.ts` helper.
 - Refreshed `2026-02-25-next-unfinished-phase-build.md` to reflect current unresolved sequence only (TI-040), moved TI-039/TI-041 to completed evidence references, and added packet freshness metadata (as-of date + sprint-status blob reference).
 

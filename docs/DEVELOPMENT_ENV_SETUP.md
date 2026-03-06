@@ -224,6 +224,18 @@ Current workflows in this repo include:
 - `release.yml`
 - `codex-ralph-loop.yml` (configurable loop that repeatedly runs build and validation checks)
 
+## 9) Supabase environment variable canonical names
+
+Use Next.js canonical keys for shared client/server usage:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+Migration notes:
+
+- Legacy aliases `SUPABASE_URL` and `SUPABASE_ANON_KEY` are deprecated.
+- Server runtime currently supports a temporary fallback to deprecated aliases with a warning log.
+- Set canonical keys in `.env` / `.env.local` now and remove alias keys during the deprecation window.
 ### CI validation commands
 
 `ci.yml` now enforces runtime contract gates with explicit CI-safe non-secret env values and protected-ref secret validation:
