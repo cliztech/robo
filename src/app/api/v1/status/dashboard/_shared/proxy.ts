@@ -22,7 +22,7 @@ function buildErrorEnvelope(status: number, detail: string, code?: string): Prox
 }
 
 async function requireSession(): Promise<ProxySession | NextResponse> {
-  const supabase = createServerClient();
+  const supabase = await createServerClient();
   const {
     data: { session },
   } = await supabase.auth.getSession();

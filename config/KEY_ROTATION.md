@@ -26,6 +26,32 @@ Use break-glass opt-in only when an operator explicitly needs secret file captur
 
 Snapshot events are written to `config/logs/startup_safety_events.jsonl` and include an `includes_secrets` field so operators can audit whether key material was copied.
 
+## Hot Rotation (No Forced Restart)
+
+The API auth layer supports runtime cutover without process restarts by using a bounded dual-key window:
+
+- `ROBODJ_SECRET_KEY` = new active key (takes effect immediately).
+- `ROBODJ_PREVIOUS_SECRET_KEY` = previous key accepted only during grace window.
+- `ROBODJ_SECRET_KEY_ROTATED_AT` = UNIX timestamp (seconds) when cutover happened.
+- `ROBODJ_PREVIOUS_SECRET_KEY_GRACE_SECONDS` = grace window duration.
+- `ROBODJ_SECRET_KEY_ROTATION_EVENT_ID` = monotonic rotation identifier (forces cache refresh instantly).
+
+### Zero-downtime rotation steps
+1. Generate the new key out-of-band (same procedure already required in this runbook).
+2. Update runtime env in one change set:
+   - Set `ROBODJ_SECRET_KEY=<new>`
+   - Set `ROBODJ_PREVIOUS_SECRET_KEY=<old>`
+   - Set `ROBODJ_SECRET_KEY_ROTATED_AT=$(date +%s)`
+   - Set `ROBODJ_PREVIOUS_SECRET_KEY_GRACE_SECONDS=<window>`
+   - Bump `ROBODJ_SECRET_KEY_ROTATION_EVENT_ID` (for example UUID/change ticket id)
+3. Verify both keys during the grace period (new key must pass immediately; old key should pass until expiry).
+4. After grace expiry, remove `ROBODJ_PREVIOUS_SECRET_KEY` and set `ROBODJ_PREVIOUS_SECRET_KEY_GRACE_SECONDS=0`.
+5. Run `python config/check_runtime_secrets.py --require-env-only` and attach output to the change ticket.
+
+### Observability
+- Auth emits audit log events when secret source changes (`env`/`file`) and when rotation event IDs change.
+- Audit events never include key material; only source and rotation metadata are logged.
+
 ## Rotation Procedure
 1. Stop RoboDJ processes using the active secrets.
 2. Generate replacement values out-of-band:

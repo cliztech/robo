@@ -1,6 +1,8 @@
 import { AudioAnalyzer } from './analyzer';
 import type { AudioMetrics, Track } from './engine';
 
+export type TelemetryChannelId = 'deck-a' | 'deck-b' | 'mic' | 'aux' | 'master';
+
 export interface StudioTelemetrySnapshot {
   waveformPosition: number;
   durationSeconds: number;
@@ -23,7 +25,7 @@ export interface StereoLevelTelemetry {
 }
 
 export interface MixerChannelTelemetry {
-  id: string;
+  id: TelemetryChannelId;
   level: number;
   peak: number;
 }
@@ -38,6 +40,29 @@ export interface SignalFlagsTelemetry {
   limiterEngaged: boolean;
 }
 
+
+function isMixerChannelTelemetry(value: unknown): value is MixerChannelTelemetry {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+  const channel = value as Partial<MixerChannelTelemetry>;
+  return (
+    typeof channel.id === 'string' &&
+    typeof channel.level === 'number' &&
+    Number.isFinite(channel.level) &&
+    typeof channel.peak === 'number' &&
+    Number.isFinite(channel.peak)
+  );
+}
+
+export function coerceMixerChannelTelemetry(channels: unknown): MixerChannelTelemetry[] {
+  if (!Array.isArray(channels)) {
+    return [];
+  }
+
+  return channels.filter(isMixerChannelTelemetry);
+}
+
 export interface DJTelemetry {
   transport: TransportTelemetry;
   stereoLevels: StereoLevelTelemetry;
@@ -46,7 +71,7 @@ export interface DJTelemetry {
   signalFlags: SignalFlagsTelemetry;
 }
 
-const DEFAULT_WAVEFORM_SAMPLE_SIZE = 250;
+export const DEFAULT_WAVEFORM_SAMPLE_SIZE = 250;
 const DETERMINISTIC_WAVEFORM_SEED = 1337;
 const LIMITER_THRESHOLD = 0.9;
 
