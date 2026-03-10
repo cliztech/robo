@@ -257,6 +257,7 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+- Hardened dashboard status proxy backend URL configuration: localhost fallback is now development-only, staging/production require `DASHBOARD_STATUS_BACKEND_URL`, malformed URLs fail startup validation, and missing non-dev config returns an explicit 500 configuration envelope.
 
 ## 2026-03-05 Typed Telemetry Contract Hardening
 - Replaced `cookies() as any` with typed async cookie-store handling in `src/lib/supabase/server.ts` and updated call sites to await server client creation.
