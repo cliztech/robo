@@ -1,65 +1,60 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState, type ElementType } from "react";
-import { motion } from "framer-motion";
-import {
-  Activity,
-  Gauge,
-  Minus,
-  Signal,
-  TrendingDown,
-  TrendingUp,
-  AlertTriangle,
-  CheckCircle2,
-  RefreshCw,
-} from "lucide-react";
-import { DegenEffectRack } from "@/components/audio/DegenEffectRack";
-import { DegenBeatGrid } from "@/components/audio/DegenBeatGrid";
-import { DegenWaveform } from "@/components/audio/DegenWaveform";
-import { DegenScheduleTimeline } from "@/components/schedule/DegenScheduleTimeline";
-import { DegenAIHost } from "@/components/ai/DegenAIHost";
+import { useEffect, useMemo, useState } from "react";
+import { Activity, AlertTriangle, CheckCircle2, Gauge, RefreshCw, Signal } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { type DashboardCardColor } from "./dashboard.types";
-import {
-  type DashboardCardColor,
-  mapSeverityToCardColor,
-  mapSeverityToStatusTextClass,
-  mapStatusToTrend,
-} from "./dashboard.types";
 import {
   acknowledgeDashboardAlert,
   fetchDashboardAlerts,
   fetchDashboardStatus,
-  type AlertSeverity,
-  type DashboardStatusResponse,
-} from "@/lib/status/dashboardClient";
-import {
-  createNotificationsState,
-  getFilteredNotificationAlerts,
-  setNotificationAlerts,
-  toggleNotificationSeverity,
-} from "@/features/notifications/notifications.store";
   type AlertCenterItem,
   type AlertSeverity,
   type DashboardStatusResponse,
 } from "@/lib/status/dashboardClient";
+import { mapSeverityToCardColor, mapSeverityToStatusTextClass, mapStatusToTrend, type DashboardCardColor, type DashboardTrend } from "./dashboard.types";
+
+export interface DashboardTelemetryFallback {
+  serviceHealthStatus: DashboardStatusResponse["service_health"]["status"];
+  queueDepth: number;
+  warningThreshold: number;
+  criticalThreshold: number;
+  activeAlerts: number;
+  totalAlerts: number;
+import { useEffect, useMemo, useState, type ElementType } from "react";
+import { motion } from "framer-motion";
+import { Activity, AlertTriangle, CheckCircle2, Gauge, Minus, RefreshCw, Signal, TrendingDown, TrendingUp } from "lucide-react";
+import { DegenAIHost } from "@/components/ai/DegenAIHost";
+import { DegenBeatGrid } from "@/components/audio/DegenBeatGrid";
+import { DegenEffectRack } from "@/components/audio/DegenEffectRack";
+import { DegenWaveform } from "@/components/audio/DegenWaveform";
+import { DegenScheduleTimeline } from "@/components/schedule/DegenScheduleTimeline";
+import { createNotificationsState, getFilteredNotificationAlerts, setNotificationAlerts, toggleNotificationSeverity } from "@/features/notifications/notifications.store";
+import { acknowledgeDashboardAlert, fetchDashboardAlerts, fetchDashboardStatus, type AlertCenterItem, type AlertSeverity, type DashboardStatusResponse } from "@/lib/status/dashboardClient";
+import { cn } from "@/lib/utils";
+import { mapSeverityToCardColor, mapSeverityToStatusTextClass, mapStatusToTrend, type DashboardCardColor } from "./dashboard.types";
+
+export interface DashboardTelemetryDTO {
+  serviceHealth?: {
+    observedAt?: string | null;
+  };
+  queueDepth?: {
+    currentDepth?: number;
+    state?: AlertSeverity;
+  };
+}
 
 export interface DashboardViewApi {
   fetchDashboardStatus: (signal?: AbortSignal) => Promise<DashboardStatusResponse>;
-  fetchDashboardAlerts: (
-    severity?: AlertSeverity,
-    signal?: AbortSignal,
-  ) => Promise<AlertCenterItem[]>;
-  acknowledgeDashboardAlert: (
-    alertId: string,
-    signal?: AbortSignal,
-  ) => Promise<AlertCenterItem>;
+  fetchDashboardAlerts: (severity?: AlertSeverity, signal?: AbortSignal) => Promise<AlertCenterItem[]>;
+  acknowledgeDashboardAlert: (alertId: string, signal?: AbortSignal) => Promise<AlertCenterItem>;
 }
 
 interface DashboardViewProps {
-  telemetry?: unknown;
-  api?: Partial<DashboardStatusApi>;
+  telemetry?: DashboardTelemetryFallback | null;
+  telemetry?: DashboardTelemetryDTO;
+  api?: DashboardViewApi;
 }
+
 const defaultDashboardViewApi: DashboardViewApi = {
   fetchDashboardStatus,
   fetchDashboardAlerts,
@@ -73,693 +68,342 @@ interface StatCardProps {
   icon: ElementType;
   color?: DashboardCardColor;
   trend?: "up" | "down" | "stable";
-  sparkline?: number[];
-  delay?: number;
 }
 
-function StatCard({
-  label,
-  value,
-  unit,
-  icon: Icon,
-  color = "lime",
-  trend,
-  sparkline,
-  delay = 0,
-}: StatCardProps) {
-  const sparkId = useId();
-  const colors = {
-    lime: {
-      gradient: "from-lime-500/8 via-lime-500/3 to-transparent",
-      border: "border-lime-500/15",
-      icon: "text-lime-500/70",
-      spark: "#aaff00",
-    },
-    purple: {
-      gradient: "from-purple-500/8 via-purple-500/3 to-transparent",
-      border: "border-purple-500/15",
-      icon: "text-purple-500/70",
-      spark: "#9933ff",
-    },
-    cyan: {
-      gradient: "from-cyan-500/8 via-cyan-500/3 to-transparent",
-      border: "border-cyan-500/15",
-      icon: "text-cyan-500/70",
-      spark: "#00bfff",
-    },
-    orange: {
-      gradient: "from-orange-500/8 via-orange-500/3 to-transparent",
-      border: "border-orange-500/15",
-      icon: "text-orange-500/70",
-      spark: "#ff6b00",
-    },
-    red: {
-      gradient: "from-red-500/8 via-red-500/3 to-transparent",
-      border: "border-red-500/15",
-      icon: "text-red-500/70",
-      spark: "#ef4444",
-    },
-  };
-
-  const points = sparkline ?? [30, 45, 38, 52, 48, 60, 55, 70, 65, 75, 72, 80];
-  const trendIcon =
-    trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus;
+function StatCard({ label, value, unit, icon: Icon, color = "lime", trend = "stable" }: StatCardProps) {
+  const trendIcon = trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus;
   const TrendIcon = trendIcon;
-  const trendClass =
-    trend === "up"
-      ? "text-lime-500"
-      : trend === "down"
-        ? "text-red-400"
-        : "text-zinc-600";
-  const c = colors[color];
+  const palette = {
+    lime: "border-lime-500/15 text-lime-500/70",
+    purple: "border-purple-500/15 text-purple-500/70",
+    cyan: "border-cyan-500/15 text-cyan-500/70",
+    orange: "border-orange-500/15 text-orange-500/70",
+    red: "border-red-500/15 text-red-500/70",
+  }[color];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.25 }}
-      className={cn(
-        "rounded-xl border p-4 bg-gradient-to-br",
-        c.gradient,
-        c.border,
-      )}
-    >
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className={cn("rounded-xl border p-4 bg-zinc-900/40", palette)}>
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center gap-1.5 text-zinc-500 text-[9px] uppercase tracking-[0.15em]">
-            <Icon size={13} className={c.icon} />
+            <Icon size={13} />
             <span>{label}</span>
           </div>
           <div className="mt-1 text-2xl font-black text-white tabular-nums">
             {value}
-            {unit ? (
-              <span className="ml-1 text-[10px] font-medium text-zinc-500">
-                {unit}
-              </span>
-            ) : null}
+            {unit ? <span className="ml-1 text-[10px] font-medium text-zinc-500">{unit}</span> : null}
           </div>
         </div>
-        {trend ? <TrendIcon size={10} className={trendClass} /> : null}
-      </div>
-
-      <div className="mt-3 h-6">
-        <svg
-          viewBox="0 0 100 30"
-          preserveAspectRatio="none"
-          className="h-full w-full"
-        >
-          <defs>
-            <linearGradient id={sparkId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={c.spark} stopOpacity="0.2" />
-              <stop offset="100%" stopColor={c.spark} stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          <path
-            d={`M 0 30 ${points
-              .map(
-                (v, i, arr) =>
-                  `L ${(i / (arr.length - 1)) * 100} ${30 - (v / 100) * 28}`,
-              )
-              .join(" ")} L 100 30 Z`}
-            fill={`url(#${sparkId})`}
-          />
-          <polyline
-            points={points
-              .map(
-                (v, i, arr) =>
-                  `${(i / (arr.length - 1)) * 100},${30 - (v / 100) * 28}`,
-              )
-              .join(" ")}
-            fill="none"
-            stroke={c.spark}
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            opacity="0.7"
-          />
-        </svg>
+        <TrendIcon size={10} className={trend === "up" ? "text-lime-500" : trend === "down" ? "text-red-400" : "text-zinc-600"} />
       </div>
     </motion.div>
   );
 }
 
-function SectionHeader({ children }: { children: React.ReactNode }) {
+function deriveQueueSeverity(currentDepth: number, thresholds: { warning: number; critical: number }): AlertSeverity {
+  if (currentDepth >= thresholds.critical) return "critical";
+  if (currentDepth >= thresholds.warning) return "warning";
+  return "info";
+}
+
+function isAlertSeverity(value: unknown): value is AlertSeverity {
+  return value === "info" || value === "warning" || value === "critical";
+}
+
+export function resolveQueueDepthSeverity(queueDepth: DashboardStatusResponse["queue_depth"]): AlertSeverity {
+  if (isAlertSeverity(queueDepth.state)) return queueDepth.state;
+  return deriveQueueSeverity(queueDepth.current_depth, queueDepth.thresholds);
+}
+
+export function parseDashboardTelemetryFallback(input: unknown): DashboardTelemetryFallback | null {
+  if (!input || typeof input !== "object") return null;
+  const candidate = input as Partial<DashboardTelemetryFallback>;
+  const healthOk = candidate.serviceHealthStatus === "healthy" || candidate.serviceHealthStatus === "degraded" || candidate.serviceHealthStatus === "offline";
+  const numeric = [candidate.queueDepth, candidate.warningThreshold, candidate.criticalThreshold, candidate.activeAlerts, candidate.totalAlerts].every(
+    (value) => typeof value === "number" && Number.isFinite(value)
+  );
+  if (!healthOk || !numeric) return null;
+  return {
+    serviceHealthStatus: candidate.serviceHealthStatus!,
+    queueDepth: candidate.queueDepth!,
+    warningThreshold: candidate.warningThreshold!,
+    criticalThreshold: candidate.criticalThreshold!,
+    activeAlerts: candidate.activeAlerts!,
+    totalAlerts: candidate.totalAlerts!,
+  };
+}
+
+function StatCard({ label, value, icon: Icon, color, trend }: { label: string; value: string; icon: typeof Activity; color: DashboardCardColor; trend: DashboardTrend }) {
   return (
-    <div className="flex items-center gap-3 mb-3">
-      <div className="h-px flex-1 bg-gradient-to-r from-zinc-800 to-transparent" />
-      <span className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600">
-        {children}
-      </span>
-      <div className="h-px flex-1 bg-gradient-to-l from-zinc-800 to-transparent" />
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
+      <div className="mb-1 flex items-center justify-between text-[10px] uppercase tracking-wider text-zinc-500">
+        <span className="flex items-center gap-1"><Icon size={12} /> {label}</span>
+        <span className={cn("font-semibold", color === "red" ? "text-red-400" : color === "orange" ? "text-orange-400" : "text-lime-400")}>{trend}</span>
+      </div>
+      <p className="text-xl font-semibold text-zinc-100">{value}</p>
     </div>
   );
 }
 
-function deriveQueueSeverity(currentDepth: number, thresholds: { warning: number; critical: number }): AlertSeverity {
-    if (currentDepth >= thresholds.critical) {
-        return 'critical';
-    }
-    if (currentDepth >= thresholds.warning) {
-        return 'warning';
-    }
-    return 'info';
-}
-
-function isAlertSeverity(value: unknown): value is AlertSeverity {
-    return value === 'info' || value === 'warning' || value === 'critical';
-}
-
-export function resolveQueueDepthSeverity(
-    queueDepth: DashboardStatusResponse['queue_depth']
-): AlertSeverity {
-    if (isAlertSeverity(queueDepth.state)) {
-        return queueDepth.state;
-    }
-
-    return deriveQueueSeverity(queueDepth.current_depth, queueDepth.thresholds);
-}
-
-function formatTimestamp(value: string | null): string {
-  if (!value) {
-    return "—";
-  }
-  return new Date(value).toLocaleString();
-}
-
-function formatFreshnessMinutes(value: string | null): string {
-  if (!value) {
-    return "Updated —";
-  }
-
-  const observedAt = new Date(value).getTime();
-  if (Number.isNaN(observedAt)) {
-    return "Updated —";
-  }
-
-  const elapsedMinutes = Math.max(0, Math.floor((Date.now() - observedAt) / 60_000));
-  return `Updated ${elapsedMinutes} min ago`;
-}
-
-interface DashboardViewProps {
-    telemetry?: any;
-    api?: DashboardViewApi;
-}
-
 export function DashboardView({ telemetry, api = defaultDashboardViewApi }: DashboardViewProps) {
-export function DashboardView() {
-    const [currentTime, setCurrentTime] = useState('');
-    const [dashboardStatus, setDashboardStatus] = useState<DashboardStatusResponse | null>(null);
-    const [notifications, setNotifications] = useState(createNotificationsState());
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [refreshTick, setRefreshTick] = useState(0);
-    const [ackInFlight, setAckInFlight] = useState<Record<string, boolean>>({});
-    const inFlightAlertIdsRef = useRef(new Set<string>());
-    const previousAlertByIdRef = useRef<Record<string, AlertCenterItem | undefined>>({});
+  const [dashboardStatus, setDashboardStatus] = useState<DashboardStatusResponse | null>(null);
+  const [alerts, setAlerts] = useState<AlertCenterItem[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [ackInFlight, setAckInFlight] = useState<Record<string, boolean>>({});
 
-    useEffect(() => {
-        const tick = () => {
-            setCurrentTime(
-                new Date().toLocaleTimeString(undefined, {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    hour12: false,
-                })
-            );
-        };
+  useEffect(() => {
+    const controller = new AbortController();
+function formatFreshnessMinutes(value: string | null): string {
+  if (!value) return "Updated —";
+  const observedAt = new Date(value).getTime();
+  if (Number.isNaN(observedAt)) return "Updated —";
+  return `Updated ${Math.max(0, Math.floor((Date.now() - observedAt) / 60_000))} min ago`;
+}
 
-        tick();
-        const timer = setInterval(tick, 1000);
-        return () => clearInterval(timer);
-    }, []);
+export function DashboardView({ telemetry: _telemetry, api = defaultDashboardViewApi }: DashboardViewProps) {
+  const [status, setStatus] = useState<DashboardStatusResponse | null>(null);
+  const [notifications, setNotifications] = useState(createNotificationsState());
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [ackInFlight, setAckInFlight] = useState<Record<string, boolean>>({});
 
-    useEffect(() => {
-        let mounted = true;
-        const abortController = new AbortController();
+  useEffect(() => {
+    let mounted = true;
+    const abortController = new AbortController();
 
-        const load = async () => {
-            setLoading(true);
-            setError(null);
-
-            try {
-                const [dashboard, alertRows] = await Promise.all([
-                    dashboardApi.fetchDashboardStatus(abortController.signal),
-                    dashboardApi.fetchDashboardAlerts?.(undefined, abortController.signal),
-                    api.fetchDashboardStatus(abortController.signal),
-                    api.fetchDashboardAlerts(undefined, abortController.signal),
-                ]);
-                if (mounted) {
-                    setDashboardStatus(dashboard);
-                    setNotifications(setNotificationAlerts(createNotificationsState(dashboard.alert_center), alertRows));
-                    setAlerts(alertRows ?? dashboard.alert_center.items);
-                }
-            } catch (fetchError) {
-                if (abortController.signal.aborted) return;
-                if (mounted) {
-                    setError(fetchError instanceof Error ? fetchError.message : 'Failed to load dashboard status');
-                }
-            } finally {
-                if (mounted && !abortController.signal.aborted) {
-                    setLoading(false);
-                }
-            }
-        };
-
-        void load();
-
-        return () => {
-            mounted = false;
-            abortController.abort();
-        };
-    }, [dashboardApi, refreshTick]);
-    }, [api, refreshTick]);
-
-    const alertCounts = useMemo(() => {
-        const counts: Record<AlertSeverity, number> = { critical: 0, warning: 0, info: 0 };
-        for (const alert of notifications.alerts) {
-            counts[alert.severity] += 1;
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const [status, alertItems] = await Promise.all([
+          api.fetchDashboardStatus(controller.signal),
+          api.fetchDashboardAlerts(undefined, controller.signal),
+        ]);
+        setDashboardStatus(status);
+        setAlerts(alertItems.length > 0 ? alertItems : status.alert_center.items);
+      } catch (fetchError) {
+        if (!controller.signal.aborted) {
+          setError(fetchError instanceof Error ? fetchError.message : "Failed to load dashboard status");
         }
-        return counts;
-    }, [notifications.alerts]);
-
-    const filteredAlerts = useMemo(() => getFilteredNotificationAlerts(notifications), [notifications]);
-    const activeAlerts = useMemo(
-      () => notifications.alerts.filter((item) => !item.acknowledged),
-      [notifications.alerts]
-    );
-
-    const handleAcknowledge = async (alertId: string) => {
-        const previousAlerts = notifications.alerts;
-        const nowIso = new Date().toISOString();
-
-        setAckInFlight((prev) => ({ ...prev, [alertId]: true }));
-        setNotifications((prev) => setNotificationAlerts(
-          prev,
-          prev.alerts.map((item) =>
-                item.alert_id === alertId
-                    ? { ...item, acknowledged: true, acknowledged_at: item.acknowledged_at ?? nowIso }
-                    : item
-            )
-        ));
-
-        try {
-            const acknowledgedAlert = await acknowledgeDashboardAlert(alertId);
-            setNotifications((prev) => setNotificationAlerts(
-              prev,
-              prev.alerts.map((item) => (item.alert_id === alertId ? acknowledgedAlert : item))
-            ));
-        } catch {
-            setNotifications((prev) => setNotificationAlerts(prev, previousAlerts));
-        if (inFlightAlertIdsRef.current.has(alertId)) {
-            return;
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
+        const [dashboard, alertRows] = await Promise.all([
+          api.fetchDashboardStatus(abortController.signal),
+          api.fetchDashboardAlerts(undefined, abortController.signal),
+        ]);
+        if (!mounted) return;
+        setStatus(dashboard);
+        setNotifications(setNotificationAlerts(createNotificationsState(dashboard.alert_center), alertRows));
+      } catch (fetchError) {
+        if (mounted && !abortController.signal.aborted) {
+          setError(fetchError instanceof Error ? fetchError.message : "Failed to load dashboard status");
         }
-
-        inFlightAlertIdsRef.current.add(alertId);
-        const nowIso = new Date().toISOString();
-
-        setAckInFlight((prev) => ({ ...prev, [alertId]: true }));
-        setAlerts((prev) =>
-            prev.map((item) => {
-                if (item.alert_id !== alertId) {
-                    return item;
-                }
-
-                previousAlertByIdRef.current[alertId] = item;
-                return {
-                    ...item,
-                    acknowledged: true,
-                    acknowledged_at: item.acknowledged_at ?? nowIso,
-                };
-            })
-        );
-
-        try {
-            const acknowledgedAlert = await dashboardApi.acknowledgeAlert(alertId);
-            const acknowledgedAlert = await api.acknowledgeDashboardAlert(alertId);
-            setAlerts((prev) =>
-                prev.map((item) => (item.alert_id === alertId ? acknowledgedAlert : item))
-            );
-        } catch {
-            const previousAlert = previousAlertByIdRef.current[alertId];
-            if (previousAlert) {
-                setAlerts((prev) =>
-                    prev.map((item) => (item.alert_id === alertId ? previousAlert : item))
-                );
-            }
-        } finally {
-            delete previousAlertByIdRef.current[alertId];
-            inFlightAlertIdsRef.current.delete(alertId);
-            setAckInFlight((prev) => {
-                if (!prev[alertId]) {
-                    return prev;
-                }
-                const next = { ...prev };
-                delete next[alertId];
-                return next;
-            });
-        }
+      } finally {
+        if (mounted && !abortController.signal.aborted) setLoading(false);
+      }
     };
 
-    const severityTone: Record<AlertSeverity, string> = {
-        critical: 'bg-red-500/15 text-red-300 border-red-500/30',
-        warning: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
-        info: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30',
+    void load();
+    return () => {
+      mounted = false;
+      abortController.abort();
     };
+  }, [api]);
 
-    const healthColor =
-        dashboardStatus?.service_health.status === 'healthy'
-            ? 'lime'
-            : dashboardStatus?.service_health.status === 'degraded'
-              ? 'orange'
-              : 'red';
-    const queueSeverity = dashboardStatus
-        ? resolveQueueDepthSeverity(dashboardStatus.queue_depth)
-        : 'info';
+  const activeAlerts = useMemo(() => notifications.alerts.filter((item) => !item.acknowledged), [notifications.alerts]);
+  const filteredAlerts = useMemo(() => getFilteredNotificationAlerts(notifications), [notifications]);
 
-    const queueColor =
-        queueSeverity === 'critical'
-            ? 'red'
-            : queueSeverity === 'warning'
-              ? 'orange'
-              : 'lime';
-    const rotationColor = dashboardStatus?.rotation.is_stale ? 'red' : 'lime';
-    const alertCenterColor = activeAlerts.length > 0 ? 'orange' : 'lime';
-    const queueSparkline = dashboardStatus?.queue_depth.trend.map((point) => point.depth);
-    const queueScaleMax = dashboardStatus
-      ? Math.max(
-          dashboardStatus.queue_depth.current_depth,
-          dashboardStatus.queue_depth.thresholds.warning,
-          dashboardStatus.queue_depth.thresholds.critical,
-          ...dashboardStatus.queue_depth.trend.map((item) => item.depth),
-          1
-        )
-      : 1;
-    const warningMarkerLeft = dashboardStatus
-      ? (dashboardStatus.queue_depth.thresholds.warning / queueScaleMax) * 100
-      : 0;
-    const criticalMarkerLeft = dashboardStatus
-      ? (dashboardStatus.queue_depth.thresholds.critical / queueScaleMax) * 100
-      : 0;
-    const statusCardsHeadingId = 'dashboard-status-cards-heading';
-    const alertCenterHeadingId = 'dashboard-alert-center-heading';
-    const nowPlayingHeadingId = 'dashboard-now-playing-heading';
-    const audioEngineHeadingId = 'dashboard-audio-engine-heading';
+  const queueSeverity = status ? resolveQueueDepthSeverity(status.queue_depth) : "info";
+  const queueColor = mapSeverityToCardColor(queueSeverity);
+  const healthColor = status ? mapSeverityToCardColor(status.service_health.status === "healthy" ? "info" : status.service_health.status === "offline" ? "critical" : "warning") : "cyan";
 
-    return (
-        <main className="space-y-5" aria-labelledby="dashboard-overview-heading">
-            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="flex items-end justify-between">
-                <div>
-                    <h1 id="dashboard-overview-heading" className="text-2xl font-black tracking-tight text-white">
-                        Station <span className="text-lime-400">Overview</span>
-                    </h1>
-                    <p className="text-[11px] text-zinc-500 mt-0.5">
-                        {dashboardStatus?.service_health.reason || 'Initializing...'}
-                    </p>
-                    <p className="text-[11px] text-zinc-500 mt-0.5">
-                        Live monitoring {error ? '· Status API degraded' : '· Status API connected'}
-                    </p>
-                    <p className="text-[11px] text-zinc-500 mt-0.5" data-testid="service-health-freshness">
-                        {formatFreshnessMinutes(dashboardStatus?.service_health.observed_at ?? null)}
-                    </p>
-                </div>
-                <div className="text-right">
-                    <div className="text-lg font-mono font-bold text-zinc-300 tabular-nums tracking-wider">{currentTime}</div>
-                    <div className="text-[9px] text-zinc-600 uppercase tracking-widest">Local Time</div>
-                </div>
-            </motion.div>
+  const handleAcknowledge = async (alertId: string) => {
+    if (ackInFlight[alertId]) return;
+    setAckInFlight((prev) => ({ ...prev, [alertId]: true }));
 
-            <div className="flex justify-end">
-                <button
+    try {
+      const acknowledgedAlert = await api.acknowledgeDashboardAlert(alertId);
+      setNotifications((prev) => setNotificationAlerts(prev, prev.alerts.map((item) => (item.alert_id === alertId ? acknowledgedAlert : item))));
+    } finally {
+      setAckInFlight((prev) => {
+        const next = { ...prev };
+        delete next[alertId];
+        return next;
+      });
+    }
+  };
+
+    void load();
+    return () => controller.abort();
+  }, [api]);
+
+  const fallbackTelemetry = useMemo(() => parseDashboardTelemetryFallback(telemetry), [telemetry]);
+  const queueSeverity = dashboardStatus ? resolveQueueDepthSeverity(dashboardStatus.queue_depth) : null;
+  const activeAlerts = alerts.filter((item) => !item.acknowledged).length;
+
+  const cards = dashboardStatus
+    ? [
+        {
+          label: "Service Health",
+          value: dashboardStatus.service_health.status.toUpperCase(),
+          icon: Activity,
+          color: mapSeverityToCardColor(queueSeverity ?? "info"),
+          trend: mapStatusToTrend(dashboardStatus.service_health.status === "healthy" ? "online" : dashboardStatus.service_health.status === "offline" ? "offline" : "degraded"),
+        },
+        {
+          label: "Queue Depth",
+          value: String(dashboardStatus.queue_depth.current_depth),
+          icon: Gauge,
+          color: mapSeverityToCardColor(queueSeverity ?? "info"),
+          trend: "stable" as DashboardTrend,
+        },
+      ]
+    : fallbackTelemetry
+      ? [
+          {
+            label: "Service Health",
+            value: fallbackTelemetry.serviceHealthStatus.toUpperCase(),
+            icon: Activity,
+            color: "orange" as DashboardCardColor,
+            trend: "stable" as DashboardTrend,
+          },
+          {
+            label: "Queue Depth",
+            value: String(fallbackTelemetry.queueDepth),
+            icon: Gauge,
+            color: "orange" as DashboardCardColor,
+            trend: "stable" as DashboardTrend,
+          },
+        ]
+      : [];
+
+  const handleAcknowledge = async (alertId: string) => {
+    if (ackInFlight[alertId]) return;
+    setAckInFlight((prev) => ({ ...prev, [alertId]: true }));
+    try {
+      const ack = await api.acknowledgeDashboardAlert(alertId);
+      setAlerts((prev) => prev.map((item) => (item.alert_id === alertId ? ack : item)));
+    } finally {
+      setAckInFlight((prev) => ({ ...prev, [alertId]: false }));
+    }
+  };
+
+  return (
+    <main className="space-y-4" data-testid="dashboard-view">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-400">Dashboard</h2>
+        <button type="button" className="inline-flex items-center gap-1 rounded border border-zinc-700 px-2 py-1 text-xs text-zinc-300" onClick={() => setRefreshTick(tick => tick + 1)}>
+          <RefreshCw size={12} /> Refresh
+        </button>
+      </div>
+
+      {loading ? <div role="status">Loading status telemetry…</div> : null}
+      {error ? <div role="alert">Status API unavailable: {error}</div> : null}
+      {!dashboardStatus && fallbackTelemetry ? <div data-testid="dashboard-fallback-banner">Fallback telemetry active.</div> : null}
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        {cards.map((card) => (
+          <StatCard key={card.label} {...card} />
+        ))}
+      </div>
+
+      {dashboardStatus ? (
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-3 text-xs text-zinc-400">
+          Queue state: <span data-testid="queue-depth-state" className={cn("font-semibold uppercase", mapSeverityToStatusTextClass(queueSeverity ?? "info"))}>{queueSeverity}</span>
+          <p data-testid="service-health-freshness">{formatFreshnessMinutes(dashboardStatus.service_health.observed_at)}</p>
+        </div>
+      ) : null}
+
+      <section className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-3">
+        <div className="mb-2 flex items-center justify-between text-xs">
+          <h3 className="font-semibold text-zinc-300">Alert Center</h3>
+          <span>{activeAlerts}/{alerts.length}</span>
+        </div>
+        {alerts.length === 0 ? (
+          <p className="text-xs text-zinc-500">No alerts in timeline.</p>
+        ) : (
+          <div className="space-y-2">
+            {alerts.map((alert) => (
+              <div key={alert.alert_id} className={cn("rounded border p-2", alert.acknowledged ? "opacity-60" : "opacity-100")}>
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <span className="text-[10px] uppercase text-zinc-500">{alert.severity}</span>
+                    <p className="text-sm text-zinc-100">{alert.title}</p>
+                    <p className="text-xs text-zinc-400">{alert.description}</p>
+                  </div>
+                  <button
                     type="button"
-                    onClick={() => setRefreshTick((value) => value + 1)}
-                    className="inline-flex items-center gap-1 rounded-md border border-zinc-700 px-2 py-1 text-[10px] uppercase tracking-wider text-zinc-300 hover:border-zinc-500"
-                >
-                    <RefreshCw size={12} /> Refresh status
-                </button>
-            </div>
-
-            <section
-                aria-labelledby={statusCardsHeadingId}
-                className="space-y-3"
-                tabIndex={0}
-            >
-                <h2 id={statusCardsHeadingId} className="sr-only">Status cards</h2>
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
-                <StatCard
-                    label="Service Health"
-                    value={dashboardStatus?.service_health.status ? dashboardStatus.service_health.status.toUpperCase() : '--'}
-                    icon={Activity}
-                    color={healthColor}
-                    trend="stable"
-                />
-                <StatCard
-                    label="Queue Depth"
-                    value={dashboardStatus?.queue_depth.current_depth ?? '--'}
-                    unit="items"
-                    icon={Gauge}
-                    color={queueColor}
-                    trend={
-                        dashboardStatus?.queue_depth.trend && dashboardStatus.queue_depth.trend.length >= 2
-                            ? dashboardStatus.queue_depth.trend[dashboardStatus.queue_depth.trend.length - 1].depth >=
-                              dashboardStatus.queue_depth.trend[dashboardStatus.queue_depth.trend.length - 2].depth
-                                ? 'up'
-                                : 'down'
-                            : 'stable'
-                    }
-                    sparkline={queueSparkline}
-                    delay={0.05}
-                />
-                <StatCard
-                    label="Warning Threshold"
-                    value={dashboardStatus ? dashboardStatus.queue_depth.thresholds.warning : '--'}
-                    unit="items"
-                    icon={AlertTriangle}
-                    color={queueColor}
-                    trend="stable"
-                    delay={0.1}
-                />
-                <StatCard
-                    label="Critical Threshold"
-                    value={dashboardStatus ? dashboardStatus.queue_depth.thresholds.critical : '--'}
-                    unit="items"
-                    icon={AlertTriangle}
-                    color={queueColor}
-                    trend="stable"
-                    delay={0.15}
-                />
-                <StatCard
-                    label="Rotation"
-                    value={dashboardStatus?.rotation.is_stale ? 'stale' : 'fresh'}
-                    icon={Signal}
-                    color={rotationColor}
-                    trend={dashboardStatus?.rotation.is_stale ? 'down' : 'up'}
-                    delay={0.2}
-                />
-                <StatCard
-                    label="Alert Center"
-                    value={`${activeAlerts.length}/${notifications.alerts.length}`}
-                    unit="active/total"
-                    icon={CheckCircle2}
-                    color={alertCenterColor}
-                    trend={activeAlerts.length > 0 ? 'down' : 'up'}
-                    delay={0.25}
-                />
-                </div>
-            </section>
-
-            {dashboardStatus ? (
-                <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-3 text-xs text-zinc-400">
-                    Queue state: <span data-testid="queue-depth-state" className={cn("font-semibold uppercase", mapSeverityToStatusTextClass(queueSeverity))}>{queueSeverity}</span>
-                </div>
-            ) : null}
-
-            {dashboardStatus ? (
-              <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3" data-testid="queue-depth-threshold-markers">
-                <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-wider text-zinc-500">
-                  <span>Queue threshold markers</span>
-                  <span>{dashboardStatus.queue_depth.current_depth} current</span>
-                </div>
-                <div className="relative h-2 rounded bg-zinc-800">
-                  <div className="absolute inset-y-0 left-0 rounded bg-lime-500/40" style={{ width: `${(dashboardStatus.queue_depth.current_depth / queueScaleMax) * 100}%` }} />
-                  <div className="absolute inset-y-[-4px] w-px bg-amber-400" style={{ left: `${warningMarkerLeft}%` }} data-testid="queue-warning-marker" />
-                  <div className="absolute inset-y-[-4px] w-px bg-red-400" style={{ left: `${criticalMarkerLeft}%` }} data-testid="queue-critical-marker" />
-                </div>
-                <div className="mt-1 flex justify-between text-[10px] text-zinc-500">
-                  <span>Warning {dashboardStatus.queue_depth.thresholds.warning}</span>
-                  <span>Critical {dashboardStatus.queue_depth.thresholds.critical}</span>
+                    disabled={alert.acknowledged || ackInFlight[alert.alert_id]}
+                    onClick={() => void handleAcknowledge(alert.alert_id)}
+                    className="rounded border border-zinc-700 px-2 py-1 text-[10px] uppercase text-zinc-300 disabled:opacity-40"
+                  >
+                    {alert.acknowledged ? <CheckCircle2 size={12} /> : <AlertTriangle size={12} />} {alert.acknowledged ? "Acknowledged" : "Acknowledge"}
+                  </button>
                 </div>
               </div>
-            ) : null}
+            ))}
+          </div>
+        )}
+      </section>
 
-            {loading ? (
-                <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3 text-xs text-zinc-400" role="status" aria-live="polite">
-                    Loading dashboard status…
-                </div>
-            ) : null}
-            {error ? (
-                <div className="rounded-xl border border-red-900/70 bg-red-950/40 p-3 text-xs text-red-200" role="alert">
-                <div role="status" aria-live="polite" aria-atomic="true" className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3 text-xs text-zinc-400">
-                    Loading status telemetry…
-                </div>
-            ) : null}
-            {error ? (
-                <div role="alert" className="rounded-xl border border-red-900/70 bg-red-950/40 p-3 text-xs text-red-200">
-                <div role="alert" aria-live="assertive" aria-atomic="true" className="rounded-xl border border-red-900/70 bg-red-950/40 p-3 text-xs text-red-200">
-                    Status API unavailable: {error}
-                </div>
-            ) : null}
+      <section className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-3 text-xs text-zinc-500">
+        <span className="inline-flex items-center gap-1"><Signal size={12} /> Thresholds</span>
+        <p>
+          Warning: {dashboardStatus?.queue_depth.thresholds.warning ?? fallbackTelemetry?.warningThreshold ?? "--"} · Critical: {dashboardStatus?.queue_depth.thresholds.critical ?? fallbackTelemetry?.criticalThreshold ?? "--"}
+        </p>
+      </section>
+    </main>
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <StatCard label="Service" value={status?.service_health.status.toUpperCase() ?? "--"} icon={Activity} color={healthColor} trend={status ? mapStatusToTrend(status.service_health.status === "healthy" ? "online" : status.service_health.status) : "stable"} />
+        <StatCard label="Queue Depth" value={status?.queue_depth.current_depth ?? "--"} unit="items" icon={Gauge} color={queueColor} trend="stable" />
+        <StatCard label="Alert Center" value={`${activeAlerts.length}/${notifications.alerts.length}`} unit="active/total" icon={CheckCircle2} color={mapSeverityToCardColor(activeAlerts.length > 0 ? "warning" : "info")} trend={activeAlerts.length > 0 ? "down" : "up"} />
+      </div>
 
-            <section aria-labelledby={alertCenterHeadingId} className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                    <h2 id={alertCenterHeadingId} className="text-xs font-semibold tracking-wide text-zinc-300 uppercase">Alert Center</h2>
-                    <div className="text-[10px] text-zinc-500">
-                        <span data-testid="severity-count-critical">Critical: {alertCounts.critical}</span>
-                        {' · '}
-                        <span>Warning: {alertCounts.warning}</span>
-                        {' · '}
-                        <span>Info: {alertCounts.info}</span>
-                        <span data-testid="severity-count-critical">Critical: {alertCounts.critical}</span> ·{" "}
-                        <span data-testid="severity-count-warning">Warning: {alertCounts.warning}</span> ·{" "}
-                        <span data-testid="severity-count-info">Info: {alertCounts.info}</span>
-                    </div>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                    {dashboardStatus?.alert_center.filters.map((severity) => {
-                        const selected = notifications.selectedSeverities.includes(severity);
-                        return (
-                          <button
-                            key={severity}
-                            type="button"
-                            onClick={() => setNotifications((prev) => toggleNotificationSeverity(prev, severity))}
-                            className={cn(
-                              "rounded-full border px-2 py-1 text-[10px] uppercase",
-                              selected ? severityTone[severity] : "border-zinc-700 text-zinc-500"
-                            )}
-                          >
-                            {severity}
-                          </button>
-                        );
-                    })}
-                </div>
-                {filteredAlerts.length === 0 ? (
-                <div className="text-xs text-zinc-500" data-testid="queue-depth-state">
-                    {queueSeverity}
-                </div>
-                {alerts.length === 0 ? (
-                    <div className="text-xs text-zinc-500">No alerts in timeline.</div>
-                ) : (
-                    <div className="space-y-2">
-                        {filteredAlerts.map((alert) => (
-                            <div
-                                key={alert.alert_id}
-                                className={cn(
-                                    'rounded-lg border border-zinc-800 p-2',
-                                    alert.acknowledged && 'opacity-60'
-                                )}
-                            >
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="space-y-1">
-                                        <div className="flex items-center gap-2">
-                                            <span className={cn('rounded-full border px-2 py-0.5 text-[10px] uppercase', severityTone[alert.severity])}>
-                                                {alert.severity}
-                                            </span>
-                                            <p className="text-sm font-medium text-zinc-100">{alert.title}</p>
-                                        </div>
-                                        <p className="text-xs text-zinc-400">{alert.description}</p>
-                                        {alert.acknowledged && (
-                                            <p className="text-[10px] text-zinc-500" data-testid={`alert-ack-${alert.alert_id}`}>
-                                            <p data-testid={`alert-ack-${alert.alert_id}`} className="text-[10px] text-zinc-500">
-                                                Ack at: {formatTimestamp(alert.acknowledged_at)}
-                                            </p>
-                                        )}
-                                    </div>
-                                    <button
-                                        type="button"
-                                        disabled={alert.acknowledged || ackInFlight[alert.alert_id]}
-                                        onClick={() => void handleAcknowledge(alert.alert_id)}
-                                        className="rounded border border-zinc-700 px-2 py-1 text-[10px] uppercase text-zinc-300 disabled:cursor-not-allowed disabled:opacity-40"
-                                    >
-                                        {alert.acknowledged ? 'Acknowledged' : 'Acknowledge'}
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </section>
+      {status ? <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-3 text-xs text-zinc-400">Queue state: <span className={cn("font-semibold uppercase", mapSeverityToStatusTextClass(queueSeverity))}>{queueSeverity}</span></div> : null}
+      {status ? <div data-testid="service-health-freshness" className="text-xs text-zinc-500">{formatFreshnessMinutes(status.service_health.observed_at)}</div> : null}
+      {loading ? <div role="status" className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3 text-xs text-zinc-400">Loading status telemetry…</div> : null}
+      {error ? <div role="alert" className="rounded-xl border border-red-900/70 bg-red-950/40 p-3 text-xs text-red-200">Status API unavailable: {error}</div> : null}
 
-            <SectionHeader>Now Playing</SectionHeader>
-            <section aria-labelledby={nowPlayingHeadingId} className="space-y-4">
-                <h2 id={nowPlayingHeadingId} className="sr-only">Now playing</h2>
-                <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_340px]">
-                <div className="space-y-4">
-                    <div className="glass-panel overflow-hidden">
-                        <div className="panel-header">
-                            <div className="flex items-center gap-2">
-                                <div
-                                    className="w-2 h-2 rounded-full bg-lime-500 animate-pulse"
-                                    style={{ boxShadow: '0 0 8px rgba(170,255,0,0.45)' }}
-                                />
-                                <span className="panel-header-title">Master Output</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Signal size={10} className="text-lime-500" />
-                                <span className="text-[9px] font-mono text-zinc-500">
-                                    AAC 320k
-                                </span>
-                            </div>
-                        </div>
-                        <div className="p-3">
-                            <DegenWaveform
-                                progress={0.42}
-                                duration={234}
-                                trackTitle="Neural Drift v2.1 - SynthKong"
-                                isPlaying
-                                cuePoints={[
-                                    { position: 0.12, label: 'CUE 1', color: '#ff6b00' },
-                                    { position: 0.68, label: 'DROP', color: '#bf00ff' },
-                                ]}
-                            />
-                        </div>
-                    </div>
-                    <SectionHeader>On-Air Schedule</SectionHeader>
-                    <DegenScheduleTimeline />
-                </div>
+      <section className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 space-y-2">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-semibold tracking-wide text-zinc-300 uppercase">Alert Center</h2>
+          <button type="button" onClick={() => void api.fetchDashboardStatus()} className="inline-flex items-center gap-1 rounded border border-zinc-700 px-2 py-1 text-[10px] uppercase tracking-wider text-zinc-300">
+            <RefreshCw size={11} /> Refresh
+          </button>
+        </div>
+        <div className="flex gap-1.5">
+          {(["critical", "warning", "info"] as const).map((severity) => (
+            <button key={severity} type="button" onClick={() => setNotifications((prev) => toggleNotificationSeverity(prev, severity))} className="rounded border border-zinc-700 px-2 py-1 text-[10px] uppercase tracking-wider text-zinc-400">{severity}</button>
+          ))}
+        </div>
+        {filteredAlerts.map((alert) => (
+          <div key={alert.alert_id} className={cn("rounded-lg border border-zinc-800 p-2", alert.acknowledged && "opacity-60")}>
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <div className="text-xs font-semibold text-zinc-100">{alert.title}</div>
+                <div className="text-[11px] text-zinc-500">{alert.description}</div>
+              </div>
+              {!alert.acknowledged ? (
+                <button type="button" onClick={() => void handleAcknowledge(alert.alert_id)} disabled={Boolean(ackInFlight[alert.alert_id])} className="rounded bg-zinc-800 px-2 py-1 text-[10px] text-zinc-200">Acknowledge</button>
+              ) : null}
+            </div>
+          </div>
+        ))}
+      </section>
 
-                <div className="space-y-4">
-                    <DegenAIHost className="glass-panel" />
-                </div>
-                </div>
-            </section>
-
-            <SectionHeader>Audio Engine</SectionHeader>
-            <section aria-labelledby={audioEngineHeadingId} className="space-y-4">
-                <h2 id={audioEngineHeadingId} className="sr-only">Audio engine</h2>
-                <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-                <div className="glass-panel overflow-hidden">
-                    <div className="panel-header">
-                        <span className="panel-header-title">Beat Sequencer</span>
-                    </div>
-                    <div className="p-3">
-                        <DegenBeatGrid decks={4} steps={16} />
-                    </div>
-                </div>
-
-                <DegenEffectRack
-                    title="Master FX"
-                    deck="MST"
-                    isActive
-                    controls={[
-                        { key: 'reverb', label: 'Reverb', unit: '%' },
-                        { key: 'comp', label: 'Comp', unit: 'dB', max: 30 },
-                        { key: 'rate', label: 'Rate', unit: 'Hz', max: 20 },
-                        { key: 'limit', label: 'Limiter', unit: 'dB', max: 0 },
-                        { key: 'width', label: 'Stereo', unit: '%' },
-                    ]}
-                />
-                </div>
-            </section>
-        </main>
-    );
+      <section className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+        <DegenEffectRack title="Deck FX" deck="A" controls={[{ key: "filter", label: "FLT" }, { key: "drive", label: "DRV" }, { key: "space", label: "SPC" }]} />
+        <DegenWaveform />
+        <DegenBeatGrid />
+        <DegenScheduleTimeline />
+        <DegenAIHost />
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 text-zinc-500 text-xs flex items-center gap-2"><Signal size={12} /> live monitor</div>
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 text-zinc-500 text-xs flex items-center gap-2"><AlertTriangle size={12} /> queue guardrail active</div>
+      </section>
+    </div>
+  );
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
+import { loadEnv } from '@/lib/env';
 
 interface ProxySession {
   userId: string;
@@ -58,6 +59,8 @@ function resolveBackendBaseUrlConfig(): BackendBaseUrlConfig {
     configError:
       'Missing dashboard backend configuration. Set DASHBOARD_STATUS_BACKEND_URL (or INTERNAL_API_BASE_URL fallback) for this environment.',
   };
+function resolveBackendBaseUrl(): string {
+  return loadEnv().dashboardStatusBackendUrl;
 }
 
 function buildErrorEnvelope(status: number, detail: string, code?: string): ProxyErrorEnvelope {
@@ -65,7 +68,7 @@ function buildErrorEnvelope(status: number, detail: string, code?: string): Prox
 }
 
 async function requireSession(): Promise<ProxySession | NextResponse> {
-  const supabase = createServerClient();
+  const supabase = await createServerClient();
   const {
     data: { session },
   } = await supabase.auth.getSession();

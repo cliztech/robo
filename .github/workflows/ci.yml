@@ -108,6 +108,33 @@ jobs:
 
       - name: Lint dashboard status env declarations
         run: python scripts/ci/check_dashboard_status_env_requirements.py
+  # ── Runtime Contract Validation ───────────────────────────
+  runtime-contract:
+    name: Runtime Contract — CI Context Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate runtime environment contract (ci)
+        env:
+          CI: "true"
+          GITHUB_ACTIONS: "true"
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_SHA: ${{ github.sha }}
+          ROBODJ_ENV: "staging"
+        run: |
+          set -euo pipefail
+          echo "Running CI runtime contract gate (non-secret env vars)..."
+          python config/check_runtime_env.py --context ci
+      - name: Guard generated artifacts in source paths
+        run: python scripts/ci/check_generated_artifacts.py
 
   # ── Security ───────────────────────────────────────────────
   security:
@@ -142,6 +169,18 @@ jobs:
         with:
           node-version: 20
           cache: npm
+
+      - name: Enforce runtime secret contract (protected refs only)
+        if: steps.policy.outputs.enforce == 'true'
+        env:
+          ROBODJ_PROTECTED_ENV: "true"
+          ROBODJ_SECRET_KEY: ${{ secrets.ROBODJ_SECRET_KEY }}
+          ROBODJ_SECRET_V2_KEY: ${{ secrets.ROBODJ_SECRET_V2_KEY }}
+          ROBODJ_SCHEDULER_API_KEY: ${{ secrets.ROBODJ_SCHEDULER_API_KEY }}
+        run: |
+          set -euo pipefail
+          echo "Running protected runtime secret contract gate..."
+          python config/check_runtime_secrets.py --require-env-only
 
       - name: Install Python dependencies
         run: |
