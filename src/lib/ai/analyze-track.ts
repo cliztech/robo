@@ -90,8 +90,9 @@ export async function analyzeTrack(options: AnalyzeTrackOptions): Promise<{
   analysis: TrackAnalysis
   tokensUsed: number
   costUSD: number
+  latencyMs: number
 }> {
-  const { trackId, metadata, audioFeatures } = options
+  const { metadata, audioFeatures } = options
 
   try {
     // Build context prompt
@@ -132,22 +133,11 @@ Be precise and confident in your classifications. Use your training on millions 
       throw new Error(`Low confidence score: ${result.object.confidenceScore}`)
     }
 
-    // Log analysis
-    await logAIDecision({
-      trackId,
-      decisionType: 'track_analysis',
-      modelUsed: AI_CONFIG.models.analysis,
-      tokensUsed,
-      costUSD,
-      latencyMs,
-      confidenceScore: result.object.confidenceScore,
-      result: result.object,
-    })
-
     return {
       analysis: result.object,
       tokensUsed,
       costUSD,
+      latencyMs,
     }
   } catch (error: any) {
     console.error('Track analysis error:', error)
@@ -202,18 +192,4 @@ function calculateCost(tokens: number, model: string): number {
   const outputTokens = Math.floor(tokens * 0.4)
 
   return inputTokens * modelPricing.input + outputTokens * modelPricing.output
-}
-
-async function logAIDecision(data: {
-  trackId: string
-  decisionType: string
-  modelUsed: string
-  tokensUsed: number
-  costUSD: number
-  latencyMs: number
-  confidenceScore: number
-  result: any
-}): Promise<void> {
-  // Log to database for transparency
-  // Implementation in Step 3
 }
