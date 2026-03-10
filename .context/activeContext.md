@@ -294,6 +294,11 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added protected-ref runtime secret gate in CI using `python config/check_runtime_secrets.py --require-env-only` with explicit fail-fast shell settings and secret-backed env wiring.
 - Documented CI runtime contract gate commands in `docs/DEVELOPMENT_ENV_SETUP.md` for operator/developer parity.
 - Added repository hygiene guardrails for generated Python packaging artifacts: ignore `*.egg-info`, removed accidental `src/UNKNOWN.egg-info/`, added CI scanner (`scripts/ci/check_generated_artifacts.py`), and added isolated wheel-build script outputting to `.artifacts/python-packaging`.
+## 2026-03-05 CI gate contract enforcement update
+- Added a new fail-fast `preflight` job in `.github/workflows/ci.yml` to run runtime-version, product-naming, design-token, and env-only secret integrity checks before build/test jobs.
+- Codified branch-aware severity policy: hard-fail on `main`/`release/**`, warning-only on non-release refs.
+- Added machine-readable CI gate summary artifact upload (`ci-reports/ci-gates-summary.json`) for audit evidence.
+- Documented mandatory CI gate contract + local preflight equivalent in `CONTRIBUTING.md`.
 
 ## 2026-03-05 Legacy `/analyze-track` sunset enforcement
 - Added runtime-configurable cutoff gate (`ROBODJ_LEGACY_AI_ROUTE_CUTOFF`) for deprecated `POST /api/v1/ai/analyze-track`.

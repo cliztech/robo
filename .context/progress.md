@@ -302,6 +302,11 @@
 - [x] Added `scripts/ci/build_python_wheels.sh` to keep Python packaging outputs in `.artifacts/python-packaging` instead of app source paths.
 - [x] Added CI guard script `scripts/ci/check_generated_artifacts.py` and wired it into `.github/workflows/ci.yml` config job.
 
+## 2026-03-05 CI gate contract + fail-fast preflight
+- [x] Added fail-fast preflight checks in CI for runtime versions, product naming, design tokens, and env-only runtime secret policy.
+- [x] Implemented branch-aware severity behavior (main/release hard fail, feature/non-release warning-only).
+- [x] Added machine-readable gate summary artifact publication for CI auditability.
+- [x] Documented the CI gate contract and local preflight commands in `CONTRIBUTING.md`.
 ## 2026-03-05 Legacy AI route deprecation telemetry + cutoff
 - [x] Implemented structured telemetry for `POST /api/v1/ai/analyze-track` with usage count and caller metadata (`sha256` API-key fingerprint + optional `X-Tenant-ID`).
 - [x] Added `ROBODJ_LEGACY_AI_ROUTE_CUTOFF` handling with ISO-8601 parsing and hard failover to `410 Gone` after sunset.
