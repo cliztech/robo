@@ -35,7 +35,7 @@ package-config:
 	@echo "Build complete: $(CONFIG_ARCHIVE)"
 
 qa:
-	yamllint docker-compose.yaml
+	yamllint docker-compose.yaml docker-compose.base.yml docker-compose.dev.yml docker-compose.staging.yml docker-compose.release.yml docker-compose.prod.yml
 	markdownlint-cli2 "**/*.md" "!make-4.3/**"
 	$(PYTHON) -m py_compile config/inspect_db.py
 
@@ -58,10 +58,10 @@ distcheck: check
 # ── Sprint 1 additions ─────────────────────────────────────
 
 dev:
-	docker compose -f docker-compose.dev.yml up
+	docker compose -f docker-compose.base.yml -f docker-compose.dev.yml --profile dev up
 
 dev-down:
-	docker compose -f docker-compose.dev.yml down
+	docker compose -f docker-compose.base.yml -f docker-compose.dev.yml --profile dev down
 
 test-backend:
 	$(PYTHON) -m pytest backend/tests -x -q --tb=short

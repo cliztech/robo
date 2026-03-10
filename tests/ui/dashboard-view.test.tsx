@@ -1,24 +1,10 @@
-import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { DashboardView, type DashboardViewApi } from "@/components/console/DashboardView";
-import type { AlertCenterItem, DashboardStatusResponse } from "@/lib/status/dashboardClient";
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+import { DashboardView, parseDashboardTelemetryFallback, resolveQueueDepthSeverity, type DashboardViewApi } from '@/components/console/DashboardView';
+import type { AlertCenterItem, DashboardStatusResponse } from '@/lib/status/dashboardClient';
 
-function buildAlerts(): AlertCenterItem[] {
-  return [
-    {
-      alert_id: "alert-queue-critical",
-      severity: "critical",
-      title: "Queue depth above critical threshold",
-      description: "Queue depth has exceeded 50 items for over 5 minutes.",
-      created_at: "2026-02-26T11:53:00.000Z",
-      acknowledged: false,
-      acknowledged_at: null,
-    },
-  ];
-}
-
-function buildStatus(reason = "queue depth above critical threshold"): DashboardStatusResponse {
+function buildStatus(overrides: Partial<DashboardStatusResponse> = {}): DashboardStatusResponse {
   return {
     service_health: {
       status: "degraded",
@@ -40,6 +26,8 @@ function buildStatus(reason = "queue depth above critical threshold"): Dashboard
     alert_center: {
       filters: ["critical", "warning", "info"],
       items: buildAlerts(),
+      filters: ['info', 'warning', 'critical'],
+      items: [],
     },
   };
 }
@@ -63,6 +51,15 @@ function buildApi(overrides: Partial<DashboardViewApi> = {}): DashboardViewApi {
       acknowledged: true,
       acknowledged_at: "2026-02-26T12:05:00.000Z",
     }),
+function buildAlert(overrides: Partial<AlertCenterItem> = {}): AlertCenterItem {
+  return {
+    alert_id: 'alert-queue-critical',
+    severity: 'critical',
+    title: 'Queue depth above critical threshold',
+    description: 'Queue depth has exceeded 50 items for over 5 minutes.',
+    created_at: '2026-02-26T11:53:00.000Z',
+    acknowledged: false,
+    acknowledged_at: null,
     ...overrides,
   };
 }
@@ -147,5 +144,66 @@ describe("DashboardView", () => {
     await waitFor(() => {
       expect(screen.getByRole("button", { name: "Acknowledged" })).toBeInTheDocument();
     });
+  });
+function buildApi(overrides: Partial<DashboardViewApi> = {}): DashboardViewApi {
+  return {
+    fetchDashboardStatus: vi.fn().mockResolvedValue(buildStatus()),
+    fetchDashboardAlerts: vi.fn().mockResolvedValue([buildAlert()]),
+    acknowledgeDashboardAlert: vi.fn().mockResolvedValue(buildAlert({ acknowledged: true })),
+    ...overrides,
+  };
+}
+
+describe('dashboard telemetry contracts', () => {
+  it('honors API-provided queue depth state', () => {
+    const status = buildStatus({
+      queue_depth: {
+        ...buildStatus().queue_depth,
+        current_depth: 80,
+        state: 'info',
+      },
+    });
+
+    expect(resolveQueueDepthSeverity(status.queue_depth)).toBe('info');
+  });
+
+  it('rejects malformed fallback telemetry', () => {
+    expect(parseDashboardTelemetryFallback({ serviceHealthStatus: 'healthy', queueDepth: 'high' })).toBeNull();
+    expect(parseDashboardTelemetryFallback({ queueDepth: 12 })).toBeNull();
+  });
+});
+
+describe('DashboardView rendering', () => {
+  it('renders fallback telemetry when status API fails', async () => {
+    const api = buildApi({
+      fetchDashboardStatus: vi.fn().mockRejectedValue(new Error('status endpoint unavailable')),
+      fetchDashboardAlerts: vi.fn().mockResolvedValue([]),
+    });
+
+    render(
+      <DashboardView
+        api={api}
+        telemetry={{
+          serviceHealthStatus: 'degraded',
+          queueDepth: 22,
+          warningThreshold: 30,
+          criticalThreshold: 50,
+          activeAlerts: 1,
+          totalAlerts: 2,
+        }}
+      />
+    );
+
+    expect((await screen.findByRole('alert')).textContent).toContain('Status API unavailable: status endpoint unavailable');
+    expect(screen.getByTestId('dashboard-fallback-banner').textContent).toContain('Fallback telemetry active.');
+    expect(screen.getByText('22')).toBeTruthy();
+  });
+
+  it('renders API status cards when service responds', async () => {
+    const api = buildApi();
+    render(<DashboardView api={api} />);
+
+    expect(await screen.findByText('DEGRADED')).toBeTruthy();
+    expect(screen.getByText('54')).toBeTruthy();
   });
 });
