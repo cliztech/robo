@@ -6,7 +6,7 @@ type AlertAckRouteParams = { alertId: string };
 type AlertAckRouteContext = AppRouteParamsContext<AlertAckRouteParams>;
 
 export async function POST(request: NextRequest, { params }: AlertAckRouteContext) {
-  const { alertId } = await params;
+  const { alertId } = params;
   const normalizedAlertId = typeof alertId === 'string' ? alertId.trim() : '';
 
   if (!normalizedAlertId) {
