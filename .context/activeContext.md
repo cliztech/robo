@@ -301,6 +301,9 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added protected-ref runtime secret gate in CI using `python config/check_runtime_secrets.py --require-env-only` with explicit fail-fast shell settings and secret-backed env wiring.
 - Documented CI runtime contract gate commands in `docs/DEVELOPMENT_ENV_SETUP.md` for operator/developer parity.
 - Added repository hygiene guardrails for generated Python packaging artifacts: ignore `*.egg-info`, removed accidental `src/UNKNOWN.egg-info/`, added CI scanner (`scripts/ci/check_generated_artifacts.py`), and added isolated wheel-build script outputting to `.artifacts/python-packaging`.
+
+- Resolved merge-corrupted `DashboardView` by unifying typed API imports/props, collapsing to one polling effect + abort path, and removing undefined dashboard identifiers; added deterministic polling override for testability.
+- Replaced `tests/ui/dashboard-view.test.tsx` with focused UI coverage for initial load, failed load, polling refresh, acknowledge rollback on error, and duplicate request prevention.
 ## 2026-03-05 CI gate contract enforcement update
 - Added a new fail-fast `preflight` job in `.github/workflows/ci.yml` to run runtime-version, product-naming, design-token, and env-only secret integrity checks before build/test jobs.
 - Codified branch-aware severity policy: hard-fail on `main`/`release/**`, warning-only on non-release refs.

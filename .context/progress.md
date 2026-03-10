@@ -309,6 +309,10 @@
 - [x] Added `scripts/ci/build_python_wheels.sh` to keep Python packaging outputs in `.artifacts/python-packaging` instead of app source paths.
 - [x] Added CI guard script `scripts/ci/check_generated_artifacts.py` and wired it into `.github/workflows/ci.yml` config job.
 
+## 2026-03-05 DashboardView consolidation and UI regression coverage
+- [x] Rebuilt `src/components/console/DashboardView.tsx` to a single export + single `DashboardViewProps` contract with typed API injection and canonical dashboard type imports.
+- [x] Removed duplicate effect/import blocks and undefined symbols (`dashboardApi`, `setAlerts`, `DashboardStatusApi`) by introducing one data-loading effect with one `AbortController` and one state update path.
+- [x] Added targeted dashboard UI tests in `tests/ui/dashboard-view.test.tsx` for initial load, failed load, polling refresh, acknowledge rollback behavior, and duplicate acknowledge request prevention.
 ## 2026-03-05 CI gate contract + fail-fast preflight
 - [x] Added fail-fast preflight checks in CI for runtime versions, product naming, design tokens, and env-only runtime secret policy.
 - [x] Implemented branch-aware severity behavior (main/release hard fail, feature/non-release warning-only).
