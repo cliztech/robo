@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
+import { loadEnv } from '@/lib/env';
 
 interface ProxySession {
   userId: string;
@@ -12,14 +13,8 @@ interface ProxyErrorEnvelope {
   code?: string;
 }
 
-const DEFAULT_BACKEND_BASE_URL = 'http://127.0.0.1:5000';
-
 function resolveBackendBaseUrl(): string {
-  return (
-    process.env.DASHBOARD_STATUS_BACKEND_URL ??
-    process.env.INTERNAL_API_BASE_URL ??
-    DEFAULT_BACKEND_BASE_URL
-  ).replace(/\/$/, '');
+  return loadEnv().dashboardStatusBackendUrl;
 }
 
 function buildErrorEnvelope(status: number, detail: string, code?: string): ProxyErrorEnvelope {
