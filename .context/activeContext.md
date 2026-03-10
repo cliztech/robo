@@ -7,6 +7,9 @@ Executing "Phase 6: Playlist Generation" hardening and preparing Phase 7 broadca
 Building the next unfinished execution plans from the roadmap queue, starting with P1 Security items (TI-039/TI-040/TI-041).
 
 ## Recent Decisions
+- Consolidated `scripts/codex_env_doctor.sh` into a single `PASS:/WARN:/FAIL:` implementation with strict shell guards (`set -euo pipefail`), centralized cleanup trap, and a single explicit exit path.
+- Added CI guard workflow `.github/workflows/codex-env-doctor-check.yml` that runs the doctor script and fails if mixed `PASS:`/`[PASS]` output formats are detected.
+
 
 - Added a shared typed env loader (`src/lib/env.ts`) with structured startup validation errors for Supabase and dashboard backend URL inputs; wired it into Supabase server client and dashboard status proxy to eliminate divergent runtime fallback behavior.
 

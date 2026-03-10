@@ -40,6 +40,7 @@
 
 ## Recent Completed Work
 
+- [x] Consolidated `scripts/codex_env_doctor.sh` to a single shellcheck-clean implementation (strict mode, trap-based cleanup, single explicit exit semantics) and added CI drift detection for mixed PASS output formats in `.github/workflows/codex-env-doctor-check.yml`.
 - [x] Hardened dashboard alert acknowledgement mutation flow to use per-alert rollback snapshots, in-flight dedupe by alert ID, and functional updates for all ack-path state writes.
 - [x] Added targeted dashboard UI tests for concurrent sibling acknowledgements (one success, one failure) and duplicate-click in-flight dedupe behavior.
 - Added Delivery Phase 8 dashboard automated coverage for loading/error/success states, alert acknowledge interaction, threshold boundary rendering, and fallback-metric regression in `tests/ui/dashboard-view.test.tsx`.
