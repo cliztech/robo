@@ -1,5 +1,10 @@
 # Progress
 
+## 2026-03-05 API Request Validation Hardening
+- [x] Added shared API error helper (`src/lib/api/error.ts`) returning deterministic `{ error_code, message, details }` envelopes.
+- [x] Added `application/json` content-type enforcement and bounded request-body size checks for AI analyze-track and batch-analyze routes.
+- [x] Added Zod request schemas + `safeParse` handling for `trackId`/`stationId` inputs with structured 400 validation detail responses.
+
 ## Completed (Phases 0-4)
 
 - [x] **Delivery Phase 0: Project Setup** (Environment, Next.js, Git)
@@ -35,6 +40,7 @@
 
 ## Recent Completed Work
 
+- [x] Consolidated `scripts/codex_env_doctor.sh` to a single shellcheck-clean implementation (strict mode, trap-based cleanup, single explicit exit semantics) and added CI drift detection for mixed PASS output formats in `.github/workflows/codex-env-doctor-check.yml`.
 - [x] Hardened dashboard alert acknowledgement mutation flow to use per-alert rollback snapshots, in-flight dedupe by alert ID, and functional updates for all ack-path state writes.
 - [x] Added targeted dashboard UI tests for concurrent sibling acknowledgements (one success, one failure) and duplicate-click in-flight dedupe behavior.
 - Added Delivery Phase 8 dashboard automated coverage for loading/error/success states, alert acknowledge interaction, threshold boundary rendering, and fallback-metric regression in `tests/ui/dashboard-view.test.tsx`.
@@ -261,6 +267,35 @@
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
 
+## 2026-03-05 Batch analyzer reliability + observability
+- [x] Reworked batch analysis to fetch tracks in bounded cursor pages rather than one bulk query.
+- [x] Enforced update error accounting semantics: increment `failed`, invoke `onError`, and never increment `successful` for failed updates.
+- [x] Added transient DB retry policy (bounded retries + jitter) scoped only to DB writes.
+- [x] Persisted per-run summary records (`total_tracks`, `successful`, `failed`, `total_cost_usd`, `total_tokens`, `elapsed_ms`, timestamps) in `ai_batch_analysis_runs`.
+- [x] Added integration tests validating partial update failures, large dataset pagination, and final counter stability.
+## 2026-03-05 Telemetry + Dashboard type enforcement
+- [x] Eliminated `cookies() as any` in server Supabase client by using typed async cookies store and updating dependent call sites.
+- [x] Tightened mixer telemetry channel typing with explicit `TelemetryChannelId` + `MixerChannelTelemetry` contracts.
+- [x] Replaced duplicated/corrupted dashboard telemetry wiring with strict `DashboardTelemetryFallback` parsing and typed API interface.
+- [x] Added dedicated typecheck gate (`npm run typecheck:telemetry-dashboard`) for affected modules.
+- [x] Added targeted unit coverage for malformed telemetry fallback DTOs and fallback rendering behavior.
+## 2026-03-05 AI track-analysis logging hardening
+- [x] Removed analyze-track local stub logger and moved all track-analysis decision persistence to shared `log-decision` facade.
+- [x] Normalized persisted decision payload schema with required observability fields (track/station/model/latency/token-cost/confidence/outcome).
+- [x] Implemented non-fatal decision logging path with structured warning telemetry emission on persistence failure.
+- [x] Added unit tests asserting one persisted decision record per successful call and expected payload fields.
+- [x] Hardened `backend/security/auth.py` key handling with TTL cache refresh + rotation-event invalidation, dual-key grace window validation, source-change audit logging, and regression tests for rotation acceptance/expiry behavior.
+
+## 2026-03-05 AI API request controls
+- [x] Added `src/lib/api/request-controls.ts` for sliding-window throttling, standardized 429 payloads, and idempotency fingerprint cache helpers.
+- [x] Enforced route-keyed `{userId, stationId, route}` limits in `src/app/api/ai/analyze-track/route.ts` and `src/app/api/ai/batch-analyze/route.ts` before expensive AI operations.
+- [x] Implemented `Idempotency-Key` replay handling for batch analysis with short-lived fingerprint persistence and mismatch protection.
+- [x] Added integration tests in `tests/integration/ai-rate-limit-idempotency-routes.test.ts` validating repeated call throttling, idempotent replay, and key reuse conflict semantics.
+- Hardened telemetry typing boundaries for Supabase server cookies, DegenMixer channel telemetry coercion, and DashboardView telemetry DTO; added strict-module TypeScript config + telemetry mismatch fallback tests.
+## 2026-03-05 CI runtime contract gate update
+- [x] Added dedicated `runtime-contract` job in `.github/workflows/ci.yml` to run `python config/check_runtime_env.py --context ci` with deterministic CI-safe non-secret env values.
+- [x] Added protected-ref gated runtime secret validation step `python config/check_runtime_secrets.py --require-env-only` in the security job.
+- [x] Documented CI runtime contract validation commands in `docs/DEVELOPMENT_ENV_SETUP.md`.
 ## 2026-03-05 Packaging artifact hygiene guard
 - [x] Added root `.gitignore` rule for `*.egg-info/` and `.artifacts/`.
 - [x] Removed accidental `src/UNKNOWN.egg-info/` artifact directory from the working tree.
@@ -273,3 +308,9 @@
 - [x] Added migration guidance headers/body for near-sunset and post-sunset phases (`Deprecation`, `Sunset`, `Link`, `Warning` + `legacy_route_sunset` detail payload).
 - [x] Added backend API tests proving behavior before/after cutoff and confirming canonical `/track-analysis` behavior is preserved.
 - [x] Documented migration timeline and release notes in `docs/operations`.
+## 2026-03-05 Status dashboard cache + trend telemetry hardening
+- [x] Extended `FileStatusTelemetryProvider` queue-depth snapshot model to parse bounded, chronologically ordered history windows (max 60 points) with sane fallback behavior.
+- [x] Updated `/api/v1/status/dashboard` to emit `queue_depth.trend` from persisted history and to serve conditional GET responses using `ETag` + `Last-Modified` validators.
+- [x] Added frontend dashboard status client support for `If-None-Match` request validators and 304 cache reuse to avoid unnecessary state churn.
+- [x] Added backend test coverage for telemetry history window ordering/limits and dashboard conditional GET behavior.
+

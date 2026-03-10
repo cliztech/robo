@@ -6,12 +6,17 @@ import { DegenVUMeter } from './DegenVUMeter';
 import { DegenKnob } from './DegenKnob';
 import { DEFAULT_MIXER_CHANNELS, type MixerChannel } from '@/lib/degenDataAdapters';
 import { useStudioStore } from '@/stores/studioState';
-import type { DJTelemetry } from '@/lib/audio/telemetry';
+import { coerceMixerChannelTelemetry, type DJTelemetry, type MixerChannelTelemetry } from '@/lib/audio/telemetry';
 
 interface DegenMixerProps {
   channels?: MixerChannel[];
   telemetry?: DJTelemetry;
   className?: string;
+}
+
+
+function isTelemetryChannelId(id: string): id is TelemetryChannelId {
+  return id === 'deck-a' || id === 'deck-b' || id === 'mic' || id === 'aux' || id === 'master';
 }
 
 interface ChannelStripProps {
@@ -70,9 +75,8 @@ export function DegenMixer({ channels = DEFAULT_MIXER_CHANNELS, telemetry, class
 
   const activeTelemetry = telemetry ?? storeTelemetry;
   const telemetryMap = useMemo(() => {
-    // Correctly map telemetry data
-    if (!activeTelemetry?.mixer?.channels) return new Map();
-    return new Map(activeTelemetry.mixer.channels.map((ch: any) => [ch.id, ch]));
+    const channels = coerceMixerChannelTelemetry(activeTelemetry?.mixer?.channels);
+    return new Map<string, MixerChannelTelemetry>(channels.map((ch) => [ch.id, ch]));
   }, [activeTelemetry]);
 
   return (
@@ -85,7 +89,7 @@ export function DegenMixer({ channels = DEFAULT_MIXER_CHANNELS, telemetry, class
       <div className="flex gap-1.5 p-3 overflow-x-auto custom-scrollbar items-start">
         {channels.map((channel) => {
           const state = mixer.channels[channel.id] ?? { gain: 70, eq: { hi: 50, mid: 50, low: 50 } };
-          const channelTelemetry = telemetryMap.get(channel.id);
+          const channelTelemetry = isTelemetryChannelId(channel.id) ? telemetryMap.get(channel.id) : undefined;
           return (
             <ChannelStrip
               key={channel.id}
