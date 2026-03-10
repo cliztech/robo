@@ -302,6 +302,12 @@
 - [x] Added `scripts/ci/build_python_wheels.sh` to keep Python packaging outputs in `.artifacts/python-packaging` instead of app source paths.
 - [x] Added CI guard script `scripts/ci/check_generated_artifacts.py` and wired it into `.github/workflows/ci.yml` config job.
 
+## 2026-03-05 Legacy AI route deprecation telemetry + cutoff
+- [x] Implemented structured telemetry for `POST /api/v1/ai/analyze-track` with usage count and caller metadata (`sha256` API-key fingerprint + optional `X-Tenant-ID`).
+- [x] Added `ROBODJ_LEGACY_AI_ROUTE_CUTOFF` handling with ISO-8601 parsing and hard failover to `410 Gone` after sunset.
+- [x] Added migration guidance headers/body for near-sunset and post-sunset phases (`Deprecation`, `Sunset`, `Link`, `Warning` + `legacy_route_sunset` detail payload).
+- [x] Added backend API tests proving behavior before/after cutoff and confirming canonical `/track-analysis` behavior is preserved.
+- [x] Documented migration timeline and release notes in `docs/operations`.
 ## 2026-03-05 Status dashboard cache + trend telemetry hardening
 - [x] Extended `FileStatusTelemetryProvider` queue-depth snapshot model to parse bounded, chronologically ordered history windows (max 60 points) with sane fallback behavior.
 - [x] Updated `/api/v1/status/dashboard` to emit `queue_depth.trend` from persisted history and to serve conditional GET responses using `ETag` + `Last-Modified` validators.
