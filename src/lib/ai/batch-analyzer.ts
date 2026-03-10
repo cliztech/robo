@@ -123,9 +123,7 @@ async function updateTrackWithRetry(
 export async function batchAnalyzeTracks(options: BatchAnalysisOptions): Promise<BatchAnalysisResult> {
   const { stationId, concurrency = 3, onProgress, onError, pageSize = DEFAULT_PAGE_SIZE, analyzeTrackFn } = options
 
-  const supabase = createServerClient()
-  const analyzeTrack = analyzeTrackFn ?? (await getAnalyzeTrackFn())
-  const startedAt = Date.now()
+  const supabase = await createServerClient()
 
   const { count, error: countError } = await supabase
     .from('tracks')
