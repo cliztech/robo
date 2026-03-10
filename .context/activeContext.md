@@ -306,6 +306,10 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Documented CI runtime contract gate commands in `docs/DEVELOPMENT_ENV_SETUP.md` for operator/developer parity.
 - Added repository hygiene guardrails for generated Python packaging artifacts: ignore `*.egg-info`, removed accidental `src/UNKNOWN.egg-info/`, added CI scanner (`scripts/ci/check_generated_artifacts.py`), and added isolated wheel-build script outputting to `.artifacts/python-packaging`.
 
+## 2026-03-05 Status dashboard route contract hardening
+- Standardized status dashboard proxy handlers on shared route typing contracts (`StatusProxyRouteHandler`, `AppRouteParamsContext`) for Next.js app-route consistency.
+- Hardened `alerts/[alertId]/ack` with early 400 validation for empty/whitespace `alertId` and prevented upstream proxy calls when invalid.
+- Expanded integration coverage for invalid `alertId` rejection and special-character path encoding in acknowledge proxy behavior.
 - Resolved merge-corrupted `DashboardView` by unifying typed API imports/props, collapsing to one polling effect + abort path, and removing undefined dashboard identifiers; added deterministic polling override for testability.
 - Replaced `tests/ui/dashboard-view.test.tsx` with focused UI coverage for initial load, failed load, polling refresh, acknowledge rollback on error, and duplicate request prevention.
 ## 2026-03-05 CI gate contract enforcement update
