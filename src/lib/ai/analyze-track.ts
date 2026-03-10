@@ -92,8 +92,9 @@ export async function analyzeTrack(options: AnalyzeTrackOptions): Promise<{
   analysis: TrackAnalysis
   tokensUsed: number
   costUSD: number
+  latencyMs: number
 }> {
-  const { stationId, trackId, metadata, audioFeatures } = options
+  const { metadata, audioFeatures } = options
 
   try {
     // Build context prompt
@@ -165,6 +166,7 @@ Be precise and confident in your classifications. Use your training on millions 
       analysis: result.object,
       tokensUsed,
       costUSD,
+      latencyMs,
     }
   } catch (error: any) {
     console.error('Track analysis error:', error)

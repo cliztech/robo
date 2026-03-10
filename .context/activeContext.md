@@ -7,6 +7,17 @@ Executing "Phase 6: Playlist Generation" hardening and preparing Phase 7 broadca
 Building the next unfinished execution plans from the roadmap queue, starting with P1 Security items (TI-039/TI-040/TI-041).
 
 ## Recent Decisions
+
+- Added bounded status queue-depth telemetry history ingestion (last 60 points), wired dashboard trend responses to real history windows, and introduced dashboard conditional GET validators (ETag/Last-Modified) with 304 handling support in the frontend status client.
+- Consolidated `scripts/codex_env_doctor.sh` into a single `PASS:/WARN:/FAIL:` implementation with strict shell guards (`set -euo pipefail`), centralized cleanup trap, and a single explicit exit path.
+- Added CI guard workflow `.github/workflows/codex-env-doctor-check.yml` that runs the doctor script and fails if mixed `PASS:`/`[PASS]` output formats are detected.
+
+
+- Added a shared typed env loader (`src/lib/env.ts`) with structured startup validation errors for Supabase and dashboard backend URL inputs; wired it into Supabase server client and dashboard status proxy to eliminate divergent runtime fallback behavior.
+
+- Standardized Supabase env naming on `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`, documented deprecated alias migration (`SUPABASE_URL`, `SUPABASE_ANON_KEY`), and added temporary server fallback warning logging for transition safety.
+
+- Hardened `src/app/api/ai/analyze-track/route.ts` and `src/app/api/ai/batch-analyze/route.ts` with strict JSON content-type gates, request size checks, and Zod `safeParse` validation, and standardized deterministic API error payloads via new `src/lib/api/error.ts` helper.
 - Refreshed `2026-02-25-next-unfinished-phase-build.md` to reflect current unresolved sequence only (TI-040), moved TI-039/TI-041 to completed evidence references, and added packet freshness metadata (as-of date + sprint-status blob reference).
 
 - Reconciled Track A security state authority on `docs/exec-plans/active/sprint-status.yaml`, aligned TI-039/TI-040/TI-041 tracked issue status + TODO state tags to backlog/open, and added roadmap autopilot consistency gating for canonical-vs-tracked issue drift.
@@ -48,6 +59,9 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
   Executing "Phase 5: AI Integration" through a quick-dev next-phase plan that decomposes AI track analysis into sprintable stories (P5-01..P5-05).
 
 ## Recent Decisions
+- Hardened `src/app/api/ai/analyze-track/route.ts` and `src/app/api/ai/batch-analyze/route.ts` with strict JSON content-type gates, request size checks, and Zod `safeParse` validation, and standardized deterministic API error payloads via new `src/lib/api/error.ts` helper.
+
+- Added bounded status queue-depth telemetry history ingestion (last 60 points), wired dashboard trend responses to real history windows, and introduced dashboard conditional GET validators (ETag/Last-Modified) with 304 handling support in the frontend status client.
 
 - Standardized phase naming contracts across planning artifacts: `Delivery Phase N` for delivery context and `Workflow Phase N` for workflow context, plus namespace-required packet/build-plan metadata.
 
@@ -76,6 +90,9 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Consolidated AI track-analysis API surface on `/api/v1/ai/track-analysis`, removed duplicate router mounting, and aligned auth/tests to canonical API-key policy.
 
 ## Recent Decisions
+- Hardened `src/app/api/ai/analyze-track/route.ts` and `src/app/api/ai/batch-analyze/route.ts` with strict JSON content-type gates, request size checks, and Zod `safeParse` validation, and standardized deterministic API error payloads via new `src/lib/api/error.ts` helper.
+
+- Added bounded status queue-depth telemetry history ingestion (last 60 points), wired dashboard trend responses to real history windows, and introduced dashboard conditional GET validators (ETag/Last-Modified) with 304 handling support in the frontend status client.
 
 - Standardized phase naming contracts across planning artifacts: `Delivery Phase N` for delivery context and `Workflow Phase N` for workflow context, plus namespace-required packet/build-plan metadata.
 
@@ -251,3 +268,54 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Hardened `src/lib/ai/analyze-track.ts` to use shared `logAIDecision` contract with `stationId`, structured decision payload, and non-blocking warning telemetry when decision logging fails.
 - Removed duplicate route-level decision insert in `src/app/api/ai/analyze-track/route.ts` and passed `stationId` into analyzer calls to enforce one persisted decision event per successful analysis.
 - Added focused unit coverage in `tests/integration/analyze-track-route-logging.test.ts` validating exactly one decision log write on success and fail-open behavior on logging errors.
+## 2026-03-05 Compose profile consolidation update
+- Consolidated root compose topology into `docker-compose.base.yml` plus profile overlays (`docker-compose.dev.yml`, `docker-compose.release.yml`, `docker-compose.prod.yml`).
+- Standardized compose `env_file` usage to `deploy/env/docker.{common,dev,staging,prod}.env` aligned to `config/env_contract.json` required `docker_stack` variables.
+- Added explicit operator command matrix and profile/env requirements in `docs/runtime_deployment_matrix.md`.
+- Added CI compose render validations in `.github/workflows/ci.yml` for `dev`, `staging`, and `prod` profile combinations.
+- Deprecated legacy compose split files by removing redundant `docker-compose.safe.yaml` and `docker-compose.docker-control.yaml`; retained `docker-compose.yaml` as compatibility shim.
+- Hardened dashboard status proxy backend URL configuration: localhost fallback is now development-only, staging/production require `DASHBOARD_STATUS_BACKEND_URL`, malformed URLs fail startup validation, and missing non-dev config returns an explicit 500 configuration envelope.
+
+## 2026-03-05 Typed Telemetry Contract Hardening
+- Replaced `cookies() as any` with typed async cookie-store handling in `src/lib/supabase/server.ts` and updated call sites to await server client creation.
+- Defined concrete audio telemetry channel IDs/interfaces in `src/lib/audio/telemetry.ts` and removed `any` channel mapping in `src/components/audio/DegenMixer.tsx`.
+- Rebuilt `src/components/console/DashboardView.tsx` with strict fallback telemetry DTO parsing, typed API injection, and queue severity contract helpers.
+- Added module-scoped TypeScript enforcement via `tsconfig.telemetry-dashboard.json` and `npm run typecheck:telemetry-dashboard`.
+- Added targeted dashboard telemetry tests for malformed fallback input and fallback rendering when API status loading fails.
+## 2026-03-05 Track-analysis telemetry normalization
+- Removed local stub logger from `src/lib/ai/analyze-track.ts`; analysis now returns latency for caller-owned telemetry persistence.
+- Added shared telemetry facade in `src/lib/ai/log-decision.ts` to normalize track-analysis payload schema (`trackId`, `stationId`, `model`, `latencyMs`, `tokensUsed`, `costUSD`, `confidenceScore`, `outcomeStatus`).
+- Updated `/api/ai/analyze-track` route to use safe decision logging (`logTrackAnalysisDecisionSafely`) so telemetry write failures emit structured warning events and do not fail successful analysis responses.
+- Added unit coverage for normalized persisted decision fields and non-fatal warning telemetry behavior.
+- Added auth key-rotation runtime support: TTL-based secret cache + explicit invalidation hook, dual-key grace verification, and audit events for key source/rotation changes; updated runbook for zero-downtime rotation cutovers.
+
+## 2026-03-05 AI API rate-limit + idempotency hardening
+- Added shared API request-controls helper with per-route sliding-window throttling keyed by `{userId, stationId, route}` and standardized `429` envelope + `Retry-After` support.
+- Applied pre-expensive-operation throttling to `/api/ai/analyze-track` and `/api/ai/batch-analyze` handlers.
+- Added batch idempotency-key replay support with short-lived request fingerprint persistence and key-reuse mismatch rejection.
+- Added integration coverage for rate-limit exhaustion, idempotent replay, and idempotency mismatch behavior.
+## 2026-03-05 Webpack workflow CI normalization
+- Updated `.github/workflows/webpack.yml` to align Node matrix support with project runtime policy (`20.x` only).
+- Replaced lockfile-ignoring install commands with `npm ci` and enabled npm dependency caching in `actions/setup-node`.
+- Removed duplicate `run` keys in the Build step so the workflow has a single valid command block.
+
+- Hardened telemetry typing boundaries for Supabase server cookies, DegenMixer channel telemetry coercion, and DashboardView telemetry DTO; added strict-module TypeScript config + telemetry mismatch fallback tests.
+## 2026-03-05 CI runtime contract gate update
+- Added dedicated CI runtime-contract validation in `.github/workflows/ci.yml` with deterministic non-secret CI env values for `python config/check_runtime_env.py --context ci`.
+- Added protected-ref runtime secret gate in CI using `python config/check_runtime_secrets.py --require-env-only` with explicit fail-fast shell settings and secret-backed env wiring.
+- Documented CI runtime contract gate commands in `docs/DEVELOPMENT_ENV_SETUP.md` for operator/developer parity.
+- Added repository hygiene guardrails for generated Python packaging artifacts: ignore `*.egg-info`, removed accidental `src/UNKNOWN.egg-info/`, added CI scanner (`scripts/ci/check_generated_artifacts.py`), and added isolated wheel-build script outputting to `.artifacts/python-packaging`.
+
+- Resolved merge-corrupted `DashboardView` by unifying typed API imports/props, collapsing to one polling effect + abort path, and removing undefined dashboard identifiers; added deterministic polling override for testability.
+- Replaced `tests/ui/dashboard-view.test.tsx` with focused UI coverage for initial load, failed load, polling refresh, acknowledge rollback on error, and duplicate request prevention.
+## 2026-03-05 CI gate contract enforcement update
+- Added a new fail-fast `preflight` job in `.github/workflows/ci.yml` to run runtime-version, product-naming, design-token, and env-only secret integrity checks before build/test jobs.
+- Codified branch-aware severity policy: hard-fail on `main`/`release/**`, warning-only on non-release refs.
+- Added machine-readable CI gate summary artifact upload (`ci-reports/ci-gates-summary.json`) for audit evidence.
+- Documented mandatory CI gate contract + local preflight equivalent in `CONTRIBUTING.md`.
+
+## 2026-03-05 Legacy `/analyze-track` sunset enforcement
+- Added runtime-configurable cutoff gate (`ROBODJ_LEGACY_AI_ROUTE_CUTOFF`) for deprecated `POST /api/v1/ai/analyze-track`.
+- Added structured in-process telemetry for deprecated route calls (usage counter + API-key fingerprint + optional tenant ID + phase state).
+- Added migration guidance protocol via `Deprecation`, `Warning`, `Sunset`, and `Link` headers, plus `410 Gone` migration error body after cutoff.
+- Extended API tests to cover pre-cutoff, near-cutoff, and post-cutoff behavior while proving canonical `/track-analysis` remains unaffected.
