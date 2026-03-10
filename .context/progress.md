@@ -301,3 +301,10 @@
 - [x] Removed accidental `src/UNKNOWN.egg-info/` artifact directory from the working tree.
 - [x] Added `scripts/ci/build_python_wheels.sh` to keep Python packaging outputs in `.artifacts/python-packaging` instead of app source paths.
 - [x] Added CI guard script `scripts/ci/check_generated_artifacts.py` and wired it into `.github/workflows/ci.yml` config job.
+
+## 2026-03-05 Status dashboard cache + trend telemetry hardening
+- [x] Extended `FileStatusTelemetryProvider` queue-depth snapshot model to parse bounded, chronologically ordered history windows (max 60 points) with sane fallback behavior.
+- [x] Updated `/api/v1/status/dashboard` to emit `queue_depth.trend` from persisted history and to serve conditional GET responses using `ETag` + `Last-Modified` validators.
+- [x] Added frontend dashboard status client support for `If-None-Match` request validators and 304 cache reuse to avoid unnecessary state churn.
+- [x] Added backend test coverage for telemetry history window ordering/limits and dashboard conditional GET behavior.
+
