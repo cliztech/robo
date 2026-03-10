@@ -117,12 +117,8 @@ fi
 if [[ "$CLEANUP_ARTIFACTS" -eq 1 ]]; then
     printf '\n== Generated artifact cleanup ==\n'
     echo "[info] Removing accidental generated artifacts from source/app roots."
-    find src backend apps dgn-airwaves/src dgn-robo-rippa/src \
-        \( -name '*.egg-info' -o -name '.eggs' -o -name 'pip-wheel-metadata' -o -name '__pycache__' -o -name '.pytest_cache' -o -name 'build' -o -name 'dist' -o -name '.next' -o -name 'coverage' \) \
-        -prune -exec rm -rf {} + 2>/dev/null || true
-    find src backend apps dgn-airwaves/src dgn-robo-rippa/src -name '*.pyc' -delete 2>/dev/null || true
-    find src backend apps dgn-airwaves/src dgn-robo-rippa/src -name '*.tsbuildinfo' -delete 2>/dev/null || true
-
+    python scripts/ci/check_generated_artifacts.py --clean
+    echo "[info] Verifying cleanup..."
     python scripts/ci/check_generated_artifacts.py
 fi
 
