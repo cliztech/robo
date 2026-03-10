@@ -264,6 +264,10 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
 
+## 2026-03-05 Session Update
+- Hardened `src/lib/ai/analyze-track.ts` to use shared `logAIDecision` contract with `stationId`, structured decision payload, and non-blocking warning telemetry when decision logging fails.
+- Removed duplicate route-level decision insert in `src/app/api/ai/analyze-track/route.ts` and passed `stationId` into analyzer calls to enforce one persisted decision event per successful analysis.
+- Added focused unit coverage in `tests/integration/analyze-track-route-logging.test.ts` validating exactly one decision log write on success and fail-open behavior on logging errors.
 ## 2026-03-05 Compose profile consolidation update
 - Consolidated root compose topology into `docker-compose.base.yml` plus profile overlays (`docker-compose.dev.yml`, `docker-compose.release.yml`, `docker-compose.prod.yml`).
 - Standardized compose `env_file` usage to `deploy/env/docker.{common,dev,staging,prod}.env` aligned to `config/env_contract.json` required `docker_stack` variables.
