@@ -159,7 +159,7 @@ describe('dashboard status proxy route handlers', () => {
         method: 'POST',
       }),
       {
-        params: Promise.resolve({ alertId: 'alert/1' }),
+        params: { alertId: 'alert/1' },
       }
     );
 
