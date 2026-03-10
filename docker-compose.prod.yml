@@ -1,0 +1,26 @@
+services:
+  backend:
+    env_file:
+      - deploy/env/docker.prod.env
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2g
+
+  frontend:
+    env_file:
+      - deploy/env/docker.prod.env
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1g
+
+  db:
+    env_file:
+      - deploy/env/docker.prod.env
+
+  redis:
+    env_file:
+      - deploy/env/docker.prod.env

@@ -267,6 +267,13 @@
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
 
+## 2026-03-05 Compose base + overlay migration
+- [x] Introduced `docker-compose.base.yml` for shared services and explicit profile declarations (`dev`, `staging`, `prod`).
+- [x] Added `docker-compose.dev.yml` (hot reload + bind mounts), `docker-compose.release.yml` (immutable + hardened defaults), and `docker-compose.prod.yml` (production env/resources).
+- [x] Standardized `env_file` contracts via `deploy/env/docker.common.env` and per-profile env files for dev/staging/prod.
+- [x] Added operator command matrix and env requirements aligned to `config/env_contract.json` in `docs/runtime_deployment_matrix.md`.
+- [x] Added CI compose profile render checks (`docker compose ... config`) for all supported combinations.
+- [x] Added compatibility notes in `README.md`; removed redundant legacy compose files superseded by profile overlays.
 ## 2026-03-05 Batch analyzer reliability + observability
 - [x] Reworked batch analysis to fetch tracks in bounded cursor pages rather than one bulk query.
 - [x] Enforced update error accounting semantics: increment `failed`, invoke `onError`, and never increment `successful` for failed updates.

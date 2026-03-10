@@ -263,6 +263,13 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 Compose profile consolidation update
+- Consolidated root compose topology into `docker-compose.base.yml` plus profile overlays (`docker-compose.dev.yml`, `docker-compose.release.yml`, `docker-compose.prod.yml`).
+- Standardized compose `env_file` usage to `deploy/env/docker.{common,dev,staging,prod}.env` aligned to `config/env_contract.json` required `docker_stack` variables.
+- Added explicit operator command matrix and profile/env requirements in `docs/runtime_deployment_matrix.md`.
+- Added CI compose render validations in `.github/workflows/ci.yml` for `dev`, `staging`, and `prod` profile combinations.
+- Deprecated legacy compose split files by removing redundant `docker-compose.safe.yaml` and `docker-compose.docker-control.yaml`; retained `docker-compose.yaml` as compatibility shim.
 - Hardened dashboard status proxy backend URL configuration: localhost fallback is now development-only, staging/production require `DASHBOARD_STATUS_BACKEND_URL`, malformed URLs fail startup validation, and missing non-dev config returns an explicit 500 configuration envelope.
 
 ## 2026-03-05 Typed Telemetry Contract Hardening
