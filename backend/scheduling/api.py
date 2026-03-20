@@ -143,7 +143,6 @@ def write_policy(
             },
         ) from error
     except ApprovalPolicyError as error:
-        raise HTTPException(status_code=403, detail=str(error)) from error
         raise HTTPException(status_code=403, detail={"message": str(error)}) from error
 
 

@@ -1,12 +1,69 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import {
+    TrackLibraryTrack,
+    ScheduleSegmentData,
+    TransportTrack,
+    TransportTelemetry,
+    MixerChannel,
+    DEMO_TRACK_LIBRARY,
+    DEMO_SCHEDULE_SEGMENTS,
+    DEFAULT_TRANSPORT_TRACK,
+    DEFAULT_TRANSPORT_TELEMETRY,
+    buildDefaultMixerState,
+    createDeterministicWaveform,
+    buildDefaultEffectValues
+} from '@/lib/degenDataAdapters';
 import { MixerChannel } from '@/lib/degenDataAdapters';
 
 // We need to test the module in different environment configurations.
 // Since the module reads process.env at the top level, we must use vi.resetModules()
 // and import() the module dynamically for each test scenario.
 
+// We import the *types* above, but we will dynamically import the *functions* in tests
+// to allow re-evaluation of the top-level DEGEN_DEMO_DATA_ENABLED constant.
+
 describe('degenDataAdapters', () => {
 
+    beforeEach(() => {
+        vi.resetModules();
+    });
+
+    afterEach(() => {
+        vi.unstubAllEnvs();
+    });
+
+    describe('when Demo Data is ENABLED', () => {
+        let adapters: any;
+
+        beforeEach(async () => {
+            // Set environment variables BEFORE importing the module
+            vi.stubEnv('NODE_ENV', 'development');
+            vi.stubEnv('NEXT_PUBLIC_DEGEN_DEMO_DATA', 'true');
+
+            // Re-import the module to trigger evaluation of top-level constants
+            adapters = await import('@/lib/degenDataAdapters');
+        });
+
+        it('resolveTrackLibraryData returns demo library when no tracks provided', () => {
+            const result = adapters.resolveTrackLibraryData();
+            expect(result).toEqual(adapters.DEMO_TRACK_LIBRARY);
+            expect(result.length).toBeGreaterThan(0);
+        });
+
+        it('resolveScheduleSegmentData returns demo segments when no segments provided', () => {
+            const result = adapters.resolveScheduleSegmentData();
+            expect(result).toEqual(adapters.DEMO_SCHEDULE_SEGMENTS);
+            expect(result.length).toBeGreaterThan(0);
+        });
+
+        it('resolveScheduleCurrentHour returns demo hour (9.5) when no hour provided', () => {
+            const result = adapters.resolveScheduleCurrentHour();
+            expect(result).toBe(9.5);
+        });
+
+        it('resolveTransportTrack returns default transport track when no track provided', () => {
+            const result = adapters.resolveTransportTrack();
+            expect(result).toEqual(adapters.DEFAULT_TRANSPORT_TRACK);
     // Store original env to restore after tests
     const originalEnv = process.env;
 
@@ -48,6 +105,20 @@ describe('degenDataAdapters', () => {
             expect(result).toEqual([]);
         });
 
+    describe('when Demo Data is DISABLED', () => {
+        let adapters: any;
+
+        beforeEach(async () => {
+            // Set environment variables to disable demo data
+            vi.stubEnv('NODE_ENV', 'production');
+            vi.stubEnv('NEXT_PUBLIC_DEGEN_DEMO_DATA', 'false'); // Explicitly false
+
+            adapters = await import('@/lib/degenDataAdapters');
+        });
+
+        it('resolveTrackLibraryData returns empty array when no tracks provided', () => {
+            const result = adapters.resolveTrackLibraryData();
+            expect(result).toEqual([]);
         it('resolveScheduleCurrentHour returns 0 by default', async () => {
             const mod = await import('@/lib/degenDataAdapters');
             const result = mod.resolveScheduleCurrentHour();
@@ -59,8 +130,20 @@ describe('degenDataAdapters', () => {
             const result = mod.resolveTransportTrack();
             expect(result).toEqual({ title: 'No track loaded', artist: '—' });
         });
-    });
 
+        it('resolveScheduleSegmentData returns empty array when no segments provided', () => {
+            const result = adapters.resolveScheduleSegmentData();
+            expect(result).toEqual([]);
+        });
+
+        it('resolveScheduleCurrentHour returns 0 when no hour provided', () => {
+            const result = adapters.resolveScheduleCurrentHour();
+            expect(result).toBe(0);
+        });
+
+        it('resolveTransportTrack returns fallback "No track loaded" object', () => {
+            const result = adapters.resolveTransportTrack();
+            expect(result).toEqual({ title: 'No track loaded', artist: '—' });
     describe('Environment: Development (Demo Data Enabled)', () => {
         beforeEach(() => {
             // Simulate development environment with demo data enabled
@@ -77,6 +160,27 @@ describe('degenDataAdapters', () => {
             expect(result.length).toBeGreaterThan(0);
         });
 
+    describe('Common Behavior (Input Priority)', () => {
+        // We can test this under either environment, but let's just pick one or test generically.
+        // The implementation always returns the input if provided, regardless of the env var.
+
+        let adapters: any;
+        beforeEach(async () => {
+             // Default setup
+             vi.stubEnv('NODE_ENV', 'test');
+             adapters = await import('@/lib/degenDataAdapters');
+        });
+
+        it('resolveTrackLibraryData prefers provided tracks over defaults', () => {
+            const mockTracks: TrackLibraryTrack[] = [{ id: '99', title: 'Test', artist: 'Test', bpm: 100, key: 'Cm', duration: 100, genre: 'Test', energy: 5 }];
+            const result = adapters.resolveTrackLibraryData(mockTracks);
+            expect(result).toBe(mockTracks);
+        });
+
+        it('resolveScheduleSegmentData prefers provided segments over defaults', () => {
+            const mockSegments: ScheduleSegmentData[] = [{ id: 'seg1', type: 'music', title: 'Test', startHour: 10, durationMinutes: 60 }];
+            const result = adapters.resolveScheduleSegmentData(mockSegments);
+            expect(result).toBe(mockSegments);
         it('resolveTrackLibraryData prefers provided tracks over demo data', async () => {
             const mod = await import('@/lib/degenDataAdapters');
             const mockTracks = [{ id: 'custom', title: 'Custom', artist: 'Custom', bpm: 120, key: 'Am', duration: 100, genre: 'Test', energy: 5 }];
@@ -102,8 +206,21 @@ describe('degenDataAdapters', () => {
             const result = mod.resolveTransportTrack();
             expect(result).toBe(mod.DEFAULT_TRANSPORT_TRACK);
         });
-    });
 
+        it('resolveScheduleCurrentHour prefers provided hour over defaults', () => {
+            const result = adapters.resolveScheduleCurrentHour(14.5);
+            expect(result).toBe(14.5);
+        });
+
+        it('resolveScheduleCurrentHour respects 0 as a valid input', () => {
+            const result = adapters.resolveScheduleCurrentHour(0);
+            expect(result).toBe(0);
+        });
+
+        it('resolveTransportTrack prefers provided track over defaults', () => {
+            const mockTrack: TransportTrack = { title: 'Custom', artist: 'Artist' };
+            const result = adapters.resolveTransportTrack(mockTrack);
+            expect(result).toBe(mockTrack);
     describe('Pure Utility Functions (Environment Independent)', () => {
         // These can be imported once or dynamically, behavior shouldn't change
 

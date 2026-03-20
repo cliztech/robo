@@ -1,4 +1,8 @@
 {
+  "generatedAt": "2026-03-01T09:02:46.572Z",
+  "sampleCount": 12,
+  "p50Ms": 5.53,
+  "p95Ms": 8.15,
   "generatedAt": "2026-03-01T09:03:01.397Z",
   "sampleCount": 12,
   "p50Ms": 5.39,

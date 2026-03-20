@@ -1,5 +1,10 @@
 # Progress
 
+## 2026-03-05 API Request Validation Hardening
+- [x] Added shared API error helper (`src/lib/api/error.ts`) returning deterministic `{ error_code, message, details }` envelopes.
+- [x] Added `application/json` content-type enforcement and bounded request-body size checks for AI analyze-track and batch-analyze routes.
+- [x] Added Zod request schemas + `safeParse` handling for `trackId`/`stationId` inputs with structured 400 validation detail responses.
+
 ## Completed (Phases 0-4)
 
 - [x] **Delivery Phase 0: Project Setup** (Environment, Next.js, Git)
@@ -35,6 +40,7 @@
 
 ## Recent Completed Work
 
+- [x] Consolidated `scripts/codex_env_doctor.sh` to a single shellcheck-clean implementation (strict mode, trap-based cleanup, single explicit exit semantics) and added CI drift detection for mixed PASS output formats in `.github/workflows/codex-env-doctor-check.yml`.
 - [x] Hardened dashboard alert acknowledgement mutation flow to use per-alert rollback snapshots, in-flight dedupe by alert ID, and functional updates for all ack-path state writes.
 - [x] Added targeted dashboard UI tests for concurrent sibling acknowledgements (one success, one failure) and duplicate-click in-flight dedupe behavior.
 - Added Delivery Phase 8 dashboard automated coverage for loading/error/success states, alert acknowledge interaction, threshold boundary rendering, and fallback-metric regression in `tests/ui/dashboard-view.test.tsx`.
@@ -112,6 +118,7 @@
 - [x] Updated `docs/massive_workflow_blueprint.md` branding to canonical `DGN-DJ by DGNradio`, with `RoboDJ` retained only as an explicit legacy alias in historical context.
 
 ## 2026-02-27 Progress Update
+- [x] Refreshed P1 security execution packet + TODO cross-link freshness note: TI-039/TI-041 now tracked as completed evidence references; TI-040 remains active unresolved scope.
 - [x] Tracked-issue hygiene hardening follow-up: split TI-007/TI-008/TI-009 into single-header/single-status docs, restored v1.2 scheduler UI ID mapping, and added strict tracked-issue structure validation in `scripts/roadmap_autopilot.py`.
 
 - Added Phase 8-inspired DJ console style pass: denser hardware panel treatment, deck-specific orange/cyan accents, and topbar session timer chip for high-density operator readability.
@@ -236,3 +243,101 @@
 - [x] Refreshed TECH_STACK.md runtime/framework/tooling entries to current versions (including Next.js 15.5.10).
 - [x] Replaced backend operator-facing legacy RoboDJ naming in startup error text and FastAPI title with DGN-DJ branding.
 - [x] Added docs consistency check execution to CI and strengthened `scripts/ci/check_docs_consistency.py` with README title/index validation.
+
+## 2026-03-03 Roadmap Autopilot Build Plan Integrity
+- [x] Switched roadmap autopilot build-plan output to atomic temp-file replacement writes.
+- [x] Added task/reminder de-duplication keyed by `(source_file, line_ref, normalized_task_text)` before markdown rendering.
+- [x] Regenerated `docs/exec-plans/active/unfinished-task-build-plan.md`; confirmed single generation header, unique cadence reminders, and no duplicate task rows.
+- [x] Extended docs consistency CI check to fail on duplicate autopilot generated-header blocks and duplicate build-plan keys.
+- [x] Aligned TI-040/TI-041 status semantics: TI-040 dependency checkpoints now include explicit evidence links/downstream impact, TI-041 carries implementation vs release-readiness split, and TODO/readiness scorecard now consume the same release-gate interpretation.
+## 2026-03-03 Security State Reconciliation
+- [x] Selected `docs/exec-plans/active/sprint-status.yaml` as authoritative security story state source and reconciled TODO + tracked issue status for TI-039/TI-040/TI-041.
+- [x] Added roadmap autopilot consistency gate to fail generation when sprint-status task state disagrees with linked tracked issue status and TODO tracking tags.
+- [x] Regenerated `docs/exec-plans/active/unfinished-task-build-plan.md` after reconciliation; P1 entries now reference unresolved TI-039/TI-040/TI-041 only.
+## 2026-03-03 Config crypto contract hardening
+
+- [x] Replaced merge-corrupted `backend/security/config_crypto.py` with a single production implementation using AES-256-GCM envelope helpers.
+- [x] Implemented TI-040-compatible envelope fields (`enc_v`, `alg`, `kid`, `nonce_b64`, `ciphertext_b64`, `tag_b64`) and `aad` metadata emission for config payload encryption.
+- [x] Kept decode compatibility for legacy envelope representations (`nonce/ciphertext/tag` and `enc::` string payloads).
+- [x] Updated and passed crypto test coverage in `backend/tests/test_config_crypto.py` and `backend/tests/test_security_config_crypto.py`.
+
+## 2026-03-04 BMAD deep research runbook evidence governance update
+- Added a mandatory evidence schema for every research claim (source type, publication date, confidence, relevance score, decision impact).
+- Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
+- Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
+- Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 AI Decision Logging Contract Hardening
+- [x] Removed local `logAIDecision` stub from `src/lib/ai/analyze-track.ts` and switched to shared `src/lib/ai/log-decision.ts` import.
+- [x] Updated track analysis logging payload to conform to `AIDecisionLog` (including `stationId`, `decisionData`, `reasoning`, `status`).
+- [x] Added explicit fail-open policy: decision logging failures now emit structured warning telemetry and do not fail successful analysis responses.
+- [x] Eliminated duplicate persistence path by removing route-level AI decision insert and routing all analysis decision writes through `analyzeTrack`.
+- [x] Added tests proving one persisted decision event per successful analysis plus warning telemetry on logging failure.
+## 2026-03-05 Compose base + overlay migration
+- [x] Introduced `docker-compose.base.yml` for shared services and explicit profile declarations (`dev`, `staging`, `prod`).
+- [x] Added `docker-compose.dev.yml` (hot reload + bind mounts), `docker-compose.release.yml` (immutable + hardened defaults), and `docker-compose.prod.yml` (production env/resources).
+- [x] Standardized `env_file` contracts via `deploy/env/docker.common.env` and per-profile env files for dev/staging/prod.
+- [x] Added operator command matrix and env requirements aligned to `config/env_contract.json` in `docs/runtime_deployment_matrix.md`.
+- [x] Added CI compose profile render checks (`docker compose ... config`) for all supported combinations.
+- [x] Added compatibility notes in `README.md`; removed redundant legacy compose files superseded by profile overlays.
+## 2026-03-05 Batch analyzer reliability + observability
+- [x] Reworked batch analysis to fetch tracks in bounded cursor pages rather than one bulk query.
+- [x] Enforced update error accounting semantics: increment `failed`, invoke `onError`, and never increment `successful` for failed updates.
+- [x] Added transient DB retry policy (bounded retries + jitter) scoped only to DB writes.
+- [x] Persisted per-run summary records (`total_tracks`, `successful`, `failed`, `total_cost_usd`, `total_tokens`, `elapsed_ms`, timestamps) in `ai_batch_analysis_runs`.
+- [x] Added integration tests validating partial update failures, large dataset pagination, and final counter stability.
+## 2026-03-05 Telemetry + Dashboard type enforcement
+- [x] Eliminated `cookies() as any` in server Supabase client by using typed async cookies store and updating dependent call sites.
+- [x] Tightened mixer telemetry channel typing with explicit `TelemetryChannelId` + `MixerChannelTelemetry` contracts.
+- [x] Replaced duplicated/corrupted dashboard telemetry wiring with strict `DashboardTelemetryFallback` parsing and typed API interface.
+- [x] Added dedicated typecheck gate (`npm run typecheck:telemetry-dashboard`) for affected modules.
+- [x] Added targeted unit coverage for malformed telemetry fallback DTOs and fallback rendering behavior.
+## 2026-03-05 AI track-analysis logging hardening
+- [x] Removed analyze-track local stub logger and moved all track-analysis decision persistence to shared `log-decision` facade.
+- [x] Normalized persisted decision payload schema with required observability fields (track/station/model/latency/token-cost/confidence/outcome).
+- [x] Implemented non-fatal decision logging path with structured warning telemetry emission on persistence failure.
+- [x] Added unit tests asserting one persisted decision record per successful call and expected payload fields.
+- [x] Hardened `backend/security/auth.py` key handling with TTL cache refresh + rotation-event invalidation, dual-key grace window validation, source-change audit logging, and regression tests for rotation acceptance/expiry behavior.
+
+## 2026-03-05 AI API request controls
+- [x] Added `src/lib/api/request-controls.ts` for sliding-window throttling, standardized 429 payloads, and idempotency fingerprint cache helpers.
+- [x] Enforced route-keyed `{userId, stationId, route}` limits in `src/app/api/ai/analyze-track/route.ts` and `src/app/api/ai/batch-analyze/route.ts` before expensive AI operations.
+- [x] Implemented `Idempotency-Key` replay handling for batch analysis with short-lived fingerprint persistence and mismatch protection.
+- [x] Added integration tests in `tests/integration/ai-rate-limit-idempotency-routes.test.ts` validating repeated call throttling, idempotent replay, and key reuse conflict semantics.
+- Hardened telemetry typing boundaries for Supabase server cookies, DegenMixer channel telemetry coercion, and DashboardView telemetry DTO; added strict-module TypeScript config + telemetry mismatch fallback tests.
+## 2026-03-05 CI runtime contract gate update
+- [x] Added dedicated `runtime-contract` job in `.github/workflows/ci.yml` to run `python config/check_runtime_env.py --context ci` with deterministic CI-safe non-secret env values.
+- [x] Added protected-ref gated runtime secret validation step `python config/check_runtime_secrets.py --require-env-only` in the security job.
+- [x] Documented CI runtime contract validation commands in `docs/DEVELOPMENT_ENV_SETUP.md`.
+## 2026-03-05 Packaging artifact hygiene guard
+- [x] Added root `.gitignore` rule for `*.egg-info/` and `.artifacts/`.
+- [x] Removed accidental `src/UNKNOWN.egg-info/` artifact directory from the working tree.
+- [x] Added `scripts/ci/build_python_wheels.sh` to keep Python packaging outputs in `.artifacts/python-packaging` instead of app source paths.
+- [x] Added CI guard script `scripts/ci/check_generated_artifacts.py` and wired it into `.github/workflows/ci.yml` config job.
+
+## 2026-03-05 Status dashboard route contract hardening
+- [x] Removed unused ack params interface and replaced ad hoc route-context typing with shared canonical app-route params context.
+- [x] Added route-level `alertId` validation (`INVALID_ALERT_ID`, HTTP 400) before downstream proxy execution.
+- [x] Extended integration tests to verify invalid alertId short-circuit behavior and correct encoded proxy path construction.
+- [x] Applied shared status proxy handler typing across adjacent dashboard and alerts status routes.
+## 2026-03-05 DashboardView consolidation and UI regression coverage
+- [x] Rebuilt `src/components/console/DashboardView.tsx` to a single export + single `DashboardViewProps` contract with typed API injection and canonical dashboard type imports.
+- [x] Removed duplicate effect/import blocks and undefined symbols (`dashboardApi`, `setAlerts`, `DashboardStatusApi`) by introducing one data-loading effect with one `AbortController` and one state update path.
+- [x] Added targeted dashboard UI tests in `tests/ui/dashboard-view.test.tsx` for initial load, failed load, polling refresh, acknowledge rollback behavior, and duplicate acknowledge request prevention.
+## 2026-03-05 CI gate contract + fail-fast preflight
+- [x] Added fail-fast preflight checks in CI for runtime versions, product naming, design tokens, and env-only runtime secret policy.
+- [x] Implemented branch-aware severity behavior (main/release hard fail, feature/non-release warning-only).
+- [x] Added machine-readable gate summary artifact publication for CI auditability.
+- [x] Documented the CI gate contract and local preflight commands in `CONTRIBUTING.md`.
+## 2026-03-05 Legacy AI route deprecation telemetry + cutoff
+- [x] Implemented structured telemetry for `POST /api/v1/ai/analyze-track` with usage count and caller metadata (`sha256` API-key fingerprint + optional `X-Tenant-ID`).
+- [x] Added `ROBODJ_LEGACY_AI_ROUTE_CUTOFF` handling with ISO-8601 parsing and hard failover to `410 Gone` after sunset.
+- [x] Added migration guidance headers/body for near-sunset and post-sunset phases (`Deprecation`, `Sunset`, `Link`, `Warning` + `legacy_route_sunset` detail payload).
+- [x] Added backend API tests proving behavior before/after cutoff and confirming canonical `/track-analysis` behavior is preserved.
+- [x] Documented migration timeline and release notes in `docs/operations`.
+## 2026-03-05 Status dashboard cache + trend telemetry hardening
+- [x] Extended `FileStatusTelemetryProvider` queue-depth snapshot model to parse bounded, chronologically ordered history windows (max 60 points) with sane fallback behavior.
+- [x] Updated `/api/v1/status/dashboard` to emit `queue_depth.trend` from persisted history and to serve conditional GET responses using `ETag` + `Last-Modified` validators.
+- [x] Added frontend dashboard status client support for `If-None-Match` request validators and 304 cache reuse to avoid unnecessary state churn.
+- [x] Added backend test coverage for telemetry history window ordering/limits and dashboard conditional GET behavior.
+

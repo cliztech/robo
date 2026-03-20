@@ -49,6 +49,8 @@ ACTION_TEXT_PATTERN = re.compile(
 TI_REFERENCE_PATTERN = re.compile(r"\bTI-\d{3}\b", re.IGNORECASE)
 TRACKED_ISSUE_HEADER_PATTERN = re.compile(r"^#\s+TI-\d{3}\b", re.IGNORECASE)
 TRACKED_ISSUE_STATUS_PATTERN = re.compile(r"^-\s+\*\*Status:\*\*", re.IGNORECASE)
+TRACKED_ISSUE_KEY_PATTERN = re.compile(r"Task\s+([A-D]\d+\.\d+)", re.IGNORECASE)
+TRACKING_STATE_PATTERN = re.compile(r"\*\*\[(?P<state>[^\]]+)\]\*\*")
 CANONICAL_TASK_KEY_PATTERN = re.compile(
     r"\b(?:canonical[_ -]?task[_ -]?key|task[_ -]?key)\s*[:=]\s*([a-z0-9_.-]+)",
     re.IGNORECASE,
@@ -124,8 +126,36 @@ class DueReminder:
     date: dt.date
     owner: str
     summary: str
+    source: Path
+    line_number: int
     state: str
     is_overdue: bool
+
+
+@dataclass(frozen=True)
+class RenderedTask:
+    """Pre-rendered task row with dedupe metadata."""
+
+    item: QueueItem
+    normalized_task_text: str
+
+    @property
+    def dedupe_key(self) -> tuple[str, int, str]:
+        rel_source = self.item.source.relative_to(ROOT).as_posix()
+        return (rel_source, self.item.line_number, self.normalized_task_text)
+
+
+@dataclass(frozen=True)
+class RenderedReminder:
+    """Pre-rendered reminder row with dedupe metadata."""
+
+    item: DueReminder
+    normalized_task_text: str
+
+    @property
+    def dedupe_key(self) -> tuple[str, int, str]:
+        rel_source = self.item.source.relative_to(ROOT).as_posix()
+        return (rel_source, self.item.line_number, self.normalized_task_text)
 
 
 def collect_due_reminders(todo_path: Path, today: dt.date) -> list[DueReminder]:
@@ -134,7 +164,10 @@ def collect_due_reminders(todo_path: Path, today: dt.date) -> list[DueReminder]:
         return []
 
     reminders: list[DueReminder] = []
-    for raw_line in todo_path.read_text(encoding="utf-8").splitlines():
+    for line_number, raw_line in enumerate(
+        todo_path.read_text(encoding="utf-8").splitlines(),
+        start=1,
+    ):
         match = DUE_ENTRY_PATTERN.match(raw_line)
         if not match:
             continue
@@ -147,6 +180,8 @@ def collect_due_reminders(todo_path: Path, today: dt.date) -> list[DueReminder]:
                 date=due_date,
                 owner=match.group("owner").strip(),
                 summary=match.group("summary").strip(),
+                source=todo_path,
+                line_number=line_number,
                 state="complete" if is_complete else "open",
                 is_overdue=(not is_complete and due_date < today),
             )
@@ -246,6 +281,123 @@ def extract_ti_references(text: str) -> set[str]:
 
 def extract_canonical_task_keys(text: str) -> set[str]:
     return {match.group(1).lower() for match in CANONICAL_TASK_KEY_PATTERN.finditer(text)}
+
+
+
+
+def parse_sprint_status_map(sprint_status_path: Path) -> dict[str, str]:
+    """Parse development_status state map from sprint-status.yaml."""
+    if not sprint_status_path.exists():
+        return {}
+
+    in_dev_status = False
+    result: dict[str, str] = {}
+    for raw_line in sprint_status_path.read_text(encoding="utf-8").splitlines():
+        stripped = raw_line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if stripped == "development_status:":
+            in_dev_status = True
+            continue
+        if in_dev_status and not raw_line.startswith("  "):
+            break
+        if in_dev_status:
+            if ":" not in stripped:
+                continue
+            key, value = stripped.split(":", 1)
+            result[key.strip().lower()] = value.strip().lower()
+
+    return result
+
+
+def parse_tracked_issue_metadata(issue_path: Path) -> tuple[str | None, str | None]:
+    """Return canonical task key + tracked issue status from a TI markdown file."""
+    task_key: str | None = None
+    status_value: str | None = None
+
+    for raw_line in issue_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if task_key is None and line.startswith("# "):
+            key_match = TRACKED_ISSUE_KEY_PATTERN.search(line)
+            if key_match:
+                section = key_match.group(1).lower()
+                task_key = section.replace('.', '-')
+
+        if status_value is None and TRACKED_ISSUE_STATUS_PATTERN.match(line):
+            _, status_raw = line.split(":", 1)
+            status_value = status_raw.strip().lower()
+
+        if task_key and status_value:
+            break
+
+    return task_key, status_value
+
+
+def canonical_status_family(status: str) -> str:
+    value = status.strip().lower().replace("-", "_").replace(" ", "_")
+    if value in {"completed", "complete", "closed", "done"}:
+        return "completed"
+    if value in {"in_progress", "active"}:
+        return "in_progress"
+    if value in {"backlog", "open", "ready", "blocked", "todo", "optional"}:
+        return "backlog"
+    return value
+
+
+def validate_security_state_consistency(
+    todo_path: Path,
+    sprint_status_path: Path,
+    tracked_issues_dir: Path = TRACKED_ISSUES_DIR,
+) -> None:
+    """Fail when TODO/tracked issue state diverges from sprint-status authority."""
+    if not todo_path.exists() or not sprint_status_path.exists() or not tracked_issues_dir.exists():
+        return
+
+    canonical_map = parse_sprint_status_map(sprint_status_path)
+    if not canonical_map:
+        return
+
+    violations: list[str] = []
+    for line_number, raw_line in enumerate(todo_path.read_text(encoding="utf-8").splitlines(), start=1):
+        ti_refs = sorted(extract_ti_references(raw_line))
+        if not ti_refs:
+            continue
+
+        tracking_state_match = TRACKING_STATE_PATTERN.search(raw_line)
+        todo_tracking_state = tracking_state_match.group("state").strip().lower() if tracking_state_match else None
+
+        for ti_ref in ti_refs:
+            issue_path = tracked_issues_dir / f"{ti_ref}.md"
+            if not issue_path.exists():
+                continue
+
+            task_key, tracked_status = parse_tracked_issue_metadata(issue_path)
+            if not task_key or not tracked_status:
+                continue
+
+            canonical_state = canonical_map.get(task_key.lower())
+            if canonical_state is None:
+                continue
+
+            canonical_family = canonical_status_family(canonical_state)
+            tracked_family = canonical_status_family(tracked_status)
+            if canonical_family != tracked_family:
+                violations.append(
+                    f"- TODO.md:{line_number} -> {ti_ref} ({task_key}): sprint-status={canonical_state}, tracked-issue={tracked_status}"
+                )
+
+            if todo_tracking_state is not None:
+                todo_family = canonical_status_family(todo_tracking_state)
+                if canonical_family != todo_family:
+                    violations.append(
+                        f"- TODO.md:{line_number} -> {ti_ref} ({task_key}): sprint-status={canonical_state}, TODO-tag={todo_tracking_state}"
+                    )
+
+    if violations:
+        raise RuntimeError(
+            "state consistency gate failed (sprint-status.yaml is authoritative):\n"
+            + "\n".join(sorted(set(violations)))
+        )
 
 
 def validate_tracked_issue_files(tracked_issues_dir: Path = TRACKED_ISSUES_DIR) -> None:
@@ -398,6 +550,36 @@ def render_phase_summary(phase_totals: dict[str, int]) -> str:
     return "Open tasks by phase: " + ", ".join(summary_bits)
 
 
+def _dedupe_rendered_tasks(tasks: list[QueueItem]) -> list[RenderedTask]:
+    seen: set[tuple[str, int, str]] = set()
+    deduped: list[RenderedTask] = []
+    for item in tasks:
+        rendered = RenderedTask(
+            item=item,
+            normalized_task_text=normalized_title_fingerprint(item.text),
+        )
+        if rendered.dedupe_key in seen:
+            continue
+        seen.add(rendered.dedupe_key)
+        deduped.append(rendered)
+    return deduped
+
+
+def _dedupe_rendered_reminders(reminders: list[DueReminder]) -> list[RenderedReminder]:
+    seen: set[tuple[str, int, str]] = set()
+    deduped: list[RenderedReminder] = []
+    for item in reminders:
+        rendered = RenderedReminder(
+            item=item,
+            normalized_task_text=normalized_title_fingerprint(item.summary),
+        )
+        if rendered.dedupe_key in seen:
+            continue
+        seen.add(rendered.dedupe_key)
+        deduped.append(rendered)
+    return deduped
+
+
 
 
 def write_build_plan(
@@ -410,8 +592,13 @@ def write_build_plan(
     output_path.parent.mkdir(parents=True, exist_ok=True)
     validate_phase_namespace(tasks)
 
+    deduped_tasks = _dedupe_rendered_tasks(tasks)
+    unique_tasks = [entry.item for entry in deduped_tasks]
+    deduped_reminders = _dedupe_rendered_reminders(due_reminders or [])
+    unique_reminders = [entry.item for entry in deduped_reminders]
+
     by_phase: dict[str, list[QueueItem]] = {}
-    for task in tasks:
+    for task in unique_tasks:
         by_phase.setdefault(task.phase, []).append(task)
 
     generated_at = dt.datetime.now(dt.timezone.utc).isoformat()
@@ -420,16 +607,16 @@ def write_build_plan(
         "",
         f"Generated by `scripts/roadmap_autopilot.py` at {generated_at}.",
         "",
-        f"Total unfinished tasks discovered: **{len(tasks)}**.",
+        f"Total unfinished tasks discovered: **{len(unique_tasks)}**.",
         "",
     ]
 
-    phase_totals = summarize_phases(tasks)
+    phase_totals = summarize_phases(unique_tasks)
     lines.append(render_phase_summary(phase_totals))
     lines.append("")
 
     skipped = skipped_tasks or []
-    reminders = due_reminders or []
+    reminders = unique_reminders
     lines.append(f"Reconciled/skipped tasks: **{len(skipped)}**.")
     lines.append("")
 
@@ -493,7 +680,9 @@ def write_build_plan(
             f"(count={generated_header_count})"
         )
 
-    output_path.write_text(rendered, encoding="utf-8")
+    temp_output = output_path.with_name(f".{output_path.name}.tmp")
+    temp_output.write_text(rendered, encoding="utf-8")
+    temp_output.replace(output_path)
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -618,6 +807,10 @@ def run_once(
     build_plan: str = "",
 ) -> int:
     validate_tracked_issue_files()
+    validate_security_state_consistency(
+        todo_path=ROOT / "TODO.md",
+        sprint_status_path=ROOT / "docs" / "exec-plans" / "active" / "sprint-status.yaml",
+    )
 
     tasks: list[QueueItem] = []
     missing_files: list[Path] = []

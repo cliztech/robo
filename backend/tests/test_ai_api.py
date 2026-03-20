@@ -36,12 +36,16 @@ def test_track_analysis_contract_success() -> None:
     response = client.post(
         "/api/v1/ai/track-analysis",
         json={
-            "title": "Neon Skyline",
-            "artist": "Bytewave",
-            "genre": "Synthwave",
-            "bpm": 118,
-            "duration_seconds": 245,
-            "notes": "night drive",
+            "track_id": "trk-001",
+            "metadata": {
+                "title": "Neon Skyline",
+                "artist": "Bytewave",
+                "genre_hint": "Synthwave",
+                "duration_seconds": 245
+            },
+            "audio_features": {
+                "bpm": 118
+            }
         },
         headers={"X-Correlation-ID": "corr-track-001", "X-API-Key": TEST_API_KEY},
     )
@@ -52,7 +56,7 @@ def test_track_analysis_contract_success() -> None:
     assert body["status"] == "success"
     assert body["correlation_id"] == "corr-track-001"
     assert response.headers["X-Correlation-ID"] == "corr-track-001"
-    assert body["data"]["track_id"] == "legacy-corr-track-001"
+    assert body["data"]["track_id"] == "trk-001"
     assert body["data"]["analysis"]["genre"] == "synthwave"
     assert body["data"]["analysis"]["status"] == AnalysisStatus.SUCCESS.value
     assert isinstance(body["latency_ms"], int)
