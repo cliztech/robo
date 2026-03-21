@@ -8,6 +8,10 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 ## Recent Decisions
 
+- Stabilized the studio developer environment by resolving a configuration conflict in `settings.json` where `chat.tools.terminal` was inconsistently defined across structured objects and dot-notation keys.
+- Added a designer-review-driven refinement pass to the DJ command bridge: compressed the marquee so hardware appears earlier, rebalanced the deck/mixer grid toward playable equipment, added a mixer reactor header, and locally darkened studio token surfaces to prevent light-theme leakage from breaking the cinematic cockpit mood.
+- Elevated the DJ operator experience into a cinematic "command bridge" shell with Rajdhani/Orbitron typography, a marquee hero banner, framed cockpit chrome, angled deck wings, and richer CDJ hardware surfacing so the app feels like a premium performance destination instead of a utility dashboard.
+- Elevated the `decks` operator view with a denser command rail, richer waveform timing chips, full hardware deck panels, a more physical mixer treatment, and a premium topbar so the virtual DJ equipment reads as intentional hardware rather than placeholder panels.
 - Added bounded status queue-depth telemetry history ingestion (last 60 points), wired dashboard trend responses to real history windows, and introduced dashboard conditional GET validators (ETag/Last-Modified) with 304 handling support in the frontend status client.
 - Consolidated `scripts/codex_env_doctor.sh` into a single `PASS:/WARN:/FAIL:` implementation with strict shell guards (`set -euo pipefail`), centralized cleanup trap, and a single explicit exit path.
 - Added CI guard workflow `.github/workflows/codex-env-doctor-check.yml` that runs the doctor script and fails if mixed `PASS:`/`[PASS]` output formats are detected.
