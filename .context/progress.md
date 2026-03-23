@@ -45,6 +45,7 @@
 
 ## Recent Completed Work
 
+- [x] Delivered a dedicated radio-station control room surface for the `studio` workspace with a cinematic operations hero, scheduling lane, smart playlist stack, host tool cluster, and multi-output/compliance overview for online station management.
 - [x] Ran a live browser design review on the DJ console and landed a second refinement pass: compressed the marquee hierarchy, strengthened mixer focal treatment with a reactor summary band, rebalanced deck/mixer proportions, and fixed studio-surface theme leakage so the interface stays dark and cohesive under app theme changes.
 - [x] Continued the AAA-grade DJ interface pass: promoted the shell into a cinematic command bridge with a marquee hero panel, environmental lighting, angular deck-wing staging, and upgraded PlatinumCDJ typography/chrome for a more game-like hardware fantasy.
 - [x] Continued DJ console visual quality pass: made the `decks` view the default operator landing screen, upgraded deck surfaces with full hardware panels and command telemetry, lifted waveform/mixer chrome, and modernized the console topbar for live-performance readability.
