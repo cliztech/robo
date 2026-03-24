@@ -48,6 +48,14 @@ warn_if_missing() {
 run_check "bootstrap_dev_environment.sh" "$REPO_ROOT/scripts/bootstrap_dev_environment.sh"
 run_check "config/validate_config.py" python "$REPO_ROOT/config/validate_config.py"
 run_check "config/check_runtime_secrets.py --require-env-only" python "$REPO_ROOT/config/check_runtime_secrets.py" --require-env-only
+run_check \
+    "config/check_runtime_env.py --context desktop_app" \
+    env \
+    ROBODJ_ENV=development \
+    ROBODJ_STATION_ID=dgn_local \
+    ROBODJ_LOG_LEVEL=INFO \
+    ROBODJ_DATA_DIR=./config/cache \
+    python "$REPO_ROOT/config/check_runtime_env.py" --context desktop_app
 
 warn_if_missing "config/secret.key"
 warn_if_missing "config/secret_v2.key"

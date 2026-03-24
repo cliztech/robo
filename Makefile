@@ -15,6 +15,9 @@ help:
 	@echo "  run-airwaves                      Run dgn-airwaves stub"
 	@echo "  run-robo-rippa                    Run dgn-robo-rippa stub"
 	@echo "  check                             Run all validation checks"
+	@echo "  env-check-desktop                 Validate desktop_app runtime env contract"
+	@echo "  env-check-docker                  Validate docker_stack runtime env contract"
+	@echo "  env-check-ci                      Validate ci runtime env contract"
 	@echo "  distcheck                         Alias of check for CI compatibility"
 
 build: check package-config
@@ -47,6 +50,28 @@ run-robo-rippa:
 
 check: build-modules lint-backend secret-scan
 	$(PYTHON) -m json.tool docs/architecture/event-schema.json > /dev/null
+
+env-check-desktop:
+	ROBODJ_ENV=development \
+	ROBODJ_STATION_ID=dgn_local \
+	ROBODJ_LOG_LEVEL=INFO \
+	ROBODJ_DATA_DIR=./config/cache \
+	$(PYTHON) config/check_runtime_env.py --context desktop_app
+
+env-check-docker:
+	COMPOSE_PROJECT_NAME=robodj \
+	ROBODJ_ENV=development \
+	ROBODJ_LOG_LEVEL=INFO \
+	ROBODJ_HTTP_PORT=8080 \
+	$(PYTHON) config/check_runtime_env.py --context docker_stack
+
+env-check-ci:
+	CI=true \
+	GITHUB_ACTIONS=true \
+	GITHUB_REF_NAME=local-preflight \
+	GITHUB_SHA=0123456789abcdef0123456789abcdef01234567 \
+	ROBODJ_ENV=staging \
+	$(PYTHON) config/check_runtime_env.py --context ci
 
 distcheck: check
 
