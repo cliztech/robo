@@ -8,6 +8,7 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 ## Recent Decisions
 
+- Redirected the `studio` operator view away from the DJ deck duplicate and into a dedicated radio-station control room surface that combines scheduling, playlists, host tools, compliance timing, and stream health into a single premium operations screen.
 - Stabilized the studio developer environment by resolving a configuration conflict in `settings.json` where `chat.tools.terminal` was inconsistently defined across structured objects and dot-notation keys.
 - Added a designer-review-driven refinement pass to the DJ command bridge: compressed the marquee so hardware appears earlier, rebalanced the deck/mixer grid toward playable equipment, added a mixer reactor header, and locally darkened studio token surfaces to prevent light-theme leakage from breaking the cinematic cockpit mood.
 - Elevated the DJ operator experience into a cinematic "command bridge" shell with Rajdhani/Orbitron typography, a marquee hero banner, framed cockpit chrome, angled deck wings, and richer CDJ hardware surfacing so the app feels like a premium performance destination instead of a utility dashboard.
