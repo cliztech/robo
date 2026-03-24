@@ -1,14 +1,15 @@
-.PHONY: help build build-all build-modules build-airwaves build-robo-rippa package-config qa smoke run-airwaves run-robo-rippa check distcheck env-check-desktop env-check-docker env-check-ci
+.PHONY: help build build-all build-modules package-config qa smoke run-airwaves run-robo-rippa check distcheck install-deps
+.PHONY: help build build-all build-modules package-config qa smoke run-airwaves run-robo-rippa check distcheck install-deps
 
 PYTHON ?= python3
 ARTIFACT_DIR ?= .artifacts
 CONFIG_ARCHIVE ?= $(ARTIFACT_DIR)/dgn-dj-studio-config.tgz
 
+PY_SOURCES = backend/ dgn-airwaves/src dgn-robo-rippa/src config/ scripts/
+
 help:
 	@echo "Targets:"
 	@echo "  build / build-all / build-modules  Build all modules and package config artifact"
-	@echo "  build-airwaves                    Build dgn-airwaves only"
-	@echo "  build-robo-rippa                  Build dgn-robo-rippa only"
 	@echo "  qa                                Run lint and basic Python checks"
 	@echo "  smoke                             Validate required runtime files exist"
 	@echo "  run-airwaves                      Run dgn-airwaves stub"
@@ -19,16 +20,11 @@ help:
 	@echo "  env-check-ci                      Validate ci runtime env contract"
 	@echo "  distcheck                         Alias of check for CI compatibility"
 
-build: build-modules package-config
+build: check package-config
 build-all: build
 
-build-modules: build-airwaves build-robo-rippa
-
-build-airwaves:
-	$(PYTHON) -m compileall -q dgn-airwaves/src
-
-build-robo-rippa:
-	$(PYTHON) -m compileall -q dgn-robo-rippa/src
+build-modules:
+	$(PYTHON) -m compileall -q $(PY_SOURCES)
 
 package-config:
 	@test -f "DGN-DJ_Launcher.bat"
@@ -37,7 +33,7 @@ package-config:
 	@echo "Build complete: $(CONFIG_ARCHIVE)"
 
 qa:
-	yamllint docker-compose.yaml
+	yamllint docker-compose.yaml docker-compose.base.yml docker-compose.dev.yml docker-compose.staging.yml docker-compose.release.yml docker-compose.prod.yml
 	markdownlint-cli2 "**/*.md" "!make-4.3/**"
 	$(PYTHON) -m py_compile config/inspect_db.py
 
@@ -52,7 +48,7 @@ run-airwaves:
 run-robo-rippa:
 	PYTHONPATH=dgn-robo-rippa/src $(PYTHON) -m dgn_robo_rippa.main
 
-check: build
+check: build-modules lint-backend secret-scan
 	$(PYTHON) -m json.tool docs/architecture/event-schema.json > /dev/null
 
 env-check-desktop:
@@ -82,10 +78,10 @@ distcheck: check
 # ── Sprint 1 additions ─────────────────────────────────────
 
 dev:
-	docker compose -f docker-compose.dev.yml up
+	docker compose -f docker-compose.base.yml -f docker-compose.dev.yml --profile dev up
 
 dev-down:
-	docker compose -f docker-compose.dev.yml down
+	docker compose -f docker-compose.base.yml -f docker-compose.dev.yml --profile dev down
 
 test-backend:
 	$(PYTHON) -m pytest backend/tests -x -q --tb=short
@@ -94,7 +90,11 @@ test-frontend:
 	npm run test
 
 lint-backend:
-	$(PYTHON) -m ruff check backend/ --output-format=full
+	$(PYTHON) -m ruff --version || $(MAKE) install-deps
+	$(PYTHON) -m ruff check $(PY_SOURCES) --output-format=full
+
+install-deps:
+	$(PYTHON) -m pip install -r backend/requirements.lock
 
 lint-frontend:
 	npm run lint

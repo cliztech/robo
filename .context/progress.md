@@ -1,5 +1,15 @@
 # Progress
 
+## 2026-03-21 Developer Environment Stabilization
+- [x] Resolved `settings.json` configuration conflict (Studio tool auto-approval error).
+- [x] Added `.gitattributes` to enforce repository-wide line ending normalization and resolve LF/CRLF warnings.
+- [x] Tracked `vitest.config.mts` to ensure consistent test environment configuration.
+
+## 2026-03-05 API Request Validation Hardening
+- [x] Added shared API error helper (`src/lib/api/error.ts`) returning deterministic `{ error_code, message, details }` envelopes.
+- [x] Added `application/json` content-type enforcement and bounded request-body size checks for AI analyze-track and batch-analyze routes.
+- [x] Added Zod request schemas + `safeParse` handling for `trackId`/`stationId` inputs with structured 400 validation detail responses.
+
 ## Completed (Phases 0-4)
 
 - [x] **Delivery Phase 0: Project Setup** (Environment, Next.js, Git)
@@ -35,6 +45,11 @@
 
 ## Recent Completed Work
 
+- [x] Delivered a dedicated radio-station control room surface for the `studio` workspace with a cinematic operations hero, scheduling lane, smart playlist stack, host tool cluster, and multi-output/compliance overview for online station management.
+- [x] Ran a live browser design review on the DJ console and landed a second refinement pass: compressed the marquee hierarchy, strengthened mixer focal treatment with a reactor summary band, rebalanced deck/mixer proportions, and fixed studio-surface theme leakage so the interface stays dark and cohesive under app theme changes.
+- [x] Continued the AAA-grade DJ interface pass: promoted the shell into a cinematic command bridge with a marquee hero panel, environmental lighting, angular deck-wing staging, and upgraded PlatinumCDJ typography/chrome for a more game-like hardware fantasy.
+- [x] Continued DJ console visual quality pass: made the `decks` view the default operator landing screen, upgraded deck surfaces with full hardware panels and command telemetry, lifted waveform/mixer chrome, and modernized the console topbar for live-performance readability.
+- [x] Consolidated `scripts/codex_env_doctor.sh` to a single shellcheck-clean implementation (strict mode, trap-based cleanup, single explicit exit semantics) and added CI drift detection for mixed PASS output formats in `.github/workflows/codex-env-doctor-check.yml`.
 - [x] Hardened dashboard alert acknowledgement mutation flow to use per-alert rollback snapshots, in-flight dedupe by alert ID, and functional updates for all ack-path state writes.
 - [x] Added targeted dashboard UI tests for concurrent sibling acknowledgements (one success, one failure) and duplicate-click in-flight dedupe behavior.
 - Added Delivery Phase 8 dashboard automated coverage for loading/error/success states, alert acknowledge interaction, threshold boundary rendering, and fallback-metric regression in `tests/ui/dashboard-view.test.tsx`.

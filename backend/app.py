@@ -26,7 +26,7 @@ async def lifespan(_: FastAPI):
     yield
 
 
-app = FastAPI(title="DGN-DJ Backend Scheduler Services", lifespan=lifespan)
+app = FastAPI(title="DGN-DJ Studio Backend Scheduler Services", lifespan=lifespan)
 app.include_router(autonomy_policy_router)
 app.include_router(status_router)
 app.include_router(scheduler_ui_router)
