@@ -57,6 +57,7 @@ CANONICAL_TASK_KEY_PATTERN = re.compile(
 )
 NON_ALNUM_PATTERN = re.compile(r"[^a-z0-9]+")
 TRACKED_ISSUES_DIR = ROOT / "docs" / "exec-plans" / "active" / "tracked-issues"
+SPRINT_STATUS_PATH = ROOT / "docs" / "exec-plans" / "active" / "sprint-status.yaml"
 DUE_ENTRY_PATTERN = re.compile(
     r"^\s*[-*]\s+\[(?P<state>[ xX])\]\s+"
     r"(?P<date>\d{4}-\d{2}-\d{2})\s+"
@@ -516,6 +517,85 @@ def validate_tracked_issue_files(tracked_issues_dir: Path = TRACKED_ISSUES_DIR) 
         )
 
 
+def parse_sprint_development_statuses(status_path: Path = SPRINT_STATUS_PATH) -> dict[str, str]:
+    """Parse sprint status YAML development_status block without external deps."""
+    if not status_path.exists():
+        raise RuntimeError(f"missing sprint status authority file: {status_path.relative_to(ROOT)}")
+
+    statuses: dict[str, str] = {}
+    in_dev_block = False
+    for raw_line in status_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.rstrip()
+        if not in_dev_block:
+            if line.strip() == "development_status:":
+                in_dev_block = True
+            continue
+
+        if not line.startswith("  "):
+            break
+        key_value = line.strip()
+        if not key_value or ":" not in key_value:
+            continue
+        key, value = key_value.split(":", 1)
+        statuses[key.strip()] = value.strip()
+
+    if not statuses:
+        raise RuntimeError("sprint status validation failed: development_status block missing/empty")
+    return statuses
+
+
+def normalize_ti_status(status_value: str) -> str:
+    """Normalizes a status string from a TI file to a canonical sprint status."""
+    lowered = status_value.strip().lower().replace(" ", "_")
+
+    # Group aliases for clarity and easier maintenance
+    COMPLETED_ALIASES = {"closed", "completed", "done"}
+    BACKLOG_ALIASES = {"open", "ready", "backlog", "blocked"}
+
+    if lowered in COMPLETED_ALIASES:
+        return "completed"
+    if lowered in BACKLOG_ALIASES:
+        return "backlog"
+    if lowered == "in_progress":
+        return "in_progress"
+
+    raise RuntimeError(f"unknown tracked issue status value: {status_value}")
+
+
+def validate_tracked_issue_status_parity(
+    tracked_issues_dir: Path = TRACKED_ISSUES_DIR,
+    status_path: Path = SPRINT_STATUS_PATH,
+) -> None:
+    """Fail when TI status fields disagree with sprint-status.yaml for the same IDs."""
+    sprint_statuses = parse_sprint_development_statuses(status_path)
+    violations: list[str] = []
+
+    for issue_path in sorted(tracked_issues_dir.glob("TI-*.md")):
+        issue_text = issue_path.read_text(encoding="utf-8")
+        task_match = re.search(r"Task\s+([A-D]\d\.\d)", issue_text)
+        status_match = re.search(r"^-\s+\*\*Status:\*\*\s*(.+)$", issue_text, re.MULTILINE)
+        if not task_match or not status_match:
+            continue
+
+        # Task A1.3 -> sprint key a1-3
+        sprint_key = task_match.group(1).lower().replace(".", "-")
+        ti_status = normalize_ti_status(status_match.group(1))
+        sprint_status = sprint_statuses.get(sprint_key)
+        if sprint_status is None:
+            continue
+        if ti_status != sprint_status:
+            rel_path = issue_path.relative_to(ROOT)
+            violations.append(
+                f"- {rel_path}: status={status_match.group(1).strip()} ({ti_status}) != "
+                f"sprint-status.yaml:{sprint_key} ({sprint_status})"
+            )
+
+    if violations:
+        raise RuntimeError(
+            "tracked issue status parity validation failed:\n" + "\n".join(violations)
+        )
+
+
 def reconcile_tasks(
     tasks: list[QueueItem],
     closed_tasks: list[OpenTask],
@@ -898,6 +978,7 @@ def run_once(
     build_plan: str = "",
 ) -> int:
     validate_tracked_issue_files()
+    validate_tracked_issue_status_parity()
     validate_security_state_consistency(
         todo_path=ROOT / "TODO.md",
         sprint_status_path=ROOT / "docs" / "exec-plans" / "active" / "sprint-status.yaml",

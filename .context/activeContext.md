@@ -267,6 +267,7 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Updated TECH_STACK.md to reflect current runtime/framework/tooling versions (Node 20.x, Next.js 15.5.10, React 18, Vitest 4.x, FastAPI/Python backend context).
 - Rebranded backend operator-facing startup/title strings from legacy RoboDJ naming to DGN-DJ naming.
 - Expanded CI docs consistency gate by wiring `scripts/ci/check_docs_consistency.py` into `.github/workflows/ci.yml` and adding README structure checks.
+- Reconciled TI-039/TI-040/TI-041 using sprint-status canonical authority + artifact existence: TI-041 confirmed complete via evidence bundle, TI-039 retained in progress, TI-040 set blocked pending artifact delivery; parity guard added to roadmap autopilot.
 
 ## 2026-03-03 DJ Console Hardware Realism Update
 - [x] Reworked deck transport surfaces into dual-device layouts: DGJ-3000X media player + DGN Technical-1200SN-inspired turntable visuals for both Deck A/B.

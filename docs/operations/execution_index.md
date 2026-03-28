@@ -19,7 +19,7 @@ This index lists active tracks, owners, and current status pointers. The status 
 | Task | Owner | Frequency | Next due (UTC) | Last completed (UTC) |
 | --- | --- | --- | --- | --- |
 | Weekly readiness score refresh (`docs/readiness_scorecard.md`) | Management Team (Project Coordinator) | Weekly | 2026-03-03 | 2026-02-27 |
-| Weekly backlog hygiene reconciliation (`TODO.md` ↔ tracked issues) | Management Team (Project Coordinator) | Weekly | 2026-03-01 | 2026-02-24 |
+| Weekly backlog hygiene reconciliation (`TODO.md` ↔ tracked issues) | Management Team (Project Coordinator) | Weekly | 2026-03-10 | 2026-03-03 |
 | Bi-weekly blocked-item pruning (`TI-037`) | Planner Agent | Bi-weekly | 2026-03-10 | 2026-02-24 |
 | Monthly roadmap-variant reassessment (`TI-038`) | Management Team (Sprint Planner) | Monthly | 2026-03-31 | 2026-02-24 |
 
@@ -89,3 +89,9 @@ Use this compact template when posting weekly updates in the SoT file for that t
 - Changed metrics: snapshot collision blocker resolved via collision-resistant naming + retry guard; rapid snapshot creation tests added and passing
 - Blockers: none (previous same-second snapshot-name collision closed)
 - Next step: rerun launcher `--on-launch` recovery SLA drill and attach second passing sample to readiness scorecard
+
+- Date (UTC): 2026-03-03
+- Owner: Management Team (Project Coordinator)
+- Changed metrics: reconciled TI-039/TI-040/TI-041 against `sprint-status.yaml` evidence gates (`TI-041` moved to done/closed; `TI-039` retained in-progress; `TI-040` remained blocked).
+- Blockers: TI-039 missing approval/audit evidence artifacts and TI-040 missing encryption evidence artifacts; deferred completion target reset to 2026-03-10.
+- Next step: deliver TI-039/TI-040 artifact bundle and rerun parity validator before weekly hygiene closeout on 2026-03-10
