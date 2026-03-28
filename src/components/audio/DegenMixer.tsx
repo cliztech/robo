@@ -7,11 +7,17 @@ import { DegenKnob } from './DegenKnob';
 import { DEFAULT_MIXER_CHANNELS, type MixerChannel } from '@/lib/degenDataAdapters';
 import { useStudioStore } from '@/stores/studioState';
 import type { DJTelemetry, MixerChannelTelemetry } from '@/lib/audio/telemetry';
+import { coerceMixerChannelTelemetry, type DJTelemetry, type MixerChannelTelemetry } from '@/lib/audio/telemetry';
 
 interface DegenMixerProps {
   channels?: MixerChannel[];
   telemetry?: DJTelemetry;
   className?: string;
+}
+
+
+function isTelemetryChannelId(id: string): id is TelemetryChannelId {
+  return id === 'deck-a' || id === 'deck-b' || id === 'mic' || id === 'aux' || id === 'master';
 }
 
 interface ChannelStripProps {
@@ -94,10 +100,10 @@ export function DegenMixer({ channels = DEFAULT_MIXER_CHANNELS, telemetry, class
   const setCrossfader = useStudioStore((state) => state.setCrossfader);
 
   const activeTelemetry = telemetry ?? storeTelemetry;
-  const telemetryMap = useMemo(
-    () => createTelemetryChannelMap(activeTelemetry?.mixer.channels),
-    [activeTelemetry]
-  );
+  const telemetryMap = useMemo(() => {
+    const channels = coerceMixerChannelTelemetry(activeTelemetry?.mixer?.channels);
+    return new Map<string, MixerChannelTelemetry>(channels.map((ch) => [ch.id, ch]));
+  }, [activeTelemetry]);
 
   return (
     <div className={cn('glass-panel overflow-hidden', className)}>
@@ -111,6 +117,7 @@ export function DegenMixer({ channels = DEFAULT_MIXER_CHANNELS, telemetry, class
           const state = mixer.channels[channel.id] ?? { gain: 70, eq: { hi: 50, mid: 50, low: 50 } };
           const channelTelemetry = telemetryMap.get(channel.id);
 
+          const channelTelemetry = isTelemetryChannelId(channel.id) ? telemetryMap.get(channel.id) : undefined;
           return (
             <ChannelStrip
               key={channel.id}
