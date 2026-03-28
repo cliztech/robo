@@ -27,11 +27,11 @@ REQUIRED_LINK_SNIPPETS = {
     AGENTS: ["docs/operations/agent_governance_canonical.md", "docs/operations/derived/agents_governance_view.md"],
     EXEC: ["docs/operations/agent_governance_canonical.md", "docs/operations/derived/agent_execution_governance_view.md"],
     DERIVED_AGENTS: [
-        "agent_governance_canonical.md#team-topology",
-        "agent_governance_canonical.md#route-selection-policy",
-        "agent_governance_canonical.md#completion-gates",
-        "agent_governance_canonical.md#escalation-flow",
-        "agent_governance_canonical.md#personality-and-communication-rules",
+        "../agent_governance_canonical.md#team-topology",
+        "../agent_governance_canonical.md#route-selection-policy",
+        "../agent_governance_canonical.md#completion-gates",
+        "../agent_governance_canonical.md#escalation-flow",
+        "../agent_governance_canonical.md#personality-and-communication-rules",
     ],
     DERIVED_EXEC: [
         "../agent_governance_canonical.md#route-selection-policy",
