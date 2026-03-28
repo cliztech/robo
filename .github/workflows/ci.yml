@@ -18,6 +18,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Detect launcher paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            launcher_related:
+              - 'DGN-DJ_Launcher.bat'
+              - 'RoboDJ_Launcher.bat'
+              - '.github/workflows/ci.yml'
+
+  # ── Cross-OS Smoke Runtime Contract ───────────────────────
+  smoke_runtime:
+    name: Smoke Runtime (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
       - name: Derive branch gate policy
         id: policy
         run: |
@@ -41,6 +63,49 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Runtime contract sanity (Linux)
+        if: runner.os != 'Windows'
+        run: |
+          set -euo pipefail
+          node -e "const major = Number(process.versions.node.split('.')[0]); if (major !== 20) { throw new Error('Expected Node 20.x runtime'); }"
+          python - <<'PY'
+          import os
+          import sys
+
+          if sys.version_info[:2] != (3, 11):
+              raise SystemExit('Expected Python 3.11 runtime')
+
+          for key in ('GITHUB_SHA', 'GITHUB_REF', 'CI'):
+              if not os.getenv(key):
+                  raise SystemExit(f'Missing expected env var: {key}')
+
+          print('✅ Linux runtime contract sanity checks passed.')
+          PY
+
+      - name: Runtime contract sanity (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          node -e "const major = Number(process.versions.node.split('.')[0]); if (major !== 20) { throw new Error('Expected Node 20.x runtime'); }"
+
+          python -c "import sys; raise SystemExit(0 if sys.version_info[:2] == (3, 11) else 1)"
+
+          $requiredVars = @('GITHUB_SHA', 'GITHUB_REF', 'GITHUB_WORKSPACE', 'RUNNER_OS', 'CI')
+          foreach ($name in $requiredVars) {
+            if (-not $env:$name) {
+              throw "Missing expected env var: $name"
+            }
+          }
+
+          Write-Host '✅ Windows runtime contract sanity checks passed.'
           cache: npm
 
       - name: Install Node.js dependencies
@@ -288,6 +353,58 @@ jobs:
         with:
           name: burn-in-failures
           path: test-results/
+          retention-days: 14
+
+  launcher_windows_smoke:
+    name: Launcher smoke (Windows)
+    runs-on: windows-latest
+    needs: detect_launcher_changes
+    if: ${{ github.event_name == 'push' || needs.detect_launcher_changes.outputs.launcher_related == 'true' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate launcher script contracts
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Path launcher-diagnostics -Force | Out-Null
+
+          $launchers = @('DGN-DJ_Launcher.bat', 'RoboDJ_Launcher.bat')
+          foreach ($launcher in $launchers) {
+            if (-not (Test-Path $launcher)) {
+              throw "Missing launcher script: $launcher"
+            }
+
+            $content = Get-Content -Path $launcher -Raw
+            if (-not ($content -match '(?i)DGN-DJ Automation\.exe|RoboDJ Automation\.exe')) {
+              throw "Launcher script $launcher does not reference expected executable wrappers"
+            }
+
+            if (-not ($content -match '(?i)%~dp0|pushd\s+%~dp0')) {
+              throw "Launcher script $launcher does not resolve paths relative to script directory"
+            }
+
+            [PSCustomObject]@{
+              launcher = $launcher
+              bytes = (Get-Item $launcher).Length
+              has_relative_path_resolution = [bool]($content -match '(?i)%~dp0|pushd\s+%~dp0')
+              has_exe_reference = [bool]($content -match '(?i)DGN-DJ Automation\.exe|RoboDJ Automation\.exe')
+            } | ConvertTo-Json -Depth 3 | Out-File -FilePath "launcher-diagnostics/$launcher.contract.json" -Encoding utf8
+
+            $content | Out-File -FilePath "launcher-diagnostics/$launcher.snapshot.txt" -Encoding utf8
+          }
+
+          Write-Host '✅ Launcher script contracts validated.'
+
+      - name: Upload launcher diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: launcher-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: launcher-diagnostics/
+          if-no-files-found: warn
           retention-days: 14
 
   # ── Config Validation ──────────────────────────────────────
