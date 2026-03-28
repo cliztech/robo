@@ -278,6 +278,12 @@
 - [x] Implemented TI-040-compatible envelope fields (`enc_v`, `alg`, `kid`, `nonce_b64`, `ciphertext_b64`, `tag_b64`) and `aad` metadata emission for config payload encryption.
 - [x] Kept decode compatibility for legacy envelope representations (`nonce/ciphertext/tag` and `enc::` string payloads).
 - [x] Updated and passed crypto test coverage in `backend/tests/test_config_crypto.py` and `backend/tests/test_security_config_crypto.py`.
+## 2026-03-04 Continuous Improvement Loop Update
+- [x] Added `docs/operations/continuous_improvement_loop.md` with leading indicators, threshold-to-intervention mapping, execution breach hook, and scorecard path governance.
+- [x] Added monthly Agent Capability Review artifact template to `docs/operations/artifacts.md`.
+- [x] Added breach execution hook to `docs/operations/subagent_execution_playbook.md` requiring `_bmad/*agents*` or `SKILLS.md` updates.
+- [x] Created historical scorecard file at `docs/metrics/agent_capability_scorecard.md`.
+
 
 - Completed TI-040 config-at-rest hardening: unified config read/write encryption envelope handling in `config_crypto`, `ai_service`, and `scheduler_ui_service`; added validator regression tests for plaintext/malformed envelope rejection; published TI-040 evidence artifacts (`ti-040-config-encryption.log`, `ti-040-high-risk-field-inventory.md`, `ti-040-config-before-after.sha256`) and closed dependency checkpoints DEP-TI040-01..03.
 ## 2026-03-04 Agent Governance Canonicalization
