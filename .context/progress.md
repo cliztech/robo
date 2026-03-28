@@ -1,5 +1,19 @@
 # Progress
 
+## 2026-03-28 Dashboard Mapping Refactor
+- [x] Refactored `src/components/console/dashboard.types.ts` to use typed lookup-table mappings for severity/status conversions, reducing repetitive switch logic while preserving behavior.
+- [x] Added `tests/unit/dashboard-types.test.ts` to validate severity/status mapping contracts end-to-end.
+
+## 2026-03-21 Developer Environment Stabilization
+- [x] Resolved `settings.json` configuration conflict (Studio tool auto-approval error).
+- [x] Added `.gitattributes` to enforce repository-wide line ending normalization and resolve LF/CRLF warnings.
+- [x] Tracked `vitest.config.mts` to ensure consistent test environment configuration.
+
+## 2026-03-05 API Request Validation Hardening
+- [x] Added shared API error helper (`src/lib/api/error.ts`) returning deterministic `{ error_code, message, details }` envelopes.
+- [x] Added `application/json` content-type enforcement and bounded request-body size checks for AI analyze-track and batch-analyze routes.
+- [x] Added Zod request schemas + `safeParse` handling for `trackId`/`stationId` inputs with structured 400 validation detail responses.
+
 ## Completed (Phases 0-4)
 
 - [x] **Delivery Phase 0: Project Setup** (Environment, Next.js, Git)
@@ -35,6 +49,11 @@
 
 ## Recent Completed Work
 
+- [x] Delivered a dedicated radio-station control room surface for the `studio` workspace with a cinematic operations hero, scheduling lane, smart playlist stack, host tool cluster, and multi-output/compliance overview for online station management.
+- [x] Ran a live browser design review on the DJ console and landed a second refinement pass: compressed the marquee hierarchy, strengthened mixer focal treatment with a reactor summary band, rebalanced deck/mixer proportions, and fixed studio-surface theme leakage so the interface stays dark and cohesive under app theme changes.
+- [x] Continued the AAA-grade DJ interface pass: promoted the shell into a cinematic command bridge with a marquee hero panel, environmental lighting, angular deck-wing staging, and upgraded PlatinumCDJ typography/chrome for a more game-like hardware fantasy.
+- [x] Continued DJ console visual quality pass: made the `decks` view the default operator landing screen, upgraded deck surfaces with full hardware panels and command telemetry, lifted waveform/mixer chrome, and modernized the console topbar for live-performance readability.
+- [x] Consolidated `scripts/codex_env_doctor.sh` to a single shellcheck-clean implementation (strict mode, trap-based cleanup, single explicit exit semantics) and added CI drift detection for mixed PASS output formats in `.github/workflows/codex-env-doctor-check.yml`.
 - [x] Hardened dashboard alert acknowledgement mutation flow to use per-alert rollback snapshots, in-flight dedupe by alert ID, and functional updates for all ack-path state writes.
 - [x] Added targeted dashboard UI tests for concurrent sibling acknowledgements (one success, one failure) and duplicate-click in-flight dedupe behavior.
 - Added Delivery Phase 8 dashboard automated coverage for loading/error/success states, alert acknowledge interaction, threshold boundary rendering, and fallback-metric regression in `tests/ui/dashboard-view.test.tsx`.
@@ -273,3 +292,28 @@
 - [x] Added `cache-telemetry` runtime events for cache hit/miss/eviction visibility.
 - [x] Added decode concurrency guardrail (`maxConcurrentDecodes`) using a bounded in-engine wait queue.
 - [x] Extended `tests/ui/audio-engine.test.ts` with cache eviction and active-track protection coverage.
+- Hardened status telemetry ingestion with safe field parsers + structured fallback logging, added tolerant service-health enum mapping in status API, and introduced corruption-focused tests (malformed JSON, invalid timestamps/depth, unknown status fallback).
+- [x] Dashboard polling resilience upgrade: decoupled UI clock from API polling cadence, hidden-tab throttling, failure backoff+jitter reset on success, request overlap prevention, and cadence-transition/unmount-abort tests.
+## 2026-03-05 Lint quality gate hardening
+- [x] Removed root Next lint bypass (`eslint.ignoreDuringBuilds`) from `next.config.js`.
+- [x] Added flat-config ESLint stack (`eslint.config.mjs`) and switched scripts to standalone CLI (`npm run lint`) plus CI lint gate (`npm run lint:ci`).
+- [x] Implemented CI lint budget/allowlist enforcement in `scripts/ci/lint_gate.mjs` with explicit owner/expiry validation.
+- [x] Added temporary lint debt allowlist with metadata and budget controls in `config/lint-allowlist.json`.
+- [x] Updated `.github/workflows/ci.yml` to make lint gate a required frontend CI step.
+- [x] Documented local/CI lint workflow and allowlist policy in `CONTRIBUTING.md`.
+## 2026-03-05 CI launcher + Windows smoke enforcement
+- [x] Added a matrix smoke job in `.github/workflows/ci.yml` for `ubuntu-latest` and `windows-latest` to enforce critical runtime contract checks.
+- [x] Added Windows launcher smoke validation for `DGN-DJ_Launcher.bat` and `RoboDJ_Launcher.bat` contract expectations (script presence, executable mapping, relative path resolution).
+- [x] Added Windows environment sanity gates (Node major version, Python version, required CI env vars) aligned to runtime expectations.
+- [x] Kept full lint/build/test suite jobs on Linux while introducing launcher-change-gated Windows smoke job for merge safety.
+- [x] Added launcher diagnostics artifact publishing to support CI regression triage.
+## 2026-03-05 Runtime context env-contract enforcement
+- [x] Added dedicated CI runtime secret contract steps (`--require-env-only`) to backend/config/security jobs.
+- [x] Implemented backend startup runtime context validator with structured diagnostics and safe log summary output.
+- [x] Implemented Next.js server-route runtime context validator and fail-fast route response envelope for invalid/missing env contracts.
+- [x] Added backend runtime contract tests and frontend route/env-contract smoke tests.
+
+## 2026-03-05 Environment Contract Preflight Update
+- [x] Wired `python config/check_runtime_env.py --context <context>` into bootstrap preflight (`desktop_app`, `docker_stack`), codex doctor (`desktop_app`), and CI workflows (`ci`).
+- [x] Added `make env-check-desktop`, `make env-check-docker`, and `make env-check-ci` convenience targets.
+- [x] Consolidated `docs/DEVELOPMENT_ENV_SETUP.md` into one canonical preflight sequence and explicit context mapping.

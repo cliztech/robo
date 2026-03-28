@@ -9,7 +9,12 @@ from backend.app import app
 from backend.status.api import get_alert_repository, get_status_telemetry_provider, get_status_thresholds
 from backend.status.evaluators import StatusThresholds
 from backend.status.repository import SQLiteStatusAlertRepository
-from backend.status.telemetry import QueueDepthSnapshot, RotationTelemetry, ServiceHealthTelemetry
+from backend.status.telemetry import (
+    QueueDepthHistoryPoint,
+    QueueDepthSnapshot,
+    RotationTelemetry,
+    ServiceHealthTelemetry,
+)
 
 client = TestClient(app)
 
@@ -22,8 +27,17 @@ class StubTelemetryProvider:
         rotation_minutes_ago: int,
         service_status: str = "healthy",
         service_reason: str = "all good",
+        queue_history: list[QueueDepthHistoryPoint] | None = None,
     ) -> None:
-        self._queue = QueueDepthSnapshot(current_depth=queue_depth, observed_at=queue_observed_at)
+        self._queue = QueueDepthSnapshot(
+            current_depth=queue_depth,
+            observed_at=queue_observed_at,
+            history=tuple(
+                queue_history
+                if queue_history is not None
+                else [QueueDepthHistoryPoint(depth=queue_depth, observed_at=queue_observed_at)]
+            ),
+        )
         self._rotation = RotationTelemetry(
             last_successful_rotation_at=queue_observed_at - timedelta(minutes=rotation_minutes_ago)
         )
@@ -153,6 +167,40 @@ def test_dashboard_rotation_stale_detection_boundary(tmp_path: Path):
     assert "alert-rotation-stale" in stale_ids
 
 
+
+
+def test_dashboard_queue_trend_uses_history(tmp_path: Path):
+    now = datetime.now(timezone.utc).replace(microsecond=0)
+    thresholds = StatusThresholds(queue_warning=30, queue_critical=50, rotation_stale_after_minutes=30)
+    history = [
+        QueueDepthHistoryPoint(depth=5, observed_at=now - timedelta(minutes=2)),
+        QueueDepthHistoryPoint(depth=9, observed_at=now - timedelta(minutes=1)),
+        QueueDepthHistoryPoint(depth=12, observed_at=now),
+    ]
+
+    with mock.patch.dict(os.environ, {"ROBODJ_SECRET_KEY": "test-secret-key"}):
+        _set_dependency_overrides(
+            tmp_path,
+            StubTelemetryProvider(
+                queue_depth=12,
+                queue_observed_at=now,
+                rotation_minutes_ago=2,
+                queue_history=history,
+            ),
+            thresholds,
+        )
+        response = client.get(
+            "/api/v1/status/dashboard",
+            headers={"X-API-Key": "test-secret-key"},
+        )
+
+    _clear_dependency_overrides()
+
+    assert response.status_code == 200
+    trend = response.json()["queue_depth"]["trend"]
+    assert [point["depth"] for point in trend] == [5, 9, 12]
+
+
 def test_alerts_and_acknowledge_endpoint_auth(tmp_path: Path):
     now = datetime.now(timezone.utc)
     thresholds = StatusThresholds(queue_warning=30, queue_critical=50, rotation_stale_after_minutes=30)
@@ -191,3 +239,56 @@ def test_alerts_and_acknowledge_endpoint_auth(tmp_path: Path):
         assert ack.json()["acknowledged"] is True
 
     _clear_dependency_overrides()
+
+
+def test_dashboard_unknown_service_status_falls_back_to_degraded(tmp_path: Path):
+    now = datetime.now(timezone.utc)
+def test_dashboard_status_conditional_get_etag_and_last_modified(tmp_path: Path):
+    now = datetime.now(timezone.utc).replace(microsecond=0)
+    thresholds = StatusThresholds(queue_warning=30, queue_critical=50, rotation_stale_after_minutes=30)
+
+    with mock.patch.dict(os.environ, {"ROBODJ_SECRET_KEY": "test-secret-key"}):
+        _set_dependency_overrides(
+            tmp_path,
+            StubTelemetryProvider(queue_depth=15, queue_observed_at=now, rotation_minutes_ago=2),
+            thresholds,
+        )
+        first_response = client.get(
+            "/api/v1/status/dashboard",
+            headers={"X-API-Key": "test-secret-key"},
+        )
+
+    _clear_dependency_overrides()
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["service_health"]["status"] == "degraded"
+    assert "runtime probe mismatch" in payload["service_health"]["reason"]
+    assert "invalid service_health status" in payload["service_health"]["reason"]
+        etag = first_response.headers["etag"]
+        last_modified = first_response.headers["last-modified"]
+
+        etag_not_modified = client.get(
+            "/api/v1/status/dashboard",
+            headers={
+                "X-API-Key": "test-secret-key",
+                "If-None-Match": etag,
+            },
+        )
+        last_modified_not_modified = client.get(
+            "/api/v1/status/dashboard",
+            headers={
+                "X-API-Key": "test-secret-key",
+                "If-Modified-Since": last_modified,
+            },
+        )
+
+    _clear_dependency_overrides()
+
+    assert first_response.status_code == 200
+    assert first_response.headers["etag"]
+    assert first_response.headers["last-modified"]
+    assert etag_not_modified.status_code == 304
+    assert etag_not_modified.content == b""
+    assert last_modified_not_modified.status_code == 304
+    assert last_modified_not_modified.content == b""
