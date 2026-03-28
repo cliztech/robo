@@ -10,47 +10,38 @@ function assertNever(value: never): never {
   throw new Error(`Unhandled dashboard value: ${String(value)}`);
 }
 
+const SEVERITY_TO_CARD_COLOR: Record<DashboardSeverity, DashboardCardColor> = {
+  info: "lime",
+  warning: "orange",
+  critical: "red",
+};
+
+const STATUS_TO_TREND: Record<DashboardServiceStatus, DashboardTrend> = {
+  online: "up",
+  degraded: "stable",
+  offline: "down",
+};
+
+const SEVERITY_TO_STATUS_TEXT_CLASS: Record<DashboardSeverity, string> = {
+  info: "text-lime-400",
+  warning: "text-orange-400",
+  critical: "text-red-400",
+};
+
 export function mapSeverityToCardColor(
   severity: DashboardSeverity,
 ): DashboardCardColor {
-  switch (severity) {
-    case "info":
-      return "lime";
-    case "warning":
-      return "orange";
-    case "critical":
-      return "red";
-    default:
-      return assertNever(severity);
-  }
+  return SEVERITY_TO_CARD_COLOR[severity] ?? assertNever(severity);
 }
 
 export function mapStatusToTrend(
   status: DashboardServiceStatus,
 ): DashboardTrend {
-  switch (status) {
-    case "online":
-      return "up";
-    case "degraded":
-      return "stable";
-    case "offline":
-      return "down";
-    default:
-      return assertNever(status);
-  }
+  return STATUS_TO_TREND[status] ?? assertNever(status);
 }
 
 export function mapSeverityToStatusTextClass(
   severity: DashboardSeverity,
 ): string {
-  switch (severity) {
-    case "info":
-      return "text-lime-400";
-    case "warning":
-      return "text-orange-400";
-    case "critical":
-      return "text-red-400";
-    default:
-      return assertNever(severity);
-  }
+  return SEVERITY_TO_STATUS_TEXT_CLASS[severity] ?? assertNever(severity);
 }

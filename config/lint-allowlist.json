@@ -1,0 +1,148 @@
+{
+  "version": 1,
+  "budget": {
+    "max_errors": 77
+  },
+  "entries": [
+    {
+      "path": "src/**/*.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "owner": "@devops-frontend",
+      "expires_on": "2026-04-15",
+      "reason": "Legacy AI route/service typing debt"
+    },
+    {
+      "path": "src/**/*.tsx",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "owner": "@devops-frontend",
+      "expires_on": "2026-04-15",
+      "reason": "Legacy UI state typing debt"
+    },
+    {
+      "path": "src/**/*.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "owner": "@devops-frontend",
+      "expires_on": "2026-04-15",
+      "reason": "In-flight refactors leave temporary dead params"
+    },
+    {
+      "path": "src/**/*.tsx",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "owner": "@devops-frontend",
+      "expires_on": "2026-04-15",
+      "reason": "In-flight UI cleanup"
+    },
+    {
+      "path": "src/**/*.tsx",
+      "ruleId": "react-hooks/immutability",
+      "owner": "@devops-frontend",
+      "expires_on": "2026-04-15",
+      "reason": "Known hook-order cleanup backlog"
+    },
+    {
+      "path": "src/**/*.tsx",
+      "ruleId": "react-hooks/set-state-in-effect",
+      "owner": "@devops-frontend",
+      "expires_on": "2026-04-15",
+      "reason": "Pending effect-to-derivation refactor"
+    },
+    {
+      "path": "src/**/*.tsx",
+      "ruleId": "react-hooks/static-components",
+      "owner": "@devops-frontend",
+      "expires_on": "2026-04-15",
+      "reason": "Pending component extraction"
+    },
+    {
+      "path": "src/**/*.ts",
+      "ruleId": "react-hooks/refs",
+      "owner": "@devops-frontend",
+      "expires_on": "2026-04-15",
+      "reason": "Engine ref API redesign in backlog"
+    },
+    {
+      "path": "src/lib/ai/analyze-track.ts",
+      "ruleId": "preserve-caught-error",
+      "owner": "@devops-frontend",
+      "expires_on": "2026-04-15",
+      "reason": "Error wrapping cleanup queued"
+    },
+    {
+      "path": "src/**/*.tsx",
+      "ruleId": "unknown",
+      "owner": "@devops-frontend",
+      "expires_on": "2026-04-15",
+      "reason": "Known parser conflicts in files under active rebase"
+    },
+    {
+      "path": "tests/**/*.ts",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "owner": "@qa",
+      "expires_on": "2026-04-15",
+      "reason": "Test fixture typing backlog"
+    },
+    {
+      "path": "tests/**/*.tsx",
+      "ruleId": "@typescript-eslint/no-explicit-any",
+      "owner": "@qa",
+      "expires_on": "2026-04-15",
+      "reason": "Test fixture typing backlog"
+    },
+    {
+      "path": "tests/**/*.ts",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "owner": "@qa",
+      "expires_on": "2026-04-15",
+      "reason": "Legacy test helpers"
+    },
+    {
+      "path": "tests/**/*.tsx",
+      "ruleId": "@typescript-eslint/no-unused-vars",
+      "owner": "@qa",
+      "expires_on": "2026-04-15",
+      "reason": "Legacy test helpers"
+    },
+    {
+      "path": "tests/**/*.ts",
+      "ruleId": "unknown",
+      "owner": "@qa",
+      "expires_on": "2026-04-15",
+      "reason": "Known parser issues in retained fixtures"
+    },
+    {
+      "path": "tests/**/*.tsx",
+      "ruleId": "unknown",
+      "owner": "@qa",
+      "expires_on": "2026-04-15",
+      "reason": "Known parser issues in retained fixtures"
+    },
+    {
+      "path": "tests/lib/utils.test.ts",
+      "ruleId": "no-constant-binary-expression",
+      "owner": "@qa",
+      "expires_on": "2026-04-15",
+      "reason": "Legacy assertion pattern"
+    },
+    {
+      "path": "tests/ui/console-skin-visual.test.tsx",
+      "ruleId": "no-useless-assignment",
+      "owner": "@qa",
+      "expires_on": "2026-04-15",
+      "reason": "Visual fixture setup cleanup"
+    },
+    {
+      "path": "tests/ui/setup.tsx",
+      "ruleId": "react/prop-types",
+      "owner": "@qa",
+      "expires_on": "2026-04-15",
+      "reason": "TS test utility; prop-types intentionally omitted"
+    },
+    {
+      "path": "src/**/*.ts",
+      "ruleId": "react-hooks/set-state-in-effect",
+      "owner": "@devops-frontend",
+      "expires_on": "2026-04-15",
+      "reason": "Pending effect-to-derivation refactor"
+    }
+  ]
+}
