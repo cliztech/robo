@@ -53,6 +53,14 @@ export interface DashboardStatusResponse {
   alert_center: AlertCenter;
 }
 
+let dashboardStatusCache: {
+  etag: string | null;
+  payload: DashboardStatusResponse | null;
+} = {
+  etag: null,
+  payload: null,
+};
+
 async function parseJson<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const body = await response
@@ -65,13 +73,31 @@ async function parseJson<T>(response: Response): Promise<T> {
 }
 
 export async function fetchDashboardStatus(signal?: AbortSignal): Promise<DashboardStatusResponse> {
+  const headers: HeadersInit = {};
+  if (dashboardStatusCache.etag) {
+    headers['If-None-Match'] = dashboardStatusCache.etag;
+  }
+
   const response = await fetch('/api/v1/status/dashboard', {
     method: 'GET',
     signal,
     cache: 'no-store',
+    headers,
   });
 
-  return parseJson<DashboardStatusResponse>(response);
+  if (response.status === 304) {
+    if (dashboardStatusCache.payload) {
+      return dashboardStatusCache.payload;
+    }
+    throw new Error('Dashboard status cache miss on 304 response');
+  }
+
+  const payload = await parseJson<DashboardStatusResponse>(response);
+  dashboardStatusCache = {
+    etag: response.headers.get('ETag'),
+    payload,
+  };
+  return payload;
 }
 
 export async function fetchDashboardAlerts(
