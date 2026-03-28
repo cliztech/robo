@@ -9,6 +9,17 @@
 3. Read [`CONFIG_VALIDATION.md`](CONFIG_VALIDATION.md) — how to validate config changes before submitting.
 4. Read [`docs/operations/agent_execution_commands.md`](docs/operations/agent_execution_commands.md) — runnable workflows for planning, parallel analysis, draft PRs, and worktrees.
 
+## Agent Governance (summary, non-authoritative)
+
+Use the governance map for instruction domains and canonical references:
+
+- [`docs/operations/agent_governance_map.md`](docs/operations/agent_governance_map.md)
+- Routing source: [`docs/operations/agent_execution_commands.md`](docs/operations/agent_execution_commands.md)
+- Boundaries + quality gates source: [`AGENTS.md`](AGENTS.md)
+- Skill usage source: [`SKILLS.md`](SKILLS.md)
+
+If this guide conflicts with those files, follow the source-of-truth files above.
+
 ## Repository Nature
 
 This repository tracks a **packaged DGN-DJ distribution**, not compilable application source code. The `backend/` directory contains Python modules, but the primary executable is a pre-built PyInstaller bundle.
@@ -188,6 +199,14 @@ Typical workflow:
    - `python scripts/draft_pr_metadata.py --metadata draft_pr_metadata.json`
 
 If your team prefers a different automation approach, keep the same section headings and output structure defined in this guide.
+
+## Instruction-file PR Drift Checklist
+
+When a PR changes instruction/governance files (for example `AGENTS.md`, `SKILLS.md`, `docs/operations/*` policy docs), include this checklist in the PR body:
+
+- [ ] **References updated:** cross-links to canonical files still resolve and point to current section anchors.
+- [ ] **No policy duplication:** non-authoritative files use concise summaries that link to source-of-truth docs.
+- [ ] **Route consistency verified:** route terms and command mapping remain aligned with `docs/operations/agent_execution_commands.md`.
 
 ## Large Change Delivery
 
