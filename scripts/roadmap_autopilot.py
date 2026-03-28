@@ -302,20 +302,21 @@ def parse_sprint_development_statuses(status_path: Path = SPRINT_STATUS_PATH) ->
 
 
 def normalize_ti_status(status_value: str) -> str:
+    """Normalizes a status string from a TI file to a canonical sprint status."""
     lowered = status_value.strip().lower().replace(" ", "_")
-    mapping = {
-        "closed": "completed",
-        "completed": "completed",
-        "done": "completed",
-        "in_progress": "in_progress",
-        "open": "backlog",
-        "ready": "backlog",
-        "backlog": "backlog",
-        "blocked": "backlog",
-    }
-    if lowered not in mapping:
-        raise RuntimeError(f"unknown tracked issue status value: {status_value}")
-    return mapping[lowered]
+
+    # Group aliases for clarity and easier maintenance
+    COMPLETED_ALIASES = {"closed", "completed", "done"}
+    BACKLOG_ALIASES = {"open", "ready", "backlog", "blocked"}
+
+    if lowered in COMPLETED_ALIASES:
+        return "completed"
+    if lowered in BACKLOG_ALIASES:
+        return "backlog"
+    if lowered == "in_progress":
+        return "in_progress"
+
+    raise RuntimeError(f"unknown tracked issue status value: {status_value}")
 
 
 def validate_tracked_issue_status_parity(
