@@ -241,6 +241,8 @@ def test_alerts_and_acknowledge_endpoint_auth(tmp_path: Path):
     _clear_dependency_overrides()
 
 
+def test_dashboard_unknown_service_status_falls_back_to_degraded(tmp_path: Path):
+    now = datetime.now(timezone.utc)
 def test_dashboard_status_conditional_get_etag_and_last_modified(tmp_path: Path):
     now = datetime.now(timezone.utc).replace(microsecond=0)
     thresholds = StatusThresholds(queue_warning=30, queue_critical=50, rotation_stale_after_minutes=30)
@@ -256,6 +258,13 @@ def test_dashboard_status_conditional_get_etag_and_last_modified(tmp_path: Path)
             headers={"X-API-Key": "test-secret-key"},
         )
 
+    _clear_dependency_overrides()
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["service_health"]["status"] == "degraded"
+    assert "runtime probe mismatch" in payload["service_health"]["reason"]
+    assert "invalid service_health status" in payload["service_health"]["reason"]
         etag = first_response.headers["etag"]
         last_modified = first_response.headers["last-modified"]
 

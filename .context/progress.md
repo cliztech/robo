@@ -285,6 +285,7 @@
 - [x] Removed accidental `src/UNKNOWN.egg-info/` artifact directory from the working tree.
 - [x] Added `scripts/ci/build_python_wheels.sh` to keep Python packaging outputs in `.artifacts/python-packaging` instead of app source paths.
 - [x] Added CI guard script `scripts/ci/check_generated_artifacts.py` and wired it into `.github/workflows/ci.yml` config job.
+- Hardened status telemetry ingestion with safe field parsers + structured fallback logging, added tolerant service-health enum mapping in status API, and introduced corruption-focused tests (malformed JSON, invalid timestamps/depth, unknown status fallback).
 - [x] Dashboard polling resilience upgrade: decoupled UI clock from API polling cadence, hidden-tab throttling, failure backoff+jitter reset on success, request overlap prevention, and cadence-transition/unmount-abort tests.
 ## 2026-03-05 Lint quality gate hardening
 - [x] Removed root Next lint bypass (`eslint.ignoreDuringBuilds`) from `next.config.js`.
