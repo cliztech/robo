@@ -257,6 +257,11 @@
 - [x] Replaced backend operator-facing legacy RoboDJ naming in startup error text and FastAPI title with DGN-DJ branding.
 - [x] Added docs consistency check execution to CI and strengthened `scripts/ci/check_docs_consistency.py` with README title/index validation.
 
+## 2026-03-03 Cadence Governance Hardening
+- [x] Converted dated Tracking Cadence items in `TODO.md` into explicit checklist rows with owner, due date, defer rationale, and replacement due metadata.
+- [x] Added compact cadence `next run window` table to `docs/operations/execution_index.md` with `status` values (`due`, `deferred`).
+- [x] Extended `scripts/roadmap_autopilot.py` with overdue cadence enforcement that exits non-zero when defer rationale/replacement date requirements are missing.
+- [x] Added cadence governance command gate to `PRE_RELEASE_CHECKLIST.md` to block release closure on unresolved overdue cadence items.
 ## 2026-03-03 Roadmap Autopilot Build Plan Integrity
 - [x] Switched roadmap autopilot build-plan output to atomic temp-file replacement writes.
 - [x] Added task/reminder de-duplication keyed by `(source_file, line_ref, normalized_task_text)` before markdown rendering.

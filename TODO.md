@@ -77,10 +77,10 @@ Use the roadmap helper to continuously surface the next open tasks while you wor
 - Status sync note: For closed tracked issues, `TODO.md` checkbox state must mirror each TI `Status` field during weekly hygiene reconciliation. For partial security-track work, record both `implementation_status` and `release_readiness_status` explicitly so release gates do not infer completion from implementation-only progress.
 - [ ] Bi-weekly: remove blocked items or split oversized tasks ([TI-037](docs/exec-plans/active/tracked-issues/TI-037.md)).
 - [ ] Monthly: reassess roadmap variation (Security-first, UX-first, Scale-first, Balanced) ([TI-038](docs/exec-plans/active/tracked-issues/TI-038.md)).
-- [x] 2026-02-24 (Owner: Management Team — Project Coordinator): Weekly readiness metric refresh posted in `docs/readiness_scorecard.md` (Outcome: completed 2026-02-27 with refreshed weighted score + blocker status; next due 2026-03-03).
-- [ ] 2026-03-01 (Owner: Management Team — Project Coordinator): Weekly backlog hygiene review + stale-track escalation log posted in `docs/operations/execution_index.md` (Outcome: 2026-02-27 window formally deferred due to Phase 5 stabilization priority; defer rationale logged in execution index cadence table).
-- [ ] 2026-03-10 (Owner: Planner Agent): Bi-weekly blocked-item pruning complete (remove blocked items or split oversized tasks).
-- [ ] 2026-03-31 (Owner: Management Team — Sprint Planner): Monthly roadmap-variant reassessment recorded (Security-first / UX-first / Scale-first / Balanced).
+- [x] Cadence item — Owner: Management Team — Project Coordinator | Due: 2026-02-24 | Replacement Due: n/a | Status: completed | Defer rationale: n/a | Weekly readiness metric refresh posted in `docs/readiness_scorecard.md` (completed 2026-02-27 with refreshed weighted score + blocker status; next due 2026-03-03).
+- [ ] Cadence item — Owner: Management Team — Project Coordinator | Due: 2026-03-01 | Replacement Due: 2026-03-03 | Status: deferred | Defer rationale: 2026-02-27 window deferred to protect Phase 5 stabilization throughput while preserving weekly cadence evidence in `docs/operations/execution_index.md`. | Weekly backlog hygiene review + stale-track escalation log posted in `docs/operations/execution_index.md`.
+- [ ] Cadence item — Owner: Planner Agent | Due: 2026-03-10 | Replacement Due: n/a | Status: due | Defer rationale: n/a | Bi-weekly blocked-item pruning complete (remove blocked items or split oversized tasks).
+- [ ] Cadence item — Owner: Management Team — Sprint Planner | Due: 2026-03-31 | Replacement Due: n/a | Status: due | Defer rationale: n/a | Monthly roadmap-variant reassessment recorded (Security-first / UX-first / Scale-first / Balanced).
 
 ### Sprint-close guardrail
 

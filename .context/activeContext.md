@@ -268,6 +268,11 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Rebranded backend operator-facing startup/title strings from legacy RoboDJ naming to DGN-DJ naming.
 - Expanded CI docs consistency gate by wiring `scripts/ci/check_docs_consistency.py` into `.github/workflows/ci.yml` and adding README structure checks.
 
+## 2026-03-03 Cadence Governance Hardening
+- Added explicit cadence checklist metadata in `TODO.md` for owner, due, status, defer rationale, and replacement due date to support deterministic governance checks.
+- Appended a compact `Next run window` cadence table in `docs/operations/execution_index.md` with status values constrained to `due|deferred` for operator scanning.
+- Hardened `scripts/roadmap_autopilot.py` to fail non-zero when overdue cadence items are not formally deferred with both rationale and replacement due date.
+- Added release gate command in `PRE_RELEASE_CHECKLIST.md` so release/sprint-close sign-off is blocked on unresolved overdue cadence items.
 ## 2026-03-03 Roadmap Autopilot Build-Plan Dedup Hardening
 - Updated `scripts/roadmap_autopilot.py` build-plan writer to perform atomic replacement writes via temp file + `Path.replace()` to prevent accidental append/partial-write artifacts.
 - Added pre-render de-duplication for build-plan tasks and cadence reminders keyed by `(source_file, line_ref, normalized_task_text)`.
