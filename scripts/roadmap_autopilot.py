@@ -281,8 +281,8 @@ def extract_ti_references(text: str) -> set[str]:
 
 def extract_primary_ti_reference(text: str) -> set[str]:
     """Return only the lead TI reference for reconciliation/status projection logic."""
-    matches = [match.group(0).upper() for match in TI_REFERENCE_PATTERN.finditer(text)]
-    return {matches[0]} if matches else set()
+    match = TI_REFERENCE_PATTERN.search(text)
+    return {match.group(0).upper()} if match else set()
 
 
 def extract_canonical_task_keys(text: str) -> set[str]:
