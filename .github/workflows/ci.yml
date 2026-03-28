@@ -2,18 +2,260 @@ name: CI Pipeline
 
 on:
   push:
-    branches: [main, work, 'release/**']
+    branches: [main, work, "release/**"]
   pull_request:
-    branches: [main, 'release/**']
+    branches: [main, "release/**"]
 
 permissions:
   contents: read
 
 jobs:
+  env-contract:
+    name: Env Contract — Parity Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+  preflight:
+    name: Preflight — CI Gate Contract
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect env/docs/compose/config changes
+        id: changed
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            env_contract_scope:
+              - '.env.example'
+              - 'config/env_contract.json'
+              - '**/docker-compose*.yml'
+              - 'docs/**/*.md'
+
+      - name: Set up Python
+        if: steps.changed.outputs.env_contract_scope == 'true'
+      - name: Detect launcher paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            launcher_related:
+              - 'DGN-DJ_Launcher.bat'
+              - 'RoboDJ_Launcher.bat'
+              - '.github/workflows/ci.yml'
+
+  # ── Cross-OS Smoke Runtime Contract ───────────────────────
+  smoke_runtime:
+    name: Smoke Runtime (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Derive branch gate policy
+        id: policy
+        run: |
+          BRANCH_CLASS="feature"
+          ENFORCE=false
+          if [[ "${GITHUB_REF}" == refs/heads/main ]] || [[ "${GITHUB_REF}" == refs/heads/release/* ]] || [[ "${GITHUB_BASE_REF}" == main ]] || [[ "${GITHUB_BASE_REF}" == release/* ]]; then
+            BRANCH_CLASS="main_or_release"
+            ENFORCE=true
+          fi
+
+          echo "branch_class=${BRANCH_CLASS}" >> "$GITHUB_OUTPUT"
+          echo "enforce=${ENFORCE}" >> "$GITHUB_OUTPUT"
+          echo "CI gate policy: ${BRANCH_CLASS} (enforce=${ENFORCE})"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate env contract parity
+        if: steps.changed.outputs.env_contract_scope == 'true'
+        run: python scripts/ci/validate_env_contract.py
+
+      - name: Upload env contract report
+        if: always() && steps.changed.outputs.env_contract_scope == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: env-contract-report
+          path: .artifacts/ci/env-contract-report.json
+
+      - name: Skip message
+        if: steps.changed.outputs.env_contract_scope != 'true'
+        run: echo "No env/docs/compose/config contract changes detected; skipping parity check."
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Runtime contract sanity (Linux)
+        if: runner.os != 'Windows'
+        run: |
+          set -euo pipefail
+          node -e "const major = Number(process.versions.node.split('.')[0]); if (major !== 20) { throw new Error('Expected Node 20.x runtime'); }"
+          python - <<'PY'
+          import os
+          import sys
+
+          if sys.version_info[:2] != (3, 11):
+              raise SystemExit('Expected Python 3.11 runtime')
+
+          for key in ('GITHUB_SHA', 'GITHUB_REF', 'CI'):
+              if not os.getenv(key):
+                  raise SystemExit(f'Missing expected env var: {key}')
+
+          print('✅ Linux runtime contract sanity checks passed.')
+          PY
+
+      - name: Runtime contract sanity (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          node -e "const major = Number(process.versions.node.split('.')[0]); if (major !== 20) { throw new Error('Expected Node 20.x runtime'); }"
+
+          python -c "import sys; raise SystemExit(0 if sys.version_info[:2] == (3, 11) else 1)"
+
+          $requiredVars = @('GITHUB_SHA', 'GITHUB_REF', 'GITHUB_WORKSPACE', 'RUNNER_OS', 'CI')
+          foreach ($name in $requiredVars) {
+            if (-not $env:$name) {
+              throw "Missing expected env var: $name"
+            }
+          }
+
+          Write-Host '✅ Windows runtime contract sanity checks passed.'
+          cache: npm
+
+      - name: Install Node.js dependencies
+        run: npm ci
+
+      - name: Run mandatory CI gate checks (fail-fast)
+        id: gates
+        run: |
+          mkdir -p ci-reports
+
+          python - <<'PY'
+          import json
+          import os
+          import subprocess
+          import time
+          from pathlib import Path
+
+          enforce = os.environ.get("ENFORCE") == "true"
+          branch_class = os.environ.get("BRANCH_CLASS", "feature")
+
+          checks = [
+              {
+                  "id": "runtime_versions",
+                  "command": ["python", "scripts/validate_runtime_versions.py"],
+                  "severity": "error" if enforce else "warning",
+              },
+              {
+                  "id": "product_naming",
+                  "command": ["python", "scripts/check_product_naming.py"],
+                  "severity": "error" if enforce else "warning",
+              },
+              {
+                  "id": "design_tokens",
+                  "command": ["npm", "run", "check:tokens"],
+                  "severity": "error" if enforce else "warning",
+              },
+              {
+                  "id": "runtime_secrets_env_only",
+                  "command": ["python", "config/check_runtime_secrets.py", "--require-env-only"],
+                  "severity": "error" if enforce else "warning",
+              },
+          ]
+
+          results = []
+          should_fail = False
+
+          for check in checks:
+              started = time.time()
+              proc = subprocess.run(check["command"], capture_output=True, text=True)
+              elapsed = int((time.time() - started) * 1000)
+
+              status = "passed" if proc.returncode == 0 else "failed"
+              if status == "failed" and check["severity"] == "error":
+                  should_fail = True
+
+              results.append(
+                  {
+                      "id": check["id"],
+                      "command": " ".join(check["command"]),
+                      "severity": check["severity"],
+                      "status": status,
+                      "exit_code": proc.returncode,
+                      "duration_ms": elapsed,
+                      "stdout": proc.stdout[-4000:],
+                      "stderr": proc.stderr[-4000:],
+                  }
+              )
+
+          summary = {
+              "policy": {
+                  "branch_class": branch_class,
+                  "enforce": enforce,
+                  "hard_fail_on": ["main", "release/**"],
+                  "warn_only_on": ["feature/**", "non-release refs"],
+              },
+              "generated_at_unix": int(time.time()),
+              "results": results,
+          }
+
+          out = Path("ci-reports/ci-gates-summary.json")
+          out.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+
+          md_lines = [
+              "## CI gate contract summary",
+              f"Policy class: `{branch_class}` (enforce hard-fail: `{enforce}`)",
+              "",
+              "| Check | Severity | Status | Command |",
+              "|---|---|---|---|",
+          ]
+          for item in results:
+              icon = "✅" if item["status"] == "passed" else ("❌" if item["severity"] == "error" else "⚠️")
+              md_lines.append(
+                  f"| {item['id']} | {item['severity']} | {icon} {item['status']} | `{item['command']}` |"
+              )
+
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as fh:
+              fh.write("\n".join(md_lines) + "\n")
+
+          if should_fail:
+              raise SystemExit("Blocking CI gate checks failed under main/release policy.")
+          PY
+        env:
+          ENFORCE: ${{ steps.policy.outputs.enforce }}
+          BRANCH_CLASS: ${{ steps.policy.outputs.branch_class }}
+
+      - name: Upload CI gate summary artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-gates-summary-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ci-reports/ci-gates-summary.json
+          if-no-files-found: error
+          retention-days: 14
+
   # ── Backend (Python) ────────────────────────────────────────
   backend:
     name: Backend — Lint + Test
     runs-on: ubuntu-latest
+    needs: preflight
 
     steps:
       - name: Checkout
@@ -30,6 +272,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.lock
 
+      - name: Validate runtime secret contract (env-only)
+        env:
+          ROBODJ_RUNTIME_CONTEXT: ci
+          ROBODJ_SECRET_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+          ROBODJ_SECRET_V2_KEY: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+          ROBODJ_SCHEDULER_API_KEY: BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+        run: python config/check_runtime_secrets.py --require-env-only
+
       - name: Lint (ruff)
         run: ruff check backend/ --output-format=github
 
@@ -40,6 +290,7 @@ jobs:
   frontend:
     name: Frontend — Lint + Build + Test
     runs-on: ubuntu-latest
+    needs: preflight
 
     steps:
       - name: Checkout
@@ -54,21 +305,144 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Lint (ESLint)
-        run: npm run lint
+      - name: Lint gate (ESLint flat config + budget)
+        run: npm run lint:ci
 
       - name: Build (Next.js)
         run: npm run build
         env:
           NEXT_TELEMETRY_DISABLED: "1"
 
-      - name: Test (Vitest)
-        run: npm run test
+  # ── Testing (Parallel Shards) ────────────────────────────────
+  test:
+    name: Frontend — Parallel Tests (Shard ${{ matrix.shard }}/${{ strategy.job-total }})
+    runs-on: ubuntu-latest
+    needs: frontend # Wait for dependencies to be cached by build job
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Sharded Tests
+        run: npm run test -- --shard=${{ matrix.shard }}/${{ strategy.job-total }}
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+
+      - name: Upload Test Results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-shard-${{ matrix.shard }}
+          path: |
+            coverage/
+            test-results/
+          retention-days: 7
+
+  # ── Flaky Test Detection (Burn-in) ───────────────────────────
+  burn-in:
+    name: Security & Stability — Burn-in Loop
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    needs: test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Burn-in loop (3 iterations for quick PR feedback)
+        run: |
+          for i in {1..3}; do
+            echo "🔥 Burn-in iteration $i/3"
+            npm run test || exit 1
+          done
+
+      - name: Upload Flaky Findings
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: burn-in-failures
+          path: test-results/
+          retention-days: 14
+
+  launcher_windows_smoke:
+    name: Launcher smoke (Windows)
+    runs-on: windows-latest
+    needs: detect_launcher_changes
+    if: ${{ github.event_name == 'push' || needs.detect_launcher_changes.outputs.launcher_related == 'true' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate launcher script contracts
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          New-Item -ItemType Directory -Path launcher-diagnostics -Force | Out-Null
+
+          $launchers = @('DGN-DJ_Launcher.bat', 'RoboDJ_Launcher.bat')
+          foreach ($launcher in $launchers) {
+            if (-not (Test-Path $launcher)) {
+              throw "Missing launcher script: $launcher"
+            }
+
+            $content = Get-Content -Path $launcher -Raw
+            if (-not ($content -match '(?i)DGN-DJ Automation\.exe|RoboDJ Automation\.exe')) {
+              throw "Launcher script $launcher does not reference expected executable wrappers"
+            }
+
+            if (-not ($content -match '(?i)%~dp0|pushd\s+%~dp0')) {
+              throw "Launcher script $launcher does not resolve paths relative to script directory"
+            }
+
+            [PSCustomObject]@{
+              launcher = $launcher
+              bytes = (Get-Item $launcher).Length
+              has_relative_path_resolution = [bool]($content -match '(?i)%~dp0|pushd\s+%~dp0')
+              has_exe_reference = [bool]($content -match '(?i)DGN-DJ Automation\.exe|RoboDJ Automation\.exe')
+            } | ConvertTo-Json -Depth 3 | Out-File -FilePath "launcher-diagnostics/$launcher.contract.json" -Encoding utf8
+
+            $content | Out-File -FilePath "launcher-diagnostics/$launcher.snapshot.txt" -Encoding utf8
+          }
+
+          Write-Host '✅ Launcher script contracts validated.'
+
+      - name: Upload launcher diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: launcher-diagnostics-${{ github.run_id }}-${{ github.run_attempt }}
+          path: launcher-diagnostics/
+          if-no-files-found: warn
+          retention-days: 14
 
   # ── Config Validation ──────────────────────────────────────
   config:
     name: Config — JSON + Schema Validation
     runs-on: ubuntu-latest
+    needs: preflight
 
     steps:
       - name: Checkout
@@ -78,6 +452,11 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
+      - name: Validate runtime env contract (ci context)
+        env:
+          ROBODJ_ENV: development
+        run: python config/check_runtime_env.py --context ci
 
       - name: Validate JSON syntax
         run: |
@@ -106,10 +485,51 @@ jobs:
       - name: Validate documentation consistency
         run: python scripts/ci/check_docs_consistency.py
 
+      - name: Validate runtime secret contract (env-only)
+        env:
+          ROBODJ_RUNTIME_CONTEXT: ci
+          ROBODJ_SECRET_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+          ROBODJ_SECRET_V2_KEY: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+          ROBODJ_SCHEDULER_API_KEY: BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+        run: python config/check_runtime_secrets.py --require-env-only
+
+  compose-config:
+    name: Compose — Profile Config Validation
+      - name: Lint dashboard status env declarations
+        run: python scripts/ci/check_dashboard_status_env_requirements.py
+  # ── Runtime Contract Validation ───────────────────────────
+  runtime-contract:
+    name: Runtime Contract — CI Context Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate runtime environment contract (ci)
+        env:
+          CI: "true"
+          GITHUB_ACTIONS: "true"
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_SHA: ${{ github.sha }}
+          ROBODJ_ENV: "staging"
+        run: |
+          set -euo pipefail
+          echo "Running CI runtime contract gate (non-secret env vars)..."
+          python config/check_runtime_env.py --context ci
+      - name: Guard generated artifacts in source paths
+        run: python scripts/ci/check_generated_artifacts.py
+
   # ── Security ───────────────────────────────────────────────
   security:
     name: Security — Dependency Audit + Secret Scan
     runs-on: ubuntu-latest
+    needs: preflight
 
     steps:
       - name: Checkout
@@ -140,6 +560,18 @@ jobs:
           node-version: 20
           cache: npm
 
+      - name: Enforce runtime secret contract (protected refs only)
+        if: steps.policy.outputs.enforce == 'true'
+        env:
+          ROBODJ_PROTECTED_ENV: "true"
+          ROBODJ_SECRET_KEY: ${{ secrets.ROBODJ_SECRET_KEY }}
+          ROBODJ_SECRET_V2_KEY: ${{ secrets.ROBODJ_SECRET_V2_KEY }}
+          ROBODJ_SCHEDULER_API_KEY: ${{ secrets.ROBODJ_SCHEDULER_API_KEY }}
+        run: |
+          set -euo pipefail
+          echo "Running protected runtime secret contract gate..."
+          python config/check_runtime_secrets.py --require-env-only
+
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
@@ -149,6 +581,14 @@ jobs:
 
       - name: Install Node.js dependencies
         run: npm ci
+
+      - name: Validate runtime secret contract (env-only)
+        env:
+          ROBODJ_RUNTIME_CONTEXT: ci
+          ROBODJ_SECRET_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+          ROBODJ_SECRET_V2_KEY: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+          ROBODJ_SCHEDULER_API_KEY: BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+        run: python config/check_runtime_secrets.py --require-env-only
 
       - name: Python dependency audit report (pip-audit)
         id: pip_audit
