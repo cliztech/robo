@@ -3,10 +3,15 @@
 > **DGN-DJ** by DGNradio — AI-powered radio automation platform
 > Node.js 20.x + Next.js 15.5.10 · Python >=3.10 · SQLite · JSON config · Vercel + Docker + Windows desktop
 
-## Scope
+## Bootstrap
+
+### Scope
 
 These instructions apply to the entire repository unless a deeper `AGENTS.md` overrides them.
 
+> **Normative precedence:** Route-level constraints are normative and override generic prose in this document when conflicts exist.
+
+### Project Startup Instruction Block (Codex/Gemini/Jules)
 ## Governance canonical references
 
 To avoid governance drift, use canonical + derived views instead of restating policies:
@@ -63,7 +68,7 @@ Use command-style prompts that map to entries in `_bmad/_config/bmad-help.csv`, 
 - `bmad-bmm-create-prd`
 - `bmad-bmm-create-architecture`
 
-## Tech Stack
+### Tech Stack
 
 | Layer            | Technology                                               | Notes                                                                        |
 | ---------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------- |
@@ -79,6 +84,18 @@ Use command-style prompts that map to entries in `_bmad/_config/bmad-help.csv`, 
 
 > ⚡ Put commands early — agents reference these often.
 
+| Action | Command | Notes |
+| ------ | ------- | ----- |
+| **Run app (launcher)** | `.\DGN-DJ_Launcher.bat` | Canonical launcher flow; resolves paths relative to launcher and may elevate when needed. |
+| **Run app (direct binary)** | `.\DGN-DJ Automation.exe` | Canonical direct execution path (bypasses launcher wrapper). |
+| **Run root web app** | `npm run dev` | Next.js studio on Node.js 20.x |
+| **Run DJ console** | `npm --prefix apps/dj-console run dev` | Vite app in owned subtree |
+| **Run radio-agentic stack** | `pnpm --dir radio-agentic install && docker compose -f radio-agentic/docker-compose.yml up --build` | Starts owned workspace stack |
+| **Inspect DB** | `cd config && python inspect_db.py` | Read-only schema inspection |
+| **Check JSON** | `python -m json.tool config/schedules.json` | Validate JSON syntax |
+| **Validate runtime versions** | `python scripts/validate_runtime_versions.py` | Ensures docs/manifests are in sync |
+| **Git status** | `git status --short` | Quick changed-file overview |
+| **Diff check** | `git diff --name-only` | List modified files before commit |
 | Action                        | Command                                                                                             | Notes                                                                                |
 | ----------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
 | **Run DGN-DJ app**            | `.\RoboDJ_Launcher.bat`                                                                             | Starts DGN-DJ via the legacy launcher filename; resolves paths relative to launcher. |
@@ -103,7 +120,15 @@ Use command-style prompts that map to entries in `_bmad/_config/bmad-help.csv`, 
 | **Build Python exe** | `python -m PyInstaller --onefile --name "DGN-DJ_Automation" --add-data "config;config" backend/app.py` | Legacy PyInstaller build |
 | **Install Rust**     | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh -s -- -y`                             | Required for Tauri       |
 
-## Project Structure & Module Organization
+### Compatibility aliases (legacy launcher filenames)
+
+Use these only when operating in environments that still depend on legacy naming:
+
+- `.\RoboDJ_Launcher.bat` (legacy alias of `.\DGN-DJ_Launcher.bat`)
+- `.\RoboDJ Automation.exe` (legacy alias of `.\DGN-DJ Automation.exe`)
+
+
+### Project Structure & Module Organization
 
 Canonical product identity is defined in `docs/productization/product_identity.md` (`DGN-DJ by DGNradio`). Legacy `RoboDJ` filenames below are compatibility artifacts and not approved product naming for new docs.
 
@@ -160,7 +185,9 @@ robo/
     └── SECURITY.md                # Security architecture overview
 ```
 
-## Multi-Agent Pipeline
+## Routing
+
+### Multi-Agent Pipeline
 
 Use this stage-gated flow for all requests:
 
@@ -210,12 +237,13 @@ Use this stage-gated flow for all requests:
   - Generate PR body if applicable
 - **Completion gate:** User request explicitly answered
 
-## Agent Output Requirements
+### Agent Output Requirements
 
 All agents operating in this repository should produce and maintain artifacts that support delivery, operations, and traceability.
 
 The following outputs are mandatory deliverable categories for agents:
 
+### Agents produce:
 ### Agents produce
 
 - Product code and tests
@@ -227,7 +255,7 @@ The following outputs are mandatory deliverable categories for agents:
 - Scripts that manage the repository itself
 - Production dashboard definition files
 
-## Workflow Quality Gates
+### Workflow Quality Gates
 
 Use these gates before moving work from planning to execution and from draft PR to Ready-for-Review.
 
@@ -264,7 +292,7 @@ Canonical scoring and evidence definitions live in [`docs/operations/quality_gat
 > Copy this block into PR reviews for consistent gate validation.
 
 ```md
-## Workflow Quality Gate Checklist
+### Workflow Quality Gate Checklist
 
 - [ ] Plan completeness = 100% (scope + constraints + rollback + verification)
 - [ ] Subagent evidence completeness = 100% (rubric minimum evidence schema + evidence links + command logs)
@@ -305,7 +333,9 @@ Canonical scoring and evidence definitions live in [`docs/operations/quality_gat
 - Modify `DGN-DJ Automation.exe_extracted/` (reference only)
 - Remove files without explicit user approval
 
-## Key Documentation
+## References
+
+### Key Documentation
 
 > 📚 These documents extend the agent pipeline with detailed specifications. Load only what's needed for the active task.
 
@@ -322,7 +352,7 @@ Canonical scoring and evidence definitions live in [`docs/operations/quality_gat
 | [`CONFIG_VALIDATION.md`](CONFIG_VALIDATION.md)                                               | JSON schema validation procedures                                     |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md)                                                         | Contribution guidelines, CI scope, PR standards                       |
 
-## Route Selection
+### Route Selection
 
 Routing must follow the canonical BMAD startup policy defined in [`docs/operations/agent_execution_commands.md`](docs/operations/agent_execution_commands.md#canonical-bmad-startup-policy-codexgeminijules).
 
@@ -334,7 +364,7 @@ Routing must follow the canonical BMAD startup policy defined in [`docs/operatio
 | **Change**   | Apply scoped edits   | Small commits; avoid binaries; backup first        |
 | **Proposal** | Design/spec output   | Documentation only; no implementation unless asked |
 
-## Coding Style & Naming Conventions
+### Coding Style & Naming Conventions
 
 **Python:**
 
@@ -361,7 +391,7 @@ def load(p):
 - Keep scripts small and task-focused
 - Concise markdown sections with task-focused headings
 
-## Commit & Pull Request Guidelines
+### Commit & Pull Request Guidelines
 
 - Use Conventional Commit style: `chore:`, `docs:`, `fix:`, `feat:`
 - Keep commits scoped to configuration/documentation/scripts
@@ -373,7 +403,9 @@ def load(p):
 
 ---
 
-## Agent Team Organization
+## Team Charters
+
+### Agent Team Organization
 
 > 🏢 DGN-DJ operates a full multi-team AI agent organization. Each team has specialized agents with defined roles, boundaries, and handoff protocols. Teams coordinate through the **Management Team** and exchange artifacts via the stage-gated pipeline above.
 
@@ -1142,3 +1174,9 @@ Use this charter when work targets DJ console design deliverables; it defines ro
 
 - **Receives from:** All teams (alerts), DevOps (deployment anomalies), Stream Reliability (outages)
 - **Hands off to:** Bug (incident-generated bugs), Management (incident reports), DevOps (emergency deployments)
+
+---
+
+### Instruction schema version
+
+- `AGENTS.md` instruction schema version: `2026.03-v1`
