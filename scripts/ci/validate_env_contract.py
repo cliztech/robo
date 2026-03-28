@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Iterable
 
 ENV_KEY_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
-COMPOSE_VAR_RE = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)")
+COMPOSE_VAR_RE = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)[^}]*\}")
 
 
 def load_contract(path: Path) -> tuple[set[str], set[str], set[str]]:
