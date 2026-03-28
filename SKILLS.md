@@ -29,10 +29,14 @@ graph LR
     B --> L[incident-responder]
     B --> M[brutal-reviewer]
     B --> N[ad-schedule-optimizer]
+    B --> O[gear-studio-builder]
+    B --> P[modular-layout-engine]
 
     G --> F
     H --> F
     M --> F
+    O --> F
+    P --> F
     K --> C
     I --> J
     J --> N
@@ -202,6 +206,7 @@ Ordered findings with one task stub per issue, formatted as:
 
 ```markdown
 ### 🔴 [Issue Title]
+
 **File:** `path/to/file`
 **Evidence:** [what was found]
 
@@ -224,6 +229,11 @@ Fix: Run `python -m json.tool config/schedules.json` before parsing and fail fas
 Location: `config/scripts/sync_schedule.py::load_schedule`
 Search anchor: `"json.load(schedule_file)"`
 :::
+> **Task Stub:**
+>
+> - Fix: [specific action]
+> - Location: `module.function_name`
+> - Search anchor: `"string to find"`
 ```
 
 #### qa-issue-emitter: Boundaries
@@ -402,19 +412,24 @@ PR title and body suitable for direct submission:
 **Title:** `docs: update schedule config with new morning slot`
 
 **Body:**
+
 ## Summary
+
 [User-visible changes]
 
 ## Files Changed
-| File | Change |
-|------|--------|
+
+| File                    | Change                    |
+| ----------------------- | ------------------------- |
 | `config/schedules.json` | Updated morning time slot |
 
 ## Validation
+
 - ✅ `python -m json.tool config/schedules.json` — passed
 - ✅ Backup created at `config/backups/schedules_20260213.json`
 
 ## Limitations
+
 - [Any known issues or follow-ups]
 ```
 
@@ -475,10 +490,11 @@ Security scan report formatted as:
 
 ```markdown
 ## Security Scan Report — [date]
-| # | Severity | Finding | File | Recommendation |
-|---|----------|---------|------|----------------|
-| 1 | 🔴 | Hardcoded API key | `backend/api.py:42` | Move to env var |
-| 2 | 🟡 | Outdated dependency | `requirements.txt` | Upgrade to v2.1+ |
+
+| #   | Severity | Finding             | File                | Recommendation   |
+| --- | -------- | ------------------- | ------------------- | ---------------- |
+| 1   | 🔴       | Hardcoded API key   | `backend/api.py:42` | Move to env var  |
+| 2   | 🟡       | Outdated dependency | `requirements.txt`  | Upgrade to v2.1+ |
 
 **Summary:** X critical, Y warnings, Z info
 ```
@@ -542,15 +558,18 @@ Compliance audit report formatted as:
 
 ```markdown
 ## Broadcast Compliance Audit — [date]
+
 **Status:** ✅ PASS | ❌ FAIL
 
 ### Findings
-| # | Area | Status | Detail |
-|---|------|--------|--------|
-| 1 | Legal IDs | ✅ | Scheduled every 60 min |
-| 2 | Ad Breaks | ⚠️ | Break at 14:00 exceeds 4-min limit |
+
+| #   | Area      | Status | Detail                             |
+| --- | --------- | ------ | ---------------------------------- |
+| 1   | Legal IDs | ✅     | Scheduled every 60 min             |
+| 2   | Ad Breaks | ⚠️     | Break at 14:00 exceeds 4-min limit |
 
 ### Attestation
+
 Reviewed by: [agent] | Date: [date] | Next audit: [date+30d]
 ```
 
@@ -613,16 +632,19 @@ Listener analytics dashboard formatted as:
 ## Listener Analytics Report — Week of [date]
 
 ### Key Metrics
-| Metric | This Week | Last Week | Trend |
-|--------|-----------|-----------|-------|
-| Avg Session Duration | 23m | 21m | 📈 +9.5% |
-| Skip Rate | 12% | 15% | 📉 -3pp (improving) |
+
+| Metric               | This Week | Last Week | Trend               |
+| -------------------- | --------- | --------- | ------------------- |
+| Avg Session Duration | 23m       | 21m       | 📈 +9.5%            |
+| Skip Rate            | 12%       | 15%       | 📉 -3pp (improving) |
 
 ### Top Performing Content
+
 1. Morning weather (persona: DJ_KONG) — 4.7/5.0 rubric
 2. Evening music segues — 4.5/5.0 rubric
 
 ### Recommendations
+
 1. [Actionable insight with supporting data]
 ```
 
@@ -686,6 +708,7 @@ Trend analysis brief formatted as:
 ## Industry Trend Brief — [date]
 
 ### Trend 1: [Title]
+
 - **Category:** Technology | Regulation | Audience | Monetization
 - **Impact:** High | Medium | Low
 - **Relevance:** [How this affects DGN-DJ]
@@ -693,6 +716,7 @@ Trend analysis brief formatted as:
 - **Roadmap Alignment:** [Link to FEATURE_HEAVY_ROADMAP_TODO.md item]
 
 ### Strategic Summary
+
 [3-5 sentence synthesis with priorities]
 ```
 
@@ -757,13 +781,15 @@ Performance profile report formatted as:
 ## Performance Profile — [date] (Release [version])
 
 ### Summary
-| Metric | Target | Actual | Status | Δ vs Baseline |
-|--------|--------|--------|--------|---------------|
-| Startup Time | ≤5s | 3.2s | ✅ | -0.3s |
-| Peak Memory | ≤512MB | 387MB | ✅ | +12MB |
-| Scheduler p95 | ≤200ms | 145ms | ✅ | -8ms |
+
+| Metric        | Target | Actual | Status | Δ vs Baseline |
+| ------------- | ------ | ------ | ------ | ------------- |
+| Startup Time  | ≤5s    | 3.2s   | ✅     | -0.3s         |
+| Peak Memory   | ≤512MB | 387MB  | ✅     | +12MB         |
+| Scheduler p95 | ≤200ms | 145ms  | ✅     | -8ms          |
 
 ### Bottlenecks Identified
+
 1. [Component] — [description and recommendation]
 
 ### Verdict: ✅ PASS | ❌ FAIL
@@ -831,23 +857,27 @@ Post-mortem report formatted as:
 ## Post-Mortem: [Incident Title] — [date]
 
 ### Timeline
-| Time | Event | Actor |
-|------|-------|-------|
-| 14:02 | Alert fired: stream buffer underrun | Alert Dispatcher |
-| 14:03 | Safe-mode playlist activated | Automation |
+
+| Time  | Event                                       | Actor              |
+| ----- | ------------------------------------------- | ------------------ |
+| 14:02 | Alert fired: stream buffer underrun         | Alert Dispatcher   |
+| 14:03 | Safe-mode playlist activated                | Automation         |
 | 14:15 | Root cause identified: TTS provider timeout | Root Cause Analyst |
-| 14:22 | Fallback TTS provider enabled | Hotfix Coordinator |
-| 14:25 | Stream restored to normal operation | Stream Reliability |
+| 14:22 | Fallback TTS provider enabled               | Hotfix Coordinator |
+| 14:25 | Stream restored to normal operation         | Stream Reliability |
 
 ### Root Cause
+
 [Description of contributing factors]
 
 ### Corrective Actions
-| # | Action | Owner | Deadline | Status |
-|---|--------|-------|----------|--------|
-| 1 | Add TTS provider failover logic | DevOps | [date+7d] | ⬜ Open |
+
+| #   | Action                          | Owner  | Deadline  | Status  |
+| --- | ------------------------------- | ------ | --------- | ------- |
+| 1   | Add TTS provider failover logic | DevOps | [date+7d] | ⬜ Open |
 
 ### Lessons Learned
+
 1. [Key takeaway]
 ```
 
@@ -911,22 +941,26 @@ Quality review formatted as:
 ## Brutal Review: [artifact name]
 
 ### Scores
-| Dimension | Score | Comment |
-|-----------|-------|---------|
-| Architecture | 4/5 | Clean separation of concerns |
-| Naming | 2/5 | `do_thing()` — rename to describe behavior |
-| Error Handling | 3/5 | Missing fallback for TTS timeout |
-| Testing | 1/5 | Zero test coverage for new logic |
-| Documentation | 4/5 | Good inline comments |
-| **Composite** | **2.8/5** | |
+
+| Dimension      | Score     | Comment                                    |
+| -------------- | --------- | ------------------------------------------ |
+| Architecture   | 4/5       | Clean separation of concerns               |
+| Naming         | 2/5       | `do_thing()` — rename to describe behavior |
+| Error Handling | 3/5       | Missing fallback for TTS timeout           |
+| Testing        | 1/5       | Zero test coverage for new logic           |
+| Documentation  | 4/5       | Good inline comments                       |
+| **Composite**  | **2.8/5** |                                            |
 
 ### Blocking Issues (🔴)
+
 1. **No tests** — Add unit tests for all new functions before merge.
 
 ### Should-Fix (🟡)
+
 1. **Vague naming** — `do_thing()` at line 42 → rename to `render_audio_segment()`
 
 ### Praise (🌟)
+
 1. Excellent error message formatting in the scheduler module.
 
 ### Verdict: ❌ REQUEST CHANGES
@@ -993,20 +1027,23 @@ Ad schedule optimization report formatted as:
 ## Ad Schedule Optimization — [date]
 
 ### Current Performance
-| Daypart | Fill Rate | CPM | Revenue/hr | Listener Impact |
-|---------|-----------|-----|-----------|-----------------|
-| Morning | 85% | $12 | $45 | Low (2% skip) |
-| Afternoon | 62% | $8 | $22 | Medium (8% skip) |
+
+| Daypart   | Fill Rate | CPM | Revenue/hr | Listener Impact  |
+| --------- | --------- | --- | ---------- | ---------------- |
+| Morning   | 85%       | $12 | $45        | Low (2% skip)    |
+| Afternoon | 62%       | $8  | $22        | Medium (8% skip) |
 
 ### Recommended Changes
+
 1. **Move 14:30 break to 14:15** — aligns with engagement dip, projected +3% fill
 2. **Reduce evening break from 4min to 3min** — projected -2% skip rate
 
 ### Projected Impact
-| Metric | Current | Projected | Δ |
-|--------|---------|-----------|---|
-| Daily Revenue | $340 | $385 | +$45 |
-| Avg Skip Rate | 5.2% | 4.1% | -1.1pp |
+
+| Metric        | Current | Projected | Δ      |
+| ------------- | ------- | --------- | ------ |
+| Daily Revenue | $340    | $385      | +$45   |
+| Avg Skip Rate | 5.2%    | 4.1%      | -1.1pp |
 ```
 
 #### ad-schedule-optimizer: Boundaries

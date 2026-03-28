@@ -46,6 +46,9 @@ class TrackAnalysisRequest(BaseModel):
     track_id: str = Field(min_length=1, max_length=120)
     metadata: TrackMetadata
     audio_features: AudioFeatures | None = None
+    model_version: str = Field(default="track-analysis-v1", min_length=1, max_length=120)
+    prompt_profile_version: str = Field(default="default", min_length=1, max_length=120)
+    schema_version: str = Field(default="track-analysis-schema-v1", min_length=1, max_length=120)
 
 
 class TrackAnalysis(BaseModel):
