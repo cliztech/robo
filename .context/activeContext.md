@@ -303,6 +303,10 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added backward-compatible decode handling for legacy envelope key names and `enc::` payload strings while keeping decrypt fail-closed behavior.
 - Updated backend crypto tests to assert v1 envelope fields and nonce uniqueness using the new schema.
 
+## 2026-03-04 Skills Registry QA-format alignment
+- Updated `SKILLS.md` to use `rg --files -g '**/AGENTS.md'` for scope discovery guidance in `scope-resolver`.
+- Migrated `qa-issue-emitter` task-stub output from legacy bullets to canonical `:::task-stub{title="..."}` directive format with a concrete compliant example block.
+- Added explicit route-authority notes in `scope-resolver`, `intake-router`, and `qa-issue-emitter` that QA mode is read-only/no-edits.
 - Completed TI-040 config-at-rest hardening: unified config read/write encryption envelope handling in `config_crypto`, `ai_service`, and `scheduler_ui_service`; added validator regression tests for plaintext/malformed envelope rejection; published TI-040 evidence artifacts (`ti-040-config-encryption.log`, `ti-040-high-risk-field-inventory.md`, `ti-040-config-before-after.sha256`) and closed dependency checkpoints DEP-TI040-01..03.
 ## 2026-03-04 Communication Mode Contract Hardening
 - Added explicit `communication_mode: persona|ops` activation-step declarations across BMAD marketing agents and core master agent definitions.

@@ -81,7 +81,7 @@ description: Determine which instruction files apply to the requested change
 #### scope-resolver: Commands / Tools
 
 - `git diff --name-only` — list changed files to resolve scope for
-- `find . -name "AGENTS.md"` — discover all instruction files
+- `rg --files -g '**/AGENTS.md'` — discover all instruction files
 - `Get-ChildItem -Recurse -Filter "AGENTS.md"` — PowerShell equivalent
 
 #### scope-resolver: Output
@@ -91,6 +91,7 @@ Scope map listing effective rules by path, as a markdown table.
 #### scope-resolver: Boundaries
 
 - ✅ **Always:** Read all `AGENTS.md` files in the path chain
+- ✅ **Always:** Treat route-level constraints from `intake-router` (for example, QA read-only/no edits) as authoritative over execution preferences
 - ⚠️ **Ask first:** If two `AGENTS.md` files have conflicting rules
 - 🚫 **Never:** Modify any `AGENTS.md` file during scope resolution
 
@@ -154,6 +155,7 @@ Route decision + rationale, formatted as:
 #### intake-router: Boundaries
 
 - ✅ **Always:** Document the routing decision and rationale
+- ✅ **Always:** Enforce route-level constraints as authoritative (QA is read-only; no edits)
 - ⚠️ **Ask first:** If the request spans multiple routes
 - 🚫 **Never:** Transition to Change mode without explicit implementation intent
 
@@ -208,6 +210,25 @@ Ordered findings with one task stub per issue, formatted as:
 **File:** `path/to/file`
 **Evidence:** [what was found]
 
+:::task-stub{title="[Short remediation title]"}
+Fix: [specific action]
+Location: `module.function_name`
+Search anchor: `"string to find"`
+:::
+```
+
+Concrete compliant example:
+
+```markdown
+### 🟡 Missing JSON validation before runtime load
+**File:** `config/scripts/sync_schedule.py`
+**Evidence:** Loader calls `json.load` directly without pre-flight schema/syntax validation.
+
+:::task-stub{title="Add schedule JSON pre-flight validation"}
+Fix: Run `python -m json.tool config/schedules.json` before parsing and fail fast with a clear error message when invalid.
+Location: `config/scripts/sync_schedule.py::load_schedule`
+Search anchor: `"json.load(schedule_file)"`
+:::
 > **Task Stub:**
 >
 > - Fix: [specific action]
@@ -218,6 +239,7 @@ Ordered findings with one task stub per issue, formatted as:
 #### qa-issue-emitter: Boundaries
 
 - ✅ **Always:** Include file paths and search anchors in every finding
+- ✅ **Always:** Treat QA route constraints as authoritative (read-only inspection; no file edits)
 - ⚠️ **Ask first:** Before flagging architectural concerns (may need Proposal route)
 - 🚫 **Never:** Emit fix implementations outside task-stub blocks; never edit files in QA mode
 
