@@ -5,11 +5,11 @@ Normative definitions are maintained in `docs/operations/agent_governance_canoni
 
 ## Canonical mappings
 
-- Team topology → `agent_governance_canonical.md#team-topology`
-- Route selection policy → `agent_governance_canonical.md#route-selection-policy`
-- Completion gates → `agent_governance_canonical.md#completion-gates`
-- Escalation flow → `agent_governance_canonical.md#escalation-flow`
-- Personality/communication rules → `agent_governance_canonical.md#personality-and-communication-rules`
+- Team topology → `../agent_governance_canonical.md#team-topology`
+- Route selection policy → `../agent_governance_canonical.md#route-selection-policy`
+- Completion gates → `../agent_governance_canonical.md#completion-gates`
+- Escalation flow → `../agent_governance_canonical.md#escalation-flow`
+- Personality/communication rules → `../agent_governance_canonical.md#personality-and-communication-rules`
 
 ## AGENTS.md consumption contract
 
