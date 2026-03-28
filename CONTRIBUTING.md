@@ -48,6 +48,28 @@ The lint gate prints an error budget report and fails if:
 - any lint error is not allowlisted,
 - an allowlist entry is expired/invalid, or
 - `allowlisted errors > budget.max_errors`.
+## CI Gate Contract
+
+Mandatory preflight checks run before build/test jobs:
+
+- `python scripts/validate_runtime_versions.py`
+- `python scripts/check_product_naming.py`
+- `npm run check:tokens`
+- `python config/check_runtime_secrets.py --require-env-only`
+
+Severity policy by branch type:
+
+- **`main` / `release/**` (including PR targets):** hard fail on any preflight check failure.
+- **Feature/non-release refs:** warning-only mode for preflight checks (results still emitted as artifacts).
+
+Local preflight equivalent:
+
+```bash
+python scripts/validate_runtime_versions.py \
+  && python scripts/check_product_naming.py \
+  && npm run check:tokens \
+  && python config/check_runtime_secrets.py --require-env-only
+```
 
 ## Do Not Add Generic Build Workflows
 

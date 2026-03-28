@@ -1,0 +1,106 @@
+/**
+ * GearBottomPanel.css — Collapsible tabbed panel
+ * Slides up from the bottom of the workspace.
+ */
+
+.gear-bottom-panel {
+  background: #0a0a0a;
+  border-top: 1px solid #1a1a1a;
+  display: flex;
+  flex-direction: column;
+  max-height: 280px;
+  transition: max-height 0.3s ease;
+  overflow: hidden;
+}
+
+.gear-bottom-panel.collapsed {
+  max-height: 36px;
+}
+
+/* Tab Bar */
+.panel-tab-bar {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  gap: 2px;
+  background: #080808;
+  border-bottom: 1px solid #131313;
+  height: 36px;
+  flex-shrink: 0;
+}
+
+.panel-tabs-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.panel-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #444;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.panel-tab:hover {
+  color: #777;
+}
+
+.panel-tab.active {
+  color: #aaa;
+  border-bottom-color: #00e5ff;
+}
+
+.panel-tab-icon {
+  font-size: 13px;
+}
+
+.panel-tab-label {
+  letter-spacing: 0.3px;
+}
+
+.panel-tab-spacer {
+  flex: 1;
+}
+
+.panel-collapse-btn {
+  background: transparent;
+  border: 1px solid #1a1a1a;
+  border-radius: 3px;
+  color: #333;
+  font-size: 10px;
+  width: 24px;
+  height: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.panel-collapse-btn:hover {
+  color: #888;
+  border-color: #333;
+}
+
+/* Content */
+.panel-content {
+  flex: 1;
+  overflow: auto;
+  padding: 12px;
+  min-height: 0;
+}
+
+.gear-bottom-panel.collapsed .panel-content {
+  display: none;
+}
