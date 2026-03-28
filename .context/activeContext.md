@@ -74,6 +74,7 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 - Completed environment-contract wiring follow-up: bootstrap/codex doctor/CI now invoke `config/check_runtime_env.py` with explicit context mapping (`desktop_app`, `docker_stack`, `ci`); added Makefile env-check targets and consolidated canonical preflight in `docs/DEVELOPMENT_ENV_SETUP.md`.
 
+
 - Standardized phase naming contracts across planning artifacts: `Delivery Phase N` for delivery context and `Workflow Phase N` for workflow context, plus namespace-required packet/build-plan metadata.
 
 - Completed shared canonical track-analysis contract extraction (`backend/ai/contracts/track_analysis.py`) and aligned service/API/tests with temporary legacy adapter removal criteria for Phase 5 story P5-05.
@@ -106,6 +107,7 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added bounded status queue-depth telemetry history ingestion (last 60 points), wired dashboard trend responses to real history windows, and introduced dashboard conditional GET validators (ETag/Last-Modified) with 304 handling support in the frontend status client.
 
 - Completed environment-contract wiring follow-up: bootstrap/codex doctor/CI now invoke `config/check_runtime_env.py` with explicit context mapping (`desktop_app`, `docker_stack`, `ci`); added Makefile env-check targets and consolidated canonical preflight in `docs/DEVELOPMENT_ENV_SETUP.md`.
+
 
 - Standardized phase naming contracts across planning artifacts: `Delivery Phase N` for delivery context and `Workflow Phase N` for workflow context, plus namespace-required packet/build-plan metadata.
 

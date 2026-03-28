@@ -246,6 +246,9 @@ cat > "$TASK_ROOT/packets/01-research.md" <<'P1'
 ## Question
 ## Phase Namespace (`delivery|workflow`)
 ## Phase ID (`delivery_phase_<n>|workflow_phase_<n>|unphased`)
+## Decision Owner
+## Consulted Roles
+## Approval Deadline UTC
 ## Inputs
 ## Constraints
 ## Deliverable
@@ -256,6 +259,9 @@ cat > "$TASK_ROOT/packets/02-risk-review.md" <<'P2'
 ## Question
 ## Phase Namespace (`delivery|workflow`)
 ## Phase ID (`delivery_phase_<n>|workflow_phase_<n>|unphased`)
+## Decision Owner
+## Consulted Roles
+## Approval Deadline UTC
 ## Inputs
 ## Constraints
 ## Deliverable
@@ -266,6 +272,9 @@ cat > "$TASK_ROOT/packets/03-validation.md" <<'P3'
 ## Question
 ## Phase Namespace (`delivery|workflow`)
 ## Phase ID (`delivery_phase_<n>|workflow_phase_<n>|unphased`)
+## Decision Owner
+## Consulted Roles
+## Approval Deadline UTC
 ## Inputs
 ## Constraints
 ## Deliverable
@@ -437,6 +446,9 @@ for team in devops secops design research management qa brutal_review bug ai_imp
   cat > "$OPS_ROOT/$team/packet.md" <<'PACKET'
 # team packet
 ## Goal
+## Decision Owner
+## Consulted Roles
+## Approval Deadline UTC
 ## Inputs
 ## Constraints
 ## Required checks
