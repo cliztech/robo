@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Activity, AlertTriangle, CheckCircle2, Gauge, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   useEffect,
@@ -55,6 +57,16 @@ import {
   setNotificationAlerts,
   toggleNotificationSeverity,
 } from "@/features/notifications/notifications.store";
+import { mapSeverityToCardColor, mapSeverityToStatusTextClass } from "./dashboard.types";
+
+export interface DashboardViewApi {
+  fetchDashboardStatus: (signal?: AbortSignal) => Promise<DashboardStatusResponse>;
+  fetchDashboardAlerts: (severity?: AlertSeverity, signal?: AbortSignal) => Promise<AlertCenterItem[]>;
+  acknowledgeDashboardAlert: (alertId: string, signal?: AbortSignal) => Promise<AlertCenterItem>;
+}
+
+interface DashboardViewProps {
+  api?: DashboardViewApi;
 
 export interface DashboardViewApi {
   fetchDashboardStatus: (
@@ -83,155 +95,15 @@ const defaultDashboardViewApi: DashboardViewApi = {
   acknowledgeDashboardAlert,
 };
 
-interface StatCardProps {
-  label: string;
-  value: string | number;
-  unit?: string;
-  icon: ElementType;
-  color?: DashboardCardColor;
-  trend?: "up" | "down" | "stable";
-  sparkline?: number[];
-  delay?: number;
-}
+const severityTone: Record<AlertSeverity, string> = {
+  critical: "border-red-500/40 text-red-300",
+  warning: "border-orange-500/40 text-orange-300",
+  info: "border-lime-500/40 text-lime-300",
+};
 
-function StatCard({
-  label,
-  value,
-  unit,
-  icon: Icon,
-  color = "lime",
-  trend,
-  sparkline,
-  delay = 0,
-}: StatCardProps) {
-  const sparkId = useId();
-  const colors = {
-    lime: {
-      gradient: "from-lime-500/8 via-lime-500/3 to-transparent",
-      border: "border-lime-500/15",
-      icon: "text-lime-500/70",
-      spark: "#aaff00",
-    },
-    purple: {
-      gradient: "from-purple-500/8 via-purple-500/3 to-transparent",
-      border: "border-purple-500/15",
-      icon: "text-purple-500/70",
-      spark: "#9933ff",
-    },
-    cyan: {
-      gradient: "from-cyan-500/8 via-cyan-500/3 to-transparent",
-      border: "border-cyan-500/15",
-      icon: "text-cyan-500/70",
-      spark: "#00bfff",
-    },
-    orange: {
-      gradient: "from-orange-500/8 via-orange-500/3 to-transparent",
-      border: "border-orange-500/15",
-      icon: "text-orange-500/70",
-      spark: "#ff6b00",
-    },
-    red: {
-      gradient: "from-red-500/8 via-red-500/3 to-transparent",
-      border: "border-red-500/15",
-      icon: "text-red-500/70",
-      spark: "#ef4444",
-    },
-  };
-
-  const points = sparkline ?? [30, 45, 38, 52, 48, 60, 55, 70, 65, 75, 72, 80];
-  const trendIcon =
-    trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus;
-  const TrendIcon = trendIcon;
-  const trendClass =
-    trend === "up"
-      ? "text-lime-500"
-      : trend === "down"
-        ? "text-red-400"
-        : "text-zinc-600";
-  const c = colors[color];
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.25 }}
-      className={cn(
-        "rounded-xl border p-4 bg-gradient-to-br",
-        c.gradient,
-        c.border,
-      )}
-    >
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="flex items-center gap-1.5 text-zinc-500 text-[9px] uppercase tracking-[0.15em]">
-            <Icon size={13} className={c.icon} />
-            <span>{label}</span>
-          </div>
-          <div className="mt-1 text-2xl font-black text-white tabular-nums">
-            {value}
-            {unit ? (
-              <span className="ml-1 text-[10px] font-medium text-zinc-500">
-                {unit}
-              </span>
-            ) : null}
-          </div>
-        </div>
-        {trend ? <TrendIcon size={10} className={trendClass} /> : null}
-      </div>
-
-      <div className="mt-3 h-6">
-        <svg
-          viewBox="0 0 100 30"
-          preserveAspectRatio="none"
-          className="h-full w-full"
-        >
-          <defs>
-            <linearGradient id={sparkId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={c.spark} stopOpacity="0.2" />
-              <stop offset="100%" stopColor={c.spark} stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          <path
-            d={`M 0 30 ${points
-              .map(
-                (v, i, arr) =>
-                  `L ${(i / (arr.length - 1)) * 100} ${30 - (v / 100) * 28}`,
-              )
-              .join(" ")} L 100 30 Z`}
-            fill={`url(#${sparkId})`}
-          />
-          <polyline
-            points={points
-              .map(
-                (v, i, arr) =>
-                  `${(i / (arr.length - 1)) * 100},${30 - (v / 100) * 28}`,
-              )
-              .join(" ")}
-            fill="none"
-            stroke={c.spark}
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            opacity="0.7"
-          />
-        </svg>
-      </div>
-    </motion.div>
-  );
-}
-
-function SectionHeader({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex items-center gap-3 mb-3">
-      <div className="h-px flex-1 bg-gradient-to-r from-zinc-800 to-transparent" />
-      <span className="text-[9px] font-black uppercase tracking-[0.2em] text-zinc-600">
-        {children}
-      </span>
-      <div className="h-px flex-1 bg-gradient-to-l from-zinc-800 to-transparent" />
-    </div>
-  );
-}
-
+function deriveQueueSeverity(currentDepth: number, thresholds: { warning: number; critical: number }): AlertSeverity {
+  if (currentDepth >= thresholds.critical) return "critical";
+  if (currentDepth >= thresholds.warning) return "warning";
 function deriveQueueSeverity(
   currentDepth: number,
   thresholds: { warning: number; critical: number },
@@ -249,6 +121,31 @@ function isAlertSeverity(value: unknown): value is AlertSeverity {
   return value === "info" || value === "warning" || value === "critical";
 }
 
+export function resolveQueueDepthSeverity(queueDepth: DashboardStatusResponse["queue_depth"]): AlertSeverity {
+  if (isAlertSeverity(queueDepth.state)) {
+    return queueDepth.state;
+  }
+
+  return deriveQueueSeverity(queueDepth.current_depth, queueDepth.thresholds);
+}
+
+function formatTimestamp(value: string | null): string {
+  if (!value) return "—";
+  const timestamp = new Date(value).getTime();
+  if (Number.isNaN(timestamp)) return "—";
+  return new Date(timestamp).toLocaleString();
+}
+
+function formatFreshnessMinutes(value: string | null): string {
+  if (!value) return "Updated —";
+  const observedAt = new Date(value).getTime();
+  if (Number.isNaN(observedAt)) return "Updated —";
+  return `Updated ${Math.max(0, Math.floor((Date.now() - observedAt) / 60_000))} min ago`;
+}
+
+export function DashboardView({ api = defaultDashboardViewApi }: DashboardViewProps) {
+  const [dashboardStatus, setDashboardStatus] = useState<DashboardStatusResponse | null>(null);
+  const [notifications, setNotifications] = useState(createNotificationsState());
 export function resolveQueueDepthSeverity(
   queueDepth: DashboardStatusResponse["queue_depth"],
 ): AlertSeverity {
@@ -447,6 +344,7 @@ export function DashboardView({
   const [refreshTick, setRefreshTick] = useState(0);
   const [ackInFlight, setAckInFlight] = useState<Record<string, boolean>>({});
   const inFlightAlertIdsRef = useRef(new Set<string>());
+  const previousAlertByIdRef = useRef<Record<string, AlertCenterItem | undefined>>({});
   const previousAlertByIdRef = useRef<
     Record<string, AlertCenterItem | undefined>
   >({});
@@ -507,6 +405,173 @@ export function DashboardView({
     };
 
     void load();
+
+    return () => {
+      mounted = false;
+      abortController.abort();
+    };
+  }, [api, refreshTick]);
+
+  const alertCounts = useMemo(() => {
+    const counts: Record<AlertSeverity, number> = { critical: 0, warning: 0, info: 0 };
+    for (const alert of notifications.alerts) {
+      counts[alert.severity] += 1;
+    }
+    return counts;
+  }, [notifications.alerts]);
+
+  const filteredAlerts = useMemo(() => getFilteredNotificationAlerts(notifications), [notifications]);
+
+  const handleAcknowledge = async (alertId: string) => {
+    if (inFlightAlertIdsRef.current.has(alertId)) return;
+
+    inFlightAlertIdsRef.current.add(alertId);
+    const nowIso = new Date().toISOString();
+
+    setAckInFlight((prev) => ({ ...prev, [alertId]: true }));
+    setNotifications((prev) =>
+      setNotificationAlerts(
+        prev,
+        prev.alerts.map((item) => {
+          if (item.alert_id !== alertId) return item;
+          previousAlertByIdRef.current[alertId] = item;
+          return { ...item, acknowledged: true, acknowledged_at: item.acknowledged_at ?? nowIso };
+        })
+      )
+    );
+
+    try {
+      const acknowledgedAlert = await api.acknowledgeDashboardAlert(alertId);
+      setNotifications((prev) =>
+        setNotificationAlerts(prev, prev.alerts.map((item) => (item.alert_id === alertId ? acknowledgedAlert : item)))
+      );
+    } catch {
+      const previousAlert = previousAlertByIdRef.current[alertId];
+      if (previousAlert) {
+        setNotifications((prev) =>
+          setNotificationAlerts(prev, prev.alerts.map((item) => (item.alert_id === alertId ? previousAlert : item)))
+        );
+      }
+    } finally {
+      delete previousAlertByIdRef.current[alertId];
+      inFlightAlertIdsRef.current.delete(alertId);
+      setAckInFlight((prev) => {
+        const next = { ...prev };
+        delete next[alertId];
+        return next;
+      });
+    }
+  };
+
+  const queueSeverity = dashboardStatus ? resolveQueueDepthSeverity(dashboardStatus.queue_depth) : "info";
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-300">Dashboard</h2>
+        <button
+          type="button"
+          className="inline-flex items-center gap-1 rounded border border-zinc-700 px-2 py-1 text-xs text-zinc-300"
+          onClick={() => setRefreshTick((prev) => prev + 1)}
+        >
+          <RefreshCw size={12} /> Refresh
+        </button>
+      </div>
+
+      {loading ? <div className="text-xs text-zinc-500">Loading status telemetry…</div> : null}
+      {error ? <div role="alert" className="rounded-xl border border-red-900/70 bg-red-950/40 p-3 text-xs text-red-200">Status API unavailable: {error}</div> : null}
+
+      {dashboardStatus ? (
+        <>
+          <section className="grid gap-3 md:grid-cols-3">
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
+              <div className="text-[10px] uppercase tracking-wide text-zinc-500">Service Health</div>
+              <div className={cn("mt-2 text-sm font-semibold", mapSeverityToStatusTextClass(queueSeverity))}>{dashboardStatus.service_health.reason}</div>
+              <div className="mt-1 text-[10px] text-zinc-500" data-testid="service-health-freshness">{formatFreshnessMinutes(dashboardStatus.service_health.observed_at)}</div>
+            </div>
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
+              <div className="text-[10px] uppercase tracking-wide text-zinc-500">Queue Depth</div>
+              <div className="mt-2 text-2xl font-bold text-zinc-100">{dashboardStatus.queue_depth.current_depth}</div>
+              <div className="text-[10px] text-zinc-500" data-testid="queue-depth-state">{queueSeverity}</div>
+            </div>
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3" data-testid="queue-depth-threshold-markers">
+              <div className="text-[10px] uppercase tracking-wide text-zinc-500">Queue Thresholds</div>
+              <div className="mt-2 text-sm text-zinc-100">{dashboardStatus.queue_depth.thresholds.warning}/{dashboardStatus.queue_depth.thresholds.critical}</div>
+              <div className="mt-1 flex gap-2 text-[10px]">
+                <span data-testid="queue-warning-marker">warning: {dashboardStatus.queue_depth.thresholds.warning}</span>
+                <span data-testid="queue-critical-marker">critical: {dashboardStatus.queue_depth.thresholds.critical}</span>
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-semibold tracking-wide text-zinc-300 uppercase">Alert Center</h3>
+              <div className="text-[10px] text-zinc-500">
+                <span data-testid="severity-count-critical">Critical: {alertCounts.critical}</span> · <span data-testid="severity-count-warning">Warning: {alertCounts.warning}</span> · <span data-testid="severity-count-info">Info: {alertCounts.info}</span>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {dashboardStatus.alert_center.filters.map((severity) => {
+                const selected = notifications.selectedSeverities.includes(severity);
+                return (
+                  <button
+                    key={severity}
+                    type="button"
+                    onClick={() => setNotifications((prev) => toggleNotificationSeverity(prev, severity))}
+                    className={cn("rounded-full border px-2 py-1 text-[10px] uppercase", selected ? severityTone[severity] : "border-zinc-700 text-zinc-500")}
+                  >
+                    {severity}
+                  </button>
+                );
+              })}
+            </div>
+            {filteredAlerts.length === 0 ? (
+              <div className="text-xs text-zinc-500">No alerts in timeline.</div>
+            ) : (
+              <div className="space-y-2">
+                {filteredAlerts.map((alert) => (
+                  <div key={alert.alert_id} className={cn("rounded-lg border border-zinc-800 p-2", alert.acknowledged && "opacity-60")}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className={cn("rounded-full border px-2 py-0.5 text-[10px] uppercase", severityTone[alert.severity])}>{alert.severity}</span>
+                          <p className="text-sm font-medium text-zinc-100">{alert.title}</p>
+                        </div>
+                        <p className="text-xs text-zinc-400">{alert.description}</p>
+                        {alert.acknowledged ? <p data-testid={`alert-ack-${alert.alert_id}`} className="text-[10px] text-zinc-500">Ack at: {formatTimestamp(alert.acknowledged_at)}</p> : null}
+                      </div>
+                      <button
+                        type="button"
+                        disabled={alert.acknowledged || ackInFlight[alert.alert_id]}
+                        onClick={() => void handleAcknowledge(alert.alert_id)}
+                        className="rounded border border-zinc-700 px-2 py-1 text-[10px] uppercase text-zinc-300 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        {alert.acknowledged ? "Acknowledged" : "Acknowledge"}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </>
+      ) : null}
+
+      <section className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-2"><DegenWaveform /></div>
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-2"><DegenBeatGrid /></div>
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-2"><DegenEffectRack /></div>
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-2"><DegenScheduleTimeline /></div>
+      </section>
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-2"><DegenAIHost /></div>
+      <div className="hidden">
+        <Activity />
+        <Gauge />
+        <AlertTriangle />
+        <CheckCircle2 className={mapSeverityToCardColor(queueSeverity)} />
+      </div>
+    </div>
 
     return () => {
       mounted = false;

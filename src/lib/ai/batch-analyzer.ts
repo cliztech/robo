@@ -85,6 +85,7 @@ function isTransientDbError(error: unknown): boolean {
 
   const maybeError = error as { code?: string; status?: number; message?: string; details?: string }
 
+  const supabase = await createServerClient()
   if (typeof maybeError.status === 'number' && maybeError.status >= 500) {
     return true
   }
