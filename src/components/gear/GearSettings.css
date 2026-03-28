@@ -1,0 +1,125 @@
+/**
+ * GearSettings.css — Studio settings panel styles
+ */
+
+.gear-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 500px;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+
+.settings-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #888;
+  letter-spacing: 0.3px;
+}
+
+/* Toggle Switch */
+.settings-toggle {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  background: #1a1a1a;
+  border: 1px solid #222;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+}
+
+.settings-toggle .toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #444;
+  transition: all 0.2s;
+}
+
+.settings-toggle.on {
+  background: #00e5ff22;
+  border-color: #00e5ff44;
+}
+
+.settings-toggle.on .toggle-knob {
+  left: 18px;
+  background: #00e5ff;
+}
+
+/* Segmented Control */
+.settings-segmented {
+  display: flex;
+  background: #111;
+  border: 1px solid #1a1a1a;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.segmented-btn {
+  padding: 4px 12px;
+  font-size: 10px;
+  font-weight: 800;
+  color: #444;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.5px;
+  font-family: 'Inter', sans-serif;
+}
+
+.segmented-btn:hover {
+  color: #888;
+}
+
+.segmented-btn.active {
+  background: #00e5ff11;
+  color: #00e5ff;
+}
+
+.segmented-btn + .segmented-btn {
+  border-left: 1px solid #1a1a1a;
+}
+
+/* Color Swatches */
+.color-swatches {
+  display: flex;
+  gap: 6px;
+}
+
+.color-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  padding: 0;
+}
+
+.color-swatch:hover {
+  transform: scale(1.2);
+}
+
+.color-swatch.selected {
+  border-color: #fff;
+  box-shadow: 0 0 8px currentColor;
+}
+
+/* Named accent colors */
+.swatch-cyan { background: #00e5ff; }
+.swatch-purple { background: #7c4dff; }
+.swatch-orange { background: #ff9100; }
+.swatch-green { background: #00e676; }
+.swatch-pink { background: #ff4081; }

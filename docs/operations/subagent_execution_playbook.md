@@ -60,6 +60,20 @@ Preemption rules:
 - P1 may preempt P3 packets only.
 - Preempted packets must checkpoint evidence and requeue with original priority.
 
+## 2.1) Stage ownership RACI matrix by route
+
+Use this matrix for clear accountability by execution stage and route.
+
+| Stage \ Route | QA | Proposal | Change |
+| --- | --- | --- | --- |
+| Intake | **A/R:** Intake | **A/R:** Intake | **A/R:** Intake |
+| Planner | **A/R:** Planner | **A/R:** Planner | **A/R:** Planner |
+| Executor | **R:** Verifier (runs checks), **A:** Planner | **R:** Executor (authors proposal artifacts), **A:** Planner | **R:** Executor (implements), **A:** Planner |
+| Verifier | **A/R:** Verifier | **R:** Verifier (quality and policy checks), **A:** Planner | **A/R:** Verifier |
+| Handoff | **A/R:** Handoff | **A/R:** Handoff | **A/R:** Handoff |
+
+Legend: `R` = Responsible, `A` = Accountable. Consulted roles are declared per packet via `consulted_roles`.
+
 ## 3) Mandatory Task Packet Schema
 
 Every delegated task must use this schema before execution:
@@ -72,6 +86,9 @@ task_packet:
   phase_id: "delivery_phase_<n>|workflow_phase_<n>|unphased"
   priority: "P0|P1|P2|P3"
   owner_role: "team.agent-role"
+  decision_owner: "role that has final call for packet-level conflicts"
+  consulted_roles: ["role-a", "role-b"]
+  approval_deadline_utc: "2026-03-04T18:30:00Z"
   objective: "single measurable outcome"
   scope:
     in_scope_paths: []
@@ -93,6 +110,14 @@ task_packet:
   timeout_sla:
     soft_timeout_minutes: 20
     hard_timeout_minutes: 40
+  escalation_sla:
+    first_response_minutes: 15
+    planner_replan_minutes: 30
+    management_arbitration_minutes: 60
+  stalled_packet_policy:
+    stale_after_minutes: 45
+    reassignment_window_minutes: 20
+    reassignment_owner_role: "planner"
   handoff:
     result_contract: "summary + evidence + risk flags"
     escalation_target: "main-agent"
@@ -105,6 +130,8 @@ task_packet:
 3. Acceptance criteria are testable.
 4. Evidence format defines exact commands/artifacts.
 5. If a packet references a phase, it must include both `phase_namespace` and `phase_id` (plain `Phase N` is invalid).
+6. `decision_owner`, `consulted_roles`, and `approval_deadline_utc` are present for any packet requiring approval or arbitration.
+7. `escalation_sla` and `stalled_packet_policy` fields are present and numerically valid.
 
 ## 3.1) High-risk stage-gate enforcement hook (TI-039)
 
@@ -145,12 +172,8 @@ Main agent is the reconciler of record and applies these rules in order.
 
 1. **Schema validity first:** Reject results that do not match packet contract.
 2. **Conflict detection:** Flag collisions when two packets modify the same semantic unit (file section, config key, or requirement).
-3. **Conflict resolution priority:**
-   - Safety/compliance constraints
-   - Explicit user request
-   - `AGENTS.md` boundaries and route constraints
-   - Higher-priority packet outcome
-   - Latest evidence-backed result
+3. **Conflict resolution priority and tie-break authority:**
+   - Use conflict-class authority table below; if unresolved, escalate following the escalation path.
 4. **Deduplication:** Merge duplicate findings by canonical key (`file + anchor + issue_type`) and keep strongest evidence.
 5. **Confidence ranking:** Score each result from `0.0-1.0` using:
    - Evidence completeness (40%)
@@ -162,6 +185,16 @@ Main agent is the reconciler of record and applies these rules in order.
 - Auto-merge if no conflicts and confidence `>= 0.8`.
 - Require main-agent manual review for confidence `0.5-0.79`.
 - Reject and re-issue packet for confidence `< 0.5`.
+
+### Conflict-class tie-break authority
+
+| Conflict class | Primary authority | Secondary consulted roles | Tie-break rule |
+| --- | --- | --- | --- |
+| Safety | Verifier | Planner, Compliance | Strictest verified safety control wins; unresolved ties escalate to Management. |
+| Scope | Planner | Intake, Executor | Narrowest interpretation that still satisfies explicit user request wins. |
+| Schedule | Management role owner | Planner, Handoff | Earliest path that preserves hard gates wins; quality gates cannot be waived. |
+| UX | Planner | Executor, Design | User-outcome alignment with documented UX contracts wins. |
+| Compliance | Compliance/SecOps role (via Verifier) | Planner, Management | Most restrictive policy-compliant result wins. |
 
 ## 5) Failure, Timeout, and Escalation
 
@@ -177,6 +210,16 @@ Main agent is the reconciler of record and applies these rules in order.
 1. At soft timeout, subagent must post checkpoint: current status, partial evidence, blocker.
 2. At hard timeout, packet auto-pauses and returns to queue as `needs_replan`.
 3. After 2 hard timeouts on same packet, escalate as F4.
+
+## Escalation SLA windows and stalled-packet reassignment
+
+- `first_response_minutes`: maximum time for main-agent triage acknowledgment after escalation event.
+- `planner_replan_minutes`: maximum time for Planner to publish revised packet scope/sequence.
+- `management_arbitration_minutes`: maximum time for management arbitration on unresolved tie-breaks.
+- `stale_after_minutes`: queue age threshold where a packet is marked stalled.
+- `reassignment_window_minutes`: window after stalled mark for reassignment to a new owner role.
+
+If reassignment is triggered, update packet metadata with new `owner_role`, preserve the original `packet_id`, and append reassignment reason in evidence.
 
 ## Escalation path
 
@@ -216,3 +259,16 @@ The command fails if required BMAD config files are missing, if `_bmad/bmm/confi
   - `backend/scheduling/scheduler_ui_api.py` + `backend/scheduling/scheduler_ui_service.py` for publish/config writes.
   - `backend/scheduling/api.py` + `backend/scheduling/autonomy_service.py` for autonomy policy updates and audit event writes.
   - `config/scripts/memory_service.py reset` for delete operations.
+
+## 8) Continuous improvement breach hook
+
+When operational indicators breach thresholds defined in `docs/operations/continuous_improvement_loop.md`, runbook execution must include a same-sprint capability update.
+
+Mandatory closure condition for a breach item:
+
+- Commit at least one capability update in `_bmad/*agents*` and/or `SKILLS.md`.
+- Record the intervention and evidence in `docs/metrics/agent_capability_scorecard.md`.
+- Attach monthly review evidence artifact using the template in `docs/operations/artifacts.md`.
+
+Breach records cannot be closed as monitoring-only without one of the required capability updates above.
+
