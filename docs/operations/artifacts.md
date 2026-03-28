@@ -87,6 +87,53 @@ Include these top-level keys:
 
 Management Team can audit all artifacts, but ownership remains with the primary role above.
 
+## Monthly Agent Capability Review artifact template
+
+Use this template for monthly capability reviews and store outputs in `.agent/verification/`.
+
+- Suggested filename: `YYYYMMDD-HHMM_AGENT-CAPABILITY-REVIEW_verification.md`
+- Source metrics: `docs/metrics/agent_capability_scorecard.md`
+- Policy reference: `docs/operations/continuous_improvement_loop.md`
+
+```yaml
+---
+artifact_type: verification
+ticket: AGENT-CAPABILITY-REVIEW
+created_at: 2026-03-01T00:00:00Z
+owner_role: verifier
+related_files:
+  - docs/metrics/agent_capability_scorecard.md
+  - docs/operations/continuous_improvement_loop.md
+status: final
+---
+```
+
+```md
+# Monthly Agent Capability Review (YYYY-MM)
+
+## Indicator snapshot (30-day window)
+- Regression recurrence rate: <value>
+- Review rejection rate: <value>
+- Incident MTTR: <value>
+- Handoff failure rate: <value>
+
+## Threshold assessment
+- Breached indicators: <none|list>
+- Consecutive-period confirmation: <yes|no>
+
+## Intervention decisions
+- Intervention type: <new subagent|prompt/persona retraining|skill/checklist/tool>
+- Required repo updates: <_bmad/*agents* paths and/or SKILLS.md sections>
+- Owner + due date: <role/date>
+
+## Verification evidence
+- Commands run:
+  - <exact command>
+- Artifacts updated:
+  - docs/metrics/agent_capability_scorecard.md
+  - <any _bmad/*agents* or SKILLS.md update paths>
+```
+
 ## TI-040 Encryption Evidence Contract (operator-facing)
 
 For TI-040 high-risk field protection, every config change touching sensitive values must produce:

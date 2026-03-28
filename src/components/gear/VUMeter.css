@@ -1,0 +1,161 @@
+/**
+ * VUMeter.css — Segmented LED-style Audio Meter
+ * Realistic multi-segment display with glow effects
+ */
+
+.vu-meter-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.vu-meter-unit.horizontal {
+  flex-direction: row;
+}
+
+.vu-label {
+  font-size: 7px;
+  font-weight: 800;
+  color: #445;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* Track container */
+.vu-track {
+  position: relative;
+  overflow: hidden;
+  border-radius: 2px;
+  background: #060608;
+  border: 1px solid #1a1c20;
+  box-shadow: inset 0 1px 4px rgba(0,0,0,0.7);
+}
+
+.vu-meter-unit.vertical .vu-track {
+  width: 10px;
+}
+
+.vu-meter-unit.horizontal .vu-track {
+  height: 10px;
+}
+
+/* Segmented LED overlay */
+.vu-track::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.vu-meter-unit.vertical .vu-track::before {
+  background:
+    repeating-linear-gradient(
+      180deg,
+      transparent 0px,
+      transparent 3px,
+      #060608 3px,
+      #060608 4px
+    );
+}
+
+.vu-meter-unit.horizontal .vu-track::before {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0px,
+      transparent 3px,
+      #060608 3px,
+      #060608 4px
+    );
+}
+
+/* Bar fill */
+.vu-bar {
+  position: absolute;
+  transition: all 0.08s linear;
+}
+
+.vu-meter-unit.vertical .vu-bar {
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.vu-meter-unit.horizontal .vu-bar {
+  top: 0;
+  left: 0;
+  bottom: 0;
+}
+
+.vu-bar.green {
+  background: linear-gradient(to top, #00c853 0%, #00e676 50%, #66ff66 100%);
+  box-shadow: 0 0 6px rgba(0, 200, 83, 0.4);
+}
+
+.vu-bar.yellow {
+  background: linear-gradient(to top, #00c853 0%, #00e676 30%, #ffeb3b 65%, #ffc107 85%, #ff9800 100%);
+  box-shadow: 0 0 6px rgba(255, 193, 7, 0.4);
+}
+
+.vu-bar.red {
+  background: linear-gradient(to top, #00c853 0%, #00e676 25%, #ffeb3b 55%, #ff9800 75%, #ff1744 90%, #ff0000 100%);
+  box-shadow: 0 0 8px rgba(255, 23, 68, 0.5);
+}
+
+.vu-bar.off {
+  background: #111;
+  opacity: 0.3;
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  inset: 0;
+}
+
+/* Peak hold indicator */
+.vu-peak-hold {
+  position: absolute;
+  z-index: 3;
+}
+
+.vu-meter-unit.vertical .vu-peak-hold {
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #fff;
+  box-shadow: 0 0 6px #fff, 0 0 12px rgba(255,255,255,0.3);
+}
+
+.vu-meter-unit.horizontal .vu-peak-hold {
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #fff;
+  box-shadow: 0 0 6px #fff, 0 0 12px rgba(255,255,255,0.3);
+}
+
+/* Scale marks */
+.vu-scale {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.vu-mark {
+  position: absolute;
+  background: rgba(255,255,255,0.15);
+}
+
+.vu-meter-unit.vertical .vu-mark {
+  left: 0;
+  right: 0;
+  height: 1px;
+}
+
+.vu-meter-unit.horizontal .vu-mark {
+  top: 0;
+  bottom: 0;
+  width: 1px;
+}
