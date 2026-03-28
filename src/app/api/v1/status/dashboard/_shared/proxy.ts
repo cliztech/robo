@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
+import { getEnv } from '@/lib/env';
 import { logRuntimeEnvValidationSummary, validateServerRuntimeEnv } from '@/lib/runtime/envContract';
 import { loadEnv } from '@/lib/env';
 
@@ -61,6 +62,10 @@ function resolveBackendBaseUrlConfig(): BackendBaseUrlConfig {
       'Missing dashboard backend configuration. Set DASHBOARD_STATUS_BACKEND_URL (or INTERNAL_API_BASE_URL fallback) for this environment.',
   };
 function resolveBackendBaseUrl(): string {
+  return getEnv(
+    'DASHBOARD_STATUS_BACKEND_URL',
+    getEnv('INTERNAL_API_BASE_URL', DEFAULT_BACKEND_BASE_URL),
+  ).replace(/\/$/, '');
   return loadEnv().dashboardStatusBackendUrl;
 }
 
