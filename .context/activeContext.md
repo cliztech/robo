@@ -315,6 +315,10 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added backward-compatible decode handling for legacy envelope key names and `enc::` payload strings while keeping decrypt fail-closed behavior.
 - Updated backend crypto tests to assert v1 envelope fields and nonce uniqueness using the new schema.
 
+## 2026-03-04 Route State-Update Policy Clarification
+- Updated bootstrap/state-management policy to make `.context` updates conditional on `Change`/`Proposal` outputs that modify project state.
+- Added explicit QA-route exception requiring a "state update suggestion" in output instead of editing state files.
+- Synced task-route templates and BMAD tie-break policy notes with the same conditional and precedence behavior.
 ## 2026-03-04 Workflow quality-gate rubric consolidation
 - Added measurable workflow-gate semantics in `AGENTS.md` with explicit required checklist keys, command-log evidence requirements, and a compact minimum evidence schema table.
 - Added canonical rubric `docs/operations/quality_gate_rubric.md` to centralize scoring formula, hard-gate pass criteria, required evidence fields, and failure semantics.

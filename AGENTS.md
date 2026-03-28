@@ -42,6 +42,9 @@ To avoid governance drift, use canonical + derived views instead of restating po
 >    - **Architecture:** How does this fit the system patterns?
 >    - **Edge Cases:** What happens at the boundaries?
 >    - **The Twist:** What is the 10% innovation that makes this inevitable?
+>    - **Update State:** When a task is completed, update `activeContext.md` and `progress.md` only for `Change`/`Proposal` outputs that modify project state.
+>    - **QA Exception:** For `QA` route outputs, do not edit state files; include a "state update suggestion" section in the response instead.
+>
 >    - **Update State:** When a task is completed, update `activeContext.md` and `progress.md`.
 > 3. **Adoption Playbook:**
 >    - **Phase 1 (Obedience):** Enumerate files, follow authority.

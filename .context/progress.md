@@ -283,6 +283,10 @@
 - [x] Kept decode compatibility for legacy envelope representations (`nonce/ciphertext/tag` and `enc::` string payloads).
 - [x] Updated and passed crypto test coverage in `backend/tests/test_config_crypto.py` and `backend/tests/test_security_config_crypto.py`.
 
+## 2026-03-04 Route State-Update Policy Clarification
+- Updated bootstrap/state-management policy to make `.context` updates conditional on `Change`/`Proposal` outputs that modify project state.
+- Added explicit QA-route exception requiring a "state update suggestion" in output instead of editing state files.
+- Synced task-route templates and BMAD tie-break policy notes with the same conditional and precedence behavior.
 ## 2026-03-04 Workflow quality gate rubric alignment
 - [x] Updated `AGENTS.md` Workflow Quality Gates with measurable required fields and hard pass criteria while preserving strict 100% thresholds.
 - [x] Added canonical rubric at `docs/operations/quality_gate_rubric.md` for scoring definitions and evidence contracts.
