@@ -28,7 +28,7 @@ export const Knob: React.FC<KnobProps> = ({
     const [showLedRing, setShowLedRing] = useState(false);
     const startY = useRef<number>(0);
     const startValue = useRef<number>(0);
-    const ledTimeout = useRef<ReturnType<typeof setTimeout>>();
+    const ledTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
     const range = max - min;
     const normalizedValue = (value - min) / range;

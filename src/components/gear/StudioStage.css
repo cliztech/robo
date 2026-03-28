@@ -1,0 +1,226 @@
+/**
+ * StudioStage.css — Modular Layout Engine Styles
+ * The "workbench" where users assemble their gear.
+ */
+
+.studio-stage {
+  width: 100%;
+  min-height: 100vh;
+  background: #080808;
+  color: #ccc;
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Toolbar */
+.stage-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  background: #111;
+  border-bottom: 1px solid #1e1e1e;
+}
+
+.stage-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stage-icon {
+  font-size: 20px;
+}
+
+.layout-name-input {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: border-color 0.2s;
+}
+
+.layout-name-input:focus {
+  outline: none;
+  border-color: #00e5ff55;
+}
+
+.toolbar-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.toolbar-btn {
+  padding: 8px 16px;
+  border: 1px solid #2a2a2a;
+  background: #1a1a1a;
+  color: #888;
+  font-weight: 600;
+  font-size: 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toolbar-btn:hover {
+  background: #222;
+  color: #ccc;
+}
+
+.toolbar-btn.danger:hover {
+  border-color: #ff3d0055;
+  color: #ff3d00;
+}
+
+/* Body Layout */
+.stage-body {
+  display: flex;
+  flex-grow: 1;
+}
+
+/* Gear Palette */
+.gear-palette {
+  width: 180px;
+  background: #0d0d0d;
+  border-right: 1px solid #1a1a1a;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.palette-title {
+  font-size: 11px;
+  font-weight: 900;
+  color: #444;
+  letter-spacing: 3px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.palette-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #141414;
+  border: 1px solid #1e1e1e;
+  border-radius: 6px;
+  cursor: grab;
+  transition: all 0.2s;
+}
+
+.palette-item:hover {
+  background: #1a1a1a;
+  border-color: #333;
+  transform: translateX(2px);
+}
+
+.palette-item:active {
+  cursor: grabbing;
+  transform: scale(0.97);
+}
+
+.palette-icon {
+  font-size: 18px;
+}
+
+.palette-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #888;
+}
+
+/* Stage Grid */
+.stage-grid {
+  flex-grow: 1;
+  padding: 24px;
+  position: relative;
+  overflow: auto;
+  background-image:
+    radial-gradient(circle, #1a1a1a 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.stage-empty-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}
+
+.hint-icon {
+  font-size: 48px;
+  opacity: 0.15;
+  margin-bottom: 12px;
+}
+
+.hint-text {
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+}
+
+/* Placed Gear */
+.gear-canvas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.placed-gear-wrapper {
+  position: relative;
+  animation: gear-drop-in 0.3s ease-out;
+}
+
+@keyframes gear-drop-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.remove-gear-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #ff3d00;
+  color: #fff;
+  border: 2px solid #0a0a0a;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.placed-gear-wrapper:hover .remove-gear-btn {
+  opacity: 1;
+}
+
+/* Drop zone */
+.drop-zone-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 0;
+}

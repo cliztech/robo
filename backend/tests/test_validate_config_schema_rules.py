@@ -108,3 +108,53 @@ def test_repository_schema_keywords_are_supported() -> None:
         validate_config._validate({}, schema, "$", errors)
         unsupported = [e for e in errors if "unsupported schema keyword" in e]
         assert unsupported == [], f"{schema_path.name}: {unsupported}"
+
+
+def test_validate_encryption_targets_rejects_plaintext_sensitive_value() -> None:
+    config = {"openai_api_key": "sk-live-plaintext"}
+
+    errors = validate_config.validate_encryption_targets("prompt_variables", config)
+
+    assert any("must be encryption envelope object" in err for err in errors)
+
+
+def test_validate_encryption_targets_rejects_malformed_envelope() -> None:
+    config = {
+        "openai_api_key": {
+            "enc_v": "v1",
+            "alg": "AES-256-GCM",
+            "kid": "badkid",
+            "nonce_b64": "not-b64",
+            "ciphertext_b64": "also-not-b64",
+            "tag_b64": "bad",
+            "aad": {"field_ref": "wrong", "env": "", "issued_at": "nope"},
+        }
+    }
+
+    errors = validate_config.validate_encryption_targets("prompt_variables", config)
+
+    assert any(".kid: expected kms://dgn-dj/config/<key-id>" in err for err in errors)
+    assert any(".nonce_b64: expected valid base64 string" in err for err in errors)
+    assert any(".aad.field_ref: expected 'config/prompt_variables.json:openai_api_key'" in err for err in errors)
+
+
+def test_validate_encryption_targets_accepts_ti040_contract_envelope() -> None:
+    config = {
+        "openai_api_key": {
+            "enc_v": "v1",
+            "alg": "AES-256-GCM",
+            "kid": "kms://dgn-dj/config/ti-004-primary",
+            "nonce_b64": "dGVzdG5vbmNlMTIz",
+            "ciphertext_b64": "dGVzdGNpcGhlcnRleHQ=",
+            "tag_b64": "dGVzdHRhZzEyMzQ1Njc4OTA=",
+            "aad": {
+                "field_ref": "config/prompt_variables.json:openai_api_key",
+                "env": "prod",
+                "issued_at": "2026-03-04T00:00:00Z",
+            },
+        }
+    }
+
+    errors = validate_config.validate_encryption_targets("prompt_variables", config)
+
+    assert errors == []

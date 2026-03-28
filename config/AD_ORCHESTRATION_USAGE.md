@@ -1,8 +1,9 @@
 # Ad Orchestration Usage
 
-`ad_orchestration.py` provides lightweight ad scheduling primitives for RoboDJ clockwheel automation.
+`ad_orchestration.py` provides lightweight ad scheduling primitives for RoboDJ clockwheel orchestration.
 
 ## Features
+
 - Ad inventory model (campaign + creative + dayparts + priority + caps)
 - Rotation with priority weighting, frequency caps, and separation
 - Contextual exclusions using content topics

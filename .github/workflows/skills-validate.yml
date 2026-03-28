@@ -2,6 +2,13 @@ name: skills-validate
 
 on:
   pull_request:
+    paths:
+      - 'skills/**'
+      - 'infra/mcp/**'
+      - '.mcp.json'
+      - 'scripts/validate_skills_and_mcp.py'
+      - 'scripts/generate_mcp_runtime_config.py'
+      - '.github/workflows/skills-validate.yml'
   workflow_dispatch:
 
 jobs:
@@ -17,4 +24,15 @@ jobs:
           python-version: '3.11'
 
       - name: Validate skills and MCP manifests
-        run: python scripts/validate_skills_and_mcp.py
+        run: python scripts/validate_skills_and_mcp.py --validate-mcp-schema
+
+      - name: Validate MCP schema on manifest edits
+        run: python scripts/validate_skills_and_mcp.py --mcp-only --validate-mcp-schema
+
+      - name: Enforce generated .mcp.json parity
+        run: |
+          if [[ "${MCP_RUNTIME_CONFIG_IGNORE:-0}" == "1" ]]; then
+            python scripts/generate_mcp_runtime_config.py --check --ignore-drift
+          else
+            python scripts/generate_mcp_runtime_config.py --check
+          fi
