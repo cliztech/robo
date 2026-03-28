@@ -320,6 +320,7 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added protected-ref runtime secret gate in CI using `python config/check_runtime_secrets.py --require-env-only` with explicit fail-fast shell settings and secret-backed env wiring.
 - Documented CI runtime contract gate commands in `docs/DEVELOPMENT_ENV_SETUP.md` for operator/developer parity.
 - Added repository hygiene guardrails for generated Python packaging artifacts: ignore `*.egg-info`, removed accidental `src/UNKNOWN.egg-info/`, added CI scanner (`scripts/ci/check_generated_artifacts.py`), and added isolated wheel-build script outputting to `.artifacts/python-packaging`.
+- Hardened `DashboardView` polling loop with separated 1s UI clock vs configurable API cadence, visibility-aware throttling, exponential backoff + jitter, and in-flight request dedupe/abort guarantees.
 
 ## 2026-03-05 Status dashboard route contract hardening
 - Standardized status dashboard proxy handlers on shared route typing contracts (`StatusProxyRouteHandler`, `AppRouteParamsContext`) for Next.js app-route consistency.

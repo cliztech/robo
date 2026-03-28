@@ -280,6 +280,12 @@
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
 
+## 2026-03-05 Packaging artifact hygiene guard
+- [x] Added root `.gitignore` rule for `*.egg-info/` and `.artifacts/`.
+- [x] Removed accidental `src/UNKNOWN.egg-info/` artifact directory from the working tree.
+- [x] Added `scripts/ci/build_python_wheels.sh` to keep Python packaging outputs in `.artifacts/python-packaging` instead of app source paths.
+- [x] Added CI guard script `scripts/ci/check_generated_artifacts.py` and wired it into `.github/workflows/ci.yml` config job.
+- [x] Dashboard polling resilience upgrade: decoupled UI clock from API polling cadence, hidden-tab throttling, failure backoff+jitter reset on success, request overlap prevention, and cadence-transition/unmount-abort tests.
 ## 2026-03-05 Lint quality gate hardening
 - [x] Removed root Next lint bypass (`eslint.ignoreDuringBuilds`) from `next.config.js`.
 - [x] Added flat-config ESLint stack (`eslint.config.mjs`) and switched scripts to standalone CLI (`npm run lint`) plus CI lint gate (`npm run lint:ci`).
