@@ -21,13 +21,9 @@ from backend.ai.contracts.track_analysis import (
     VocalStyle,
 )
 
-from backend.security.config_crypto import EnvelopeKey, serialize_json, transform_sensitive_values
-from backend.security.config_crypto import ConfigCryptoError, load_config_json
+from backend.security.config_crypto import ConfigCryptoError, dump_config_json, load_config_json
 
 logger = logging.getLogger(__name__)
-
-HIGH_RISK_PROMPT_KEYS = {"api_key", "auth_token", "password", "secret", "access_token"}
-
 
 class HostScriptRequest(BaseModel):
     message_type: Literal["intro", "outro", "commentary", "news"]
@@ -62,6 +58,31 @@ class _GuardrailPrompts:
 
 
 
+class LegacyAITrackAnalysisRequest(BaseModel):
+    """Temporary compatibility input for /api/v1/ai/track-analysis.
+
+    TODO(phase-5-story-P5-05): Remove this adapter after all clients send
+    canonical TrackAnalysisRequest payloads with track_id + metadata fields.
+    """
+
+    title: str = Field(min_length=1, max_length=160)
+    artist: str = Field(min_length=1, max_length=160)
+    genre: str = Field(min_length=1, max_length=80)
+    bpm: int = Field(ge=50, le=220)
+    duration_seconds: int = Field(ge=30, le=1800)
+    notes: str = Field(default="", max_length=800)
+
+    def to_canonical(self, correlation_id: str) -> TrackAnalysisRequest:
+        return TrackAnalysisRequest(
+            track_id=f"legacy-{correlation_id}",
+            metadata={
+                "title": self.title.strip(),
+                "artist": self.artist.strip(),
+                "duration_seconds": self.duration_seconds,
+                "genre_hint": self.genre.strip(),
+            },
+            audio_features={"bpm": self.bpm},
+        )
 PROMPTS = _GuardrailPrompts(
     track_analysis=(
         "You are a broadcast-safe track analysis model. Return compact JSON with fields: "
@@ -132,6 +153,11 @@ class AIInferenceService:
         self._max_cache_size = 1000
 
     def _resolve_prompt_profile(self) -> tuple[str, str]:
+        config_path = Path(__file__).parent.parent / "config" / "prompt_variables.json"
+        try:
+            payload = load_config_json(config_path)
+        except (OSError, json.JSONDecodeError, ConfigCryptoError):
+            return "default", "{}"
         payload = self._load_prompt_variables()
         if payload is None:
             config_path = Path(__file__).parent.parent / "config" / "prompt_variables.json"
@@ -139,12 +165,6 @@ class AIInferenceService:
                 payload = load_config_json(config_path)
             except (OSError, json.JSONDecodeError, ConfigCryptoError):
                 return "default", "{}"
-
-        config_path = Path(__file__).parent.parent / "config" / "prompt_variables.json"
-        try:
-            payload = load_config_json(config_path)
-        except (OSError, json.JSONDecodeError, ConfigCryptoError):
-            return "default", "{}"
 
         version = str(payload.get("version", "default")).strip() or "default"
         variable_settings = payload.get("variable_settings", {})
@@ -157,44 +177,9 @@ class AIInferenceService:
         serialized = json.dumps(deterministic_payload, sort_keys=True, separators=(",", ":"))
         return version, serialized
 
-    def _resolve_crypto_key(self) -> EnvelopeKey | None:
-        raw = os.getenv("ROBODJ_CONFIG_CRYPTO_KEY", "").strip()
-        kid = os.getenv("ROBODJ_CONFIG_CRYPTO_KID", "local-dev")
-        if not raw:
-            return None
-        try:
-            key_bytes = raw.encode("utf-8")
-            if len(key_bytes) not in (16, 24, 32):
-                return None
-            return EnvelopeKey(kid=kid, key_bytes=key_bytes)
-        except Exception:
-            return None
-
-    def _load_prompt_variables(self) -> dict[str, Any] | None:
-        config_path = Path(__file__).parent.parent / "config" / "prompt_variables.json"
-        try:
-            payload = json.loads(config_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            return None
-
-        crypto_key = self._resolve_crypto_key()
-        return transform_sensitive_values(
-            payload,
-            sensitive_keys=HIGH_RISK_PROMPT_KEYS,
-            encode=False,
-            key_lookup={crypto_key.kid: crypto_key} if crypto_key else {},
-        )
-
     def save_prompt_variables(self, payload: dict[str, Any]) -> None:
         config_path = Path(__file__).parent.parent / "config" / "prompt_variables.json"
-        crypto_key = self._resolve_crypto_key()
-        transformed = transform_sensitive_values(
-            payload,
-            sensitive_keys=HIGH_RISK_PROMPT_KEYS,
-            encode=True,
-            key=crypto_key,
-        )
-        config_path.write_text(serialize_json(transformed), encoding="utf-8")
+        config_path.write_text(dump_config_json(config_path, payload, indent=2), encoding="utf-8")
 
     def _compute_fingerprint(
         self,

@@ -6,15 +6,66 @@ from enum import Enum
 from typing import Iterable, Sequence
 
 
+class ActionId(str, Enum):
+    ACT_PUBLISH = "ACT-PUBLISH"
+    ACT_DELETE = "ACT-DELETE"
+    ACT_OVERRIDE = "ACT-OVERRIDE"
+    ACT_KEY_ROTATION = "ACT-KEY-ROTATION"
+    ACT_CONFIG_EDIT = "ACT-CONFIG-EDIT"
+    ACT_UPDATE_SCHEDULES = "ACT-UPDATE-SCHEDULES"
+    ACT_UPDATE_AUTONOMY_POLICY = "ACT-UPDATE-AUTONOMY-POLICY"
+
+
+class ApproverRole(str, Enum):
+    OPERATOR = "operator"
+    PRODUCER = "producer"
+    SECURITY = "security"
+    ADMIN = "admin"
+
+
 class ApprovalPolicyError(PermissionError):
     """Raised when a protected action fails approval policy checks."""
 
 
 @dataclass(frozen=True)
 class ApprovalRecord:
-    approver_id: str
-    approver_roles: frozenset[str]
-    reason: str
+    # Legacy approval-chain shape
+    principal: str = ""
+    role: ApproverRole | None = None
+    approved_at_utc: str = ""
+    # New approval-context shape
+    approver_id: str = ""
+    approver_roles: frozenset[str] = field(default_factory=frozenset)
+    reason: str = ""
+
+    def __post_init__(self) -> None:
+        principal = self.principal.strip() or self.approver_id.strip()
+        approver_id = self.approver_id.strip() or principal
+        approver_roles = frozenset(role.strip().lower() for role in self.approver_roles if role and role.strip())
+
+        resolved_role = self.role
+        if resolved_role is None:
+            for candidate in sorted(approver_roles):
+                try:
+                    resolved_role = ApproverRole(candidate)
+                    break
+                except ValueError:
+                    continue
+
+        if not approver_roles and resolved_role is not None:
+            approver_roles = frozenset({resolved_role.value})
+
+        approved_at_utc = self.approved_at_utc.strip()
+        reason = self.reason.strip()
+        if not reason and approved_at_utc:
+            reason = f"Approved at {approved_at_utc}"
+
+        object.__setattr__(self, "principal", principal)
+        object.__setattr__(self, "approver_id", approver_id)
+        object.__setattr__(self, "approver_roles", approver_roles)
+        object.__setattr__(self, "role", resolved_role)
+        object.__setattr__(self, "approved_at_utc", approved_at_utc)
+        object.__setattr__(self, "reason", reason)
 
 
 @dataclass(frozen=True)
@@ -57,15 +108,36 @@ ACTION_CATALOG: dict[str, ActionPolicy] = {
         min_approvals=1,
         allowed_approver_roles=frozenset({"admin"}),
     ),
+    "ACT-CONFIG-EDIT": ActionPolicy(
+        action_code="ACT-CONFIG-EDIT",
+        allowed_actor_roles=frozenset({"admin", "operator"}),
+        min_approvals=0,
+        allowed_approver_roles=frozenset({"admin", "operator"}),
+    ),
+}
+
+
+ACTION_MINIMUM_APPROVER_ROLES: dict[ActionId, frozenset[ApproverRole]] = {
+    ActionId.ACT_PUBLISH: frozenset({ApproverRole.OPERATOR, ApproverRole.PRODUCER}),
+    ActionId.ACT_DELETE: frozenset({ApproverRole.ADMIN, ApproverRole.SECURITY}),
+    ActionId.ACT_OVERRIDE: frozenset({ApproverRole.OPERATOR, ApproverRole.ADMIN}),
+    ActionId.ACT_KEY_ROTATION: frozenset({ApproverRole.SECURITY, ApproverRole.ADMIN}),
+    ActionId.ACT_CONFIG_EDIT: frozenset({ApproverRole.PRODUCER, ApproverRole.ADMIN}),
+    ActionId.ACT_UPDATE_SCHEDULES: frozenset({ApproverRole.OPERATOR, ApproverRole.ADMIN}),
+    ActionId.ACT_UPDATE_AUTONOMY_POLICY: frozenset({ApproverRole.ADMIN}),
 }
 
 
 def _validate_roles(roles: Iterable[str]) -> frozenset[str]:
-    cleaned = frozenset(role.strip().lower() for role in roles if role and role.strip())
-    return cleaned
+    return frozenset(role.strip().lower() for role in roles if role and role.strip())
 
 
-def normalize_context(*, actor_id: str, actor_roles: Iterable[str], approvals: Iterable[dict] | None = None) -> ApprovalContext:
+def normalize_context(
+    *,
+    actor_id: str,
+    actor_roles: Iterable[str],
+    approvals: Iterable[dict] | None = None,
+) -> ApprovalContext:
     normalized_approvals: list[ApprovalRecord] = []
     for approval in approvals or ():
         normalized_approvals.append(
@@ -86,7 +158,18 @@ def normalize_context(*, actor_id: str, actor_roles: Iterable[str], approvals: I
 def enforce_action_approval(action_code: str, context: ApprovalContext) -> None:
     policy = ACTION_CATALOG.get(action_code)
     if policy is None:
-        raise ApprovalPolicyError(f"Unknown protected action '{action_code}'.")
+        try:
+            action_id = ActionId(action_code)
+        except ValueError as exc:
+            raise ApprovalPolicyError(f"Unknown protected action '{action_code}'.") from exc
+
+        required_roles = ACTION_MINIMUM_APPROVER_ROLES.get(action_id, frozenset())
+        policy = ActionPolicy(
+            action_code=action_code,
+            allowed_actor_roles=frozenset({"admin", "operator"}),
+            min_approvals=1 if required_roles else 0,
+            allowed_approver_roles=frozenset(role.value for role in required_roles),
+        )
 
     if not context.actor_id:
         raise ApprovalPolicyError("Protected action requires a non-empty actor_id.")
@@ -115,50 +198,9 @@ def enforce_action_approval(action_code: str, context: ApprovalContext) -> None:
             f"Action {action_code} requires at least {policy.min_approvals} distinct approver(s); "
             f"received {len(valid_approvers)}."
         )
-import json
-from dataclasses import dataclass
-from enum import Enum
-from typing import Sequence
 
 
-class ActionId(str, Enum):
-    ACT_PUBLISH = "ACT-PUBLISH"
-    ACT_DELETE = "ACT-DELETE"
-    ACT_OVERRIDE = "ACT-OVERRIDE"
-    ACT_KEY_ROTATION = "ACT-KEY-ROTATION"
-    ACT_CONFIG_EDIT = "ACT-CONFIG-EDIT"
-
-
-class ApproverRole(str, Enum):
-    OPERATOR = "operator"
-    PRODUCER = "producer"
-    SECURITY = "security"
-    ADMIN = "admin"
-
-
-@dataclass(frozen=True)
-class ChainApprovalRecord:
-    principal: str
-    role: ApproverRole
-    approved_at_utc: str
-
-
-@dataclass(frozen=True)
-class ApprovalDecision:
-    allowed: bool
-    reason: str
-
-
-ACTION_MINIMUM_APPROVER_ROLES: dict[ActionId, frozenset[ApproverRole]] = {
-    ActionId.ACT_PUBLISH: frozenset({ApproverRole.OPERATOR, ApproverRole.PRODUCER}),
-    ActionId.ACT_DELETE: frozenset({ApproverRole.ADMIN, ApproverRole.SECURITY}),
-    ActionId.ACT_OVERRIDE: frozenset({ApproverRole.OPERATOR, ApproverRole.ADMIN}),
-    ActionId.ACT_KEY_ROTATION: frozenset({ApproverRole.SECURITY, ApproverRole.ADMIN}),
-    ActionId.ACT_CONFIG_EDIT: frozenset({ApproverRole.PRODUCER, ApproverRole.ADMIN}),
-}
-
-
-def parse_approval_chain(raw_chain: Sequence[dict[str, str]] | str | None) -> list[ChainApprovalRecord]:
+def parse_approval_chain(raw_chain: Sequence[dict[str, str]] | str | None) -> list[ApprovalRecord]:
     if raw_chain is None:
         return []
 
@@ -173,30 +215,68 @@ def parse_approval_chain(raw_chain: Sequence[dict[str, str]] | str | None) -> li
     else:
         records = raw_chain
 
-    parsed: list[ChainApprovalRecord] = []
+    parsed: list[ApprovalRecord] = []
     for index, item in enumerate(records):
         if not isinstance(item, dict):
             raise ApprovalPolicyError(f"approval_chain[{index}] must be an object")
-        try:
-            role = ApproverRole(item["role"])
-            principal = item["principal"]
-            approved_at = item["approved_at_utc"]
-        except KeyError as exc:
-            raise ApprovalPolicyError(f"approval_chain[{index}] missing key: {exc.args[0]}") from exc
-        except ValueError as exc:
-            raise ApprovalPolicyError(f"approval_chain[{index}] has invalid role") from exc
 
-        if not principal.strip():
-            raise ApprovalPolicyError(f"approval_chain[{index}].principal must be non-empty")
+        if "principal" in item and "role" in item:
+            try:
+                parsed.append(
+                    ApprovalRecord(
+                        principal=str(item["principal"]).strip(),
+                        role=ApproverRole(str(item["role"]).strip().lower()),
+                        approved_at_utc=str(item.get("approved_at_utc", "")).strip(),
+                    )
+                )
+            except ValueError as exc:
+                raise ApprovalPolicyError(f"approval_chain[{index}] has invalid role") from exc
+            continue
 
-        parsed.append(ChainApprovalRecord(principal=principal, role=role, approved_at_utc=approved_at))
+        if "approver_id" in item:
+            approver_roles = _validate_roles(item.get("approver_roles", []))
+            parsed.append(
+                ApprovalRecord(
+                    approver_id=str(item.get("approver_id", "")).strip(),
+                    approver_roles=approver_roles,
+                    reason=str(item.get("reason", "")).strip(),
+                )
+            )
+            continue
+
+        raise ApprovalPolicyError(
+            f"approval_chain[{index}] must include either principal/role or approver_id/approver_roles"
+        )
 
     return parsed
 
 
-def evaluate_approval_chain(action_id: ActionId, approval_chain: Sequence[ChainApprovalRecord]) -> ApprovalDecision:
+@dataclass(frozen=True)
+class ApprovalDecision:
+    allowed: bool
+    reason: str
+
+
+def _approval_roles(record: ApprovalRecord) -> set[ApproverRole]:
+    roles: set[ApproverRole] = set()
+    if record.role is not None:
+        roles.add(record.role)
+
+    for raw_role in record.approver_roles:
+        try:
+            roles.add(ApproverRole(raw_role))
+        except ValueError:
+            continue
+
+    return roles
+
+
+def evaluate_approval_chain(action_id: ActionId, approval_chain: Sequence[ApprovalRecord]) -> ApprovalDecision:
     required_roles = ACTION_MINIMUM_APPROVER_ROLES[action_id]
-    chain_roles = {entry.role for entry in approval_chain}
+    chain_roles: set[ApproverRole] = set()
+    for entry in approval_chain:
+        chain_roles.update(_approval_roles(entry))
+
     missing_roles = sorted(role.value for role in required_roles - chain_roles)
     if missing_roles:
         return ApprovalDecision(
@@ -207,7 +287,7 @@ def evaluate_approval_chain(action_id: ActionId, approval_chain: Sequence[ChainA
     return ApprovalDecision(allowed=True, reason="approved")
 
 
-def require_approval(action_id: ActionId, approval_chain: Sequence[ChainApprovalRecord]) -> None:
+def require_approval(action_id: ActionId, approval_chain: Sequence[ApprovalRecord]) -> None:
     decision = evaluate_approval_chain(action_id=action_id, approval_chain=approval_chain)
     if not decision.allowed:
         raise ApprovalPolicyError(decision.reason)
