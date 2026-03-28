@@ -12,6 +12,7 @@ REQUIRED_TOKENS = {
     "contract_block": "<communication_mode_contract",
     "ops_mode_requirement": "<ops_mode>",
     "fallback_requirement": "<fallback_behavior>",
+    "enforcement_rule": "Maintain active communication_mode behavior",
 }
 
 
