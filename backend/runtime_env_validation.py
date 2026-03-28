@@ -7,19 +7,19 @@ from dataclasses import dataclass
 RUNTIME_CONTEXT_ENV = "ROBODJ_RUNTIME_CONTEXT"
 ALLOWED_RUNTIME_CONTEXTS = ("desktop_app", "docker_stack", "ci")
 
+# Keys required for server-like environments (Docker, CI)
+_SERVER_REQUIRED_KEYS = (
+    "ROBODJ_SECRET_KEY",
+    "ROBODJ_SECRET_V2_KEY",
+    "ROBODJ_SCHEDULER_API_KEY",
+)
+
 REQUIRED_ENV_BY_CONTEXT: dict[str, tuple[str, ...]] = {
     "desktop_app": (),
-    "docker_stack": (
-        "ROBODJ_SECRET_KEY",
-        "ROBODJ_SECRET_V2_KEY",
-        "ROBODJ_SCHEDULER_API_KEY",
-    ),
-    "ci": (
-        "ROBODJ_SECRET_KEY",
-        "ROBODJ_SECRET_V2_KEY",
-        "ROBODJ_SCHEDULER_API_KEY",
-    ),
+    "docker_stack": _SERVER_REQUIRED_KEYS,
+    "ci": _SERVER_REQUIRED_KEYS,
 }
+
 
 
 @dataclass(frozen=True)
