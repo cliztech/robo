@@ -7,6 +7,9 @@ Executing "Phase 6: Playlist Generation" hardening and preparing Phase 7 broadca
 Building the next unfinished execution plans from the roadmap queue, starting with P1 Security items (TI-039/TI-040/TI-041).
 
 ## Recent Decisions
+
+- Re-synced Track A security reconciliation on 2026-03-04: `docs/exec-plans/active/sprint-status.yaml` remains authoritative; TODO/TI-041 were updated to backlog/open with explicit TI-040 deliverable gaps (`TI040-ART-LOG/REPORT/HASH`) and roadmap autopilot queue was regenerated.
+
 - Established canonical agent governance source at `docs/operations/agent_governance_canonical.md`, added derived governance views, and wired PR drift validation via workflow + consistency script.
 
 - Added CI env-contract parity guard (`scripts/ci/validate_env_contract.py`) to compare required contract vars, `.env.example`, and compose `${VAR}` references with JSON artifact output for PR diagnostics.
@@ -76,6 +79,8 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Completed environment-contract wiring follow-up: bootstrap/codex doctor/CI now invoke `config/check_runtime_env.py` with explicit context mapping (`desktop_app`, `docker_stack`, `ci`); added Makefile env-check targets and consolidated canonical preflight in `docs/DEVELOPMENT_ENV_SETUP.md`.
 
 
+
+
 - Standardized phase naming contracts across planning artifacts: `Delivery Phase N` for delivery context and `Workflow Phase N` for workflow context, plus namespace-required packet/build-plan metadata.
 
 - Completed shared canonical track-analysis contract extraction (`backend/ai/contracts/track_analysis.py`) and aligned service/API/tests with temporary legacy adapter removal criteria for Phase 5 story P5-05.
@@ -108,6 +113,8 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added bounded status queue-depth telemetry history ingestion (last 60 points), wired dashboard trend responses to real history windows, and introduced dashboard conditional GET validators (ETag/Last-Modified) with 304 handling support in the frontend status client.
 
 - Completed environment-contract wiring follow-up: bootstrap/codex doctor/CI now invoke `config/check_runtime_env.py` with explicit context mapping (`desktop_app`, `docker_stack`, `ci`); added Makefile env-check targets and consolidated canonical preflight in `docs/DEVELOPMENT_ENV_SETUP.md`.
+
+
 
 
 - Standardized phase naming contracts across planning artifacts: `Delivery Phase N` for delivery context and `Workflow Phase N` for workflow context, plus namespace-required packet/build-plan metadata.
