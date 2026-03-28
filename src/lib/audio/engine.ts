@@ -1,5 +1,5 @@
 /**
- * AudioEngine - Core Web Audio API wrapper for broadcast automation.
+ * AudioEngine - Core Web Audio API wrapper for broadcast orchestration.
  * Handles playback, crossfading, EQ, compression, and analysis.
  */
 

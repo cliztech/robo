@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import hashlib
+import json
 from functools import lru_cache
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
+from email.utils import format_datetime, parsedate_to_datetime
 from pathlib import Path
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, Field
 
 from backend.security.auth import verify_api_key
@@ -90,6 +93,8 @@ def get_status_thresholds() -> StatusThresholds:
 
 @router.get("/dashboard", response_model=DashboardStatusResponse)
 def read_dashboard_status(
+    request: Request,
+    response: Response,
     repository: StatusAlertRepository = Depends(get_alert_repository),
     telemetry_provider: StatusTelemetryProvider = Depends(get_status_telemetry_provider),
     thresholds: StatusThresholds = Depends(get_status_thresholds),
@@ -130,7 +135,7 @@ def read_dashboard_status(
         service_health_status = ServiceHealth.degraded
         reason = "queue depth above critical threshold"
 
-    return DashboardStatusResponse(
+    dashboard_status = DashboardStatusResponse(
         service_health=ServiceHealthCard(
             status=service_health_status,
             reason=reason,
@@ -140,9 +145,10 @@ def read_dashboard_status(
             current_depth=queue_snapshot.current_depth,
             trend=[
                 QueueTrendPoint(
-                    timestamp=queue_snapshot.observed_at,
-                    depth=queue_snapshot.current_depth,
+                    timestamp=point.observed_at,
+                    depth=point.depth,
                 )
+                for point in queue_snapshot.history
             ],
             thresholds=ThresholdBand(
                 warning=thresholds.queue_warning,
@@ -158,6 +164,52 @@ def read_dashboard_status(
         ),
         alert_center=AlertCenter(items=repository.list_alerts()),
     )
+
+    body_bytes = json.dumps(
+        dashboard_status.model_dump(mode="json"),
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    etag = f'"{hashlib.sha256(body_bytes).hexdigest()}"'
+    last_modified = max(
+        queue_snapshot.observed_at,
+        rotation_snapshot.last_successful_rotation_at,
+        service_health_snapshot.observed_at,
+    ).astimezone(timezone.utc).replace(microsecond=0)
+    headers = {
+        "ETag": etag,
+        "Last-Modified": format_datetime(last_modified, usegmt=True),
+    }
+
+    if _is_not_modified(request=request, etag=etag, last_modified=last_modified):
+        return Response(status_code=304, headers=headers)
+
+    for name, value in headers.items():
+        response.headers[name] = value
+    return dashboard_status
+
+
+def _is_not_modified(request: Request, etag: str, last_modified: datetime) -> bool:
+    if_none_match = request.headers.get("if-none-match")
+    if if_none_match:
+        if if_none_match.strip() == "*":
+            return True
+        candidate_tags = [candidate.strip() for candidate in if_none_match.split(",")]
+        if etag in candidate_tags:
+            return True
+
+    if_modified_since = request.headers.get("if-modified-since")
+    if if_modified_since:
+        try:
+            parsed_if_modified_since = parsedate_to_datetime(if_modified_since)
+            if parsed_if_modified_since.tzinfo is None:
+                return False
+            if last_modified <= parsed_if_modified_since:
+                return True
+        except (TypeError, ValueError):
+            return False
+
+    return False
 
 
 def _map_service_health_status(status: str, reason: str) -> tuple[ServiceHealth, str]:

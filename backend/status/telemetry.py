@@ -9,12 +9,20 @@ from typing import Protocol
 
 
 logger = logging.getLogger(__name__)
+MAX_QUEUE_DEPTH_HISTORY_POINTS = 60
+
+
+@dataclass(frozen=True)
+class QueueDepthHistoryPoint:
+    depth: int
+    observed_at: datetime
 
 
 @dataclass(frozen=True)
 class QueueDepthSnapshot:
     current_depth: int
     observed_at: datetime
+    history: tuple[QueueDepthHistoryPoint, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -62,6 +70,18 @@ class FileStatusTelemetryProvider:
             telemetry_path=self._telemetry_path,
         )
         return QueueDepthSnapshot(current_depth=depth, observed_at=observed_at)
+        depth = int(queue_payload.get("current_depth", 0))
+        current_depth = max(depth, 0)
+        history = _normalize_queue_history(
+            history_payload=queue_payload.get("history"),
+            fallback_depth=current_depth,
+            fallback_observed_at=observed_at,
+        )
+        return QueueDepthSnapshot(
+            current_depth=current_depth,
+            observed_at=observed_at,
+            history=history,
+        )
 
     def read_rotation(self) -> RotationTelemetry:
         payload = self._read_payload()
@@ -213,3 +233,33 @@ def _log_field_warning(
             "error": str(error),
         },
     )
+def _normalize_queue_history(
+    history_payload: object,
+    fallback_depth: int,
+    fallback_observed_at: datetime,
+) -> tuple[QueueDepthHistoryPoint, ...]:
+    history_points: list[QueueDepthHistoryPoint] = []
+    if isinstance(history_payload, list):
+        for point in history_payload:
+            if not isinstance(point, dict):
+                continue
+
+            try:
+                raw_observed_at = point.get("observed_at") or point.get("timestamp")
+                if not isinstance(raw_observed_at, str):
+                    continue
+                observed_at = _parse_iso_datetime(raw_observed_at)
+                depth = max(int(point.get("depth", 0)), 0)
+            except (TypeError, ValueError):
+                continue
+
+            history_points.append(QueueDepthHistoryPoint(depth=depth, observed_at=observed_at))
+
+    if not history_points:
+        history_points = [
+            QueueDepthHistoryPoint(depth=fallback_depth, observed_at=fallback_observed_at)
+        ]
+
+    history_points.sort(key=lambda point: point.observed_at)
+    bounded_history = history_points[-MAX_QUEUE_DEPTH_HISTORY_POINTS:]
+    return tuple(bounded_history)
