@@ -271,6 +271,11 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added backward-compatible decode handling for legacy envelope key names and `enc::` payload strings while keeping decrypt fail-closed behavior.
 - Updated backend crypto tests to assert v1 envelope fields and nonce uniqueness using the new schema.
 
+## 2026-03-04 Communication Mode Contract Hardening
+- Added explicit `communication_mode: persona|ops` activation-step declarations across BMAD marketing agents and core master agent definitions.
+- Standardized per-agent communication mode contract blocks with explicit Ops Mode requirements (concise + non-roleplay + required Assumptions/Risks/Actions/Evidence blocks) and fallback behavior.
+- Updated `docs/operations/agent_execution_commands.md` with automatic Ops Mode switch triggers for incidents, production risk, and release gate failures.
+- Added `scripts/validate_agent_communication_modes.py` lint check to enforce contract, ops behavior, and fallback coverage across all BMAD/core agent markdown definitions.
 ## 2026-03-04 BMAD deep research runbook evidence governance update
 - Added a mandatory evidence schema for every research claim (source type, publication date, confidence, relevance score, decision impact).
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
