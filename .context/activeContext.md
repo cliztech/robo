@@ -315,6 +315,10 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added backward-compatible decode handling for legacy envelope key names and `enc::` payload strings while keeping decrypt fail-closed behavior.
 - Updated backend crypto tests to assert v1 envelope fields and nonce uniqueness using the new schema.
 
+## 2026-03-04 Workflow quality-gate rubric consolidation
+- Added measurable workflow-gate semantics in `AGENTS.md` with explicit required checklist keys, command-log evidence requirements, and a compact minimum evidence schema table.
+- Added canonical rubric `docs/operations/quality_gate_rubric.md` to centralize scoring formula, hard-gate pass criteria, required evidence fields, and failure semantics.
+- Linked `AGENTS.md`, `docs/operations/subagent_execution_playbook.md`, `docs/operations/execution_index.md`, and `docs/operations/artifacts.md` to the canonical rubric to prevent semantic drift.
 ## 2026-03-04 Skills Registry QA-format alignment
 - Updated `SKILLS.md` to use `rg --files -g '**/AGENTS.md'` for scope discovery guidance in `scope-resolver`.
 - Migrated `qa-issue-emitter` task-stub output from legacy bullets to canonical `:::task-stub{title="..."}` directive format with a concrete compliant example block.

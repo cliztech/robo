@@ -228,12 +228,33 @@ The following outputs are mandatory deliverable categories for agents:
 
 Use these gates before moving work from planning to execution and from draft PR to Ready-for-Review.
 
+Canonical scoring and evidence definitions live in [`docs/operations/quality_gate_rubric.md`](docs/operations/quality_gate_rubric.md). `AGENTS.md` defines enforcement intent; the rubric defines required fields, scoring math, and pass/fail semantics.
+
 ### Numeric Thresholds (Hard Gates)
 
-1. **Plan completeness score** (scope, constraints, rollback, verification) must be **100%**.
-2. **Subagent evidence completeness** (all required fields present) must be **100%**.
-3. **Draft PR maturity checklist** must be fully passed before marking a PR **Ready-for-Review**.
-4. **Worktree hygiene checks** must pass: no stale branches and no detached worktree merges.
+1. **Plan completeness score** must be **100%** against rubric keys:
+   - `scope_definition`
+   - `constraints_and_boundaries`
+   - `rollback_strategy`
+   - `verification_plan`
+2. **Subagent evidence completeness** must be **100%** against rubric minimum evidence schema and include:
+   - evidence links for declared artifacts
+   - verification command logs (exact command + exit status)
+3. **Draft PR maturity checklist** must be fully passed before marking a PR **Ready-for-Review**, including validation command log linkage.
+4. **Worktree hygiene checks** must pass with explicit evidence of:
+   - no stale branches in active worktree scope
+   - no detached worktree merges
+
+### Minimum evidence schema
+
+| Field name | Required | Example |
+| --- | --- | --- |
+| `packet_id` | Yes | `PKT-20260304-quality-gates` |
+| `owner_role` | Yes | `planner.agent` |
+| `checklist_keys` | Yes | `["scope_definition","rollback_strategy"]` |
+| `evidence_links` | Yes | `[".agent/verification/20260304-0912_PROJ-401_verification.md"]` |
+| `verification_commands` | Yes | `[{"cmd":"npm test","exit_code":0,"output_ref":".agent/verification/npm_test.md"}]` |
+| `result` | Yes | `pass` |
 
 ### Reviewer Checklist Template
 
@@ -243,8 +264,8 @@ Use these gates before moving work from planning to execution and from draft PR 
 ## Workflow Quality Gate Checklist
 
 - [ ] Plan completeness = 100% (scope + constraints + rollback + verification)
-- [ ] Subagent evidence completeness = 100% (all required fields present)
-- [ ] Draft PR maturity checklist passed before Ready-for-Review
+- [ ] Subagent evidence completeness = 100% (rubric minimum evidence schema + evidence links + command logs)
+- [ ] Draft PR maturity checklist passed before Ready-for-Review (with validation command logs linked)
 - [ ] Worktree hygiene passed (no stale branches, no detached worktree merges)
 - [ ] Validation commands and outputs are documented in the PR
 - [ ] Follow-up actions (if any) are explicitly tracked

@@ -2,6 +2,8 @@
 
 This document defines standard artifact locations, filenames, required fields, ownership, and retention policy for agent execution records.
 
+For canonical workflow quality-gate scoring keys, pass thresholds, and minimum evidence schema, use [`docs/operations/quality_gate_rubric.md`](./quality_gate_rubric.md).
+
 ## Directory Layout
 
 All operational artifacts live under `.agent/` at the repository root:

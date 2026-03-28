@@ -37,6 +37,7 @@ This index lists active tracks, owners, and current status pointers. The status 
 ## Planning runbooks
 
 - [`BMAD Deep Research Runbook`](./bmad_deep_research_runbook.md) — Mandatory sequence and quality gates for Market Research → Domain Research → Technical Research → PRD → Architecture → Epics/Stories → Readiness Check.
+- [`Workflow Quality Gate Rubric`](./quality_gate_rubric.md) — Canonical checklist keys, measurable scoring fields, evidence schema, and pass/fail semantics used by `AGENTS.md` and subagent execution.
 
 ## Weekly update protocol
 
