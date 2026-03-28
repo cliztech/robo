@@ -1,5 +1,12 @@
 "use client";
 
+import { useMemo } from 'react';
+import { motion } from 'framer-motion';
+import { Activity, AlertTriangle, Clock3, Disc3, Radio } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { CONSOLE_NAV_ITEMS } from '@/components/console/consoleNav';
+import type { ConsoleViewMode } from '@/components/console/types';
+import { useThemePreferences } from '@/lib/theme/ThemeProvider';
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {

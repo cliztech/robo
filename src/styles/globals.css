@@ -374,7 +374,7 @@ body::before {
   min-height: var(--studio-panel-min-height);
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: calc(var(--studio-grid-gap) * 0.75);
   padding: var(--space-4);
 }
@@ -386,6 +386,7 @@ body::before {
 .dj-jog-wheel {
   width: var(--studio-jog-size);
   height: var(--studio-jog-size);
+  position: relative;
   border-radius: 999px;
   display: grid;
   place-items: center;
@@ -393,6 +394,137 @@ body::before {
   background:
     radial-gradient(circle at 32% 30%, hsla(0, 0%, 100%, 0.14) 0%, hsla(0, 0%, 100%, 0.02) 52%, transparent 100%),
     radial-gradient(circle, hsla(0, 0%, 8%, 0.9) 0%, hsla(0, 0%, 4%, 0.98) 74%);
+}
+
+.dj-cdj-body,
+.dj-turntable-body {
+  border: 1px solid hsla(0, 0%, 100%, 0.12);
+  background: linear-gradient(170deg, hsla(0, 0%, 100%, 0.07), hsla(0, 0%, 100%, 0.02));
+  border-radius: var(--radius-lg);
+  padding: 10px;
+}
+
+.dj-cdj-body {
+  flex: 1;
+  min-width: 240px;
+}
+
+.dj-cdj-topline {
+  display: flex;
+  justify-content: space-between;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: hsl(var(--color-text-muted));
+  margin-bottom: 8px;
+}
+
+.dj-jog-vinyl {
+  position: absolute;
+  inset: 14%;
+  border-radius: 999px;
+  border: 1px solid hsla(0, 0%, 100%, 0.14);
+  background: repeating-radial-gradient(circle, hsla(0, 0%, 100%, 0.12) 0 2px, transparent 2px 5px);
+}
+
+.dj-jog-label {
+  width: 42%;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  background: radial-gradient(circle, hsla(0, 0%, 18%, 0.95), hsla(0, 0%, 3%, 0.98));
+  border: 1px solid hsla(0, 0%, 100%, 0.2);
+}
+
+.dj-cdj-controls {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: 10px;
+}
+
+.dj-cdj-pitch {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 54px 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.dj-cdj-pitch-value {
+  font-size: 10px;
+  font-weight: 700;
+  color: hsl(var(--color-text));
+  font-variant-numeric: tabular-nums;
+}
+
+.dj-cdj-pitch-track {
+  height: 8px;
+  border-radius: 999px;
+  background: hsla(0, 0%, 100%, 0.08);
+  border: 1px solid hsla(0, 0%, 100%, 0.1);
+  padding: 1px;
+}
+
+.dj-cdj-pitch-fader {
+  width: 35%;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(180deg, hsla(var(--color-accent), 0.85), hsla(var(--color-accent), 0.55));
+}
+
+.dj-turntable-body {
+  width: 160px;
+  position: relative;
+}
+
+.dj-turntable-title {
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: hsl(var(--color-text-muted));
+  margin-bottom: 8px;
+}
+
+.dj-turntable-platter {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  position: relative;
+  border: 2px solid hsla(0, 0%, 100%, 0.3);
+  background: radial-gradient(circle, hsla(0, 0%, 88%, 0.24) 0%, hsla(0, 0%, 35%, 0.2) 42%, hsla(0, 0%, 12%, 0.95) 88%);
+}
+
+.dj-turntable-record {
+  position: absolute;
+  inset: 17%;
+  border-radius: 999px;
+  background: repeating-radial-gradient(circle, hsla(0, 0%, 100%, 0.07) 0 1px, hsla(0, 0%, 0%, 0.92) 1px 4px);
+  border: 1px solid hsla(0, 0%, 100%, 0.12);
+}
+
+.dj-turntable-center {
+  position: absolute;
+  inset: 44%;
+  border-radius: 999px;
+  background: radial-gradient(circle, hsla(0, 0%, 90%, 0.95), hsla(0, 0%, 60%, 0.8));
+}
+
+.dj-turntable-tonearm {
+  position: absolute;
+  width: 58px;
+  height: 5px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, hsla(0, 0%, 78%, 0.95), hsla(0, 0%, 52%, 0.95));
+  right: 8px;
+  top: 38px;
+  transform: rotate(37deg);
+  transform-origin: right center;
 }
 
 .dj-jog-wheel[data-deck='A'] {
@@ -539,6 +671,11 @@ body::before {
   .dj-deck-cluster,
   .dj-deck-cluster[data-deck='B'] {
     flex-direction: column;
+  }
+
+  .dj-turntable-body {
+    width: 100%;
+    max-width: 220px;
   }
 }
 
