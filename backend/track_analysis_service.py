@@ -101,9 +101,11 @@ class InMemoryAnalysisCacheStore(AnalysisCacheStore):
         return datetime.now(timezone.utc)
 
     def _purge_expired(self, now: datetime) -> None:
-        expired_keys = [key for key, entry in self._cache.items() if entry.expires_at <= now]
+        # Create a list of keys to avoid RuntimeError during iteration
+        expired_keys = [key for key, entry in list(self._cache.items()) if entry.expires_at <= now]
         for key in expired_keys:
-            del self._cache[key]
+            # Use pop with a default value to avoid KeyError if already deleted
+            self._cache.pop(key, None)
         self._expirations += len(expired_keys)
 
     def get(self, fingerprint: str) -> TrackAnalysisResult | None:
