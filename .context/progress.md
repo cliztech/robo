@@ -274,6 +274,7 @@
 - [x] Kept decode compatibility for legacy envelope representations (`nonce/ciphertext/tag` and `enc::` string payloads).
 - [x] Updated and passed crypto test coverage in `backend/tests/test_config_crypto.py` and `backend/tests/test_security_config_crypto.py`.
 
+- Completed TI-040 config-at-rest hardening: unified config read/write encryption envelope handling in `config_crypto`, `ai_service`, and `scheduler_ui_service`; added validator regression tests for plaintext/malformed envelope rejection; published TI-040 evidence artifacts (`ti-040-config-encryption.log`, `ti-040-high-risk-field-inventory.md`, `ti-040-config-before-after.sha256`) and closed dependency checkpoints DEP-TI040-01..03.
 ## 2026-03-04 Agent Governance Canonicalization
 - [x] Added canonical governance source (`docs/operations/agent_governance_canonical.md`) covering topology, route policy, completion gates, escalation, communication rules, and changelog ownership metadata.
 - [x] Added derived governance views for `AGENTS.md` and `docs/operations/agent_execution_commands.md` and linked both primary docs to canonical references.
