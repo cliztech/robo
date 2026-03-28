@@ -24,8 +24,8 @@ export function getBooleanEnv(name: string, fallback = false): boolean {
   }
 
   const normalized = value.trim().toLowerCase();
-  if (normalized === 'true' || normalized === '1' || normalized === 'yes') return true;
-  if (normalized === 'false' || normalized === '0' || normalized === 'no') return false;
+  if (TRUTHY_VALUES.has(normalized)) return true;
+  if (FALSY_VALUES.has(normalized)) return false;
   return fallback;
 }
 
