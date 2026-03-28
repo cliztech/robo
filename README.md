@@ -92,8 +92,14 @@ pnpm dev
 - Windows launcher flow: `./DGN-DJ_Launcher.bat` for packaged desktop startup (legacy `RoboDJ_Launcher.bat` remains compatibility alias in some environments).
 - DJ Console subproject: `npm --prefix apps/dj-console run dev`.
 - Radio-agentic workspace: `pnpm --dir radio-agentic install && docker compose -f radio-agentic/docker-compose.yml up --build`.
+- Root compose (profile overlays):
+  - Dev: `docker compose -f docker-compose.base.yml -f docker-compose.dev.yml --profile dev up -d`
+  - Staging: `docker compose -f docker-compose.base.yml -f docker-compose.staging.yml -f docker-compose.release.yml --profile staging up -d`
+  - Prod: `docker compose -f docker-compose.base.yml -f docker-compose.release.yml -f docker-compose.prod.yml --profile prod up -d`
 
-See `docs/architecture/canonical_runtime_map.md` for ownership boundaries and deployment targets.
+`docker-compose.yaml` is now a compatibility shim during migration. Legacy `docker-compose.safe.yaml` and `docker-compose.docker-control.yaml` were removed in favor of the base+overlay profile model.
+
+See `docs/architecture/canonical_runtime_map.md` and `docs/runtime_deployment_matrix.md` for ownership boundaries, profile commands, and env requirements.
 
 ### Backend Python environment (authoritative)
 

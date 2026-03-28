@@ -1,0 +1,552 @@
+/**
+ * PlatinumCDJ.css
+ * Studio Iron Design System - Team SGE
+ * Phase 7+ — Premium Realistic Skin
+ */
+
+:root {
+  --iron-bg: #0a0a0c;
+  --iron-surface: #121416;
+  --iron-surface-alt: #181a1e;
+  --iron-platinum: #b0b0b0;
+  --iron-blue: #00e5ff;
+  --iron-blue-dim: #00a0b4;
+  --iron-red: #ff3d00;
+  --iron-orange: #ff6d00;
+  --iron-border: #262a2e;
+  --iron-border-light: #383c42;
+  --iron-glow: rgba(0, 229, 255, 0.4);
+  --iron-text-dim: #667;
+}
+
+.platinum-cdj {
+  width: 340px;
+  height: auto;
+  background: linear-gradient(175deg, #181c20 0%, #0e1014 50%, #101216 100%);
+  border: 1.5px solid #262a2e;
+  border-top-color: #3a3e44;
+  border-radius: 10px;
+  color: #fff;
+  padding: 14px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  box-shadow:
+    0 2px 0 #2a2e32,
+    0 12px 32px rgba(0, 0, 0, 0.7),
+    0 24px 48px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  position: relative;
+  font-family: "Inter", "Segoe UI", sans-serif;
+  -webkit-user-select: none;
+  user-select: none;
+  overflow: hidden;
+}
+
+/* Brushed-metal surface texture */
+.iron-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.03) 0%,
+      transparent 15%,
+      transparent 85%,
+      rgba(0, 0, 0, 0.15) 100%
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.008) 0px,
+      transparent 1px,
+      transparent 2px
+    ),
+    radial-gradient(
+      ellipse at 70% 10%,
+      rgba(255, 255, 255, 0.06) 0%,
+      transparent 60%
+    );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Header */
+.cdj-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  position: relative;
+  z-index: 2;
+}
+
+.deck-indicator {
+  padding: 4px 14px;
+  background: linear-gradient(135deg, #00c8e0, #00e5ff);
+  color: #000;
+  font-weight: 900;
+  font-size: 12px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  box-shadow:
+    0 0 12px rgba(0, 229, 255, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.cdj-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cdj-meters {
+  display: flex;
+  gap: 3px;
+  align-items: flex-end;
+}
+
+.bpm-display {
+  text-align: right;
+}
+
+.bpm-value {
+  font-size: 26px;
+  font-weight: 800;
+  margin-right: 2px;
+  letter-spacing: -0.5px;
+  background: linear-gradient(180deg, #fff 40%, #aab 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.bpm-unit {
+  font-size: 9px;
+  font-weight: 700;
+  opacity: 0.45;
+  letter-spacing: 1px;
+}
+
+/* Main Display — LCD look */
+.cdj-main-display {
+  background: #000;
+  border-radius: 5px;
+  padding: 10px 12px 8px;
+  margin-bottom: 12px;
+  border: 1px solid #1a1c20;
+  position: relative;
+  z-index: 2;
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.8),
+    inset 0 0 1px rgba(0, 229, 255, 0.05),
+    0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+/* Bezel highlight on LCD */
+.cdj-main-display::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  border-top-color: rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+}
+
+.time-display {
+  text-align: right;
+  font-family: "Inter", "Menlo", "Consolas", monospace;
+  font-weight: 900;
+  font-size: 30px;
+  color: #00e5ff;
+  letter-spacing: 2px;
+  text-shadow:
+    0 0 16px rgba(0, 229, 255, 0.5),
+    0 0 4px rgba(0, 229, 255, 0.8);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+/* Jog Wheel — Metallic Realistic */
+.jog-wheel-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 0 8px;
+  position: relative;
+  z-index: 2;
+}
+
+.jog-wheel {
+  width: 210px;
+  height: 210px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at 50% 50%,
+    #2c2c30 0%,
+    #1a1a1e 30%,
+    #111114 60%,
+    #0c0c0f 100%
+  );
+  border: 5px solid #222226;
+  box-shadow:
+    /* Outer ring */
+    0 0 0 3px #1a1a1e,
+    0 0 0 5px #2a2a2e,
+    0 0 0 6px #0e0e10,
+    /* Depth shadows */ inset 0 4px 16px rgba(0, 0, 0, 0.9),
+    inset 0 -2px 8px rgba(255, 255, 255, 0.02),
+    /* Outer glow */ 0 8px 20px rgba(0, 0, 0, 0.6);
+  position: relative;
+  transition: transform 0.05s linear;
+}
+
+/* Centre label area */
+.jog-wheel::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 70px;
+  height: 70px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, #1e1e22 0%, #141416 70%, #0e0e10 100%);
+  border: 2px solid #2a2a2e;
+  box-shadow:
+    inset 0 2px 6px rgba(0, 0, 0, 0.8),
+    0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Platter ring grooves */
+.jog-inner-texture {
+  position: absolute;
+  inset: 12%;
+  border-radius: 50%;
+  background: repeating-radial-gradient(
+    circle at center,
+    transparent 0px,
+    transparent 5px,
+    rgba(255, 255, 255, 0.015) 5px,
+    rgba(255, 255, 255, 0.015) 6px
+  );
+  opacity: 1;
+}
+
+/* Metallic outer ring reflection */
+.jog-wheel::before {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    rgba(255, 255, 255, 0.05) 0deg,
+    rgba(255, 255, 255, 0.12) 30deg,
+    rgba(255, 255, 255, 0.03) 60deg,
+    rgba(255, 255, 255, 0.08) 120deg,
+    rgba(255, 255, 255, 0.02) 180deg,
+    rgba(255, 255, 255, 0.1) 240deg,
+    rgba(255, 255, 255, 0.04) 300deg,
+    rgba(255, 255, 255, 0.05) 360deg
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Position indicator dot */
+.jog-indicator {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  width: 5px;
+  height: 16px;
+  background: #00e5ff;
+  box-shadow:
+    0 0 10px #00e5ff,
+    0 0 20px rgba(0, 229, 255, 0.4);
+  transform: translateX(-50%);
+  border-radius: 2px;
+  z-index: 2;
+}
+
+/* Controls */
+.cdj-controls {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  position: relative;
+  z-index: 2;
+  padding-top: 4px;
+}
+
+.cdj-btn {
+  padding: 11px 16px;
+  border-radius: 4px;
+  border: 1px solid #2a2c30;
+  background: linear-gradient(180deg, #1e2024 0%, #161618 100%);
+  color: #667;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 1px;
+  flex-grow: 1;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 2px 4px rgba(0, 0, 0, 0.4);
+  text-align: center;
+}
+
+.cdj-btn:hover {
+  background: linear-gradient(180deg, #252830 0%, #1c1e22 100%);
+  border-color: #3a3e44;
+}
+
+.cdj-btn:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.cdj-btn.active {
+  color: #fff;
+  border-color: rgba(0, 229, 255, 0.4);
+  box-shadow:
+    0 0 12px rgba(0, 229, 255, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.cue-btn {
+  border-left: 3px solid transparent;
+}
+
+.cue-btn.active {
+  border-left-color: #ff6d00;
+  color: #ff6d00;
+  box-shadow: 0 0 12px rgba(255, 109, 0, 0.15);
+}
+
+.play-btn.active {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 229, 255, 0.12) 0%,
+    rgba(0, 229, 255, 0.04) 100%
+  );
+  color: #00e5ff;
+  text-shadow: 0 0 8px rgba(0, 229, 255, 0.4);
+}
+
+/* Pitch Section */
+.pitch-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+  min-width: 36px;
+}
+
+.pitch-slider-track {
+  width: 5px;
+  height: 80px;
+  background: linear-gradient(180deg, #1a1a1e, #0e0e10);
+  border-radius: 3px;
+  position: relative;
+  border: 1px solid #1e2024;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Centre line on pitch slider */
+.pitch-slider-track::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #00e5ff44;
+}
+
+.pitch-handle {
+  width: 22px;
+  height: 8px;
+  background: linear-gradient(180deg, #555 0%, #333 100%);
+  border: 1px solid #666;
+  border-radius: 2px;
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.pitch-value {
+  font-size: 9px;
+  font-family: "Inter", monospace;
+  color: #556;
+  font-variant-numeric: tabular-nums;
+}
+
+.iron-border-accent {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent 5%,
+    #00e5ff80 30%,
+    #00e5ff 50%,
+    #00e5ff80 70%,
+    transparent 95%
+  );
+  opacity: 0.4;
+  z-index: 3;
+}
+
+/* ─── STEMS 2.0 ─── */
+.cdj-stems {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 8px 4px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+  margin-bottom: 6px;
+}
+
+.stems-label {
+  font-size: 8px;
+  font-weight: 700;
+  color: #555;
+  letter-spacing: 0.8px;
+  margin-right: 4px;
+}
+
+.stem-btn {
+  flex: 1;
+  padding: 4px 0;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  color: #777;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.stem-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #aaa;
+}
+
+.stem-active {
+  background: var(--stem-color, #3b82f6);
+  color: #fff;
+  border-color: var(--stem-color, #3b82f6);
+  box-shadow: 0 0 6px
+    color-mix(in srgb, var(--stem-color, #3b82f6) 50%, transparent);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* ─── Hot Cue Pads ─── */
+.cdj-hotcues {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+  padding: 4px 8px;
+  margin-bottom: 4px;
+}
+
+.hotcue-pad {
+  aspect-ratio: 2.2 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #555;
+  background: linear-gradient(180deg, #1a1c20 0%, #111316 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.hotcue-pad:hover {
+  background: linear-gradient(180deg, #222428 0%, #181a1e 100%);
+  color: #888;
+}
+
+.hotcue-pad:active {
+  transform: scale(0.96);
+}
+
+.hotcue-set {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--cue-color, #ff3d3d) 30%, transparent),
+    color-mix(in srgb, var(--cue-color, #ff3d3d) 15%, transparent)
+  );
+  border-color: color-mix(in srgb, var(--cue-color, #ff3d3d) 50%, transparent);
+  color: var(--cue-color, #ff3d3d);
+  box-shadow: 0 0 8px
+    color-mix(in srgb, var(--cue-color, #ff3d3d) 30%, transparent);
+}
+
+/* ─── Transport group ─── */
+.cdj-transport {
+  display: flex;
+  gap: 8px;
+}
+
+/* ─── Loop Controls ─── */
+.cdj-loops {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.loop-btn {
+  padding: 4px 6px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #777;
+  background: linear-gradient(180deg, #1c1e22 0%, #141618 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.loop-btn:hover {
+  color: #bbb;
+  background: #1e2024;
+}
+
+.loop-size-btn {
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: "JetBrains Mono", monospace;
+  color: #aaa;
+  background: linear-gradient(180deg, #1c1e22 0%, #141618 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.loop-on {
+  color: #22cc44;
+  border-color: #22cc44;
+  background: rgba(34, 204, 68, 0.08);
+  box-shadow: 0 0 6px rgba(34, 204, 68, 0.2);
+}
