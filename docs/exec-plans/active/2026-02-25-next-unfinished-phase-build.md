@@ -32,11 +32,11 @@ Execution lane source of truth for unresolved P1 Security work. Do not close `do
 
 ### Active remaining work
 
-- [ ] **TI-040 — config-at-rest encryption for high-risk JSON fields** (`ready`)
+- [ ] **TI-040 — config-at-rest encryption for high-risk JSON fields** (`blocked`)
   - Tracking issue: [`docs/exec-plans/active/tracked-issues/TI-040.md`](docs/exec-plans/active/tracked-issues/TI-040.md)
   - Owner: **Security Engineer**
   - Target date: **2026-03-05**
-  - State gates: [x] ready · [ ] in-progress · [ ] done
+  - State gates: [ ] ready · [ ] in-progress · [ ] done
   - Required evidence before `done`: `artifacts/security/logs/ti-040-config-encryption.log`, `artifacts/security/reports/ti-040-high-risk-field-inventory.md`, `artifacts/security/hashes/ti-040-config-before-after.sha256`
 
 ### Dependency gates (explicit)

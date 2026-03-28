@@ -57,10 +57,20 @@ CANONICAL_TASK_KEY_PATTERN = re.compile(
 )
 NON_ALNUM_PATTERN = re.compile(r"[^a-z0-9]+")
 TRACKED_ISSUES_DIR = ROOT / "docs" / "exec-plans" / "active" / "tracked-issues"
+SPRINT_STATUS_PATH = ROOT / "docs" / "exec-plans" / "active" / "sprint-status.yaml"
 DUE_ENTRY_PATTERN = re.compile(
     r"^\s*[-*]\s+\[(?P<state>[ xX])\]\s+"
     r"(?P<date>\d{4}-\d{2}-\d{2})\s+"
     r"\(Owner:\s*(?P<owner>[^\)]+)\):\s*"
+    r"(?P<summary>.*\S)\s*$"
+)
+CADENCE_ITEM_PATTERN = re.compile(
+    r"^\s*[-*]\s+\[(?P<state>[ xX])\]\s+Cadence item\s+—\s+"
+    r"Owner:\s*(?P<owner>[^|]+?)\s*\|\s*"
+    r"Due:\s*(?P<due>\d{4}-\d{2}-\d{2})\s*\|\s*"
+    r"Replacement Due:\s*(?P<replacement_due>[^|]+?)\s*\|\s*"
+    r"Status:\s*(?P<status>[^|]+?)\s*\|\s*"
+    r"Defer rationale:\s*(?P<defer_rationale>[^|]+?)\s*\|\s*"
     r"(?P<summary>.*\S)\s*$"
 )
 
@@ -133,6 +143,17 @@ class DueReminder:
 
 
 @dataclass(frozen=True)
+class CadenceItem:
+    """Structured cadence row parsed from TODO.md tracking checklist."""
+
+    line_number: int
+    owner: str
+    due: dt.date
+    replacement_due: dt.date | None
+    status: str
+    defer_rationale: str
+    summary: str
+    is_complete: bool
 class RenderedTask:
     """Pre-rendered task row with dedupe metadata."""
 
@@ -164,6 +185,24 @@ def collect_due_reminders(todo_path: Path, today: dt.date) -> list[DueReminder]:
         return []
 
     reminders: list[DueReminder] = []
+    for raw_line in todo_path.read_text(encoding="utf-8").splitlines():
+        cadence_match = CADENCE_ITEM_PATTERN.match(raw_line)
+        if cadence_match:
+            state = cadence_match.group("state").lower()
+            due_date = dt.date.fromisoformat(cadence_match.group("due"))
+            normalized_status = cadence_match.group("status").strip().lower()
+            is_complete = state == "x" or normalized_status == "completed"
+            reminders.append(
+                DueReminder(
+                    date=due_date,
+                    owner=cadence_match.group("owner").strip(),
+                    summary=cadence_match.group("summary").strip(),
+                    state="complete" if is_complete else normalized_status,
+                    is_overdue=(not is_complete and due_date < today),
+                )
+            )
+            continue
+
     for line_number, raw_line in enumerate(
         todo_path.read_text(encoding="utf-8").splitlines(),
         start=1,
@@ -189,6 +228,59 @@ def collect_due_reminders(todo_path: Path, today: dt.date) -> list[DueReminder]:
 
     reminders.sort(key=lambda item: (item.date, item.owner, item.summary))
     return reminders
+
+
+def collect_cadence_items(todo_path: Path) -> list[CadenceItem]:
+    """Collect structured cadence checklist rows from TODO.md."""
+    if not todo_path.exists():
+        return []
+
+    items: list[CadenceItem] = []
+    for line_number, raw_line in enumerate(todo_path.read_text(encoding="utf-8").splitlines(), start=1):
+        match = CADENCE_ITEM_PATTERN.match(raw_line)
+        if not match:
+            continue
+
+        replacement_raw = match.group("replacement_due").strip()
+        replacement_due: dt.date | None = None
+        if replacement_raw.lower() not in {"n/a", "na", "none", "-"}:
+            try:
+                replacement_due = dt.date.fromisoformat(replacement_raw)
+            except ValueError:
+                replacement_due = None
+
+        status = match.group("status").strip().lower()
+        state = match.group("state").lower()
+        is_complete = state == "x" or status == "completed"
+        items.append(
+            CadenceItem(
+                line_number=line_number,
+                owner=match.group("owner").strip(),
+                due=dt.date.fromisoformat(match.group("due")),
+                replacement_due=replacement_due,
+                status=status,
+                defer_rationale=match.group("defer_rationale").strip(),
+                summary=match.group("summary").strip(),
+                is_complete=is_complete,
+            )
+        )
+
+    return items
+
+
+def find_overdue_cadence_violations(items: list[CadenceItem], today: dt.date) -> list[CadenceItem]:
+    """Identify overdue cadence items lacking defer rationale + replacement due date."""
+    violations: list[CadenceItem] = []
+    for item in items:
+        if item.is_complete or item.due >= today:
+            continue
+
+        has_defer_rationale = item.defer_rationale.lower() not in {"", "n/a", "na", "none", "-"}
+        has_replacement_due = item.replacement_due is not None
+        if not (item.status == "deferred" and has_defer_rationale and has_replacement_due):
+            violations.append(item)
+
+    return violations
 
 
 def collect_open_tasks(markdown_path: Path) -> list[OpenTask]:
@@ -279,6 +371,12 @@ def extract_ti_references(text: str) -> set[str]:
     return {match.group(0).upper() for match in TI_REFERENCE_PATTERN.finditer(text)}
 
 
+def extract_primary_ti_reference(text: str) -> set[str]:
+    """Return only the lead TI reference for reconciliation/status projection logic."""
+    match = TI_REFERENCE_PATTERN.search(text)
+    return {match.group(0).upper()} if match else set()
+
+
 def extract_canonical_task_keys(text: str) -> set[str]:
     return {match.group(1).lower() for match in CANONICAL_TASK_KEY_PATTERN.finditer(text)}
 
@@ -310,6 +408,14 @@ def parse_sprint_status_map(sprint_status_path: Path) -> dict[str, str]:
     return result
 
 
+def normalize_status_value(status: str) -> str:
+    """Normalize markdown/decorated status tokens to machine-friendly vocabulary."""
+    cleaned = re.sub(r"[`*_~]", "", status).strip().lower()
+    cleaned = cleaned.replace("-", "_").replace(" ", "_")
+    cleaned = re.sub(r"[^a-z0-9_]+", "_", cleaned).strip("_")
+    return cleaned
+
+
 def parse_tracked_issue_metadata(issue_path: Path) -> tuple[str | None, str | None]:
     """Return canonical task key + tracked issue status from a TI markdown file."""
     task_key: str | None = None
@@ -325,7 +431,7 @@ def parse_tracked_issue_metadata(issue_path: Path) -> tuple[str | None, str | No
 
         if status_value is None and TRACKED_ISSUE_STATUS_PATTERN.match(line):
             _, status_raw = line.split(":", 1)
-            status_value = status_raw.strip().lower()
+            status_value = normalize_status_value(status_raw)
 
         if task_key and status_value:
             break
@@ -334,14 +440,129 @@ def parse_tracked_issue_metadata(issue_path: Path) -> tuple[str | None, str | No
 
 
 def canonical_status_family(status: str) -> str:
-    value = status.strip().lower().replace("-", "_").replace(" ", "_")
+    value = normalize_status_value(status)
     if value in {"completed", "complete", "closed", "done"}:
         return "completed"
-    if value in {"in_progress", "active"}:
+    if value in {"in_progress", "active", "partial"}:
         return "in_progress"
-    if value in {"backlog", "open", "ready", "blocked", "todo", "optional"}:
+    if value in {"blocked"}:
+        return "blocked"
+    if value in {"backlog", "open", "ready", "todo", "optional"}:
         return "backlog"
     return value
+
+
+def dependency_label_for_status(status: str) -> str:
+    family = canonical_status_family(status)
+    if family == "blocked":
+        return "blocked"
+    if family == "in_progress":
+        return "in-progress"
+    return "ready"
+
+
+def parse_tracked_issue_status_map(
+    tracked_issues_dir: Path = TRACKED_ISSUES_DIR,
+) -> dict[str, str]:
+    """Map TI IDs to normalized tracked issue status values."""
+    if not tracked_issues_dir.exists():
+        return {}
+
+    status_map: dict[str, str] = {}
+    for issue_path in sorted(tracked_issues_dir.glob("TI-*.md")):
+        ti_id = issue_path.stem.upper()
+        _, tracked_status = parse_tracked_issue_metadata(issue_path)
+        if tracked_status:
+            status_map[ti_id] = tracked_status
+    return status_map
+
+
+def _dedupe_generated_preamble(lines: list[str]) -> list[str]:
+    generated_prefix = "Generated by `scripts/roadmap_autopilot.py` at "
+    seen = False
+    normalized: list[str] = []
+    for line in lines:
+        if line.startswith(generated_prefix):
+            if seen:
+                continue
+            seen = True
+        normalized.append(line)
+    return normalized
+
+
+def validate_emitted_ti_queue_status(
+    tasks: list[QueueItem],
+    tracked_issue_status: dict[str, str],
+) -> None:
+    """Verify emitted TI queue rows carry status/dependency projection from tracked issues."""
+    violations: list[str] = []
+    for task in tasks:
+        ti_ids = sorted(extract_primary_ti_reference(task.text))
+        if not ti_ids:
+            continue
+
+        for ti_id in ti_ids:
+            expected_status = tracked_issue_status.get(ti_id)
+            if not expected_status:
+                continue
+
+            expected_family = canonical_status_family(expected_status)
+            expected_dependency = dependency_label_for_status(expected_status)
+            marker = (
+                f"status_projection={expected_family}; dependency={expected_dependency}; source=tracked_issue"
+            )
+            if marker not in task.text:
+                rel_source = task.source.relative_to(ROOT)
+                violations.append(
+                    f"- {rel_source}:{task.line_number} -> {ti_id} missing/incorrect projection marker ({marker})"
+                )
+
+    if violations:
+        raise RuntimeError(
+            "post-generation TI sanity check failed:\n" + "\n".join(sorted(set(violations)))
+        )
+
+
+def apply_ti_status_projections(
+    tasks: list[QueueItem],
+    tracked_issue_status: dict[str, str],
+) -> list[QueueItem]:
+    """Append normalized TI status/dependency projection markers to queue item text."""
+    projected: list[QueueItem] = []
+    for task in tasks:
+        ti_ids = sorted(extract_primary_ti_reference(task.text))
+        if not ti_ids:
+            projected.append(task)
+            continue
+
+        markers: list[str] = []
+        for ti_id in ti_ids:
+            status_value = tracked_issue_status.get(ti_id)
+            if not status_value:
+                continue
+            markers.append(
+                f"{ti_id}: status_projection={canonical_status_family(status_value)}; "
+                f"dependency={dependency_label_for_status(status_value)}; "
+                "source=tracked_issue"
+            )
+
+        if not markers:
+            projected.append(task)
+            continue
+
+        projected.append(
+            QueueItem(
+                source=task.source,
+                line_number=task.line_number,
+                section=task.section,
+                phase=task.phase,
+                phase_namespace=task.phase_namespace,
+                text=f"{task.text} [{' | '.join(markers)}]",
+                kind=task.kind,
+            )
+        )
+
+    return projected
 
 
 def validate_security_state_consistency(
@@ -425,6 +646,85 @@ def validate_tracked_issue_files(tracked_issues_dir: Path = TRACKED_ISSUES_DIR) 
         )
 
 
+def parse_sprint_development_statuses(status_path: Path = SPRINT_STATUS_PATH) -> dict[str, str]:
+    """Parse sprint status YAML development_status block without external deps."""
+    if not status_path.exists():
+        raise RuntimeError(f"missing sprint status authority file: {status_path.relative_to(ROOT)}")
+
+    statuses: dict[str, str] = {}
+    in_dev_block = False
+    for raw_line in status_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.rstrip()
+        if not in_dev_block:
+            if line.strip() == "development_status:":
+                in_dev_block = True
+            continue
+
+        if not line.startswith("  "):
+            break
+        key_value = line.strip()
+        if not key_value or ":" not in key_value:
+            continue
+        key, value = key_value.split(":", 1)
+        statuses[key.strip()] = value.strip()
+
+    if not statuses:
+        raise RuntimeError("sprint status validation failed: development_status block missing/empty")
+    return statuses
+
+
+def normalize_ti_status(status_value: str) -> str:
+    """Normalizes a status string from a TI file to a canonical sprint status."""
+    lowered = status_value.strip().lower().replace(" ", "_")
+
+    # Group aliases for clarity and easier maintenance
+    COMPLETED_ALIASES = {"closed", "completed", "done"}
+    BACKLOG_ALIASES = {"open", "ready", "backlog", "blocked"}
+
+    if lowered in COMPLETED_ALIASES:
+        return "completed"
+    if lowered in BACKLOG_ALIASES:
+        return "backlog"
+    if lowered == "in_progress":
+        return "in_progress"
+
+    raise RuntimeError(f"unknown tracked issue status value: {status_value}")
+
+
+def validate_tracked_issue_status_parity(
+    tracked_issues_dir: Path = TRACKED_ISSUES_DIR,
+    status_path: Path = SPRINT_STATUS_PATH,
+) -> None:
+    """Fail when TI status fields disagree with sprint-status.yaml for the same IDs."""
+    sprint_statuses = parse_sprint_development_statuses(status_path)
+    violations: list[str] = []
+
+    for issue_path in sorted(tracked_issues_dir.glob("TI-*.md")):
+        issue_text = issue_path.read_text(encoding="utf-8")
+        task_match = re.search(r"Task\s+([A-D]\d\.\d)", issue_text)
+        status_match = re.search(r"^-\s+\*\*Status:\*\*\s*(.+)$", issue_text, re.MULTILINE)
+        if not task_match or not status_match:
+            continue
+
+        # Task A1.3 -> sprint key a1-3
+        sprint_key = task_match.group(1).lower().replace(".", "-")
+        ti_status = normalize_ti_status(status_match.group(1))
+        sprint_status = sprint_statuses.get(sprint_key)
+        if sprint_status is None:
+            continue
+        if ti_status != sprint_status:
+            rel_path = issue_path.relative_to(ROOT)
+            violations.append(
+                f"- {rel_path}: status={status_match.group(1).strip()} ({ti_status}) != "
+                f"sprint-status.yaml:{sprint_key} ({sprint_status})"
+            )
+
+    if violations:
+        raise RuntimeError(
+            "tracked issue status parity validation failed:\n" + "\n".join(violations)
+        )
+
+
 def reconcile_tasks(
     tasks: list[QueueItem],
     closed_tasks: list[OpenTask],
@@ -435,7 +735,7 @@ def reconcile_tasks(
     closed_fingerprints: set[str] = set()
 
     for item in closed_tasks:
-        ti_refs = extract_ti_references(item.text)
+        ti_refs = extract_primary_ti_reference(item.text)
         if not ti_refs and not extract_canonical_task_keys(item.text):
             continue
         closed_tis.update(ti_refs)
@@ -448,7 +748,7 @@ def reconcile_tasks(
     skipped: list[ReconciledSkip] = []
 
     for item in tasks:
-        item_tis = extract_ti_references(item.text)
+        item_tis = extract_primary_ti_reference(item.text)
         matched_ti = sorted(item_tis & closed_tis)
         if matched_ti:
             skipped.append(
@@ -669,6 +969,7 @@ def write_build_plan(
             )
         lines.append("")
 
+    lines = _dedupe_generated_preamble(lines)
     rendered = "\n".join(lines).rstrip() + "\n"
     generated_header = "Generated by `scripts/roadmap_autopilot.py` at "
     generated_header_count = sum(
@@ -807,10 +1108,13 @@ def run_once(
     build_plan: str = "",
 ) -> int:
     validate_tracked_issue_files()
+    validate_tracked_issue_status_parity()
     validate_security_state_consistency(
         todo_path=ROOT / "TODO.md",
         sprint_status_path=ROOT / "docs" / "exec-plans" / "active" / "sprint-status.yaml",
     )
+
+    tracked_issue_status_map = parse_tracked_issue_status_map()
 
     tasks: list[QueueItem] = []
     missing_files: list[Path] = []
@@ -844,6 +1148,7 @@ def run_once(
 
     tasks.sort(key=lambda item: (str(item.source), item.line_number))
     tasks, skipped_tasks = reconcile_tasks(tasks, closed_todo_tracked_tasks)
+    tasks = apply_ti_status_projections(tasks, tracked_issue_status_map)
 
     if missing_files:
         for missing in missing_files:
@@ -851,9 +1156,13 @@ def run_once(
 
     print(render_queue(tasks, limit=limit))
 
+    reminder_source = next((path for path in todo_files if path.name == "TODO.md"), ROOT / "TODO.md")
+    today = dt.datetime.now(dt.timezone.utc).date()
+    due_reminders = collect_due_reminders(reminder_source, today=today)
+    cadence_items = collect_cadence_items(reminder_source)
+    cadence_violations = find_overdue_cadence_violations(cadence_items, today=today)
+
     if build_plan:
-        reminder_source = next((path for path in todo_files if path.name == "TODO.md"), ROOT / "TODO.md")
-        due_reminders = collect_due_reminders(reminder_source, today=dt.datetime.now(dt.timezone.utc).date())
         output_path = (ROOT / build_plan).resolve()
         try:
             output_path.relative_to(ROOT)
@@ -866,8 +1175,22 @@ def run_once(
             skipped_tasks=skipped_tasks,
             due_reminders=due_reminders,
         )
+        validate_emitted_ti_queue_status(tasks, tracked_issue_status_map)
         rel_output = output_path.relative_to(ROOT)
         print(f"\nWrote build plan: {rel_output}")
+
+    if cadence_violations:
+        print("\nerror: unresolved overdue cadence items detected in TODO.md:", file=sys.stderr)
+        for violation in cadence_violations:
+            print(
+                "- "
+                f"TODO.md:{violation.line_number} | due={violation.due.isoformat()} | "
+                f"status={violation.status or 'n/a'} | owner={violation.owner} | "
+                f"replacement_due={violation.replacement_due.isoformat() if violation.replacement_due else 'missing'} | "
+                f"defer_rationale={violation.defer_rationale!r} | {violation.summary}",
+                file=sys.stderr,
+            )
+        return 3
 
     return 0 if tasks else 1
 

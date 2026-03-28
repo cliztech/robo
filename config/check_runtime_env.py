@@ -146,9 +146,16 @@ def main() -> int:
         all_errors.extend(validate_context(contract, context_name))
 
     if all_errors:
-        print("Environment contract check failed:", file=sys.stderr)
+        print(
+            f"Environment contract check failed (contract: {contract_path}):",
+            file=sys.stderr,
+        )
         for error in all_errors:
             print(f" - {error}", file=sys.stderr)
+        print(
+            f"Remediation: update missing/invalid variables defined in {contract_path}",
+            file=sys.stderr,
+        )
         return 1
 
     print(
