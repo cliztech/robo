@@ -274,6 +274,11 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
 
+## 2026-03-05 Runtime context env-contract enforcement
+- Added runtime context contract enforcement across backend startup and Next.js dashboard server routes via explicit `ROBODJ_RUNTIME_CONTEXT` selection (`desktop_app`, `docker_stack`, `ci`).
+- Added structured non-secret diagnostics and log summaries for invalid/missing env contracts (missing key names only).
+- Extended CI pipeline jobs with env-only runtime secret contract checks using `python config/check_runtime_secrets.py --require-env-only`.
+- Added backend and route-level/env-contract tests to lock pass/fail behavior for runtime context validation.
 ## 2026-03-05 Session Update
 - Hardened `src/lib/ai/analyze-track.ts` to use shared `logAIDecision` contract with `stationId`, structured decision payload, and non-blocking warning telemetry when decision logging fails.
 - Removed duplicate route-level decision insert in `src/app/api/ai/analyze-track/route.ts` and passed `stationId` into analyzer calls to enforce one persisted decision event per successful analysis.

@@ -280,6 +280,11 @@
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
 
+## 2026-03-05 Runtime context env-contract enforcement
+- [x] Added dedicated CI runtime secret contract steps (`--require-env-only`) to backend/config/security jobs.
+- [x] Implemented backend startup runtime context validator with structured diagnostics and safe log summary output.
+- [x] Implemented Next.js server-route runtime context validator and fail-fast route response envelope for invalid/missing env contracts.
+- [x] Added backend runtime contract tests and frontend route/env-contract smoke tests.
 
 ## 2026-03-05 Environment Contract Preflight Update
 - [x] Wired `python config/check_runtime_env.py --context <context>` into bootstrap preflight (`desktop_app`, `docker_stack`), codex doctor (`desktop_app`), and CI workflows (`ci`).

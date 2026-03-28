@@ -176,6 +176,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.lock
 
+      - name: Validate runtime secret contract (env-only)
+        env:
+          ROBODJ_RUNTIME_CONTEXT: ci
+          ROBODJ_SECRET_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+          ROBODJ_SECRET_V2_KEY: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+          ROBODJ_SCHEDULER_API_KEY: BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+        run: python config/check_runtime_secrets.py --require-env-only
+
       - name: Lint (ruff)
         run: ruff check backend/ --output-format=github
 
@@ -329,6 +337,13 @@ jobs:
       - name: Validate documentation consistency
         run: python scripts/ci/check_docs_consistency.py
 
+      - name: Validate runtime secret contract (env-only)
+        env:
+          ROBODJ_RUNTIME_CONTEXT: ci
+          ROBODJ_SECRET_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+          ROBODJ_SECRET_V2_KEY: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+          ROBODJ_SCHEDULER_API_KEY: BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+        run: python config/check_runtime_secrets.py --require-env-only
 
   compose-config:
     name: Compose — Profile Config Validation
@@ -418,6 +433,14 @@ jobs:
 
       - name: Install Node.js dependencies
         run: npm ci
+
+      - name: Validate runtime secret contract (env-only)
+        env:
+          ROBODJ_RUNTIME_CONTEXT: ci
+          ROBODJ_SECRET_KEY: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+          ROBODJ_SECRET_V2_KEY: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+          ROBODJ_SCHEDULER_API_KEY: BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+        run: python config/check_runtime_secrets.py --require-env-only
 
       - name: Python dependency audit report (pip-audit)
         id: pip_audit

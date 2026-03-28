@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
+import { logRuntimeEnvValidationSummary, validateServerRuntimeEnv } from '@/lib/runtime/envContract';
 import { loadEnv } from '@/lib/env';
 
 interface ProxySession {
@@ -98,6 +99,17 @@ function normalizeBackendError(status: number, payload: unknown): ProxyErrorEnve
 }
 
 export async function proxyDashboardRequest(request: NextRequest, path: string, init?: RequestInit): Promise<NextResponse> {
+  const runtimeDiagnostics = validateServerRuntimeEnv();
+  logRuntimeEnvValidationSummary(runtimeDiagnostics);
+  if (!runtimeDiagnostics.ok) {
+    return NextResponse.json(
+      {
+        status: 500,
+        detail: 'Runtime environment validation failed for server route.',
+        code: 'RUNTIME_ENV_INVALID',
+        diagnostics: runtimeDiagnostics,
+      },
+      { status: 500 }
   if (BACKEND_BASE_URL_CONFIG.configError) {
     return NextResponse.json(
       buildErrorEnvelope(500, BACKEND_BASE_URL_CONFIG.configError, CONFIGURATION_ERROR_CODE),
