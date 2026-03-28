@@ -18,6 +18,20 @@ describe('StudioPage', () => {
     expect(within(header as HTMLElement).getByText('AI Host')).toBeInTheDocument();
   });
 
+
+  it('renders the radio station control room in studio view', async () => {
+    const user = userEvent.setup();
+    render(<StudioPage />);
+
+    await user.click(screen.getByRole('button', { name: 'Studio' }));
+
+    expect(screen.getByRole('region', { name: 'Radio station control room' })).toBeInTheDocument();
+    expect(screen.getByText('Run the full station from one cinematic broadcast surface.')).toBeInTheDocument();
+    expect(screen.getByText('Smart playlist stack')).toBeInTheDocument();
+    expect(screen.getByText('Host tools & live assist')).toBeInTheDocument();
+    expect(screen.getByText('Outputs, compliance, and audience')).toBeInTheDocument();
+  });
+
   it('toggles on-air state and keeps status token classes stable', async () => {
     const user = userEvent.setup();
     render(<StudioPage />);
