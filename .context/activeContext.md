@@ -7,6 +7,7 @@ Executing "Phase 6: Playlist Generation" hardening and preparing Phase 7 broadca
 Building the next unfinished execution plans from the roadmap queue, starting with P1 Security items (TI-039/TI-040/TI-041).
 
 ## Recent Decisions
+- Established canonical agent governance source at `docs/operations/agent_governance_canonical.md`, added derived governance views, and wired PR drift validation via workflow + consistency script.
 
 - Added CI env-contract parity guard (`scripts/ci/validate_env_contract.py`) to compare required contract vars, `.env.example`, and compose `${VAR}` references with JSON artifact output for PR diagnostics.
 - Wired PR-scoped CI execution and artifact upload in `.github/workflows/ci.yml` for env/docs/compose/contract changes and documented remediation flow in `docs/DEVELOPMENT_ENV_SETUP.md`.
