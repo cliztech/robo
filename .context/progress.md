@@ -283,6 +283,13 @@
 - [x] Kept decode compatibility for legacy envelope representations (`nonce/ciphertext/tag` and `enc::` string payloads).
 - [x] Updated and passed crypto test coverage in `backend/tests/test_config_crypto.py` and `backend/tests/test_security_config_crypto.py`.
 
+## 2026-03-04 Roadmap Autopilot TI Status Projection + Sanity Gate
+- [x] Hardened `scripts/roadmap_autopilot.py` status normalization pipeline with markdown-safe parsing and canonical status family mapping before dependency label derivation.
+- [x] Added TI projection enrichment for emitted queue/build-plan rows (`status_projection` + dependency label sourced from tracked-issue docs).
+- [x] Added post-generation sanity gate to fail when emitted TI rows diverge from tracked-issue status authority.
+- [x] Updated TI reconciliation to match only lead TI references and prevent dependency-text cross-contamination.
+- [x] Regenerated `docs/exec-plans/active/unfinished-task-build-plan.md`; verified single generation header and consistent TI-040 status projection markers.
+- [x] Fixed `docs/exec-plans/active/tracked-issues/TI-041.md` to a single `Status` entry for one-issue-per-file integrity.
 ## 2026-03-04 Skill spec compliance updates
 - [x] Replaced `scope-resolver` AGENTS discovery command with `rg --files -g '**/AGENTS.md'` in `SKILLS.md`.
 - [x] Replaced `qa-issue-emitter` legacy task-stub bullet format with canonical markdown directive format.
