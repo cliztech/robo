@@ -242,7 +242,7 @@ Canonical scoring and evidence definitions live in [`docs/operations/quality_gat
 | `owner_role` | Yes | `planner.agent` |
 | `checklist_keys` | Yes | `["scope_definition","rollback_strategy"]` |
 | `evidence_links` | Yes | `[".agent/verification/20260304-0912_PROJ-401_verification.md"]` |
-| `verification_commands` | Yes | `[{"cmd":"npm test","exit_code":0}]` |
+| `verification_commands` | Yes | `[{"cmd":"npm test","exit_code":0,"output_ref":".agent/verification/npm_test.md"}]` |
 | `result` | Yes | `pass` |
 
 ### Reviewer Checklist Template
