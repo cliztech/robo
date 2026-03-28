@@ -1,9 +1,5 @@
 # Progress
 
-## 2026-03-28 Dashboard Mapping Refactor
-- [x] Refactored `src/components/console/dashboard.types.ts` to use typed lookup-table mappings for severity/status conversions, reducing repetitive switch logic while preserving behavior.
-- [x] Added `tests/unit/dashboard-types.test.ts` to validate severity/status mapping contracts end-to-end.
-
 ## 2026-03-21 Developer Environment Stabilization
 - [x] Resolved `settings.json` configuration conflict (Studio tool auto-approval error).
 - [x] Added `.gitattributes` to enforce repository-wide line ending normalization and resolve LF/CRLF warnings.
