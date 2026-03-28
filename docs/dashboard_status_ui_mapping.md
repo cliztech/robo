@@ -74,8 +74,9 @@ This UI uses **Next.js route-handler proxying** as the canonical integration pat
   - `POST /api/v1/status/dashboard/alerts/{alert_id}/ack`
 - Route handlers enforce Supabase session auth before proxying.
 - Route handlers forward `Authorization: Bearer <access_token>` and `X-User-Id` to the backend status service.
-- Backend service base URL is resolved from:
-  1. `DASHBOARD_STATUS_BACKEND_URL`
-  2. fallback `INTERNAL_API_BASE_URL`
-  3. fallback `http://127.0.0.1:5000`
+- Backend service base URL resolution:
+  1. Use `DASHBOARD_STATUS_BACKEND_URL` (preferred) or `INTERNAL_API_BASE_URL` (legacy fallback).
+  2. In `NODE_ENV=development`, if neither env var is set, fallback to `http://127.0.0.1:5000`.
+  3. In staging/production (`NODE_ENV !== 'development'`), absence of both env vars returns a proxy `500` config error envelope.
+  4. Configured values must be valid absolute `http(s)` URLs including host; malformed values fail startup early.
 - Non-2xx backend responses are normalized into `{ status, detail, code? }` to keep client-side error handling stable.

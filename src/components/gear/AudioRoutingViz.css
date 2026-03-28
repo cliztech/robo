@@ -1,0 +1,197 @@
+/**
+ * AudioRoutingViz.css — Signal flow diagram styles
+ * Phase 5 — Layered flow with animated signal pulses
+ */
+
+.routing-viz {
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  border-radius: 8px;
+  padding: 14px;
+  font-family: 'Inter', sans-serif;
+  color: #888;
+}
+
+.routing-viz.live {
+  border-color: #00e5ff22;
+  box-shadow: 0 0 20px #00e5ff06;
+}
+
+.routing-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.routing-title {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: #333;
+  text-transform: uppercase;
+}
+
+.routing-legend {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: #555;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.routing-live-badge {
+  font-size: 10px;
+  font-weight: 800;
+  color: #00e5ff;
+  letter-spacing: 1px;
+  animation: _live-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes _live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Layered Flow Layout */
+.routing-flow-layered {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow-x: auto;
+  padding: 8px 0;
+}
+
+.routing-layer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.route-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 14px;
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 6px;
+  min-width: 80px;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.route-node:hover {
+  border-color: #333;
+  transform: translateY(-1px);
+}
+
+.route-node[data-signal="audio"]:hover {
+  border-color: #00e5ff33;
+  box-shadow: 0 0 8px #00e5ff0a;
+}
+
+.route-node[data-signal="midi"]:hover {
+  border-color: #ff910033;
+  box-shadow: 0 0 8px #ff91000a;
+}
+
+.route-node[data-signal="sync"]:hover {
+  border-color: #7c4dff33;
+  box-shadow: 0 0 8px #7c4dff0a;
+}
+
+.route-icon {
+  font-size: 20px;
+}
+
+.route-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #aaa;
+  white-space: nowrap;
+}
+
+.route-type {
+  font-size: 9px;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.route-signal-indicator {
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #00e5ff;
+  animation: _signal-blink 0.8s ease-in-out infinite;
+}
+
+@keyframes _signal-blink {
+  0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
+  50% { opacity: 0.2; transform: translateX(-50%) scale(0.6); }
+}
+
+/* Arrows */
+.routing-arrows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  padding: 0 4px;
+}
+
+.route-arrow {
+  display: flex;
+  align-items: center;
+  padding: 0 2px;
+}
+
+.arrow-line {
+  width: 24px;
+  height: 0;
+  border-top: 2px dashed #333;
+  transition: border-color 0.3s;
+}
+
+.arrow-line.animated {
+  animation: _arrow-travel 1.5s ease-in-out infinite;
+}
+
+@keyframes _arrow-travel {
+  0% { border-top-style: dashed; opacity: 0.4; }
+  50% { border-top-style: solid; opacity: 1; }
+  100% { border-top-style: dashed; opacity: 0.4; }
+}
+
+.arrow-head {
+  font-size: 14px;
+  color: #333;
+  margin-left: -2px;
+  transition: color 0.3s;
+}
+
+.routing-empty {
+  text-align: center;
+  color: #222;
+  font-size: 12px;
+  padding: 16px;
+}

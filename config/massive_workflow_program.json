@@ -1,16 +1,12 @@
 {
-  "program_name": "robodj_hyper_automation",
+  "program_name": "robodj_studio_orchestration",
   "version": "1.0.0",
   "targets": {
     "operator_intervention_reduction_pct": 70,
     "publish_preflight_detection_pct": 95,
     "workflow_success_rate_pct": 99
   },
-  "execution_profiles": [
-    "manual",
-    "assisted",
-    "autonomous"
-  ],
+  "execution_profiles": ["manual", "assisted", "autonomous"],
   "workstreams": [
     {
       "id": "ws_foundation",

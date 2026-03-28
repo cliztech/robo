@@ -85,7 +85,8 @@ class SchedulerUiService:
         approval_context: ApprovalContext | None = None,
 
     ) -> SchedulerUiState:
-        enforce_action_approval("ACT-CONFIG-EDIT", approval_context or self._default_approval_context())
+        context = approval_context or self._default_approval_context()
+        enforce_action_approval("ACT-CONFIG-EDIT", context)
         envelope = ScheduleEnvelope(schema_version=2, schedules=schedules)
         self._validate_schema(envelope)
 
@@ -102,7 +103,7 @@ class SchedulerUiService:
             result="success",
             before_hash=before_hash,
             after_hash=after_hash,
-            context=approval_context,
+            context=context,
         )
         timeline = self._build_timeline_blocks(schedules)
 
@@ -118,14 +119,14 @@ class SchedulerUiService:
         context = approval_context or self._default_approval_context()
         enforce_action_approval("ACT-PUBLISH", context)
         before_hash = self._file_hash(self.schedules_path)
-        ui_state = self.update_schedules(schedules, approval_context=approval_context)
+        ui_state = self.update_schedules(schedules, approval_context=context)
         after_hash = self._file_hash(self.schedules_path)
         self._append_security_audit(
             action="ACT-PUBLISH",
             result="success",
             before_hash=before_hash,
             after_hash=after_hash,
-            context=approval_context,
+            context=context,
         )
         return {
             "status": "published",
@@ -269,7 +270,7 @@ class SchedulerUiService:
         result: str,
         before_hash: str,
         after_hash: str,
-        context: ApprovalContext | None = None,
+        context: ApprovalContext,
     ) -> None:
         append_audit_record(
             self.audit_log_path,
