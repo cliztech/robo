@@ -61,7 +61,7 @@ class FileStatusTelemetryProvider:
             field_name="queue_depth.current_depth",
             telemetry_path=self._telemetry_path,
         )
-        return QueueDepthSnapshot(current_depth=max(depth, 0), observed_at=observed_at)
+        return QueueDepthSnapshot(current_depth=depth, observed_at=observed_at)
 
     def read_rotation(self) -> RotationTelemetry:
         payload = self._read_payload()
