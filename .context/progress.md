@@ -286,6 +286,11 @@
 - [x] Added `scripts/ci/build_python_wheels.sh` to keep Python packaging outputs in `.artifacts/python-packaging` instead of app source paths.
 - [x] Added CI guard script `scripts/ci/check_generated_artifacts.py` and wired it into `.github/workflows/ci.yml` config job.
 
+## 2026-03-05 Env contract parity validation
+- [x] Added `scripts/ci/validate_env_contract.py` to diff required contract vars, `.env.example` keys, and compose `${VAR}` references.
+- [x] Emitted machine-readable report artifact at `.artifacts/ci/env-contract-report.json` plus concise console summary output.
+- [x] Wired PR-scoped CI execution + artifact upload in `.github/workflows/ci.yml` for env/docs/compose/config contract changes.
+- [x] Documented validator usage and remediation paths in `docs/DEVELOPMENT_ENV_SETUP.md`.
 ## 2026-03-05 Audio engine cache + preload guardrails
 - [x] Added configurable audio cache limits (`cacheMaxEntries`, `cacheMaxBytes`) and total estimated-byte accounting in `src/lib/audio/engine.ts`.
 - [x] Implemented LRU cache access-order updates and eviction that excludes active `currentTrack`/`nextTrack` buffers.

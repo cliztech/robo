@@ -61,6 +61,28 @@ GITHUB_REF_NAME=main \
 GITHUB_SHA=0123456789abcdef0123456789abcdef01234567 \
 ROBODJ_ENV=staging \
 python config/check_runtime_env.py --context ci
+```
+
+Contract source of truth:
+- `config/env_contract.json` (machine-readable variable requirements by context)
+
+### CI parity check: contract vs `.env.example` vs compose
+
+Use `python scripts/ci/validate_env_contract.py` to enforce parity between:
+- required variables declared in `config/env_contract.json`
+- keys documented in `.env.example`
+- `${VAR}` references in all tracked `docker-compose*.yml` files
+
+The script writes a machine-readable artifact at `.artifacts/ci/env-contract-report.json` and prints a concise summary line.
+
+Remediation guide when CI fails:
+- `missing_required`: add the missing key to `.env.example` (or mark it non-required in `config/env_contract.json` if requirement changed).
+- `stale_env_example`: remove deprecated keys from `.env.example` or add them to the contract/compose usage if still valid.
+- `undocumented_compose`: document the compose variable in `.env.example` and/or `config/env_contract.json`.
+
+### Codex pre-task secret check (recommended)
+
+Before starting implementation tasks in Codex, run:
 
 # Protected refs/environments only
 # This command requires ROBODJ_PROTECTED_ENV=true and all required secrets

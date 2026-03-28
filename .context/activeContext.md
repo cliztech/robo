@@ -8,6 +8,9 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 ## Recent Decisions
 
+- Added CI env-contract parity guard (`scripts/ci/validate_env_contract.py`) to compare required contract vars, `.env.example`, and compose `${VAR}` references with JSON artifact output for PR diagnostics.
+- Wired PR-scoped CI execution and artifact upload in `.github/workflows/ci.yml` for env/docs/compose/contract changes and documented remediation flow in `docs/DEVELOPMENT_ENV_SETUP.md`.
+
 - Refactored dashboard status/severity mapping helpers into shared typed lookup tables in `src/components/console/dashboard.types.ts` and added dedicated unit coverage to lock mapping behavior.
 - Redirected the `studio` operator view away from the DJ deck duplicate and into a dedicated radio-station control room surface that combines scheduling, playlists, host tools, compliance timing, and stream health into a single premium operations screen.
 - Stabilized the studio developer environment by resolving a configuration conflict in `settings.json` where `chat.tools.terminal` was inconsistently defined across structured objects and dot-notation keys.
