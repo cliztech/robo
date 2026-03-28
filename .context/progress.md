@@ -283,6 +283,11 @@
 - [x] Kept decode compatibility for legacy envelope representations (`nonce/ciphertext/tag` and `enc::` string payloads).
 - [x] Updated and passed crypto test coverage in `backend/tests/test_config_crypto.py` and `backend/tests/test_security_config_crypto.py`.
 
+## 2026-03-04 DJ Console Realism Specialist Enablement
+- [x] Added `_bmad/bmm/agents/dj-hardware-specialist.md` with ownership for deck/cue/headphone realism and accidental-trigger prevention.
+- [x] Added `_bmad/bmm/agents/radio-control-room-specialist.md` with ownership for mixer semantics, broadcast chain integrity, and live recovery patterns.
+- [x] Published `docs/ui/equipment_interaction_model.md` with normative interaction contracts and realism acceptance criteria (latency, trigger safety, one-hand keyboard workflows).
+- [x] Linked both specialists into `docs/ui/dj_console_design_pod.md` ownership/cadence/handoff sections.
 ## 2026-03-04 AGENTS.md Instruction Schema Normalization
 
 - [x] Restructured root `AGENTS.md` into strict top-level sections: Bootstrap, Commands, Routing, Boundaries, References, Team Charters.
