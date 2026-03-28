@@ -129,8 +129,11 @@ class InMemoryAnalysisCacheStore(AnalysisCacheStore):
         self._cache.move_to_end(fingerprint)
 
         while len(self._cache) > self._max_entries:
-            self._cache.popitem(last=False)
-            self._evictions += 1
+            try:
+                self._cache.popitem(last=False)
+                self._evictions += 1
+            except KeyError:
+                break
 
     def metrics(self) -> dict[str, int]:
         self._purge_expired(self._now())
