@@ -1,29 +1,88 @@
+import { ZodError, z } from 'zod'
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { analyzeTrack } from '@/lib/ai/analyze-track'
 import { logAIDecision } from '@/lib/ai/log-decision'
+import { consumeSlidingWindowToken, resolveApiLimits, toRateLimitErrorPayload } from '@/lib/api/request-controls'
+import { apiError } from '@/lib/api/error'
+
+const MAX_BODY_BYTES = 8 * 1024
+
+const analyzeTrackRequestSchema = z.object({
+  trackId: z.string().uuid().max(64),
+})
+
+function ensureJsonContentType(request: NextRequest): NextResponse | null {
+  const contentType = request.headers.get('content-type')
+
+  if (!contentType || !contentType.toLowerCase().startsWith('application/json')) {
+    return apiError(415, 'UNSUPPORTED_MEDIA_TYPE', 'Content-Type must be application/json', {
+      expected: 'application/json',
+      received: contentType ?? null,
+    })
+  }
+
+  return null
+}
+
+async function parseJsonWithLimit(request: NextRequest): Promise<unknown> {
+  const contentLength = request.headers.get('content-length')
+  if (contentLength) {
+    const parsedLength = Number.parseInt(contentLength, 10)
+    if (Number.isFinite(parsedLength) && parsedLength > MAX_BODY_BYTES) {
+      throw apiError(413, 'PAYLOAD_TOO_LARGE', 'Request body exceeds size limit', {
+        limit_bytes: MAX_BODY_BYTES,
+        received_bytes: parsedLength,
+      })
+    }
+  }
+
+  const rawBody = await request.text()
+  const byteLength = Buffer.byteLength(rawBody, 'utf8')
+
+  if (byteLength > MAX_BODY_BYTES) {
+    throw apiError(413, 'PAYLOAD_TOO_LARGE', 'Request body exceeds size limit', {
+      limit_bytes: MAX_BODY_BYTES,
+      received_bytes: byteLength,
+    })
+  }
+
+  try {
+    return JSON.parse(rawBody)
+  } catch {
+    throw apiError(400, 'INVALID_JSON', 'Request body must be valid JSON')
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createServerClient()
+    const invalidContentType = ensureJsonContentType(request)
+    if (invalidContentType) {
+      return invalidContentType
+    }
+
     const supabase = createServerClient()
 
-    // Check authentication
     const {
       data: { session },
     } = await supabase.auth.getSession()
 
     if (!session) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return apiError(401, 'UNAUTHORIZED', 'Unauthorized')
     }
 
-    const body = await request.json()
-    const { trackId } = body
+    const body = await parseJsonWithLimit(request)
+    const parsedBody = analyzeTrackRequestSchema.safeParse(body)
 
-    if (!trackId) {
-      return NextResponse.json({ error: 'Missing trackId' }, { status: 400 })
+    if (!parsedBody.success) {
+      return apiError(400, 'INVALID_REQUEST_BODY', 'Invalid request body', {
+        issues: parsedBody.error.issues,
+      })
     }
 
-    // Get track from database
+    const { trackId } = parsedBody.data
+
     const { data: track, error: trackError } = await supabase
       .from('tracks')
       .select('*, stations!inner(user_id, id)')
@@ -31,15 +90,13 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (trackError || !track) {
-      return NextResponse.json({ error: 'Track not found' }, { status: 404 })
+      return apiError(404, 'TRACK_NOT_FOUND', 'Track not found')
     }
 
-    // Verify ownership
     if (track.stations.user_id !== session.user.id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      return apiError(403, 'FORBIDDEN', 'Forbidden')
     }
 
-    // Check if already analyzed
     if (track.ai_analyzed) {
       return NextResponse.json({
         message: 'Track already analyzed',
@@ -51,8 +108,27 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    const limits = resolveApiLimits()
+    const routeKey = [session.user.id, track.stations.id, '/api/ai/analyze-track'].join(':')
+    const rateLimit = consumeSlidingWindowToken({
+      key: routeKey,
+      maxHits: limits.analyzeTrack.max,
+      windowMs: limits.analyzeTrack.windowMs,
+    })
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(toRateLimitErrorPayload(rateLimit), {
+        status: 429,
+        headers: {
+          'Retry-After': String(rateLimit.retryAfterSeconds),
+        },
+      })
+    }
+
     // Perform AI analysis
     const { analysis, tokensUsed, costUSD } = await analyzeTrack({
+      stationId: track.stations.id,
+    const { analysis, tokensUsed, costUSD, latencyMs } = await analyzeTrack({
       trackId: track.id,
       metadata: {
         title: track.title,
@@ -70,7 +146,6 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Update track with AI analysis
     const { error: updateError } = await supabase
       .from('tracks')
       .update({
@@ -101,20 +176,15 @@ export async function POST(request: NextRequest) {
 
     if (updateError) throw updateError
 
-    // Log AI decision
+    await logTrackAnalysisDecisionSafely({
+      trackId,
     await logAIDecision({
       stationId: track.stations.id,
-      decisionType: 'track_analysis',
-      decisionData: {
-        trackId,
-        analysis,
-      },
-      reasoning: analysis.reasoning,
-      confidenceScore: analysis.confidenceScore,
-      modelUsed: 'gpt-4o',
+      model: AI_CONFIG.models.analysis,
+      latencyMs,
       tokensUsed,
       costUSD,
-      latencyMs: 0, // Set in analyzeTrack function
+      latencyMs: 0,
       status: 'auto_applied',
     })
 
@@ -124,8 +194,18 @@ export async function POST(request: NextRequest) {
       tokensUsed,
       costUSD,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
+    if (error instanceof Response) {
+      return error
+    }
+
+    if (error instanceof ZodError) {
+      return apiError(400, 'INVALID_REQUEST_BODY', 'Invalid request body', {
+        issues: error.issues,
+      })
+    }
+
     console.error('Track analysis error:', error)
-    return NextResponse.json({ error: error.message || 'Failed to analyze track' }, { status: 500 })
+    return apiError(500, 'TRACK_ANALYSIS_FAILED', 'Failed to analyze track')
   }
 }
