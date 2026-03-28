@@ -36,9 +36,9 @@ All BMAD/core agents must declare `communication_mode: persona|ops` in activatio
 
 When `communication_mode=ops`, responses must be operationally strict:
 
-- concise and action-oriented language;
-- no roleplay flourish or persona theatrics;
-- mandatory structured output blocks in this exact order: **Assumptions**, **Risks**, **Actions**, **Evidence**.
+- concise and action-oriented language
+- no roleplay flourish or persona theatrics
+- mandatory structured output blocks in this exact order: **Assumptions**, **Risks**, **Actions**, **Evidence**
 
 ### Automatic Ops Mode switching triggers
 
