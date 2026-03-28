@@ -1,0 +1,16 @@
+services:
+  backend:
+    env_file:
+      - deploy/env/docker.staging.env
+
+  frontend:
+    env_file:
+      - deploy/env/docker.staging.env
+
+  db:
+    env_file:
+      - deploy/env/docker.staging.env
+
+  redis:
+    env_file:
+      - deploy/env/docker.staging.env

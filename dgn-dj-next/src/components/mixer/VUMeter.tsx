@@ -14,9 +14,9 @@ export const VUMeter: React.FC<VUMeterProps> = ({
 }) => {
     const [displayLevel, setDisplayLevel] = useState(0);
     const [peakLevel, setPeakLevel] = useState(0);
-    const peakTimer = useRef<ReturnType<typeof setTimeout>>();
+    const peakTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
     const prevTime = useRef<number>(performance.now());
-    const frameRef = useRef<number>();
+    const frameRef = useRef<number | undefined>(undefined);
 
     useEffect(() => {
         const animate = (time: number) => {
