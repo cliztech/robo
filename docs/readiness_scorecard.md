@@ -13,28 +13,34 @@ This scorecard provides a versioned, repeatable way to track progress from roadm
 
 ## Scoring model
 
-| Category | Weight | Target | Current | Delta to Target |
-| --- | ---: | ---: | ---: | ---: |
-| Core functionality | 25% | 85% | 78% | -7% |
-| Security & compliance | 20% | 80% | 62% | -18% |
-| UX & operator workflows | 20% | 82% | 54% | -28% |
-| Reliability & observability | 15% | 80% | 60% | -20% |
-| DevEx & release process | 10% | 80% | 66% | -14% |
-| Commercial readiness | 10% | 75% | 48% | -27% |
-| **Weighted total** | **100%** | **80%+** | **63%** | **-17%** |
+| Category                    |   Weight |   Target | Current | Delta to Target |
+| --------------------------- | -------: | -------: | ------: | --------------: |
+| Core functionality          |      20% |      85% |     78% |             -7% |
+| Security & compliance       |      20% |      80% |     62% |            -18% |
+| UX & operator workflows     |      20% |      82% |     54% |            -28% |
+| Reliability & observability |      15% |      80% |     60% |            -20% |
+| Brand Maturity (Studio)     |      10% |      90% |     85% |             -5% |
+| DevEx & release process     |      10% |      80% |     66% |            -14% |
+| Commercial readiness        |       5% |      75% |     48% |            -27% |
+| **Weighted total**          | **100%** | **80%+** | **68%** |        **-12%** |
 
 > Baseline values are sourced from `PRODUCT_READINESS_PLAN.md` and should be updated after each reporting cycle.
 
 ## Reliability drill-down metrics
 
-| Metric | Target | Current | Evidence source | Owner |
-| --- | ---: | ---: | --- | --- |
-| Startup diagnostics pass rate | 100% | 100% | `config/scripts/startup_safety.py --on-launch` output archive | Runtime engineer |
-| Config validation block rate (invalid configs) | 100% | 100% | `config/validate_config.py` + launch gate logs | Config owner |
-| **Recovery SLA pass rate (`<=120s` launch gate to ready)** | **100% of documented runs** | **50% (1/2) as of 2026-02-24T01:34:19Z** | `config/BACKUP_RECOVERY.md` evidence table + `config/logs/startup_safety_events.jsonl` | QA lead |
-
+| Metric                                                     |                      Target |                                  Current | Evidence source                                                                        | Owner            |
+| ---------------------------------------------------------- | --------------------------: | ---------------------------------------: | -------------------------------------------------------------------------------------- | ---------------- |
+| Startup diagnostics pass rate                              |                        100% |                                     100% | `config/scripts/startup_safety.py --on-launch` output archive                          | Runtime engineer |
+| Config validation block rate (invalid configs)             |                        100% |                                     100% | `config/validate_config.py` + launch gate logs                                         | Config owner     |
+| **Recovery SLA pass rate (`<=120s` launch gate to ready)** | **100% of documented runs** | **50% (1/2) as of 2026-02-24T01:34:19Z** | `config/BACKUP_RECOVERY.md` evidence table + `config/logs/startup_safety_events.jsonl` | QA lead          |
 
 ## Weekly updates (SoT for Product readiness scorecard)
+
+### Status interpretation for release gating
+
+- `implementation_status` tracks build/test/documentation execution progress.
+- `release_readiness_status` tracks dependency-evidence closure and gate eligibility.
+- A tracked issue is release-eligible only when both values are `complete`/`ready`; implementation-only completion must not raise readiness claims.
 
 - ⚠ stale
   - Date (UTC): 2026-02-16
@@ -52,10 +58,11 @@ This scorecard provides a versioned, repeatable way to track progress from roadm
   - Next step: publish updated Track A execution evidence and re-evaluate Security & compliance score in next weekly refresh
 - Date (UTC): 2026-02-27
   - Owner: Management Team (Project Coordinator)
-  - Changed metrics: weighted total remains `63%`; security blockers now mapped directly to TI-039/TI-040 implementation windows
+  - Changed metrics: weighted total remains `63%`; security blockers now mapped to split status semantics (`implementation_status` vs `release_readiness_status`)
   - Blockers:
-    - TI-039 approval workflow implementation still open (target 2026-03-07)
-    - TI-040 config-at-rest encryption implementation still open (target 2026-03-10)
+    - TI-039 implementation_status: open; release_readiness_status: blocked (target 2026-03-07)
+    - TI-040 implementation_status: in_progress; release_readiness_status: blocked (DEP-TI040-01..03 unresolved; target 2026-03-10)
+    - TI-041 implementation_status: complete; release_readiness_status: blocked (pending TI040-ART-LOG/TI040-ART-REPORT/TI040-ART-HASH)
   - Next step: complete weekly backlog hygiene reconciliation and publish deferred-item rationale in the cadence table
 
 ## Weekly update workflow
@@ -70,26 +77,26 @@ This scorecard provides a versioned, repeatable way to track progress from roadm
 
 Source sprint board: `docs/track_a_security_sprint_checklist.md`.
 
-| Task | Owner | Due date (UTC) | Weekly status owner |
-| --- | --- | --- | --- |
-| A1.1 | Design Team (UI/UX Agent) + DevOps Team (CI/CD Pipeline Agent) | 2026-02-24 | Management Team (Project Coordinator Agent) |
-| A2.3 | SecOps Team (Compliance Agent) | 2026-02-26 | Management Team (Project Coordinator Agent) |
-| A3.2 | Release Manager Agent | 2026-02-27 | Management Team (Project Coordinator Agent) |
-| A1.2 | Design Team (Accessibility Auditor Agent) | 2026-03-05 | Management Team (Project Coordinator Agent) |
-| A2.1 | SecOps Team (Secrets Auditor Agent) | 2026-03-06 | Management Team (Project Coordinator Agent) |
-| A3.1 | QA Team (Test Generator Agent) | 2026-03-07 | Management Team (Project Coordinator Agent) |
-| A2.2 | DevOps Team (Infrastructure Agent) + SecOps Team (Compliance Agent) | 2026-03-12 | Management Team (Project Coordinator Agent) |
-| A1.3 | Management Team (Project Coordinator Agent) + SecOps Team (Compliance Agent) | 2026-03-14 | Management Team (Project Coordinator Agent) |
+| Task | Owner                                                                        | Due date (UTC) | Weekly status owner                         |
+| ---- | ---------------------------------------------------------------------------- | -------------- | ------------------------------------------- |
+| A1.1 | Design Team (UI/UX Agent) + DevOps Team (CI/CD Pipeline Agent)               | 2026-02-24     | Management Team (Project Coordinator Agent) |
+| A2.3 | SecOps Team (Compliance Agent)                                               | 2026-02-26     | Management Team (Project Coordinator Agent) |
+| A3.2 | Release Manager Agent                                                        | 2026-02-27     | Management Team (Project Coordinator Agent) |
+| A1.2 | Design Team (Accessibility Auditor Agent)                                    | 2026-03-05     | Management Team (Project Coordinator Agent) |
+| A2.1 | SecOps Team (Secrets Auditor Agent)                                          | 2026-03-06     | Management Team (Project Coordinator Agent) |
+| A3.1 | QA Team (Test Generator Agent)                                               | 2026-03-07     | Management Team (Project Coordinator Agent) |
+| A2.2 | DevOps Team (Infrastructure Agent) + SecOps Team (Compliance Agent)          | 2026-03-12     | Management Team (Project Coordinator Agent) |
+| A1.3 | Management Team (Project Coordinator Agent) + SecOps Team (Compliance Agent) | 2026-03-14     | Management Team (Project Coordinator Agent) |
 
 ## Weekly Track A score updates
 
-| Week ending (UTC) | Security score | A1.1 | A2.3 | A3.2 | Blockers | Notes |
-| --- | ---: | --- | --- | --- | --- | --- |
-| 2026-02-15 | 50% | Not started | Not started | Not started | None recorded | Baseline imported from readiness plan. |
-| 2026-02-22 | 50% | Planned | Planned | Planned | ⚠ stale (older than 7 days) | Sprint checklist published; execution started next cycle. |
-| 2026-02-24 | 50% | Planned | Planned | Planned | A1.1 evidence pending (ETA 2026-02-26)<br>A2.3 denylist verification pending (ETA 2026-02-27)<br>A3.2 security gate evidence pending (ETA 2026-02-28) | Weekly refresh aligned to execution index template; next actions assigned to owners. |
-| 2026-02-22 | 50% | Planned | Planned | Planned | None recorded | Sprint checklist published; execution started next cycle. |
-| 2026-02-24 | 62% | Complete | Complete | Complete | None active | P0 evidence captured via schema contract checks, role-visibility tests, and explicit A3.2 gate/sign-off section updates. |
+| Week ending (UTC) | Security score | A1.1        | A2.3        | A3.2        | Blockers                                                                                                                                              | Notes                                                                                                                    |
+| ----------------- | -------------: | ----------- | ----------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| 2026-02-15        |            50% | Not started | Not started | Not started | None recorded                                                                                                                                         | Baseline imported from readiness plan.                                                                                   |
+| 2026-02-22        |            50% | Planned     | Planned     | Planned     | ⚠ stale (older than 7 days)                                                                                                                           | Sprint checklist published; execution started next cycle.                                                                |
+| 2026-02-24        |            50% | Planned     | Planned     | Planned     | A1.1 evidence pending (ETA 2026-02-26)<br>A2.3 denylist verification pending (ETA 2026-02-27)<br>A3.2 security gate evidence pending (ETA 2026-02-28) | Weekly refresh aligned to execution index template; next actions assigned to owners.                                     |
+| 2026-02-22        |            50% | Planned     | Planned     | Planned     | None recorded                                                                                                                                         | Sprint checklist published; execution started next cycle.                                                                |
+| 2026-02-24        |            62% | Complete    | Complete    | Complete    | None active                                                                                                                                           | P0 evidence captured via schema contract checks, role-visibility tests, and explicit A3.2 gate/sign-off section updates. |
 
 ## Critical unresolved security items (readiness inflation guard)
 
@@ -101,22 +108,23 @@ If any **P0 security item** (A1.1, A2.3, A3.2) is unresolved, readiness reportin
 
 ### Active critical unresolved items
 
-| Item | Severity | Owner | Target unblock date (UTC) | Current state | Mitigation evidence |
-| --- | --- | --- | --- | --- | --- |
-| A1.1 role-aware settings visibility | Critical (P0) | Design Team + DevOps Team | 2026-02-24 | Complete | `contracts/frontend_responses/*.schema.json` now require `settings_visibility` + shared admin/operator/viewer matrix contract. |
-| A2.3 redaction denylist enforcement | Critical (P0) | SecOps Team | 2026-02-26 | Complete | `python config/spec_check_frontend_contracts.py` enforces denylist + role-visibility checks; contract tests added under `backend/tests/`. |
-| A3.2 pre-release security gate | Critical (P0) | Release Manager Agent | 2026-02-27 | Complete | `PRE_RELEASE_CHECKLIST.md` includes mandatory PASS/FAIL security checks, key-rotation gate, and explicit sign-off record table. |
+| Item                                | Severity      | Owner                     | Target unblock date (UTC) | Current state | Mitigation evidence                                                                                                                       |
+| ----------------------------------- | ------------- | ------------------------- | ------------------------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| A1.1 role-aware settings visibility | Critical (P0) | Design Team + DevOps Team | 2026-02-24                | Complete      | `contracts/frontend_responses/*.schema.json` now require `settings_visibility` + shared admin/operator/viewer matrix contract.            |
+| A2.3 redaction denylist enforcement | Critical (P0) | SecOps Team               | 2026-02-26                | Complete      | `python config/spec_check_frontend_contracts.py` enforces denylist + role-visibility checks; contract tests added under `backend/tests/`. |
+| A3.2 pre-release security gate      | Critical (P0) | Release Manager Agent     | 2026-02-27                | Complete      | `PRE_RELEASE_CHECKLIST.md` includes mandatory PASS/FAIL security checks, key-rotation gate, and explicit sign-off record table.           |
 
 ## UX instrumentation baselines and targets (Track B)
 
-| Metric | Baseline (2026.02) | MVP target (B1.1/B1.2) | Collection source | Owner |
-| --- | ---: | ---: | --- | --- |
-| Workflow completion time (median) | 14m 30s | <= 10m 00s | `ux_workflow_started` + `ux_workflow_completed` | Backend Observability (aggregation), Frontend Telemetry (events) |
-| Workflow completion time (p95) | 31m 00s | <= 20m 00s | `ux_workflow_started` + `ux_workflow_completed` | Backend Observability (aggregation), Frontend Telemetry (events) |
-| Intervention rate | 28% | 15–22% (healthy checkpoint usage band) | `ux_checkpoint_presented` + `ux_checkpoint_decision` | Backend Workflow Analytics |
-| Rollback rate | 12% | <= 7% | `ux_rollback_initiated` + `ux_rollback_completed`/`ux_rollback_failed` | Backend Reliability Analytics |
+| Metric                            | Baseline (2026.02) |                 MVP target (B1.1/B1.2) | Collection source                                                      | Owner                                                            |
+| --------------------------------- | -----------------: | -------------------------------------: | ---------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Workflow completion time (median) |            14m 30s |                             <= 10m 00s | `ux_workflow_started` + `ux_workflow_completed`                        | Backend Observability (aggregation), Frontend Telemetry (events) |
+| Workflow completion time (p95)    |            31m 00s |                             <= 20m 00s | `ux_workflow_started` + `ux_workflow_completed`                        | Backend Observability (aggregation), Frontend Telemetry (events) |
+| Intervention rate                 |                28% | 15–22% (healthy checkpoint usage band) | `ux_checkpoint_presented` + `ux_checkpoint_decision`                   | Backend Workflow Analytics                                       |
+| Rollback rate                     |                12% |                                  <= 7% | `ux_rollback_initiated` + `ux_rollback_completed`/`ux_rollback_failed` | Backend Reliability Analytics                                    |
 
 Notes:
+
 - Baselines are initial planning assumptions and become measured values once Track B telemetry is live.
 - Targets are considered passing when maintained for 2 consecutive weekly reporting windows.
 - Event schema and collection-point ownership are defined in `PRODUCT_READINESS_PLAN.md` (Track B4).
@@ -129,8 +137,8 @@ Notes:
 
 ## Version history
 
-| Date (UTC) | Version | Weighted Total | Summary |
-| --- | --- | ---: | --- |
-| 2026-02-16 | 2026.02 | 62% | Added dedicated recovery SLA pass-rate metric and linked evidence source. |
-| 2026-02-15 | 2026.02 | 62% | Initial scorecard created from readiness baseline. |
-| 2026-02-16 | 2026.02 | 62% | Added Track A ownership, weekly security score updates, and readiness inflation guard for unresolved critical security items. |
+| Date (UTC) | Version | Weighted Total | Summary                                                                                                                       |
+| ---------- | ------- | -------------: | ----------------------------------------------------------------------------------------------------------------------------- |
+| 2026-02-16 | 2026.02 |            62% | Added dedicated recovery SLA pass-rate metric and linked evidence source.                                                     |
+| 2026-02-15 | 2026.02 |            62% | Initial scorecard created from readiness baseline.                                                                            |
+| 2026-02-16 | 2026.02 |            62% | Added Track A ownership, weekly security score updates, and readiness inflation guard for unresolved critical security items. |

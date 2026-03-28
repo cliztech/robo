@@ -6,10 +6,9 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
-from backend.security.approval_policy import ApprovalPolicyError, parse_approval_chain
+from backend.security.approval_policy import ApprovalPolicyError
 from backend.security.auth import get_scheduler_api_key
 from backend.security.approval_policy import ApprovalContext, ApprovalRecord
-from backend.security.approval_policy import ApprovalContext, ChainApprovalRecord
 
 from .scheduler_models import (
     PreviewRequest,
@@ -53,13 +52,28 @@ def _approval_context_from_request(request: Request) -> ApprovalContext:
         approvals_payload = []
 
     approvals = tuple(
-        ChainApprovalRecord(
+        ApprovalRecord(
             approver_id=str(item.get("approver_id", "")).strip(),
             approver_roles=frozenset(role.strip().lower() for role in item.get("approver_roles", [])),
             reason=str(item.get("reason", "")).strip(),
         )
         for item in approvals_payload
         if isinstance(item, dict)
+    )
+    return ApprovalContext(actor_id=actor_id, actor_roles=frozenset(actor_roles), approvals=approvals)
+
+
+def _approval_context_from_payload(payload: SchedulerUiStateUpdate) -> ApprovalContext:
+    actor_id = payload.actor_principal or "api-key-actor"
+    actor_roles = {"operator"}
+    approvals = tuple(
+        ApprovalRecord(
+            approver_id=entry.principal.strip(),
+            approver_roles=frozenset({entry.role.strip().lower()}),
+            reason="scheduler-ui approval_chain",
+        )
+        for entry in payload.approval_chain
+        if entry.principal.strip() and entry.role.strip()
     )
     return ApprovalContext(actor_id=actor_id, actor_roles=frozenset(actor_roles), approvals=approvals)
 
@@ -76,12 +90,11 @@ def write_scheduler_state(
     service: SchedulerUiService = Depends(get_scheduler_service),
 ) -> SchedulerUiState:
     try:
-        return service.update_schedules(payload.schedules, approval_context=_approval_context_from_request(request))
+        header_context = _approval_context_from_request(request)
+        payload_context = _approval_context_from_payload(payload)
+        approval_context = payload_context if payload.approval_chain else header_context
+        return service.update_schedules(payload.schedules, approval_context=approval_context)
     except ValueError as exc:
-    except ValueError:
-        approval_chain = parse_approval_chain([entry.model_dump() for entry in payload.approval_chain])
-        return service.update_schedules(payload.schedules, approval_chain=approval_chain)
-    except (ValueError, ApprovalPolicyError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except ApprovalPolicyError as exc:
         raise HTTPException(status_code=403, detail=str(exc)) from exc
@@ -102,12 +115,14 @@ def publish_scheduler_state(
     service: SchedulerUiService = Depends(get_scheduler_service),
 ):
     try:
-        approval_chain = parse_approval_chain([entry.model_dump() for entry in payload.approval_chain])
-        return service.publish_schedules(payload.schedules, approval_chain=approval_chain)
-    except (ValueError, ApprovalPolicyError) as exc:
+        header_context = _approval_context_from_request(request)
+        payload_context = _approval_context_from_payload(payload)
+        approval_context = payload_context if payload.approval_chain else header_context
+        return service.publish_schedules(payload.schedules, approval_context=approval_context)
+    except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     except ApprovalPolicyError as exc:
-        raise HTTPException(status_code=403, detail=str(exc)) from exc
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @router.post("/templates/apply")

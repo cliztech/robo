@@ -232,6 +232,7 @@ When launching via `DGN-DJ_Launcher.bat`, startup now runs config validation bef
 - [ ] Backup/restore drill pass — Sign-off: Release Manager
 - [ ] Crash recovery simulation pass — Sign-off: Release Manager
 - [ ] Rollback path verified — Sign-off: Release Manager
+- [ ] Cadence governance gate pass (blocks release/sprint close if unresolved overdue dated cadence items exist) — Command: `python scripts/roadmap_autopilot.py --todos-only --limit 5` — Sign-off: Release Manager
 - [ ] Execute the accessibility QA matrix in `REACT_BROWSER_UI_TEAM_BLUEPRINT.md` for shell, overlays, and scheduler interactions.
 - [ ] Verify keyboard-only flow for all release-critical user paths (no pointer required).
 - [ ] Verify visible, logical focus order and focus restoration behavior for overlays/modals.

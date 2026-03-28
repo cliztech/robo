@@ -1,0 +1,41 @@
+name: Codex Env Doctor Check
+
+on:
+  push:
+    branches:
+      - main
+      - work
+    paths:
+      - 'scripts/codex_env_doctor.sh'
+      - '.github/workflows/codex-env-doctor-check.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'scripts/codex_env_doctor.sh'
+      - '.github/workflows/codex-env-doctor-check.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  codex-env-doctor:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run codex environment doctor
+        run: |
+          set -euo pipefail
+          bash scripts/codex_env_doctor.sh > codex_env_doctor.log 2>&1 || true
+          cat codex_env_doctor.log
+
+      - name: Fail on mixed PASS output formats
+        run: |
+          set -euo pipefail
+          if grep -q '^PASS:' codex_env_doctor.log && grep -q '^\[PASS\]' codex_env_doctor.log; then
+            echo 'Detected mixed PASS output formats (PASS: and [PASS]).'
+            exit 1
+          fi

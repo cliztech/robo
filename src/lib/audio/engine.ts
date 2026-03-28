@@ -1,5 +1,5 @@
 /**
- * AudioEngine - Core Web Audio API wrapper for broadcast automation.
+ * AudioEngine - Core Web Audio API wrapper for broadcast orchestration.
  * Handles playback, crossfading, EQ, compression, and analysis.
  */
 
@@ -18,6 +18,7 @@ type AudioEngineEventMap = {
   'volume-changed': { level: number };
   'eq-changed': { band: EQBand; gain: number };
   'metrics-update': AudioMetrics;
+  'cache-telemetry': AudioCacheTelemetry;
 };
 
 type AudioEngineEventName = keyof AudioEngineEventMap;
@@ -65,6 +66,22 @@ export interface AudioEngineConfig {
   sampleRate?: number;
   latencyHint?: AudioContextLatencyCategory;
   autoResume?: boolean;
+  cacheMaxEntries?: number;
+  cacheMaxBytes?: number;
+  maxConcurrentDecodes?: number;
+}
+
+export interface AudioCacheTelemetry {
+  type: 'hit' | 'miss' | 'eviction';
+  trackId: string;
+  reason?: 'max-entries' | 'max-bytes';
+  cacheEntries: number;
+  estimatedBytes: number;
+}
+
+interface CachedTrackBuffer {
+  buffer: AudioBuffer;
+  estimatedBytes: number;
 }
 
 export interface AudioMetrics {
@@ -83,7 +100,10 @@ export type EQBand = 'low' | 'lowMid' | 'mid' | 'highMid' | 'high';
 
 export class AudioEngine extends TypedEmitter {
   private context: AudioContext | null = null;
-  private tracks: Map<string, AudioBuffer> = new Map();
+  private tracks: Map<string, CachedTrackBuffer> = new Map();
+  private cacheEstimatedBytes = 0;
+  private decodeInFlight = 0;
+  private decodeWaiters: Array<() => void> = [];
 
   private currentSource: AudioBufferSourceNode | null = null;
   private nextSource: AudioBufferSourceNode | null = null;
@@ -136,7 +156,91 @@ export class AudioEngine extends TypedEmitter {
       sampleRate: config.sampleRate ?? 48_000,
       latencyHint: config.latencyHint ?? 'interactive',
       autoResume: config.autoResume ?? true,
+      cacheMaxEntries: Math.max(1, Math.floor(config.cacheMaxEntries ?? 200)),
+      cacheMaxBytes: Math.max(1024, Math.floor(config.cacheMaxBytes ?? Number.MAX_SAFE_INTEGER)),
+      maxConcurrentDecodes: Math.max(1, Math.floor(config.maxConcurrentDecodes ?? 4)),
     };
+  }
+
+  private estimateBufferBytes(buffer: AudioBuffer): number {
+    return buffer.length * buffer.numberOfChannels * Float32Array.BYTES_PER_ELEMENT;
+  }
+
+  private emitCacheTelemetry(telemetry: AudioCacheTelemetry): void {
+    this.emit('cache-telemetry', telemetry);
+  }
+
+  private markTrackAccess(trackId: string): CachedTrackBuffer | null {
+    const entry = this.tracks.get(trackId);
+    if (!entry) {
+      return null;
+    }
+
+    this.tracks.delete(trackId);
+    this.tracks.set(trackId, entry);
+    return entry;
+  }
+
+  private getProtectedTrackIds(): Set<string> {
+    const protectedIds = new Set<string>();
+
+    if (this.currentTrack) {
+      protectedIds.add(this.currentTrack.id);
+    }
+
+    if (this.nextTrack) {
+      protectedIds.add(this.nextTrack.id);
+    }
+
+    return protectedIds;
+  }
+
+  private evictTracksIfNeeded(): void {
+    if (this.tracks.size <= this.config.cacheMaxEntries && this.cacheEstimatedBytes <= this.config.cacheMaxBytes) {
+      return;
+    }
+
+    const protectedIds = this.getProtectedTrackIds();
+
+    for (const [trackId, entry] of this.tracks) {
+      if (this.tracks.size <= this.config.cacheMaxEntries && this.cacheEstimatedBytes <= this.config.cacheMaxBytes) {
+        break;
+      }
+
+      if (protectedIds.has(trackId)) {
+        continue;
+      }
+
+      const entriesExceeded = this.tracks.size > this.config.cacheMaxEntries;
+      const bytesExceeded = this.cacheEstimatedBytes > this.config.cacheMaxBytes;
+
+      this.tracks.delete(trackId);
+      this.cacheEstimatedBytes = Math.max(0, this.cacheEstimatedBytes - entry.estimatedBytes);
+      this.emitCacheTelemetry({
+        type: 'eviction',
+        trackId,
+        reason: entriesExceeded && !bytesExceeded ? 'max-entries' : 'max-bytes',
+        cacheEntries: this.tracks.size,
+        estimatedBytes: this.cacheEstimatedBytes,
+      });
+    }
+  }
+
+  private async withDecodeSlot<T>(operation: () => Promise<T>): Promise<T> {
+    while (this.decodeInFlight >= this.config.maxConcurrentDecodes) {
+      await new Promise<void>((resolve) => {
+        this.decodeWaiters.push(resolve);
+      });
+    }
+
+    this.decodeInFlight += 1;
+    try {
+      return await operation();
+    } finally {
+      this.decodeInFlight = Math.max(0, this.decodeInFlight - 1);
+      const next = this.decodeWaiters.shift();
+      next?.();
+    }
   }
 
   async initialize(): Promise<void> {
@@ -230,18 +334,35 @@ export class AudioEngine extends TypedEmitter {
   async loadTrack(track: Track): Promise<void> {
     if (!this.context) throw new Error('AudioContext not initialized');
 
-    if (this.tracks.has(track.id)) {
+    const cachedEntry = this.markTrackAccess(track.id);
+    if (cachedEntry) {
+      this.emitCacheTelemetry({
+        type: 'hit',
+        trackId: track.id,
+        cacheEntries: this.tracks.size,
+        estimatedBytes: this.cacheEstimatedBytes,
+      });
       this.emit('track-loaded', { trackId: track.id, cached: true });
       return;
     }
+
+    this.emitCacheTelemetry({
+      type: 'miss',
+      trackId: track.id,
+      cacheEntries: this.tracks.size,
+      estimatedBytes: this.cacheEstimatedBytes,
+    });
 
     try {
       const response = await fetch(track.url);
       if (!response.ok) throw new Error(`Failed to fetch track: ${response.statusText}`);
 
       const arrayBuffer = await response.arrayBuffer();
-      const audioBuffer = await this.context.decodeAudioData(arrayBuffer);
-      this.tracks.set(track.id, audioBuffer);
+      const audioBuffer = await this.withDecodeSlot(() => this.context!.decodeAudioData(arrayBuffer));
+      const estimatedBytes = this.estimateBufferBytes(audioBuffer);
+      this.tracks.set(track.id, { buffer: audioBuffer, estimatedBytes });
+      this.cacheEstimatedBytes += estimatedBytes;
+      this.evictTracksIfNeeded();
       this.emit('track-loaded', { trackId: track.id, duration: audioBuffer.duration });
     } catch (error) {
       this.emit('error', { type: 'track-load', trackId: track.id, error });
@@ -260,7 +381,8 @@ export class AudioEngine extends TypedEmitter {
       await this.loadTrack(track);
     }
 
-    const buffer = this.tracks.get(track.id);
+    const trackEntry = this.markTrackAccess(track.id);
+    const buffer = trackEntry?.buffer;
     if (!buffer) throw new Error('Track not loaded');
 
     this.stopCurrent();
@@ -300,7 +422,8 @@ export class AudioEngine extends TypedEmitter {
       await this.loadTrack(nextTrack);
     }
 
-    const buffer = this.tracks.get(nextTrack.id);
+    const nextEntry = this.markTrackAccess(nextTrack.id);
+    const buffer = nextEntry?.buffer;
     if (!buffer) throw new Error('Next track not loaded');
 
     this.crossfading = true;
@@ -398,7 +521,8 @@ export class AudioEngine extends TypedEmitter {
       await this.context.resume();
     }
 
-    const buffer = this.tracks.get(this.currentTrack.id);
+    const currentEntry = this.markTrackAccess(this.currentTrack.id);
+    const buffer = currentEntry?.buffer;
     if (!buffer) throw new Error('Track not loaded');
 
     this.currentSource = this.context.createBufferSource();
@@ -472,7 +596,7 @@ export class AudioEngine extends TypedEmitter {
 
     const rms = Math.sqrt(sumSquares / this.meterDataArray.length);
     const currentTime = this.isPaused ? this.pauseTime : this.context.currentTime - this.startTime;
-    const duration = this.currentTrack ? (this.tracks.get(this.currentTrack.id)?.duration ?? 0) : 0;
+    const duration = this.currentTrack ? (this.tracks.get(this.currentTrack.id)?.buffer.duration ?? 0) : 0;
 
     return {
       currentTime,
@@ -534,6 +658,9 @@ export class AudioEngine extends TypedEmitter {
 
     this.context = null;
     this.tracks.clear();
+    this.cacheEstimatedBytes = 0;
+    this.decodeInFlight = 0;
+    this.decodeWaiters = [];
     this.isInitialized = false;
     this.emit('destroyed', undefined);
     this.removeAllListeners();
