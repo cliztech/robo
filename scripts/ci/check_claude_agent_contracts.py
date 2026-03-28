@@ -38,75 +38,18 @@ def _extract_frontmatter(markdown: str) -> str | None:
     return match.group(1)
 
 
-def _parse_inline_list(value: str) -> list[str] | None:
-    stripped = value.strip()
-    if not (stripped.startswith("[") and stripped.endswith("]")):
-        return None
-    inner = stripped[1:-1].strip()
-    if not inner:
-        return []
-    return [part.strip().strip("\"'") for part in inner.split(",") if part.strip()]
-
-
 def _parse_frontmatter(frontmatter_text: str) -> tuple[dict[str, object], list[str]]:
-    data: dict[str, object] = {}
-    parse_issues: list[str] = []
-    current_key: str | None = None
-
-    for raw_line in frontmatter_text.splitlines():
-        line = raw_line.rstrip()
-        stripped = line.strip()
-
-        if not stripped or stripped.startswith("#"):
-            continue
-
-        if stripped.startswith("- "):
-            item = stripped[2:].strip().strip("\"'")
-            if current_key is None:
-                parse_issues.append(f"list item without key context: {stripped!r}")
-                continue
-            current_value = data.get(current_key)
-            if not isinstance(current_value, list):
-                parse_issues.append(f"unexpected list item for non-list key: {current_key}")
-                continue
-            current_value.append(item)
-            continue
-
-        if ":" not in line:
-            parse_issues.append(f"invalid key/value syntax: {line!r}")
-            continue
-
-        key, raw_value = line.split(":", 1)
-        key = key.strip()
-        value = raw_value.strip()
-
-        if not key:
-            parse_issues.append(f"empty key in line: {line!r}")
-            continue
-
-        if key in data:
-            parse_issues.append(f"duplicate key: {key}")
-            current_key = key
-            continue
-
-        if key in LIST_KEYS:
-            inline = _parse_inline_list(value)
-            if inline is not None:
-                data[key] = inline
-            elif value == "":
-                data[key] = []
-            else:
-                parse_issues.append(f"{key} must be a YAML list")
-                data[key] = []
-        else:
-            if value == "":
-                data[key] = ""
-            else:
-                data[key] = value.strip("\"'")
-
-        current_key = key
-
-    return data, parse_issues
+    """Parses the YAML frontmatter text using a standard library."""
+    try:
+        # Using a standard YAML parser is more robust than manual parsing.
+        # This handles various YAML features, comments, and edge cases.
+        data = yaml.safe_load(frontmatter_text)
+        if not isinstance(data, dict):
+            return {}, [f"Frontmatter is not a dictionary, but a {type(data).__name__}"]
+        return data, []
+    except yaml.YAMLError as e:
+        # Catches parsing errors, including syntax issues.
+        return {}, [f"YAML parsing error: {e}"]
 
 
 def _validate_role_file(path: Path, rel: Path, roles_seen: set[str]) -> list[ValidationIssue]:
