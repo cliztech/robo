@@ -285,6 +285,13 @@
 - [x] Removed accidental `src/UNKNOWN.egg-info/` artifact directory from the working tree.
 - [x] Added `scripts/ci/build_python_wheels.sh` to keep Python packaging outputs in `.artifacts/python-packaging` instead of app source paths.
 - [x] Added CI guard script `scripts/ci/check_generated_artifacts.py` and wired it into `.github/workflows/ci.yml` config job.
+
+## 2026-03-05 Audio engine cache + preload guardrails
+- [x] Added configurable audio cache limits (`cacheMaxEntries`, `cacheMaxBytes`) and total estimated-byte accounting in `src/lib/audio/engine.ts`.
+- [x] Implemented LRU cache access-order updates and eviction that excludes active `currentTrack`/`nextTrack` buffers.
+- [x] Added `cache-telemetry` runtime events for cache hit/miss/eviction visibility.
+- [x] Added decode concurrency guardrail (`maxConcurrentDecodes`) using a bounded in-engine wait queue.
+- [x] Extended `tests/ui/audio-engine.test.ts` with cache eviction and active-track protection coverage.
 - Hardened status telemetry ingestion with safe field parsers + structured fallback logging, added tolerant service-health enum mapping in status API, and introduced corruption-focused tests (malformed JSON, invalid timestamps/depth, unknown status fallback).
 - [x] Dashboard polling resilience upgrade: decoupled UI clock from API polling cadence, hidden-tab throttling, failure backoff+jitter reset on success, request overlap prevention, and cadence-transition/unmount-abort tests.
 ## 2026-03-05 Lint quality gate hardening
