@@ -9,6 +9,17 @@
 3. Read [`CONFIG_VALIDATION.md`](CONFIG_VALIDATION.md) — how to validate config changes before submitting.
 4. Read [`docs/operations/agent_execution_commands.md`](docs/operations/agent_execution_commands.md) — runnable workflows for planning, parallel analysis, draft PRs, and worktrees.
 
+## Agent Governance (summary, non-authoritative)
+
+Use the governance map for instruction domains and canonical references:
+
+- [`docs/operations/agent_governance_map.md`](docs/operations/agent_governance_map.md)
+- Routing source: [`docs/operations/agent_execution_commands.md`](docs/operations/agent_execution_commands.md)
+- Boundaries + quality gates source: [`AGENTS.md`](AGENTS.md)
+- Skill usage source: [`SKILLS.md`](SKILLS.md)
+
+If this guide conflicts with those files, follow the source-of-truth files above.
+
 ## Repository Nature
 
 This repository tracks a **packaged DGN-DJ distribution**, not compilable application source code. The `backend/` directory contains Python modules, but the primary executable is a pre-built PyInstaller bundle.
@@ -22,6 +33,54 @@ The CI workflow intentionally runs **distribution/config validation only**:
 - Python syntax checks for maintenance scripts (e.g., `config/inspect_db.py`)
 - Presence checks for expected distribution artifacts and config layout
 - Frontend contract checks via `python config/spec_check_frontend_contracts.py`
+
+
+## Frontend Lint Workflow (Local + CI)
+
+The frontend lint gate runs through the standalone ESLint CLI (flat config via `eslint.config.mjs`) rather than `next lint`.
+
+### Local workflow
+
+1. Run lint before pushing:
+   - `npm run lint`
+2. Run the CI-equivalent lint gate (enforces allowlist metadata + budget):
+   - `npm run lint:ci`
+
+### Temporary allowlist policy
+
+Known lint violations must be tracked in `config/lint-allowlist.json` with:
+
+- `owner` (team or individual responsible)
+- `expires_on` (ISO date; expired entries fail CI)
+- a narrow matcher (`path`, `ruleId`, and optional `message_includes`)
+
+The lint gate prints an error budget report and fails if:
+
+- any lint error is not allowlisted,
+- an allowlist entry is expired/invalid, or
+- `allowlisted errors > budget.max_errors`.
+## CI Gate Contract
+
+Mandatory preflight checks run before build/test jobs:
+
+- `python scripts/validate_runtime_versions.py`
+- `python scripts/check_product_naming.py`
+- `npm run check:tokens`
+- `python config/check_runtime_secrets.py --require-env-only`
+
+Severity policy by branch type:
+
+- **`main` / `release/**` (including PR targets):** hard fail on any preflight check failure.
+- **Feature/non-release refs:** warning-only mode for preflight checks (results still emitted as artifacts).
+
+Local preflight equivalent:
+
+```bash
+python scripts/validate_runtime_versions.py \
+  && python scripts/check_product_naming.py \
+  && npm run check:tokens \
+  && python config/check_runtime_secrets.py --require-env-only
+```
 
 ## Do Not Add Generic Build Workflows
 
@@ -140,6 +199,14 @@ Typical workflow:
    - `python scripts/draft_pr_metadata.py --metadata draft_pr_metadata.json`
 
 If your team prefers a different automation approach, keep the same section headings and output structure defined in this guide.
+
+## Instruction-file PR Drift Checklist
+
+When a PR changes instruction/governance files (for example `AGENTS.md`, `SKILLS.md`, `docs/operations/*` policy docs), include this checklist in the PR body:
+
+- [ ] **References updated:** cross-links to canonical files still resolve and point to current section anchors.
+- [ ] **No policy duplication:** non-authoritative files use concise summaries that link to source-of-truth docs.
+- [ ] **Route consistency verified:** route terms and command mapping remain aligned with `docs/operations/agent_execution_commands.md`.
 
 ## Large Change Delivery
 
