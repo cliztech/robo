@@ -7,6 +7,12 @@ Executing "Phase 6: Playlist Generation" hardening and preparing Phase 7 broadca
 Building the next unfinished execution plans from the roadmap queue, starting with P1 Security items (TI-039/TI-040/TI-041).
 
 ## Recent Decisions
+- Completed Claude-agent contract hardening to production readiness: validator now supports configurable agent roots, CI strict mode (`--fail-on-skip`), duplicate/unknown-key detection, and automated tests for pass/fail/skip-policy paths.
+
+- Reviewed and rated the initial Claude-agent blueprint (7.5/10), then hardened it with an executable contract linter (`scripts/ci/check_claude_agent_contracts.py`) and explicit adoption command to convert advisory guardrails into enforceable checks.
+
+- Added a minimal `.claude/agents` execution-layer skeleton (planner/executor/verifier + secops/qa/devops role packets) mapped to canonical `AGENTS.md` governance to reduce role-spec drift while enabling faster local orchestration.
+
 - Added continuous improvement governance docs: new `docs/operations/continuous_improvement_loop.md`, monthly Agent Capability Review template in `docs/operations/artifacts.md`, breach execution hook in `docs/operations/subagent_execution_playbook.md`, and historical scorecard path `docs/metrics/agent_capability_scorecard.md`.
 
 - Re-synced Track A security reconciliation on 2026-03-04: `docs/exec-plans/active/sprint-status.yaml` remains authoritative; TODO/TI-041 were updated to backlog/open with explicit TI-040 deliverable gaps (`TI040-ART-LOG/REPORT/HASH`) and roadmap autopilot queue was regenerated.

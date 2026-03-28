@@ -319,6 +319,21 @@
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
 
+## 2026-03-05 Agent Directory Execution Layer
+- [x] Added `docs/operations/claude_agents_bootstrap.md` with required frontmatter contract and canonical policy references (`AGENTS.md` + operations playbooks).
+- [x] Added copy-ready role packet templates for planner/executor/verifier and secops/qa/devops adapters to support thin, testable role routing without duplicating governance text.
+- [x] Backed up modified context files in `.context/backups/` before updates per repository guardrails.
+
+## 2026-03-05 Claude Agent Blueprint Hardening
+- [x] Performed post-implementation review and rated the initial blueprint at 7.5/10 (strong architecture fit, weak enforcement).
+- [x] Added `scripts/ci/check_claude_agent_contracts.py` to enforce role frontmatter contract completeness, route enum validity, and duplicate role detection.
+- [x] Updated `docs/operations/claude_agents_bootstrap.md` with review score, gap analysis, and runnable lint command for deterministic adoption.
+
+## 2026-03-05 Claude Agent Contract Validator Productionization
+- [x] Upgraded `scripts/ci/check_claude_agent_contracts.py` with strict frontmatter parsing, unknown-key detection, `--agents-root` path override, and `--fail-on-skip` CI mode.
+- [x] Added automated coverage in `scripts/ci/tests/test_check_claude_agent_contracts.py` for valid contract pass, duplicate role fail, and strict skip-policy fail paths.
+- [x] Elevated bootstrap guidance to explicit post-hardening 10/10 readiness with deterministic CI command (`python scripts/ci/check_claude_agent_contracts.py --fail-on-skip`).
+
 ## 2026-03-05 AI Decision Logging Contract Hardening
 - [x] Removed local `logAIDecision` stub from `src/lib/ai/analyze-track.ts` and switched to shared `src/lib/ai/log-decision.ts` import.
 - [x] Updated track analysis logging payload to conform to `AIDecisionLog` (including `stationId`, `decisionData`, `reasoning`, `status`).
