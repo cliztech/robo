@@ -1,0 +1,203 @@
+/* ─── WaveformHeader ─── Full-width dual-deck waveform display ─── */
+
+.waveform-header {
+  display: flex;
+  width: 100%;
+  height: 160px;
+  background: #060608;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+/* ─── Each deck half ─── */
+.wh-deck {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  position: relative;
+}
+
+.wh-deck-a {
+  border-right: 1px solid rgba(255, 255, 255, 0.03);
+}
+.wh-deck-b {
+  border-left: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+/* ─── Canvas wrapper ─── */
+.wh-canvas-wrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.wh-canvas-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px,
+    transparent 1px,
+    rgba(0, 0, 0, 0.05) 1px,
+    rgba(0, 0, 0, 0.05) 2px
+  );
+  z-index: 2;
+}
+
+.wh-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ─── Deck label badge ─── */
+.wh-deck-label {
+  position: absolute;
+  top: 6px;
+  font-family: "Inter", sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+  z-index: 5;
+}
+
+.wh-label-a {
+  left: 8px;
+  background: rgba(0, 229, 255, 0.15);
+  color: #00e5ff;
+  border: 1px solid rgba(0, 229, 255, 0.3);
+}
+
+.wh-label-b {
+  right: 8px;
+  background: rgba(255, 61, 110, 0.15);
+  color: #ff3d6e;
+  border: 1px solid rgba(255, 61, 110, 0.3);
+}
+
+/* ─── Track info bar ─── */
+.wh-track-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 36px;
+  padding: 0 12px;
+  background: linear-gradient(180deg, #0c0c10 0%, #0a0a0e 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  gap: 10px;
+}
+
+.wh-info-right {
+  flex-direction: row-reverse;
+}
+
+.wh-track-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+.wh-track-title {
+  font-family: "Inter", sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  color: #e0e0e0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wh-track-artist {
+  font-family: "Inter", sans-serif;
+  font-size: 11px;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wh-track-data {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* ─── BPM ─── */
+.wh-bpm {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-weight: 700;
+  font-size: 18px;
+  color: #00e5ff;
+  text-shadow: 0 0 6px rgba(0, 229, 255, 0.4);
+  letter-spacing: -0.5px;
+}
+
+.wh-bpm-b {
+  color: #ff3d6e;
+  text-shadow: 0 0 6px rgba(255, 61, 110, 0.4);
+}
+
+/* ─── KEY tag ─── */
+.wh-key-tag {
+  font-family: "Inter", sans-serif;
+  font-weight: 700;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: rgba(0, 229, 255, 0.12);
+  color: #00e5ff;
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  letter-spacing: 0.3px;
+}
+
+.wh-key-b {
+  background: rgba(255, 61, 110, 0.12);
+  color: #ff3d6e;
+  border-color: rgba(255, 61, 110, 0.2);
+}
+
+/* ─── Time counters ─── */
+.wh-time {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 11px;
+  color: #ccc;
+}
+
+.wh-time-remain {
+  color: #888;
+  font-size: 10px;
+}
+
+/* ─── Master divider ─── */
+.wh-master-divider {
+  width: 4px;
+  background: linear-gradient(180deg, #111 0%, #1a1a22 50%, #111 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.wh-master-vu {
+  width: 2px;
+  height: 70%;
+  background: linear-gradient(
+    to top,
+    #22cc44 0%,
+    #88cc22 40%,
+    #cccc00 65%,
+    #ff6600 85%,
+    #ff2200 100%
+  );
+  border-radius: 1px;
+  opacity: 0.5;
+}

@@ -1,150 +1,21 @@
 from __future__ import annotations
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from pathlib import Path
 
 import base64
 import hashlib
-import hmac
 import json
 import os
-
-from typing import Any
 from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 
 @dataclass(frozen=True)
 class EnvelopeKey:
     kid: str
     key_bytes: bytes
-
-
-def config_hash(payload: str) -> str:
-    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
-
-
-def _b64_encode(raw: bytes) -> str:
-    return base64.b64encode(raw).decode("ascii")
-
-
-def _b64_decode(value: str) -> bytes:
-    return base64.b64decode(value.encode("ascii"), validate=True)
-
-
-def _xor_stream(data: bytes, key: bytes, nonce: bytes) -> bytes:
-    out = bytearray(len(data))
-    counter = 0
-    offset = 0
-    while offset < len(data):
-        block = hashlib.sha256(key + nonce + counter.to_bytes(4, "big")).digest()
-        for i, b in enumerate(block):
-            if offset + i >= len(data):
-                break
-            out[offset + i] = data[offset + i] ^ b
-        offset += len(block)
-        counter += 1
-    return bytes(out)
-
-
-def envelope_encode(value: str, *, key: EnvelopeKey, aad: str = "") -> dict[str, str | int]:
-    nonce = os.urandom(12)
-    plaintext = value.encode("utf-8")
-    ciphertext = _xor_stream(plaintext, key.key_bytes, nonce)
-    tag = hmac.new(key.key_bytes, aad.encode("utf-8") + nonce + ciphertext, hashlib.sha256).digest()[:16]
-    return {
-        "enc_v": 1,
-        "alg": "XOR-HMAC-SHA256",
-        "kid": key.kid,
-        "nonce": _b64_encode(nonce),
-        "ciphertext": _b64_encode(ciphertext),
-        "tag": _b64_encode(tag),
-    }
-
-
-def envelope_decode(envelope: dict[str, Any], *, key_lookup: dict[str, EnvelopeKey], aad: str = "") -> str:
-    for field in ("enc_v", "alg", "kid", "nonce", "ciphertext", "tag"):
-        if field not in envelope:
-            raise ValueError(f"Encrypted envelope missing field '{field}'")
-
-    if envelope["enc_v"] != 1 or not str(envelope["alg"]):
-        raise ValueError("Unsupported envelope contract")
-
-    kid = str(envelope["kid"])
-    if kid not in key_lookup:
-        raise ValueError(f"Unknown key id '{kid}'")
-
-    nonce = _b64_decode(str(envelope["nonce"]))
-    ciphertext = _b64_decode(str(envelope["ciphertext"]))
-    tag = _b64_decode(str(envelope["tag"]))
-
-    key = key_lookup[kid].key_bytes
-    expected_tag = hmac.new(key, aad.encode("utf-8") + nonce + ciphertext, hashlib.sha256).digest()[:16]
-    if not hmac.compare_digest(tag, expected_tag):
-        raise ValueError("Ciphertext authentication failed")
-
-    decrypted = _xor_stream(ciphertext, key, nonce)
-    return decrypted.decode("utf-8")
-
-
-def transform_sensitive_values(
-    payload: Any,
-    *,
-    sensitive_keys: set[str],
-    encode: bool,
-    key: EnvelopeKey | None = None,
-    key_lookup: dict[str, EnvelopeKey] | None = None,
-) -> Any:
-    if isinstance(payload, dict):
-        transformed: dict[str, Any] = {}
-        for k, v in payload.items():
-            key_name = str(k).lower()
-            if key_name in sensitive_keys and isinstance(v, str):
-                if encode:
-                    transformed[k] = envelope_encode(v, key=key, aad=key_name) if key else v
-                else:
-                    transformed[k] = envelope_decode(v, key_lookup=key_lookup or {}, aad=key_name) if isinstance(v, dict) and "enc_v" in v else v
-            else:
-                transformed[k] = transform_sensitive_values(
-                    v,
-                    sensitive_keys=sensitive_keys,
-                    encode=encode,
-                    key=key,
-                    key_lookup=key_lookup,
-                )
-        return transformed
-
-    if isinstance(payload, list):
-        return [
-            transform_sensitive_values(item, sensitive_keys=sensitive_keys, encode=encode, key=key, key_lookup=key_lookup)
-            for item in payload
-        ]
-
-    return payload
-
-
-def serialize_json(payload: Any) -> str:
-    return json.dumps(payload, indent=2, sort_keys=True)
-from dataclasses import dataclass
-from pathlib import Path
-
-
-
-
-
-ENVELOPE_VERSION = "v1"
-ENVELOPE_ALGORITHM = "AES-256-GCM"
-ENVELOPE_PREFIX = "enc::"
-
-TI040_FIELD_MAP: dict[str, set[str]] = {
-    "config/prompt_variables.json": {
-        "openai_api_key",
-        "tts_api_key",
-    },
-    "config/schedules.json": {
-        "webhook_auth_token",
-        "stream_fallback_password",
-        "remote_ingest_secret",
-    },
-}
 
 
 class ConfigCryptoError(RuntimeError):
@@ -170,6 +41,28 @@ class ConfigKeyMaterial:
     decrypt_keys: dict[str, bytes]
 
 
+ENVELOPE_VERSION = "v1"
+ENVELOPE_ALGORITHM = "AES-256-GCM"
+LEGACY_ENVELOPE_PREFIX = "enc::"
+
+TI040_FIELD_MAP: dict[str, set[str]] = {
+    "config/prompt_variables.json": {"openai_api_key", "tts_api_key"},
+    "config/schedules.json": {
+        "webhook_auth_token",
+        "stream_fallback_password",
+        "remote_ingest_secret",
+    },
+}
+
+
+def config_hash(payload: str) -> str:
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def serialize_json(payload: Any) -> str:
+    return json.dumps(payload, indent=2, sort_keys=True)
+
+
 def _digest_key(raw: str) -> bytes:
     token = raw.strip()
     if not token:
@@ -185,8 +78,6 @@ def _read_key_file(path: Path) -> bytes:
 
 
 def load_key_material() -> ConfigKeyMaterial:
-    """Load TI-004-aligned primary/previous keys and KID provenance metadata."""
-
     primary_path = Path(os.getenv("CONFIG_ENCRYPTION_PRIMARY_KEY_PATH", "config/secret.key"))
     previous_path = Path(os.getenv("CONFIG_ENCRYPTION_PREVIOUS_KEY_PATH", "config/secret_v2.key"))
 
@@ -202,130 +93,221 @@ def load_key_material() -> ConfigKeyMaterial:
     return ConfigKeyMaterial(current_kid=current_kid, current_key=current_key, decrypt_keys=decrypt_keys)
 
 
-def _target_fields(config_path: Path) -> set[str]:
-    normalized = config_path.as_posix()
-    for suffix, fields in TI040_FIELD_MAP.items():
-        if normalized.endswith(suffix):
-            return fields
-    return set()
+def _as_envelope_key(keys: ConfigKeyMaterial) -> EnvelopeKey:
+    return EnvelopeKey(kid=keys.current_kid, key_bytes=keys.current_key)
 
 
-def _encode_envelope(envelope: dict[str, str]) -> str:
-    return ENVELOPE_PREFIX + json.dumps(envelope, separators=(",", ":"), sort_keys=True)
-
-
-def _decode_envelope(value: str) -> dict[str, str]:
-    if not value.startswith(ENVELOPE_PREFIX):
-        raise ConfigCryptoEnvelopeError("Envelope prefix missing")
-    body = value[len(ENVELOPE_PREFIX) :]
+def _decode_base64(field_name: str, value: Any) -> bytes:
+    if not isinstance(value, str):
+        raise ConfigCryptoEnvelopeError(f"Envelope field '{field_name}' must be base64 string")
     try:
-        payload = json.loads(body)
-    except json.JSONDecodeError as exc:
-        raise ConfigCryptoEnvelopeError("Encrypted envelope JSON is unreadable") from exc
-
-    required = {"enc_v", "alg", "kid", "nonce", "ciphertext", "tag"}
-    missing = required - set(payload.keys())
-    if missing:
-        raise ConfigCryptoEnvelopeError(f"Encrypted envelope missing required fields: {sorted(missing)}")
-    if payload.get("enc_v") != ENVELOPE_VERSION or payload.get("alg") != ENVELOPE_ALGORITHM:
-        raise ConfigCryptoEnvelopeError("Unsupported encrypted envelope version or algorithm")
-    return payload
+        return base64.b64decode(value, validate=True)
+    except (ValueError, TypeError) as exc:
+        raise ConfigCryptoEnvelopeError(f"Envelope field '{field_name}' is invalid base64") from exc
 
 
-def _encrypt_value(plaintext: str, *, field_ref: str, keys: ConfigKeyMaterial) -> str:
+def envelope_encode(value: str, *, key: EnvelopeKey, aad: str = "") -> dict[str, Any]:
     nonce = os.urandom(12)
-    aad = field_ref.encode("utf-8")
-    raw = AESGCM(keys.current_key).encrypt(nonce, plaintext.encode("utf-8"), aad)
-    ciphertext, tag = raw[:-16], raw[-16:]
-    envelope = {
+    ciphertext_with_tag = AESGCM(key.key_bytes).encrypt(nonce, value.encode("utf-8"), aad.encode("utf-8"))
+    ciphertext, tag = ciphertext_with_tag[:-16], ciphertext_with_tag[-16:]
+    return {
         "enc_v": ENVELOPE_VERSION,
         "alg": ENVELOPE_ALGORITHM,
-        "kid": keys.current_kid,
-        "nonce": base64.b64encode(nonce).decode("ascii"),
-        "ciphertext": base64.b64encode(ciphertext).decode("ascii"),
-        "tag": base64.b64encode(tag).decode("ascii"),
+        "kid": key.kid,
+        "nonce_b64": base64.b64encode(nonce).decode("ascii"),
+        "ciphertext_b64": base64.b64encode(ciphertext).decode("ascii"),
+        "tag_b64": base64.b64encode(tag).decode("ascii"),
     }
-    return _encode_envelope(envelope)
 
 
-def _decrypt_value(serialized: str, *, field_ref: str, keys: ConfigKeyMaterial) -> str:
-    envelope = _decode_envelope(serialized)
-    kid = envelope["kid"]
-    key = keys.decrypt_keys.get(kid)
+def _normalize_envelope(envelope: dict[str, Any]) -> dict[str, Any]:
+    if envelope.get("enc_v") not in {ENVELOPE_VERSION, 1}:
+        raise ConfigCryptoEnvelopeError("Unsupported encrypted envelope version")
+    if envelope.get("alg") not in {ENVELOPE_ALGORITHM, "XOR-HMAC-SHA256"}:
+        raise ConfigCryptoEnvelopeError("Unsupported encrypted envelope algorithm")
+
+    # Legacy envelopes may use nonce/ciphertext/tag names.
+    nonce_b64 = envelope.get("nonce_b64", envelope.get("nonce"))
+    ciphertext_b64 = envelope.get("ciphertext_b64", envelope.get("ciphertext"))
+    tag_b64 = envelope.get("tag_b64", envelope.get("tag"))
+
+    if not isinstance(envelope.get("kid"), str) or not envelope.get("kid"):
+        raise ConfigCryptoEnvelopeError("Envelope field 'kid' is required")
+
+    return {
+        "kid": envelope["kid"],
+        "nonce_b64": nonce_b64,
+        "ciphertext_b64": ciphertext_b64,
+        "tag_b64": tag_b64,
+    }
+
+
+def envelope_decode(envelope: dict[str, Any], *, key_lookup: dict[str, EnvelopeKey], aad: str = "") -> str:
+    normalized = _normalize_envelope(envelope)
+    key = key_lookup.get(normalized["kid"])
     if key is None:
-        raise ConfigCryptoDecryptError(f"Unknown encryption key id: {kid}")
+        raise ConfigCryptoDecryptError(f"Unknown key id '{normalized['kid']}'")
+
+    nonce = _decode_base64("nonce_b64", normalized["nonce_b64"])
+    ciphertext = _decode_base64("ciphertext_b64", normalized["ciphertext_b64"])
+    tag = _decode_base64("tag_b64", normalized["tag_b64"])
 
     try:
-        nonce = base64.b64decode(envelope["nonce"], validate=True)
-        ciphertext = base64.b64decode(envelope["ciphertext"], validate=True)
-        tag = base64.b64decode(envelope["tag"], validate=True)
-    except (ValueError, TypeError) as exc:
-        raise ConfigCryptoEnvelopeError("Encrypted envelope base64 payload is unreadable") from exc
-
-    try:
-        plaintext = AESGCM(key).decrypt(nonce, ciphertext + tag, field_ref.encode("utf-8"))
-    except Exception as exc:  # cryptography raises InvalidTag
-        raise ConfigCryptoDecryptError(f"Unable to decrypt encrypted config field: {field_ref}") from exc
+        plaintext = AESGCM(key.key_bytes).decrypt(nonce, ciphertext + tag, aad.encode("utf-8"))
+    except Exception as exc:
+        raise ConfigCryptoDecryptError("Ciphertext authentication failed") from exc
     return plaintext.decode("utf-8")
 
 
-def _transform(node: Any, *, fields: set[str], keys: ConfigKeyMaterial | None, encrypt: bool, file_ref: str) -> Any:
-    if isinstance(node, dict):
+def _target_ref(config_path: Path) -> str | None:
+    normalized = config_path.as_posix()
+    for suffix in TI040_FIELD_MAP:
+        if normalized.endswith(suffix):
+            return suffix
+    return None
+
+
+def _transform_sensitive_values(
+    payload: Any,
+    *,
+    sensitive_keys: set[str],
+    encode: bool,
+    key: EnvelopeKey | None = None,
+    key_lookup: dict[str, EnvelopeKey] | None = None,
+    field_ref_base: str | None = None,
+) -> Any:
+    if isinstance(payload, dict):
         transformed: dict[str, Any] = {}
-        for key, value in node.items():
-            if key in fields and isinstance(value, str):
-                field_ref = f"{file_ref}:{key}"
-                if encrypt:
-                    if value.startswith(ENVELOPE_PREFIX):
-                        transformed[key] = value
+        for k, v in payload.items():
+            key_name = str(k)
+            if key_name in sensitive_keys:
+                if encode and isinstance(v, str):
+                    if key is None:
+                        transformed[k] = v
                     else:
-                        effective_keys = keys or load_key_material()
-                        transformed[key] = _encrypt_value(value, field_ref=field_ref, keys=effective_keys)
+                        aad_payload = None
+                        if field_ref_base:
+                            aad_payload = {
+                                "field_ref": f"{field_ref_base}:{key_name}",
+                                "env": os.getenv("APP_ENV", "dev"),
+                                "issued_at": datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
+                            }
+                        aad = (
+                            json.dumps(aad_payload, sort_keys=True, separators=(",", ":"))
+                            if aad_payload is not None
+                            else key_name
+                        )
+                        envelope = envelope_encode(v, key=key, aad=aad)
+                        if aad_payload is not None:
+                            envelope["aad"] = aad_payload
+                        transformed[k] = envelope
+                elif not encode:
+                    candidate = v
+                    if isinstance(candidate, str) and candidate.startswith(LEGACY_ENVELOPE_PREFIX):
+                        candidate = json.loads(candidate[len(LEGACY_ENVELOPE_PREFIX) :])
+                    if isinstance(candidate, dict) and "enc_v" in candidate:
+                        aad_payload = candidate.get("aad")
+                        aad = (
+                            json.dumps(aad_payload, sort_keys=True, separators=(",", ":"))
+                            if isinstance(aad_payload, dict)
+                            else key_name
+                        )
+                        transformed[k] = envelope_decode(candidate, key_lookup=key_lookup or {}, aad=aad)
+                    else:
+                        transformed[k] = candidate
                 else:
-                    if value.startswith(ENVELOPE_PREFIX):
-                        effective_keys = keys or load_key_material()
-                        transformed[key] = _decrypt_value(value, field_ref=field_ref, keys=effective_keys)
-                    else:
-                        transformed[key] = value
+                    transformed[k] = v
             else:
-                transformed[key] = _transform(value, fields=fields, keys=keys, encrypt=encrypt, file_ref=file_ref)
+                transformed[k] = _transform_sensitive_values(
+                    v,
+                    sensitive_keys=sensitive_keys,
+                    encode=encode,
+                    key=key,
+                    key_lookup=key_lookup,
+                    field_ref_base=field_ref_base,
+                )
         return transformed
-    if isinstance(node, list):
-        return [_transform(item, fields=fields, keys=keys, encrypt=encrypt, file_ref=file_ref) for item in node]
-    return node
+
+    if isinstance(payload, list):
+        return [
+            _transform_sensitive_values(
+                item,
+                sensitive_keys=sensitive_keys,
+                encode=encode,
+                key=key,
+                key_lookup=key_lookup,
+                field_ref_base=field_ref_base,
+            )
+            for item in payload
+        ]
+
+    return payload
+
+
+def transform_sensitive_values(
+    payload: Any,
+    *,
+    sensitive_keys: set[str],
+    encode: bool,
+    key: EnvelopeKey | None = None,
+    key_lookup: dict[str, EnvelopeKey] | None = None,
+) -> Any:
+    return _transform_sensitive_values(
+        payload,
+        sensitive_keys=sensitive_keys,
+        encode=encode,
+        key=key,
+        key_lookup=key_lookup,
+    )
 
 
 def encrypt_config_payload(config_path: Path, payload: Any, *, keys: ConfigKeyMaterial | None = None) -> Any:
-    fields = _target_fields(config_path)
-    if not fields:
+    target_ref = _target_ref(config_path)
+    if target_ref is None:
         return payload
-    return _transform(
+    effective_key = _as_envelope_key(keys) if keys is not None else None
+    return _transform_sensitive_values(
         payload,
-        fields=fields,
-        keys=keys,
-        encrypt=True,
-        file_ref=next(k for k in TI040_FIELD_MAP if config_path.as_posix().endswith(k)),
+        sensitive_keys=TI040_FIELD_MAP[target_ref],
+        encode=True,
+        key=effective_key,
+        field_ref_base=target_ref,
     )
 
 
 def decrypt_config_payload(config_path: Path, payload: Any, *, keys: ConfigKeyMaterial | None = None) -> Any:
-    fields = _target_fields(config_path)
-    if not fields:
+    target_ref = _target_ref(config_path)
+    if target_ref is None:
         return payload
-    return _transform(
+    key_lookup = {}
+    if keys is not None:
+        key_lookup = {kid: EnvelopeKey(kid=kid, key_bytes=key_bytes) for kid, key_bytes in keys.decrypt_keys.items()}
+    return _transform_sensitive_values(
         payload,
-        fields=fields,
-        keys=keys,
-        encrypt=False,
-        file_ref=next(k for k in TI040_FIELD_MAP if config_path.as_posix().endswith(k)),
+        sensitive_keys=TI040_FIELD_MAP[target_ref],
+        encode=False,
+        key_lookup=key_lookup,
+        field_ref_base=target_ref,
     )
 
 
 def load_config_json(config_path: Path, *, keys: ConfigKeyMaterial | None = None) -> Any:
+    resolved_keys = keys
+    if resolved_keys is None:
+        try:
+            resolved_keys = load_key_material()
+        except ConfigCryptoKeyError:
+            resolved_keys = None
     payload = json.loads(config_path.read_text(encoding="utf-8"))
-    return decrypt_config_payload(config_path, payload, keys=keys)
+    return decrypt_config_payload(config_path, payload, keys=resolved_keys)
 
 
 def dump_config_json(config_path: Path, payload: Any, *, indent: int = 2, keys: ConfigKeyMaterial | None = None) -> str:
-    encrypted = encrypt_config_payload(config_path, payload, keys=keys)
+    resolved_keys = keys
+    if resolved_keys is None:
+        try:
+            resolved_keys = load_key_material()
+        except ConfigCryptoKeyError:
+            resolved_keys = None
+    encrypted = encrypt_config_payload(config_path, payload, keys=resolved_keys)
     return json.dumps(encrypted, indent=indent)

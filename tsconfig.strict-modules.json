@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "noImplicitAny": true
+  },
+  "include": [
+    "src/lib/supabase/server.ts",
+    "src/lib/audio/telemetry.ts",
+    "src/components/audio/DegenMixer.tsx",
+    "src/components/console/DashboardView.tsx"
+  ]
+}
