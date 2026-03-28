@@ -7,6 +7,12 @@
         "--package=agentvibes",
         "agentvibes-mcp-server"
       ]
+    },
+    "dj-component-generator": {
+      "command": "node",
+      "args": [
+        "scripts/mcp/dj-component-server.js"
+      ]
     }
   }
 }

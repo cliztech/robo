@@ -1,0 +1,235 @@
+/* ─── TrackLibrary ─── VDJ-style bottom-panel track browser ─── */
+
+.track-library {
+  display: flex;
+  width: 100%;
+  height: 280px;
+  background: #0a0a0e;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-family: "Inter", sans-serif;
+  color: #ccc;
+  font-size: 12px;
+}
+
+/* ─── Sidebar ─── */
+.tl-sidebar {
+  width: 200px;
+  min-width: 180px;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  overflow-y: auto;
+  padding: 6px 0;
+  background: #08080c;
+}
+
+.tl-folder-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 5px 12px;
+  background: transparent;
+  border: none;
+  color: #bbb;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.tl-folder-btn:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+.tl-folder-active {
+  color: #00e5ff;
+  background: rgba(0, 229, 255, 0.06);
+}
+
+.tl-folder-icon {
+  font-size: 14px;
+}
+.tl-expand {
+  margin-left: auto;
+  font-size: 10px;
+  color: #666;
+}
+
+.tl-subfolder-list {
+  padding-left: 24px;
+}
+
+.tl-subfolder-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 3px 8px;
+  background: transparent;
+  border: none;
+  color: #999;
+  font-size: 11px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s;
+}
+
+.tl-subfolder-btn:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: #ddd;
+}
+
+.tl-sub-icon {
+  font-size: 11px;
+}
+
+/* ─── Main panel ─── */
+.tl-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ─── Search bar ─── */
+.tl-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: #0c0c11;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.tl-search-icon {
+  font-size: 13px;
+  color: #666;
+}
+
+.tl-search-input {
+  flex: 1;
+  background: #141418;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  padding: 4px 10px;
+  color: #ddd;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.tl-search-input::placeholder {
+  color: #555;
+}
+.tl-search-input:focus {
+  border-color: rgba(0, 229, 255, 0.3);
+}
+
+.tl-file-count {
+  color: #666;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* ─── Table ─── */
+.tl-table-wrap {
+  flex: 1;
+  overflow: auto;
+}
+
+.tl-table {
+  width: 100%;
+  border-collapse: collapse;
+  white-space: nowrap;
+}
+
+.tl-th {
+  position: sticky;
+  top: 0;
+  background: #0e0e14;
+  color: #888;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 5px 10px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s;
+}
+
+.tl-th:hover {
+  color: #ccc;
+}
+.tl-th-center {
+  text-align: center;
+}
+
+.tl-row {
+  transition: background 0.1s;
+  cursor: pointer;
+}
+
+.tl-row:nth-child(even) {
+  background: rgba(255, 255, 255, 0.01);
+}
+.tl-row:hover {
+  background: rgba(0, 229, 255, 0.04);
+}
+
+.tl-td {
+  padding: 4px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+  color: #ccc;
+}
+
+.tl-td-title {
+  font-weight: 500;
+  color: #eee;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tl-td-remix {
+  color: #888;
+}
+.tl-td-center {
+  text-align: center;
+}
+.tl-td-mono {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+}
+
+/* ─── Key tag ─── */
+.tl-key-tag {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.key-major {
+  background: rgba(0, 229, 255, 0.1);
+  color: #00e5ff;
+}
+
+.key-minor {
+  background: rgba(255, 140, 0, 0.1);
+  color: #ff8c00;
+}
+
+/* ─── Star rating ─── */
+.tl-stars {
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+.star-filled {
+  color: #f59e0b;
+}
+.star-empty {
+  color: #333;
+}
