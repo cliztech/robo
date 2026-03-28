@@ -22,11 +22,12 @@ development_status:
 
   epic-a2-secrets-lifecycle-and-data-protection: in_progress
   a2-1-key-rotation-workflow-cli-checklist: completed
-  a2-2-config-at-rest-encryption-high-risk-fields: backlog
+  a2-2-config-at-rest-encryption-high-risk-fields: in_progress
   a2-3-redaction-denylist-enforcement-logs-api: completed
   epic-a2-retrospective: optional
 
   epic-a3-security-verification-and-release-gate-hardening: in_progress
+  a3-1-security-smoke-script-authn-authz-lockout: in_progress
   a3-1-security-smoke-script-authn-authz-lockout: completed
   a3-2-pre-release-security-gate-checklist: completed
   epic-a3-retrospective: optional
@@ -82,3 +83,15 @@ development_status:
   d3-1-product-packaging-definition-base-pro-gates: completed
   d3-2-telemetry-ethics-and-opt-in-policy: completed
   epic-d3-retrospective: optional
+
+dependency_state:
+  ti-040:
+    status: in_progress
+    checkpoints:
+      dep-ti040-01: complete
+      dep-ti040-02: complete
+      dep-ti040-03: blocked_missing_target_fields
+  ti-041:
+    status: blocked_by_ti-040
+    blocked_on:
+      - dep-ti040-03

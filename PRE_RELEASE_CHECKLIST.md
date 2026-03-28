@@ -272,6 +272,7 @@ When launching via `DGN-DJ_Launcher.bat`, startup now runs config validation bef
 | Artifact review/sign-off completeness |  |  | Release Manager Agent + SecOps Compliance Agent |  |
 
 - [ ] **PASS/FAIL:** TI-041 deterministic security smoke matrix is green.
+  - Dependency gate note: TI-041 cannot be considered complete unless TI-040 dependency checkpoints `DEP-TI040-01`, `DEP-TI040-02`, and `DEP-TI040-03` are all complete with recorded evidence, including `artifacts/security/hashes/ti-040-config-before-after.sha256`.
   - Commands:
     - `pnpm test:security -- --case authn-invalid-password`
     - `pnpm test:security -- --case authz-role-deny`
