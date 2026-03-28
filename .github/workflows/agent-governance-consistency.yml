@@ -1,0 +1,29 @@
+name: Agent Governance Consistency
+
+on:
+  pull_request:
+    paths:
+      - 'AGENTS.md'
+      - 'docs/operations/**'
+      - '_bmad/**/agents/**'
+      - '_bmad/**/*agents*'
+
+permissions:
+  contents: read
+
+jobs:
+  validate-governance:
+    name: Validate agent governance drift
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run governance consistency validator
+        run: python scripts/validate_agent_governance_consistency.py

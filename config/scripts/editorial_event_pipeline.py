@@ -2,13 +2,11 @@ import argparse
 import concurrent.futures
 import json
 import logging
-import sys
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, List, Optional
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
-
 
 logger = logging.getLogger(__name__)
 
@@ -20,51 +18,56 @@ class ExternalEvent:
     timestamp: str
     confidence: float
     locality: str
-    relevance_score: float = 0.5
-    safety_score: float = 1.0
-    emergency: bool = False
+    relevance_score: float
+    safety_score: float
+    emergency: bool
 
 
 class BaseAdapter:
     source_name = "external"
-    default_timeout_seconds = 10.0
 
     def __init__(self, config: Dict[str, Any]):
         self.config = config
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(f"{__name__}.{self.source_name}")
 
     def fetch(self) -> List[Dict[str, Any]]:
         endpoint = self.config.get("endpoint")
         if not endpoint:
             return []
 
-        timeout_raw = self.config.get("timeout_seconds", self.default_timeout_seconds)
+        headers = self.config.get("headers", {})
+        timeout_raw = self.config.get("timeout", self.config.get("timeout_seconds", 10.0))
         try:
             timeout = max(0.1, float(timeout_raw))
         except (TypeError, ValueError):
-            timeout = self.default_timeout_seconds
-        headers = self.config.get("headers", {})
+            timeout = 10.0
 
         try:
             request_obj = Request(endpoint, headers=headers)
-            request = urlopen(request_obj, timeout=timeout)
-            data = request.read().decode("utf-8")
-            if not data:
-                return []
-
-            payload = json.loads(data)
-            if isinstance(payload, list):
-                return [item for item in payload if isinstance(item, dict)]
-            if isinstance(payload, dict):
-                items = payload.get("items", [])
-                if isinstance(items, list):
-                    return [item for item in items if isinstance(item, dict)]
-
-            self._emit_fetch_failure(endpoint, TypeError(f"Unsupported payload type: {type(payload).__name__}"))
-            return []
-        except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
+            with urlopen(request_obj, timeout=timeout) as response:
+                data = response.read().decode("utf-8")
+        except (HTTPError, URLError, TimeoutError) as exc:
             self._emit_fetch_failure(endpoint, exc)
             return []
+
+        if not data:
+            return []
+
+        try:
+            payload = json.loads(data)
+        except json.JSONDecodeError as exc:
+            self._emit_fetch_failure(endpoint, exc)
+            return []
+
+        if isinstance(payload, list):
+            return [item for item in payload if isinstance(item, dict)]
+        if isinstance(payload, dict):
+            items = payload.get("items", [])
+            if isinstance(items, list):
+                return [item for item in items if isinstance(item, dict)]
+
+        self._emit_fetch_failure(endpoint, TypeError(f"Unsupported payload type: {type(payload).__name__}"))
+        return []
 
     def _emit_fetch_failure(self, endpoint: str, exc: Exception) -> None:
         diagnostic = {
@@ -74,7 +77,6 @@ class BaseAdapter:
             "error_class": exc.__class__.__name__,
             "error_message": str(exc),
         }
-        # Using print to stderr for diagnostic output as requested by tests/expectations
         print(json.dumps(diagnostic, sort_keys=True))
         self.logger.warning("base_adapter_fetch_failure %s", json.dumps(diagnostic, sort_keys=True))
 
@@ -82,21 +84,50 @@ class BaseAdapter:
         raise NotImplementedError
 
 
+class EditorialEventPipeline:
+    def __init__(self, source_name: str):
+        self.source_name = source_name
+
+    def _safe_float(self, value: Any, default: float = 0.0, source: str = "", field: str = "") -> float:
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            if source and field:
+                logger.debug(
+                    "Invalid numeric value encountered; using default",
+                    extra={"source": source, "field": field, "value": value},
+                )
+            return default
+
+    def _emit_fetch_diagnostic(self, endpoint: str, error: Exception) -> None:
+        print(
+            json.dumps(
+                {
+                    "event": "adapter_fetch_failed",
+                    "source": self.source_name,
+                    "endpoint": endpoint,
+                    "error_class": type(error).__name__,
+                    "error_message": str(error),
+                },
+                ensure_ascii=False,
+            )
+        )
+
+
 def parse_float(
     value: Any,
     default: float,
     *,
-    source: Optional[str] = None,
-    field: Optional[str] = None,
+    source: str = "unknown",
+    field: str = "unknown",
 ) -> float:
     try:
         return float(value)
     except (TypeError, ValueError):
-        if source and field:
-            logger.debug(
-                "Invalid numeric value encountered; using default",
-                extra={"source": source, "field": field, "value": value},
-            )
+        logger.debug(
+            "Invalid numeric value encountered; using default",
+            extra={"source": source, "field": field, "value": value},
+        )
         return default
 
 
@@ -110,11 +141,12 @@ def to_iso8601(value: Optional[str]) -> str:
 
     try:
         parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-        if parsed.tzinfo is None:
-            parsed = parsed.replace(tzinfo=timezone.utc)
-        return parsed.isoformat()
     except ValueError:
         return datetime.now(tz=timezone.utc).isoformat()
+
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.isoformat()
 
 
 class WeatherAdapter(BaseAdapter):
@@ -152,7 +184,6 @@ class WeatherAdapter(BaseAdapter):
                         parse_float(
                             item.get("safety_score", safety),
                             safety,
-                            source=item.get("source") or self.source_name,
                             source=self.source_name,
                             field="safety_score",
                         )
@@ -187,7 +218,6 @@ class NewsAdapter(BaseAdapter):
                         parse_float(
                             item.get("relevance", 0.6),
                             0.6,
-                            source=item.get("source") or self.source_name,
                             source=self.source_name,
                             field="relevance",
                         )
@@ -196,7 +226,6 @@ class NewsAdapter(BaseAdapter):
                         parse_float(
                             item.get("safety_score", 0.97),
                             0.97,
-                            source=item.get("source") or self.source_name,
                             source=self.source_name,
                             field="safety_score",
                         )
@@ -231,7 +260,6 @@ class TrendAdapter(BaseAdapter):
                         parse_float(
                             item.get("relevance", 0.5),
                             0.5,
-                            source=item.get("source") or self.source_name,
                             source=self.source_name,
                             field="relevance",
                         )
@@ -240,7 +268,6 @@ class TrendAdapter(BaseAdapter):
                         parse_float(
                             item.get("safety_score", 0.9),
                             0.9,
-                            source=item.get("source") or self.source_name,
                             source=self.source_name,
                             field="safety_score",
                         )
@@ -249,34 +276,6 @@ class TrendAdapter(BaseAdapter):
                 )
             )
         return normalized
-
-
-def parse_float(value: Any, default: float, *, source: str = "unknown", field: str = "unknown") -> float:
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        logger.debug(
-            "Invalid numeric value encountered; using default",
-            extra={"source": source, "field": field, "value": value},
-        )
-        return default
-
-
-def clamp(value: float) -> float:
-    return max(0.0, min(1.0, value))
-
-
-def to_iso8601(value: Optional[str]) -> str:
-    if not value:
-        return datetime.now(tz=timezone.utc).isoformat()
-
-    try:
-        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-        if parsed.tzinfo is None:
-            parsed = parsed.replace(tzinfo=timezone.utc)
-        return parsed.isoformat()
-    except ValueError:
-        return datetime.now(tz=timezone.utc).isoformat()
 
 
 def age_in_hours(timestamp: str) -> float:
@@ -299,7 +298,7 @@ def freshness_score(event: ExternalEvent) -> float:
 
 
 def rank_events(events: List[ExternalEvent], weights: Dict[str, float]) -> List[Dict[str, Any]]:
-    scored = []
+    scored: List[Dict[str, Any]] = []
     for event in events:
         relevance = clamp(event.relevance_score)
         freshness = freshness_score(event)
@@ -331,18 +330,18 @@ def rank_events(events: List[ExternalEvent], weights: Dict[str, float]) -> List[
 def insertion_rule(event: Dict[str, Any], quiet_mode: bool, cfg: Dict[str, Any]) -> str:
     thresholds = cfg.get("thresholds", {})
     emergency_score = thresholds.get("emergency_min_rank", 0.55)
-    toh_score = thresholds.get("top_of_hour_min_rank", 0.45)
+    top_of_hour_score = thresholds.get("top_of_hour_min_rank", 0.45)
     mid_break_score = thresholds.get("mid_break_min_rank", 0.35)
 
     if event.get("emergency") and event["rank_score"] >= emergency_score:
         return "emergency_interrupt"
 
     if quiet_mode:
-        if event["rank_score"] >= toh_score and event["safety_score"] >= 0.9:
+        if event["rank_score"] >= top_of_hour_score and event["safety_score"] >= 0.9:
             return "top_of_hour_bulletin"
         return "quiet_mode_skip"
 
-    if event["rank_score"] >= toh_score:
+    if event["rank_score"] >= top_of_hour_score:
         return "top_of_hour_bulletin"
     if event["rank_score"] >= mid_break_score:
         return "mid_break_mention"
@@ -363,8 +362,8 @@ def script_line(event: Dict[str, Any], disclaimers: Dict[str, str]) -> str:
 
 
 def load_events_from_file(path: str) -> Dict[str, List[Dict[str, Any]]]:
-    with open(path, "r", encoding="utf-8") as f:
-        payload = json.load(f)
+    with open(path, "r", encoding="utf-8") as handle:
+        payload = json.load(handle)
 
     return {
         "weather": payload.get("weather", []),
@@ -384,13 +383,15 @@ def run_pipeline(config: Dict[str, Any], sample_events_path: Optional[str]) -> L
     if sample_events_path:
         external_data = load_events_from_file(sample_events_path)
     else:
-        external_data = {}
-        enabled_adapters = {}
-        for name, adapter in adapters.items():
-            if not sources.get(name, {}).get("enabled", False):
-                external_data[name] = []
-                continue
-            enabled_adapters[name] = adapter
+        external_data: Dict[str, List[Dict[str, Any]]] = {}
+        enabled_adapters = {
+            name: adapter
+            for name, adapter in adapters.items()
+            if sources.get(name, {}).get("enabled", False)
+        }
+
+        for name in adapters:
+            external_data.setdefault(name, [])
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=len(enabled_adapters) or 1) as executor:
             future_to_name = {
@@ -412,12 +413,11 @@ def run_pipeline(config: Dict[str, Any], sample_events_path: Optional[str]) -> L
         normalized.extend(adapters[name].normalize(records))
 
     ranked = rank_events(normalized, config.get("ranking", {}).get("weights", {}))
-
     quiet_mode = config.get("format", {}).get("quiet_mode", False)
     disclaimer_policy = config.get("attribution", {}).get("confidence_disclaimers", {})
     insertion_cfg = config.get("insertion_rules", {})
 
-    scheduled = []
+    scheduled: List[Dict[str, Any]] = []
     for event in ranked:
         rule = insertion_rule(event, quiet_mode=quiet_mode, cfg=insertion_cfg)
         if rule in {"skip", "quiet_mode_skip"}:
@@ -437,15 +437,11 @@ def run_pipeline(config: Dict[str, Any], sample_events_path: Optional[str]) -> L
 def main() -> None:
     parser = argparse.ArgumentParser(description="External event connector and editorial ranking pipeline")
     parser.add_argument("--config", default="config/editorial_pipeline_config.json", help="Path to pipeline config")
-    parser.add_argument(
-        "--sample-events",
-        default=None,
-        help="Path to sample source payloads for local/offline runs",
-    )
+    parser.add_argument("--sample-events", default=None, help="Path to sample source payloads for local/offline runs")
     args = parser.parse_args()
 
-    with open(args.config, "r", encoding="utf-8") as f:
-        config = json.load(f)
+    with open(args.config, "r", encoding="utf-8") as handle:
+        config = json.load(handle)
 
     output = run_pipeline(config, args.sample_events)
     print(json.dumps(output, indent=2))

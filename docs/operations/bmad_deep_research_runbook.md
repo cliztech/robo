@@ -32,6 +32,62 @@ Use a numbered file prefix to preserve execution order:
 - `06_epics_stories.md`
 - `07_readiness_check.md`
 
+## Mandatory evidence schema (applies to every research claim)
+
+Every claim in Steps 1-3 (and any inherited claim reused in Steps 4-7) must include an evidence record with all required fields.
+
+| Field | Allowed values / format | Requirement |
+| --- | --- | --- |
+| `source_type` | `standards` \| `vendor` \| `paper` \| `internal` | Required. Must map to one of the four canonical source categories. |
+| `publication_date` | ISO-8601 date (`YYYY-MM-DD`) | Required. If exact day is unknown, use best-known date and mark `date_precision` note in claim context. |
+| `confidence` | `low` \| `medium` \| `high` | Required. Confidence is claim-level, not source-level. |
+| `relevance_score` | Integer `1-5` | Required. `1` = weakly relevant, `5` = directly decision-critical. |
+| `decision_impact` | `informational` \| `directional` \| `blocking` | Required. Declares how strongly the claim affects go/no-go and design selection. |
+
+### Evidence record template
+
+```md
+| claim_id | finding | source_ref | source_type | publication_date | confidence | relevance_score | decision_impact |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| MR-01 | <concise claim> | <URL/path/doc section> | standards/vendor/paper/internal | YYYY-MM-DD | high | 5 | directional |
+```
+
+## Mandatory source mix and freshness gates
+
+Before a step can be marked **Pass**, the packet must satisfy both gates:
+
+1. **Source mix minimum (all required):**
+   - ≥1 standards-body source (`source_type=standards`)
+   - ≥1 vendor documentation source (`source_type=vendor`)
+   - ≥1 recent research paper (`source_type=paper`)
+   - ≥1 internal artifact (repo doc, runbook, telemetry, postmortem, etc.; `source_type=internal`)
+2. **Freshness gate for fast-moving AI/tooling topics:**
+   - At least 2 cited sources must have `publication_date` within the last 12 months at time of review.
+   - If freshness cannot be met, the packet must include an approved exception entry with owner, rationale, and sunset date.
+
+## Decision trace requirement
+
+Each packet (at minimum the readiness artifact) must include a decision-trace table linking research evidence to downstream planning IDs.
+
+| finding_id | summary | evidence_refs | prd_id | architecture_id | epic_or_story_id | decision | owner |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| F-01 | <finding summary> | MR-01, DR-03 | PRD-REQ-07 | ARCH-ADR-02 | ST-14 | Adopt | Project Coordinator |
+
+This trace is mandatory for acceptance because it proves continuity from research → requirement → architecture → execution story.
+
+## Research packet QA verification checklist
+
+QA must validate the following before marking packet acceptance:
+
+- [ ] Required BMAD sequence artifacts (`01` through `07`) exist in `docs/planning_artifacts/bmad_deep_research/`.
+- [ ] Every research claim includes all mandatory evidence schema fields.
+- [ ] Source mix minimum is satisfied (standards + vendor + paper + internal).
+- [ ] Freshness gate is satisfied (≥2 sources <12 months old), or an approved exception is recorded.
+- [ ] Decision trace table is present and links finding IDs to PRD, architecture, and epic/story IDs.
+- [ ] High-impact (`decision_impact=blocking`) claims have explicit mitigation/owner/date if unresolved.
+- [ ] Confidence/relevance values are coherent with recommendation strength and fail/pass decision.
+- [ ] Final readiness status and QA + Management sign-off are explicitly recorded in `07_readiness_check.md`.
+
 ## Stage requirements and gates
 
 | # | Step | Required inputs (docs, metrics, SoT files) | Expected output artifact (planning_artifacts path) | Pass criteria | Fail criteria | Owner role |

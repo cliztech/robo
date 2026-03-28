@@ -25,7 +25,7 @@ def _keys() -> ConfigKeyMaterial:
 def test_round_trip_encryption_decryption() -> None:
     payload = {"openai_api_key": "sk-live-123", "other": "safe"}
     encrypted = encrypt_config_payload(Path("config/prompt_variables.json"), payload, keys=_keys())
-    assert encrypted["openai_api_key"].startswith("enc::")
+    assert encrypted["openai_api_key"]["enc_v"] == "v1"
 
     decrypted = decrypt_config_payload(Path("config/prompt_variables.json"), encrypted, keys=_keys())
     assert decrypted == payload
@@ -45,9 +45,9 @@ def test_nonce_uniqueness() -> None:
     one = encrypt_config_payload(Path("config/prompt_variables.json"), payload, keys=_keys())
     two = encrypt_config_payload(Path("config/prompt_variables.json"), payload, keys=_keys())
 
-    first_envelope = json.loads(one["openai_api_key"][len("enc::") :])
-    second_envelope = json.loads(two["openai_api_key"][len("enc::") :])
-    assert first_envelope["nonce"] != second_envelope["nonce"]
+    first_envelope = one["openai_api_key"]
+    second_envelope = two["openai_api_key"]
+    assert first_envelope["nonce_b64"] != second_envelope["nonce_b64"]
 
 
 def test_schema_preserving_targeted_edits() -> None:
@@ -68,7 +68,7 @@ def test_schema_preserving_targeted_edits() -> None:
     assert set(encrypted.keys()) == set(payload.keys())
     assert set(encrypted["schedules"][0].keys()) == set(payload["schedules"][0].keys())
     assert encrypted["schedules"][0]["non_secret"] == "keep"
-    assert encrypted["schedules"][0]["webhook_auth_token"].startswith("enc::")
+    assert encrypted["schedules"][0]["webhook_auth_token"]["enc_v"] == "v1"
 
 
 def test_dump_json_stays_valid_and_decryptable(tmp_path: Path) -> None:
