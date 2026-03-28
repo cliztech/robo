@@ -315,6 +315,10 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added backward-compatible decode handling for legacy envelope key names and `enc::` payload strings while keeping decrypt fail-closed behavior.
 - Updated backend crypto tests to assert v1 envelope fields and nonce uniqueness using the new schema.
 
+## 2026-03-04 Agent Governance Assessment
+- Rated current agent-governance setup at 7.8/10 with strongest performance in coverage and enforceability, and primary weakness in cross-document determinism/maintainability.
+- Published a four-phase hardening plan in `docs/exec-plans/active/2026-03-04-agent-governance-hardening-plan.md` targeting authority normalization, route-consistency fixes, measurable gates, and drift prevention.
+- Prioritized immediate actions: canonical governance map, QA/context policy reconciliation, skill-format alignment, and quality-gate rubric definition.
 ## 2026-03-04 MCP Runtime Config Authority Update
 - Established `infra/mcp/servers.json` as the authoritative MCP source by adding `scripts/generate_mcp_runtime_config.py` to emit root `.mcp.json` from indexed manifests.
 - Added optional `.mcp.local.json` deep-merge support for local developer overrides without mutating source manifests.

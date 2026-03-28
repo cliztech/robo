@@ -283,6 +283,10 @@
 - [x] Kept decode compatibility for legacy envelope representations (`nonce/ciphertext/tag` and `enc::` string payloads).
 - [x] Updated and passed crypto test coverage in `backend/tests/test_config_crypto.py` and `backend/tests/test_security_config_crypto.py`.
 
+## 2026-03-04 Governance Planning Update
+- [x] Completed fresh setup rating for agent-instruction ecosystem: **7.8/10 overall**.
+- [x] Documented deficiencies with impact framing (authority overlap, route contradiction, command ambiguity, skill misalignment, non-measurable gate semantics).
+- [x] Created executable hardening plan at `docs/exec-plans/active/2026-03-04-agent-governance-hardening-plan.md` with phased priorities and measurable success criteria.
 ## 2026-03-04 MCP Runtime Config Authority
 - [x] Added `scripts/generate_mcp_runtime_config.py` to generate `.mcp.json` from `infra/mcp/servers.json` and referenced server manifests.
 - [x] Added optional `.mcp.local.json` merge behavior (deep merge for objects; local replacement for arrays/scalars).
