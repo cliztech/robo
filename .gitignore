@@ -45,6 +45,7 @@ desktop.ini
 *.swo
 
 # Project specific
+*.egg-info/
 .claude/
 node_modules/
 dist/
@@ -59,3 +60,4 @@ config/secret_v2.key
 config/robodj.lock
 config/scheduler.signal
 config/.robodj_trial
+.artifacts/
