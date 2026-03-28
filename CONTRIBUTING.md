@@ -23,6 +23,31 @@ The CI workflow intentionally runs **distribution/config validation only**:
 - Presence checks for expected distribution artifacts and config layout
 - Frontend contract checks via `python config/spec_check_frontend_contracts.py`
 
+
+## Frontend Lint Workflow (Local + CI)
+
+The frontend lint gate runs through the standalone ESLint CLI (flat config via `eslint.config.mjs`) rather than `next lint`.
+
+### Local workflow
+
+1. Run lint before pushing:
+   - `npm run lint`
+2. Run the CI-equivalent lint gate (enforces allowlist metadata + budget):
+   - `npm run lint:ci`
+
+### Temporary allowlist policy
+
+Known lint violations must be tracked in `config/lint-allowlist.json` with:
+
+- `owner` (team or individual responsible)
+- `expires_on` (ISO date; expired entries fail CI)
+- a narrow matcher (`path`, `ruleId`, and optional `message_includes`)
+
+The lint gate prints an error budget report and fails if:
+
+- any lint error is not allowlisted,
+- an allowlist entry is expired/invalid, or
+- `allowlisted errors > budget.max_errors`.
 ## CI Gate Contract
 
 Mandatory preflight checks run before build/test jobs:
