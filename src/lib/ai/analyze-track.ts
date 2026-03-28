@@ -94,6 +94,7 @@ export async function analyzeTrack(options: AnalyzeTrackOptions): Promise<{
   costUSD: number
   latencyMs: number
 }> {
+  const { stationId, trackId, metadata, audioFeatures } = options
   const { metadata, audioFeatures } = options
 
   try {

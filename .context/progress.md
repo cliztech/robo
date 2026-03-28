@@ -302,6 +302,12 @@
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
 
+## 2026-03-05 AI Decision Logging Contract Hardening
+- [x] Removed local `logAIDecision` stub from `src/lib/ai/analyze-track.ts` and switched to shared `src/lib/ai/log-decision.ts` import.
+- [x] Updated track analysis logging payload to conform to `AIDecisionLog` (including `stationId`, `decisionData`, `reasoning`, `status`).
+- [x] Added explicit fail-open policy: decision logging failures now emit structured warning telemetry and do not fail successful analysis responses.
+- [x] Eliminated duplicate persistence path by removing route-level AI decision insert and routing all analysis decision writes through `analyzeTrack`.
+- [x] Added tests proving one persisted decision event per successful analysis plus warning telemetry on logging failure.
 ## 2026-03-05 Packaging artifact hygiene guard
 - [x] Added root `.gitignore` rule for `*.egg-info/` and `.artifacts/`.
 - [x] Removed accidental `src/UNKNOWN.egg-info/` artifact directory from the working tree.
