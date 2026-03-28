@@ -1,6 +1,6 @@
 'use client';
 
-import { Disc3, Pause, Play, SkipBack, SkipForward, Square } from 'lucide-react';
+import { Pause, Play, SkipBack, SkipForward, Square } from 'lucide-react';
 import { DegenEffectRack } from '@/components/audio/DegenEffectRack';
 import { DegenMixer } from '@/components/audio/DegenMixer';
 import { DegenTrackList } from '@/components/audio/DegenTrackList';
@@ -18,7 +18,7 @@ function DeckTransportCluster({ deck, isPlaying }: DeckTransportClusterProps) {
     return (
         <section className="glass-panel skin-panel overflow-hidden" data-deck={deck}>
             <div className="panel-header">
-                <span className="panel-header-title">Deck {deck} Transport</span>
+                <span className="panel-header-title">DGJ-3000X Deck {deck}</span>
                 <span
                     className={cn(
                         'dj-deck-badge skin-deck-accent',
@@ -30,22 +30,43 @@ function DeckTransportCluster({ deck, isPlaying }: DeckTransportClusterProps) {
                 </span>
             </div>
             <div className="dj-deck-cluster" data-deck={deck}>
-                <div className="dj-jog-wheel" data-deck={deck} aria-hidden>
-                    <Disc3 size={32} />
+                <div className="dj-cdj-body" data-deck={deck}>
+                    <div className="dj-cdj-topline">
+                        <span>DGJ-3000X</span>
+                        <span>96kHz / 32-bit</span>
+                    </div>
+                    <div className="dj-jog-wheel" data-deck={deck} aria-hidden>
+                        <div className="dj-jog-vinyl" />
+                        <div className="dj-jog-label">DGN RADIO</div>
+                    </div>
+                    <div className="dj-cdj-controls dj-transport-buttons">
+                        <button type="button" aria-label={`Deck ${deck} cue`}>
+                            <Square size={13} />
+                        </button>
+                        <button type="button" aria-label={`Deck ${deck} previous`}>
+                            <SkipBack size={13} />
+                        </button>
+                        <button type="button" className="is-primary" aria-label={`Deck ${deck} play pause`}>
+                            {isPlaying ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
+                        </button>
+                        <button type="button" aria-label={`Deck ${deck} next`}>
+                            <SkipForward size={13} />
+                        </button>
+                    </div>
+                    <div className="dj-cdj-pitch" aria-hidden>
+                        <span className="dj-cdj-pitch-value">+0.8%</span>
+                        <div className="dj-cdj-pitch-track">
+                            <div className="dj-cdj-pitch-fader" />
+                        </div>
+                    </div>
                 </div>
-                <div className="dj-transport-buttons" role="group" aria-label={`Deck ${deck} transport`}>
-                    <button type="button" aria-label={`Deck ${deck} cue`}>
-                        <Square size={13} />
-                    </button>
-                    <button type="button" aria-label={`Deck ${deck} previous`}>
-                        <SkipBack size={13} />
-                    </button>
-                    <button type="button" className="is-primary" aria-label={`Deck ${deck} play pause`}>
-                        {isPlaying ? <Pause size={16} /> : <Play size={16} className="ml-0.5" />}
-                    </button>
-                    <button type="button" aria-label={`Deck ${deck} next`}>
-                        <SkipForward size={13} />
-                    </button>
+                <div className="dj-turntable-body" data-deck={deck}>
+                    <div className="dj-turntable-title">DGN Technical-1200SN</div>
+                    <div className="dj-turntable-platter">
+                        <div className="dj-turntable-record" />
+                        <div className="dj-turntable-center" />
+                    </div>
+                    <div className="dj-turntable-tonearm" />
                 </div>
             </div>
         </section>

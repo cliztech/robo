@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowJs": false,
+    "incremental": false
+  },
+  "include": [
+    "src/lib/supabase/server.ts",
+    "src/lib/audio/telemetry.ts",
+    "src/components/audio/DegenMixer.tsx",
+    "src/components/console/DashboardView.tsx",
+    "src/components/console/dashboard.types.ts",
+    "src/lib/status/dashboardClient.ts",
+    "tests/ui/dashboard-view.test.tsx"
+  ]
+}

@@ -4,6 +4,8 @@ import hashlib
 import json
 import logging
 from dataclasses import dataclass
+from collections import OrderedDict
+from datetime import datetime, timedelta, timezone
 
 from backend.ai.contracts.track_analysis import (
     TrackAnalysis,
@@ -58,21 +60,90 @@ class AnalysisCacheStore:
     def set(self, fingerprint: str, result: TrackAnalysisResult) -> None:
         raise NotImplementedError
 
+    def metrics(self) -> dict[str, int]:
+        raise NotImplementedError
+
+
+@dataclass
+class _CacheEntry:
+    value: TrackAnalysisResult
+    expires_at: datetime
+
 
 class InMemoryAnalysisCacheStore(AnalysisCacheStore):
     """Process-local cache store for analysis responses."""
 
-    def __init__(self) -> None:
-        self._cache: dict[str, TrackAnalysisResult] = {}
+    def __init__(
+        self,
+        *,
+        ttl_seconds: int = 900,
+        max_entries: int = 512,
+        eviction_policy: Literal["lru", "fifo"] = "lru",
+    ) -> None:
+        if ttl_seconds <= 0:
+            raise ValueError("ttl_seconds must be greater than zero")
+        if max_entries <= 0:
+            raise ValueError("max_entries must be greater than zero")
+        if eviction_policy not in {"lru", "fifo"}:
+            raise ValueError("eviction_policy must be either 'lru' or 'fifo'")
+
+        self._ttl = timedelta(seconds=ttl_seconds)
+        self._max_entries = max_entries
+        self._eviction_policy = eviction_policy
+        self._cache: OrderedDict[str, _CacheEntry] = OrderedDict()
+        self._hits = 0
+        self._misses = 0
+        self._evictions = 0
+        self._expirations = 0
+
+    @staticmethod
+    def _now() -> datetime:
+        return datetime.now(timezone.utc)
+
+    def _purge_expired(self, now: datetime) -> None:
+        # Create a list of keys to avoid RuntimeError during iteration
+        expired_keys = [key for key, entry in list(self._cache.items()) if entry.expires_at <= now]
+        for key in expired_keys:
+            # Use pop with a default value to avoid KeyError if already deleted
+            self._cache.pop(key, None)
+        self._expirations += len(expired_keys)
 
     def get(self, fingerprint: str) -> TrackAnalysisResult | None:
-        cached = self._cache.get(fingerprint)
-        if cached is None:
+        now = self._now()
+        self._purge_expired(now)
+        cached_entry = self._cache.get(fingerprint)
+        if cached_entry is None:
+            self._misses += 1
             return None
-        return cached.model_copy(deep=True)
+
+        self._hits += 1
+        if self._eviction_policy == "lru":
+            self._cache.move_to_end(fingerprint)
+        return cached_entry.value.model_copy(deep=True)
 
     def set(self, fingerprint: str, result: TrackAnalysisResult) -> None:
-        self._cache[fingerprint] = result.model_copy(deep=True)
+        now = self._now()
+        self._purge_expired(now)
+
+        self._cache[fingerprint] = _CacheEntry(value=result.model_copy(deep=True), expires_at=now + self._ttl)
+        self._cache.move_to_end(fingerprint)
+
+        while len(self._cache) > self._max_entries:
+            try:
+                self._cache.popitem(last=False)
+                self._evictions += 1
+            except KeyError:
+                break
+
+    def metrics(self) -> dict[str, int]:
+        self._purge_expired(self._now())
+        return {
+            "size": len(self._cache),
+            "hits": self._hits,
+            "misses": self._misses,
+            "evictions": self._evictions,
+            "expirations": self._expirations,
+        }
 
 
 class TrackAnalysisService:
@@ -121,6 +192,7 @@ class TrackAnalysisService:
         )
         result = TrackAnalysisResult(track_id=request.track_id, analysis=analysis)
         self._cache_store.set(fingerprint, result)
+        self._log_cache_event(event="track_analysis_cache_write", fingerprint=fingerprint, request=request)
         return result
 
     @staticmethod
@@ -134,12 +206,13 @@ class TrackAnalysisService:
             ),
             "model_version": request.model_version,
             "prompt_profile_version": request.prompt_profile_version,
+            "schema_version": request.schema_version,
         }
         serialized = json.dumps(stable_payload, sort_keys=True, separators=(",", ":"))
         return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
 
-    @staticmethod
-    def _log_cache_event(*, event: str, fingerprint: str, request: TrackAnalysisRequest) -> None:
+    def _log_cache_event(self, *, event: str, fingerprint: str, request: TrackAnalysisRequest) -> None:
+        cache_metrics = self._cache_store.metrics()
         logger.info(
             json.dumps(
                 {
@@ -148,10 +221,17 @@ class TrackAnalysisService:
                     "fingerprint": fingerprint,
                     "model_version": request.model_version,
                     "prompt_profile_version": request.prompt_profile_version,
+                    "schema_version": request.schema_version,
+                    "cache_size": cache_metrics["size"],
+                    "cache_hits": cache_metrics["hits"],
+                    "cache_misses": cache_metrics["misses"],
+                    "cache_evictions": cache_metrics["evictions"],
+                    "cache_expirations": cache_metrics["expirations"],
                 },
                 sort_keys=True,
             )
         )
+
 
     @staticmethod
     def _resolve_genre(genre_hint: str | None) -> str:

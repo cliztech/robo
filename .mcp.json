@@ -43,6 +43,12 @@
         "--repository",
         "/workspace/robo"
       ]
+    },
+    "dj-component-generator": {
+      "command": "node",
+      "args": [
+        "scripts/mcp/dj-component-server.js"
+      ]
     }
   }
 }
