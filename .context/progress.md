@@ -294,3 +294,8 @@
 - [x] Removed accidental `src/UNKNOWN.egg-info/` artifact directory from the working tree.
 - [x] Added `scripts/ci/build_python_wheels.sh` to keep Python packaging outputs in `.artifacts/python-packaging` instead of app source paths.
 - [x] Added CI guard script `scripts/ci/check_generated_artifacts.py` and wired it into `.github/workflows/ci.yml` config job.
+
+## 2026-03-06 dgn-dj-next merge-conflict remediation
+- [x] Removed all merge conflict markers and duplicated branch sections from `dgn-dj-next/src/components/layout/MainLayout.tsx`.
+- [x] Added `npm run check:conflicts` + `prebuild` guard using `dgn-dj-next/scripts/check-conflict-markers.mjs` to block merge markers in `dgn-dj-next/src`.
+- [x] Fixed TypeScript build blockers (`useRef` initialization + unused import) so `npm --prefix dgn-dj-next run build` succeeds.

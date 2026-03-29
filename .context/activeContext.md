@@ -282,3 +282,8 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added protected-ref runtime secret gate in CI using `python config/check_runtime_secrets.py --require-env-only` with explicit fail-fast shell settings and secret-backed env wiring.
 - Documented CI runtime contract gate commands in `docs/DEVELOPMENT_ENV_SETUP.md` for operator/developer parity.
 - Added repository hygiene guardrails for generated Python packaging artifacts: ignore `*.egg-info`, removed accidental `src/UNKNOWN.egg-info/`, added CI scanner (`scripts/ci/check_generated_artifacts.py`), and added isolated wheel-build script outputting to `.artifacts/python-packaging`.
+
+## 2026-03-06 dgn-dj-next conflict-marker hardening
+- Resolved merge-conflict artifacts in `dgn-dj-next/src/components/layout/MainLayout.tsx` by keeping a single typed import style, one `MainLayoutProps` declaration, one `libraryRows` definition, and one component export body.
+- Added `dgn-dj-next/scripts/check-conflict-markers.mjs` and wired `npm run check:conflicts` into `prebuild` to fail build/CI on `<<<<<<<`, `=======`, `>>>>>>>` markers under `dgn-dj-next/src`.
+- Cleared blocking TypeScript `useRef` initialization errors in `VUMeter` and `Knob`, and removed an unused React import in `waveform-rail` unit test to restore build pass.
