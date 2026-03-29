@@ -282,3 +282,9 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added protected-ref runtime secret gate in CI using `python config/check_runtime_secrets.py --require-env-only` with explicit fail-fast shell settings and secret-backed env wiring.
 - Documented CI runtime contract gate commands in `docs/DEVELOPMENT_ENV_SETUP.md` for operator/developer parity.
 - Added repository hygiene guardrails for generated Python packaging artifacts: ignore `*.egg-info`, removed accidental `src/UNKNOWN.egg-info/`, added CI scanner (`scripts/ci/check_generated_artifacts.py`), and added isolated wheel-build script outputting to `.artifacts/python-packaging`.
+
+## 2026-03-06 Launcher entrypoint source-of-truth reconciliation
+- Established `docs/launcher_entrypoints.md` as the canonical launcher naming/role policy (canonical vs shim vs deprecated) and aligned runtime map references.
+- Reconciled root launcher roles for `DGN-DJ_Launcher.bat`, `RoboDJ_Launcher.bat`, `DGNDJ_Fullstack_Launcher.bat`, and `DGN-DJ_Fullstack_Launcher.bat`.
+- Updated AGENTS/README/runtime docs to explicitly state `.exe` artifacts are external/bundled and intentionally excluded from git.
+- Added CI drift guard `scripts/ci/check_launcher_entrypoints.py` and wired it into `.github/workflows/ci.yml` config validation.

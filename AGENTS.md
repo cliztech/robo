@@ -74,14 +74,14 @@ Use command-style prompts that map to entries in `_bmad/_config/bmad-help.csv`, 
 
 | Action | Command | Notes |
 | ------ | ------- | ----- |
-| **Run DGN-DJ app** | `.\RoboDJ_Launcher.bat` | Starts DGN-DJ via the legacy launcher filename; resolves paths relative to launcher. |
-| **Run binary directly** | `.\RoboDJ Automation.exe` | Starts DGN-DJ via the legacy binary filename (wrapper bypass). |
+| **Run DGN-DJ app (canonical desktop launcher)** | `.\DGN-DJ_Launcher.bat` | Canonical packaged desktop startup; resolves paths relative to launcher. |
+| **Run DGN-DJ app (compatibility shim)** | `.\RoboDJ_Launcher.bat` | Legacy launcher alias that delegates to `DGN-DJ_Launcher.bat`. |
+| **Run fullstack web launcher (canonical)** | `.\DGNDJ_Fullstack_Launcher.bat [dev|prod] [--port N]` | Canonical Windows fullstack Next.js launcher. |
+| **Run fullstack desktop+backend launcher (deprecated compatibility)** | `.\DGN-DJ_Fullstack_Launcher.bat` | Legacy compatibility flow for desktop + FastAPI bootstrap. |
 | **Run root web app** | `npm run dev` | Next.js studio on Node.js 20.x |
-| **Run Windows launcher** | `.\RoboDJ_Launcher.bat` | Desktop launcher flow |
 | **Run DJ console** | `npm --prefix apps/dj-console run dev` | Vite app in owned subtree |
 | **Run radio-agentic stack** | `pnpm --dir radio-agentic install && docker compose -f radio-agentic/docker-compose.yml up --build` | Starts owned workspace stack |
-| **Run app** | `.\DGN-DJ_Launcher.bat` | Resolves paths relative to launcher; elevated when needed |
-| **Run directly** | `.\DGN-DJ Automation.exe` | Skips launcher wrapper |
+| **Run directly (bundled artifact only)** | `.\DGN-DJ Automation.exe` | External/bundled executable; intentionally not tracked in git. |
 | **Inspect DB** | `cd config && python inspect_db.py` | Read-only schema inspection |
 | **Check JSON** | `python -m json.tool config/schedules.json` | Validate JSON syntax |
 | **Validate runtime versions** | `python scripts/validate_runtime_versions.py` | Ensures docs/manifests are in sync |
@@ -94,8 +94,11 @@ Canonical product identity is defined in `docs/productization/product_identity.m
 
 ```text
 robo/
-├── DGN-DJ Automation.exe          # Main executable (DO NOT EDIT)
-├── DGN-DJ_Launcher.bat            # Launcher script
+├── DGN-DJ_Launcher.bat            # Canonical desktop launcher script
+├── RoboDJ_Launcher.bat            # Compatibility shim launcher
+├── DGNDJ_Fullstack_Launcher.bat   # Canonical fullstack Next.js launcher
+├── DGN-DJ_Fullstack_Launcher.bat  # Deprecated compatibility fullstack launcher
+├── DGN-DJ Automation.exe          # External/bundled executable (intentionally not tracked in git)
 ├── AGENTS.md                      # This file (repo-wide agent rules)
 ├── ARCHITECTURE.md                # Top-level architecture entry point
 ├── SKILLS.md                      # Reusable skill definitions
@@ -273,6 +276,8 @@ Use these gates before moving work from planning to execution and from draft PR 
 ## Key Documentation
 
 > 📚 These documents extend the agent pipeline with detailed specifications. Load only what's needed for the active task.
+
+Launcher/entrypoint source of truth: `docs/launcher_entrypoints.md` (naming + role policy) and `docs/architecture/canonical_runtime_map.md` (runtime ownership + deployment map).
 
 | Document | Purpose |
 | -------- | ------- |

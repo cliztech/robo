@@ -294,3 +294,9 @@
 - [x] Removed accidental `src/UNKNOWN.egg-info/` artifact directory from the working tree.
 - [x] Added `scripts/ci/build_python_wheels.sh` to keep Python packaging outputs in `.artifacts/python-packaging` instead of app source paths.
 - [x] Added CI guard script `scripts/ci/check_generated_artifacts.py` and wired it into `.github/workflows/ci.yml` config job.
+
+## 2026-03-06 Launcher entrypoint contract hardening
+- [x] Defined canonical launcher source-of-truth in `docs/launcher_entrypoints.md` and synchronized runtime ownership references in `docs/architecture/canonical_runtime_map.md`.
+- [x] Reconciled root launcher statuses: canonical (`DGN-DJ_Launcher.bat`, `DGNDJ_Fullstack_Launcher.bat`), shim (`RoboDJ_Launcher.bat`), deprecated compatibility (`DGN-DJ_Fullstack_Launcher.bat`).
+- [x] Updated `AGENTS.md` and `README.md` runtime command/docs sections to reflect tracked launchers and explicit external `.exe` artifact policy.
+- [x] Added `scripts/ci/check_launcher_entrypoints.py` (path + naming policy validation) and executed it in CI config job.
