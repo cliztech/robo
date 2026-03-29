@@ -294,3 +294,9 @@
 - [x] Removed accidental `src/UNKNOWN.egg-info/` artifact directory from the working tree.
 - [x] Added `scripts/ci/build_python_wheels.sh` to keep Python packaging outputs in `.artifacts/python-packaging` instead of app source paths.
 - [x] Added CI guard script `scripts/ci/check_generated_artifacts.py` and wired it into `.github/workflows/ci.yml` config job.
+
+## 2026-03-06 Conductor product-guidelines merge cleanup
+- [x] Replaced merge-conflicted `conductor/product-guidelines.md` with a single canonical document.
+- [x] Preserved governance pointer links to `AGENTS.md`, `SKILLS.md`, and `SECURITY.md`.
+- [x] Preserved product guidance sections with updated **DGN-DJ by DGNradio** naming.
+- [x] Added `npm run check:merge-conflicts:docs` guard to scan `conductor/**/*.md` for merge markers.
