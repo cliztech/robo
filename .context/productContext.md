@@ -1,27 +1,18 @@
 # Product Context
 
-Canonical Name: **DGN-DJ by DGNradio**
-Legacy Aliases: `RoboDJ`, `AetherRadio`
-
 ## Mission
-DGN-DJ by DGNradio is a next-generation AI-powered radio automation platform that enables users to run professional 24/7 internet radio stations with intelligent playlist generation, seamless crossfading, and real-time audio processing.
-DGN-DJ Studio is a next-generation AI-powered radio automation platform that enables users to run professional 24/7 internet radio stations with intelligent playlist generation, seamless crossfading, and real-time audio processing.
+DGN-DJ by DGNradio is an AI-powered radio automation platform for operators who need reliable scheduling, automation, and recovery controls across web, service, and desktop runtimes.
 
-## Non-Negotiables
-- **Professional Audio Quality:** Web Audio API with 5-band EQ, compression, and limiting must be flawless.
-- **Always-On Reliability:** 24/7 uptime is critical for radio stations.
-- **Intelligent Automation:** Playlists must feel curated, not random.
-- **Modern UX:** Dark theme, drag-and-drop, real-time visualizations.
+## Canonical product goals
+- Ship safe automation with explicit validation gates for configuration, runtime contracts, and release readiness.
+- Reduce operator workload via scheduler UX improvements (conflict prevention, templates, keyboard parity, undo/redo).
+- Maintain operational trust through security controls, auditability, and deterministic CI checks.
 
-## User Outcomes
-- [ ] Users launch a professional-sounding station in minutes.
-- [ ] AI generates playlists that match the station's vibe without manual intervention.
-- [ ] Listeners experience seamless crossfading and high-quality audio processing.
-- [ ] Broadcasters can monitor performance and listener stats in real-time.
+## Product identity constraints
+- Canonical branding is **"DGN-DJ by DGNradio"**.
+- Legacy RoboDJ filenames remain compatibility artifacts and are not naming targets for new docs/features.
 
-## Key Features
-- **AI-Powered Automation**: Intelligent track selection and playlist generation.
-- **Professional Audio Engine**: Web Audio API with 5-band EQ, compression, and limiting.
-- **Seamless Crossfading**: Multiple crossfade algorithms with beat matching.
-- **Real-time Broadcasting**: Live streaming with Icecast integration.
-- **Smart Analytics**: Track performance, listener stats, and AI decision tracking.
+## Source anchors
+- `AGENTS.md` (identity, pipeline, boundaries)
+- `FEATURE_HEAVY_ROADMAP_TODO.md` (release goals and acceptance criteria)
+- `docs/PLANS.md` (active/completed planning tracks)

@@ -8,6 +8,8 @@
 2. Read [`SKILLS.md`](SKILLS.md) — defines reusable skill definitions with triggers and guardrails.
 3. Read [`CONFIG_VALIDATION.md`](CONFIG_VALIDATION.md) — how to validate config changes before submitting.
 4. Read [`docs/operations/agent_execution_commands.md`](docs/operations/agent_execution_commands.md) — runnable workflows for planning, parallel analysis, draft PRs, and worktrees.
+5. Initialize session memory and verify required context files:
+   - `python scripts/ci/check_context_files.py`
 
 ## Repository Nature
 
@@ -20,7 +22,7 @@ The CI workflow intentionally runs **distribution/config validation only**:
 - JSON syntax validation for `config/*.json`
 - JSON schema validation via `python config/validate_config.py`
 - Python syntax checks for maintenance scripts (e.g., `config/inspect_db.py`)
-- Presence checks for expected distribution artifacts and config layout
+- Presence checks for expected distribution artifacts, config layout, and required `.context/*` memory files
 - Frontend contract checks via `python config/spec_check_frontend_contracts.py`
 
 ## Do Not Add Generic Build Workflows

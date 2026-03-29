@@ -72,6 +72,9 @@ git branch --show-current
 
 # Confirm this playbook and core docs are present
 rg -n "agent_execution_commands.md|AGENTS.md|CONTRIBUTING.md" AGENTS.md CONTRIBUTING.md
+
+# Enforce required session-memory bootstrap files
+python scripts/ci/check_context_files.py
 ```
 
 Expected output snippet:
