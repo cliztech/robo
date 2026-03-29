@@ -282,3 +282,7 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added protected-ref runtime secret gate in CI using `python config/check_runtime_secrets.py --require-env-only` with explicit fail-fast shell settings and secret-backed env wiring.
 - Documented CI runtime contract gate commands in `docs/DEVELOPMENT_ENV_SETUP.md` for operator/developer parity.
 - Added repository hygiene guardrails for generated Python packaging artifacts: ignore `*.egg-info`, removed accidental `src/UNKNOWN.egg-info/`, added CI scanner (`scripts/ci/check_generated_artifacts.py`), and added isolated wheel-build script outputting to `.artifacts/python-packaging`.
+
+## 2026-03-06 Batch analyzer persistence failure accounting hardening
+- Updated `src/lib/ai/batch-analyzer.ts` to capture Supabase update errors per-track, throw contextualized persistence failures (`track.id` in message), and ensure `onError` always receives a typed `Error` even for non-Error thrown values.
+- Added focused unit coverage in `tests/unit/batch-analyzer.test.ts` for DB write failure accounting (`failed` increments, `successful` not incremented) and progress callback monotonicity under mixed success/failure batch writes.

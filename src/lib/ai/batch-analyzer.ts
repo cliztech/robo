@@ -1,10 +1,13 @@
 import PQueue from 'p-queue'
-import { createServerClient } from '@/lib/supabase/server'
-import { analyzeTrack } from './analyze-track'
+
+type AnalyzeTrackFn = typeof import('./analyze-track')['analyzeTrack']
+type CreateServerClientFn = typeof import('@/lib/supabase/server')['createServerClient']
 
 export interface BatchAnalysisOptions {
   stationId: string
   concurrency?: number
+  createServerClientFn?: CreateServerClientFn
+  analyzeTrackFn?: AnalyzeTrackFn
   onProgress?: (progress: {
     completed: number
     total: number
@@ -19,8 +22,10 @@ export async function batchAnalyzeTracks(options: BatchAnalysisOptions): Promise
   totalCost: number
   totalTokens: number
 }> {
-  const { stationId, concurrency = 3, onProgress, onError } = options
+  const { stationId, concurrency = 3, onProgress, onError, createServerClientFn, analyzeTrackFn } = options
 
+  const createServerClient =
+    createServerClientFn ?? (await import('@/lib/supabase/server')).createServerClient
   const supabase = await createServerClient()
 
   // Get unanalyzed tracks
@@ -43,6 +48,8 @@ export async function batchAnalyzeTracks(options: BatchAnalysisOptions): Promise
   let failed = 0
   let totalCost = 0
   let totalTokens = 0
+
+  const analyzeTrack = analyzeTrackFn ?? (await import('./analyze-track')).analyzeTrack
 
   // Process tracks
   const promises = tracks.map((track) =>
@@ -73,7 +80,7 @@ export async function batchAnalyzeTracks(options: BatchAnalysisOptions): Promise
         })
 
         // Update track
-        await supabase
+        const { error: updateError } = await supabase
           .from('tracks')
           .update({
             ai_analyzed: true,
@@ -101,12 +108,25 @@ export async function batchAnalyzeTracks(options: BatchAnalysisOptions): Promise
           })
           .eq('id', track.id)
 
+        if (updateError) {
+          throw new Error(
+            `Failed to persist AI analysis for track ${track.id}: ${updateError.message}`
+          )
+        }
+
         successful++
         totalCost += result.costUSD
         totalTokens += result.tokensUsed
-      } catch (error: any) {
+      } catch (error: unknown) {
         failed++
-        onError?.(track.id, error)
+        const typedError =
+          error instanceof Error
+            ? error
+            : new Error(
+                `Track ${track.id} analysis failed with non-Error value: ${String(error)}`
+              )
+
+        onError?.(track.id, typedError)
       }
     })
   )
