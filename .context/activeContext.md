@@ -282,3 +282,7 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added protected-ref runtime secret gate in CI using `python config/check_runtime_secrets.py --require-env-only` with explicit fail-fast shell settings and secret-backed env wiring.
 - Documented CI runtime contract gate commands in `docs/DEVELOPMENT_ENV_SETUP.md` for operator/developer parity.
 - Added repository hygiene guardrails for generated Python packaging artifacts: ignore `*.egg-info`, removed accidental `src/UNKNOWN.egg-info/`, added CI scanner (`scripts/ci/check_generated_artifacts.py`), and added isolated wheel-build script outputting to `.artifacts/python-packaging`.
+
+## 2026-03-06 Batch-analyze Supabase client + regression coverage
+- Removed duplicate `supabase` declaration in `/api/ai/batch-analyze` and kept a single awaited `createServerClient()` instance for auth/session + station ownership checks.
+- Expanded integration coverage for batch-analyze auth success, 401 unauthenticated guard, idempotent replay after first success, and explicit rate-limit-before-idempotency branch ordering.
