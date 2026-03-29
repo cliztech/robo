@@ -282,3 +282,9 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added protected-ref runtime secret gate in CI using `python config/check_runtime_secrets.py --require-env-only` with explicit fail-fast shell settings and secret-backed env wiring.
 - Documented CI runtime contract gate commands in `docs/DEVELOPMENT_ENV_SETUP.md` for operator/developer parity.
 - Added repository hygiene guardrails for generated Python packaging artifacts: ignore `*.egg-info`, removed accidental `src/UNKNOWN.egg-info/`, added CI scanner (`scripts/ci/check_generated_artifacts.py`), and added isolated wheel-build script outputting to `.artifacts/python-packaging`.
+
+## 2026-03-06 Supabase server client merge cleanup
+- Replaced merge-corrupted `src/lib/supabase/server.ts` with one canonical async `createServerClient` export.
+- Unified env resolution on canonical `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY` with temporary alias fallback warnings.
+- Standardized a single typed cookie adapter with `get`/`set`/`remove` paths compatible with server-component cookie immutability.
+- Added unit coverage for deterministic missing-env errors, alias fallback resolution, and non-throwing cookie adapter mutations.

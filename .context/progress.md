@@ -294,3 +294,9 @@
 - [x] Removed accidental `src/UNKNOWN.egg-info/` artifact directory from the working tree.
 - [x] Added `scripts/ci/build_python_wheels.sh` to keep Python packaging outputs in `.artifacts/python-packaging` instead of app source paths.
 - [x] Added CI guard script `scripts/ci/check_generated_artifacts.py` and wired it into `.github/workflows/ci.yml` config job.
+
+## 2026-03-06 Supabase server client merge cleanup
+- [x] Replaced merge-corrupted `src/lib/supabase/server.ts` with a single async `createServerClient` implementation.
+- [x] Kept canonical env names with deprecated alias fallback and deterministic missing-env error messages.
+- [x] Implemented one typed cookie adapter (`get`/`set`/`remove`) without `as any` and with server-component-safe mutation guards.
+- [x] Added `tests/unit/supabase-server.test.ts` covering missing env, alias fallback, and non-throwing cookie adapter mutation paths.
