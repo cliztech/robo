@@ -8,6 +8,7 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 ## Recent Decisions
 
+- Refactored `src/lib/api/request-controls.ts` to support pluggable request-control storage with an Upstash/Redis shared backend option and in-memory fallback; added cross-instance test coverage for shared rate-limit/idempotency behavior.
 - Standardized Supabase env naming on `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`, documented deprecated alias migration (`SUPABASE_URL`, `SUPABASE_ANON_KEY`), and added temporary server fallback warning logging for transition safety.
 
 - Hardened `src/app/api/ai/analyze-track/route.ts` and `src/app/api/ai/batch-analyze/route.ts` with strict JSON content-type gates, request size checks, and Zod `safeParse` validation, and standardized deterministic API error payloads via new `src/lib/api/error.ts` helper.
