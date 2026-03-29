@@ -294,3 +294,5 @@
 - [x] Removed accidental `src/UNKNOWN.egg-info/` artifact directory from the working tree.
 - [x] Added `scripts/ci/build_python_wheels.sh` to keep Python packaging outputs in `.artifacts/python-packaging` instead of app source paths.
 - [x] Added CI guard script `scripts/ci/check_generated_artifacts.py` and wired it into `.github/workflows/ci.yml` config job.
+
+- [x] Unified `src/app/api/ai/analyze-track/route.ts` control flow and repaired decision logging branch to compile with deterministic JSON success/error responses; expanded `tests/integration/ai-analyze-track-route.test.ts` for success/short-circuit/non-fatal logging failure/auth cases.
