@@ -294,3 +294,9 @@
 - [x] Removed accidental `src/UNKNOWN.egg-info/` artifact directory from the working tree.
 - [x] Added `scripts/ci/build_python_wheels.sh` to keep Python packaging outputs in `.artifacts/python-packaging` instead of app source paths.
 - [x] Added CI guard script `scripts/ci/check_generated_artifacts.py` and wired it into `.github/workflows/ci.yml` config job.
+
+## 2026-03-06 Dashboard status proxy upstream resilience
+- [x] Added `AbortController` timeout handling with env-configurable timeout (`DASHBOARD_STATUS_UPSTREAM_TIMEOUT_MS`, default 5000ms) to `src/app/api/v1/status/dashboard/_shared/proxy.ts`.
+- [x] Wrapped dashboard upstream fetch in `try/catch` and normalized transport failures to stable envelopes (`UPSTREAM_TIMEOUT`, `UPSTREAM_UNREACHABLE`).
+- [x] Kept non-2xx backend response normalization unchanged for existing route behavior.
+- [x] Added integration tests for upstream timeout, network exception, and non-JSON upstream error payload fallback in `tests/integration/status-dashboard-routes.test.ts`.

@@ -282,3 +282,9 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added protected-ref runtime secret gate in CI using `python config/check_runtime_secrets.py --require-env-only` with explicit fail-fast shell settings and secret-backed env wiring.
 - Documented CI runtime contract gate commands in `docs/DEVELOPMENT_ENV_SETUP.md` for operator/developer parity.
 - Added repository hygiene guardrails for generated Python packaging artifacts: ignore `*.egg-info`, removed accidental `src/UNKNOWN.egg-info/`, added CI scanner (`scripts/ci/check_generated_artifacts.py`), and added isolated wheel-build script outputting to `.artifacts/python-packaging`.
+
+## 2026-03-06 Dashboard status proxy upstream resilience
+- Added upstream request timeout control via `DASHBOARD_STATUS_UPSTREAM_TIMEOUT_MS` (default 5000ms) using `AbortController` in dashboard proxy shared transport layer.
+- Added transport failure normalization to stable envelopes: timeout -> `504/UPSTREAM_TIMEOUT`, network failure -> `502/UPSTREAM_UNREACHABLE`.
+- Preserved existing non-2xx backend error normalization behavior, including generic fallback on non-JSON upstream error payloads.
+- Added integration coverage for timeout mapping, network exception mapping, and non-JSON upstream error payload fallback.

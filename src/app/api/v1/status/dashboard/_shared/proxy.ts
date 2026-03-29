@@ -13,6 +13,7 @@ interface ProxyErrorEnvelope {
 }
 
 const DEFAULT_BACKEND_BASE_URL = 'http://127.0.0.1:5000';
+const DEFAULT_UPSTREAM_TIMEOUT_MS = 5_000;
 
 function resolveBackendBaseUrl(): string {
   return (
@@ -24,6 +25,20 @@ function resolveBackendBaseUrl(): string {
 
 function buildErrorEnvelope(status: number, detail: string, code?: string): ProxyErrorEnvelope {
   return { status, detail, code };
+}
+
+function resolveUpstreamTimeoutMs(): number {
+  const raw = process.env.DASHBOARD_STATUS_UPSTREAM_TIMEOUT_MS;
+  if (!raw) {
+    return DEFAULT_UPSTREAM_TIMEOUT_MS;
+  }
+
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return DEFAULT_UPSTREAM_TIMEOUT_MS;
+  }
+
+  return parsed;
 }
 
 async function requireSession(): Promise<ProxySession | NextResponse> {
@@ -63,17 +78,40 @@ export async function proxyDashboardRequest(request: NextRequest, path: string, 
   }
 
   const backendUrl = `${resolveBackendBaseUrl()}${path}`;
-  const upstreamResponse = await fetch(backendUrl, {
-    method: init?.method ?? request.method,
-    headers: {
-      Accept: 'application/json',
-      Authorization: `Bearer ${session.accessToken}`,
-      'X-User-Id': session.userId,
-      ...(init?.headers ?? {}),
-    },
-    cache: 'no-store',
-    body: init?.body ?? request.body,
-  });
+  const timeoutMs = resolveUpstreamTimeoutMs();
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    controller.abort('dashboard_upstream_timeout');
+  }, timeoutMs);
+
+  let upstreamResponse: Response;
+
+  try {
+    upstreamResponse = await fetch(backendUrl, {
+      method: init?.method ?? request.method,
+      headers: {
+        Accept: 'application/json',
+        Authorization: `Bearer ${session.accessToken}`,
+        'X-User-Id': session.userId,
+        ...(init?.headers ?? {}),
+      },
+      cache: 'no-store',
+      body: init?.body ?? request.body,
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      return NextResponse.json(buildErrorEnvelope(504, 'Dashboard backend request timed out', 'UPSTREAM_TIMEOUT'), {
+        status: 504,
+      });
+    }
+
+    return NextResponse.json(buildErrorEnvelope(502, 'Dashboard backend is unreachable', 'UPSTREAM_UNREACHABLE'), {
+      status: 502,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   const contentType = upstreamResponse.headers.get('content-type') ?? '';
   const payload = contentType.includes('application/json')
