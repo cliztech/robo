@@ -1,66 +1,48 @@
 # Runtime & Deployment Matrix
 
-**Version:** 1.0
+**Version:** 2.0  
 **Applies to:** `dev`, `staging`, `prod`
 
-## Supported profiles
+## Compose model (base + overlays)
 
-| Profile | Primary runtime | Launch path | Data source | Intended usage |
+- **Base:** `docker-compose.base.yml` defines common services (`backend`, `frontend`, `db`, `redis`) and shared runtime constraints.
+- **Dev overlay:** `docker-compose.dev.yml` enables hot reload, local bind mounts, and development image/build settings.
+- **Staging overlay:** `docker-compose.staging.yml` binds staging env files.
+- **Release security overlay (staging+prod):** `docker-compose.release.yml` applies immutable-image runtime posture with stricter container hardening defaults.
+- **Prod overlay:** `docker-compose.prod.yml` binds production env files and resource limits.
+
+## Operator command matrix
+
+| Profile | Compose files | Profiles flag | Start command | Validate command |
 | --- | --- | --- | --- | --- |
-| `dev` | Python 3.x + local scripts | `python` / local tooling | Local config + local DB copies | Feature/dev validation |
-| `staging` | Windows launcher + validated config | `RoboDJ_Launcher.bat` | Staging config snapshots | Pre-release verification |
-| `prod` | Windows launcher + approved release bundle | `RoboDJ_Launcher.bat` | Production config snapshots | Live operations |
+| `dev` | `docker-compose.base.yml` + `docker-compose.dev.yml` | `--profile dev` | `docker compose -f docker-compose.base.yml -f docker-compose.dev.yml --profile dev up -d` | `docker compose -f docker-compose.base.yml -f docker-compose.dev.yml --profile dev config` |
+| `staging` | `docker-compose.base.yml` + `docker-compose.staging.yml` + `docker-compose.release.yml` | `--profile staging` | `docker compose -f docker-compose.base.yml -f docker-compose.staging.yml -f docker-compose.release.yml --profile staging up -d` | `docker compose -f docker-compose.base.yml -f docker-compose.staging.yml -f docker-compose.release.yml --profile staging config` |
+| `prod` | `docker-compose.base.yml` + `docker-compose.release.yml` + `docker-compose.prod.yml` | `--profile prod` | `docker compose -f docker-compose.base.yml -f docker-compose.release.yml -f docker-compose.prod.yml --profile prod up -d` | `docker compose -f docker-compose.base.yml -f docker-compose.release.yml -f docker-compose.prod.yml --profile prod config` |
 
-## Compatibility constraints
+## Env contract alignment (`config/env_contract.json`)
 
-| Concern | `dev` | `staging` | `prod` |
-| --- | --- | --- | --- |
-| Config validation (`config/validate_config.py`) | Required before merge | Required before release candidate | Required before deployment |
-| Backup snapshots (`config/backups/`) | Recommended | Required | Required |
-| Secret handling (`.key`, env vars) | Placeholder or env-only | Env-only; no plaintext in repo | Env-only; audited |
-| Database files (`settings.db`, `user_content.db`) | Read-only for agents | Read-only for agents | Read-only for agents |
-| Binary edits (`.exe`) | Forbidden | Forbidden | Forbidden |
+### Standardized `env_file` layout
 
-### Secret handling (`.key`, env vars)
+- Shared: `deploy/env/docker.common.env`
+- Dev: `deploy/env/docker.dev.env`
+- Staging: `deploy/env/docker.staging.env`
+- Prod: `deploy/env/docker.prod.env`
 
-#### Secret manager key -> runtime env var mapping
+### Required variables per profile
 
-| Secret manager key (authoritative source) | Runtime env var (consumed by app) | Notes |
-| --- | --- | --- |
-| `dgn-dj/<profile>/ROBODJ_SECRET_KEY` | `ROBODJ_SECRET_KEY` | Primary symmetric secret; rotate as a pair with v2 key. |
-| `dgn-dj/<profile>/ROBODJ_SECRET_V2_KEY` | `ROBODJ_SECRET_V2_KEY` | Secondary/forward-compat key; required in all profiles. |
+| Variable | Contract context | Dev | Staging | Prod |
+| --- | --- | --- | --- | --- |
+| `COMPOSE_PROJECT_NAME` | `docker_stack` required | ✅ | ✅ | ✅ |
+| `ROBODJ_ENV` | `docker_stack` required | `development` | `staging` | `production` |
+| `ROBODJ_LOG_LEVEL` | `docker_stack` required | ✅ | ✅ | ✅ |
+| `ROBODJ_HTTP_PORT` | `docker_stack` required | ✅ | ✅ | ✅ |
+| `ROBODJ_SECRET_KEY` | `docker_stack` required | ✅ | ✅ | ✅ |
+| `ROBODJ_SECRET_V2_KEY` | `docker_stack` required | ✅ | ✅ | ✅ |
+| `ROBODJ_IDLE_TIMEOUT_MINUTES` | `docker_stack` optional | optional | optional | optional |
+| `ROBODJ_REAUTH_GRACE_MINUTES` | `docker_stack` optional | optional | optional | optional |
 
-#### Rotation ownership and approval by profile
+## Compatibility notes
 
-| Profile | Rotation owner | Approval authority | Allowed fallback file usage |
-| --- | --- | --- | --- |
-| `dev` | Feature owner or local operator | Dev lead | Allowed only for explicit local development or break-glass testing; remove after use. |
-| `staging` | Release Manager Agent | Management Team sign-off | Not allowed for normal flow; break-glass only with documented incident ticket + expiry. |
-| `prod` | Release Manager Agent + SecOps Secrets Auditor Agent | Incident commander or designated production approver | Not allowed for normal flow; break-glass only during active incident with post-incident cleanup evidence. |
-
-Normal release workflows must be env-only for secret injection. Fallback secret files are prohibited outside explicit local dev/break-glass scenarios.
-
-## Promotion gates
-
-### `dev` -> `staging`
-
-- Config validation passes.
-- Runtime secret preflight passes in env-only mode: `python config/check_runtime_secrets.py --require-env-only`.
-- Roadmap-critical docs updated (contracts/runbooks/checklists).
-- No secret exposure in staged diff.
-
-### `staging` -> `prod`
-
-- `PRE_RELEASE_CHECKLIST.md` gates completed.
-- Runtime secret preflight passes in env-only mode: `python config/check_runtime_secrets.py --require-env-only`.
-- Rollback drill validated against latest snapshot.
-- Incident escalation contacts confirmed.
-
-## Drift policy
-
-If a profile deviates from this matrix, document the exception in release notes with:
-
-- date/time,
-- owner,
-- expected duration,
-- rollback/remediation path.
+- `docker-compose.yaml` remains as a temporary compatibility shim for tooling that still expects the legacy filename.
+- Legacy standalone files `docker-compose.safe.yaml` and `docker-compose.docker-control.yaml` were removed after migration to the profile-overlay model.
+- Prefer explicit layered commands from the matrix above for all operator and CI workflows.

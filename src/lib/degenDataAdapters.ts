@@ -1,3 +1,5 @@
+import { getBooleanEnv, resolveAppEnvironment } from '@/lib/env';
+
 export interface TrackLibraryTrack {
     id: string;
     title: string;
@@ -50,8 +52,9 @@ export interface MixerChannelState {
     vuLevel: number;
 }
 
+
 export const DEGEN_DEMO_DATA_ENABLED =
-    process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEGEN_DEMO_DATA === 'true';
+    resolveAppEnvironment() === 'development' && getBooleanEnv('NEXT_PUBLIC_DEGEN_DEMO_DATA', false);
 
 export const DEMO_TRACK_LIBRARY: TrackLibraryTrack[] = [
     { id: '1', title: 'Neural Drift v2.1', artist: 'SynthKong', bpm: 128, key: 'Am', duration: 234, genre: 'Deep House', energy: 7 },

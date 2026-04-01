@@ -3,9 +3,11 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 SKILLS_DIR = ROOT / "skills"
@@ -32,11 +34,72 @@ MCP_REQUIRED = {
 }
 
 
-def load_json(path: Path) -> dict:
+def load_json(path: Path) -> dict[str, Any]:
     try:
         return json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         raise ValueError(f"Invalid JSON in {path}: {exc}") from exc
+
+
+def validate_against_schema(payload: Any, schema: dict[str, Any], *, path_prefix: str) -> list[str]:
+    errors: list[str] = []
+
+    schema_type = schema.get("type")
+    if schema_type == "object":
+        if not isinstance(payload, dict):
+            errors.append(f"{path_prefix}: expected object")
+            return errors
+
+        required = schema.get("required", [])
+        for key in required:
+            if key not in payload:
+                errors.append(f"{path_prefix}: missing required key '{key}'")
+
+        properties = schema.get("properties", {})
+        for key, value in payload.items():
+            if key in properties:
+                errors.extend(
+                    validate_against_schema(value, properties[key], path_prefix=f"{path_prefix}.{key}")
+                )
+            elif schema.get("additionalProperties") is False:
+                errors.append(f"{path_prefix}: unexpected key '{key}'")
+
+    elif schema_type == "array":
+        if not isinstance(payload, list):
+            errors.append(f"{path_prefix}: expected array")
+            return errors
+
+        min_items = schema.get("minItems")
+        if isinstance(min_items, int) and len(payload) < min_items:
+            errors.append(f"{path_prefix}: expected at least {min_items} items")
+
+        item_schema = schema.get("items")
+        if isinstance(item_schema, dict):
+            for idx, item in enumerate(payload):
+                errors.extend(
+                    validate_against_schema(item, item_schema, path_prefix=f"{path_prefix}[{idx}]")
+                )
+
+    elif schema_type == "string":
+        if not isinstance(payload, str):
+            errors.append(f"{path_prefix}: expected string")
+        else:
+            min_length = schema.get("minLength")
+            if isinstance(min_length, int) and len(payload) < min_length:
+                errors.append(f"{path_prefix}: expected minimum length {min_length}")
+
+            const_value = schema.get("const")
+            if const_value is not None and payload != const_value:
+                errors.append(f"{path_prefix}: expected constant value '{const_value}'")
+
+            pattern = schema.get("pattern")
+            if isinstance(pattern, str):
+                import re
+
+                if not re.match(pattern, payload):
+                    errors.append(f"{path_prefix}: does not match pattern '{pattern}'")
+
+    return errors
 
 
 def validate_skills(errors: list[str]) -> None:
@@ -81,7 +144,7 @@ def validate_skills(errors: list[str]) -> None:
                 errors.append(f"{rel_skill}: entrypoint does not exist: {rel_entry}")
 
 
-def validate_mcp(errors: list[str]) -> None:
+def validate_mcp(errors: list[str], *, validate_schema: bool) -> None:
     servers_index = MCP_DIR / "servers.json"
     if not servers_index.exists():
         errors.append(f"Missing MCP server index: {servers_index.relative_to(ROOT)}")
@@ -90,6 +153,11 @@ def validate_mcp(errors: list[str]) -> None:
     index = load_json(servers_index)
     if index.get("project") != "dgn-dj":
         errors.append("infra/mcp/servers.json: project must be 'dgn-dj'")
+
+    if validate_schema:
+        schema_path = MCP_DIR / "schemas" / "mcp-servers.schema.json"
+        schema = load_json(schema_path)
+        errors.extend(validate_against_schema(index, schema, path_prefix="infra/mcp/servers.json"))
 
     servers = index.get("servers")
     if not isinstance(servers, list) or not servers:
@@ -143,24 +211,43 @@ def validate_mcp(errors: list[str]) -> None:
             )
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--skills-only", action="store_true", help="Validate skills metadata only")
+    parser.add_argument("--mcp-only", action="store_true", help="Validate MCP manifests only")
+    parser.add_argument(
+        "--validate-mcp-schema",
+        action="store_true",
+        help="Validate infra/mcp/servers.json against infra/mcp/schemas/mcp-servers.schema.json",
+    )
+    return parser.parse_args()
+
+
 def main() -> int:
+    args = parse_args()
+    if args.skills_only and args.mcp_only:
+        print("Cannot combine --skills-only and --mcp-only", file=sys.stderr)
+        return 2
+
     errors: list[str] = []
 
     try:
-        validate_skills(errors)
-        validate_mcp(errors)
+        if not args.mcp_only:
+            validate_skills(errors)
+        if not args.skills_only:
+            validate_mcp(errors, validate_schema=args.validate_mcp_schema)
     except ValueError as exc:
         errors.append(str(exc))
 
     if errors:
-        print("Validation failed:")
-        for issue in errors:
-            print(f" - {issue}")
+        print("Validation failed:", file=sys.stderr)
+        for err in errors:
+            print(f" - {err}", file=sys.stderr)
         return 1
 
-    print("Validation passed: skills and MCP manifests are discoverable and schema-compliant.")
+    print("All skill and MCP validations passed.")
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())

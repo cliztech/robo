@@ -1,0 +1,30 @@
+services:
+  backend:
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    pids_limit: 256
+
+  frontend:
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    pids_limit: 256
+
+  db:
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+
+  redis:
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
