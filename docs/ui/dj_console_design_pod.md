@@ -31,6 +31,8 @@ Out of scope for this pod:
 | UI/UX Agent | Design Team · UI/UX Agent | Wireframes, interaction states, workflow ergonomics, operator task-flow design | PM/Architect Liaison |
 | Accessibility Auditor | Design Team · Accessibility Auditor Agent | Keyboard-first and assistive-technology criteria, ARIA/focus order, contrast and readability conformance | QA Visual/Regression Support |
 | Brand Consistency Agent | Design Team · Brand Consistency Agent | Enforce DGN-DJ branding language, visual identity alignment, copy consistency | UI/UX Agent |
+| DJ Hardware Specialist | BMAD Specialist · DJ Hardware Specialist | Deck/cue/headphone realism contracts, tactile workflow parity, accidental-trigger guardrail design | UI/UX Agent |
+| Radio Control Room Specialist | BMAD Specialist · Radio Control Room Specialist | Mixer strip semantics, broadcast chain state contracts, live incident recovery playbooks | PM/Architect Liaison |
 | QA Visual/Regression Support | QA Team · Regression Watcher Agent | Visual baseline checks, UI regression coverage expectations, pre-PR verification evidence | Accessibility Auditor |
 | PM/Architect Liaison | Management Team · Project Coordinator Agent | Scope arbitration, dependency/risk tracking, cross-team handoff alignment, escalation owner | Sprint Planner Agent |
 
@@ -39,9 +41,29 @@ Out of scope for this pod:
 - **Daily standup owner:** PM/Architect Liaison.
 - **Daily standup cadence:** 15 minutes, business days, focused on blockers and artifact status.
 - **Weekly design review gate owner:** UI/UX Agent.
-- **Weekly design review cadence:** Once weekly, includes Accessibility Auditor + Brand Consistency + QA Visual/Regression sign-off.
+- **Weekly design review cadence:** Once weekly, includes Accessibility Auditor + Brand Consistency + DJ Hardware Specialist + Radio Control Room Specialist + QA Visual/Regression sign-off.
 - **Pre-PR quality gate owner:** QA Visual/Regression Support.
-- **Pre-PR quality gate cadence:** Required before each PR opening and re-run before Ready-for-Review.
+- **Pre-PR quality gate cadence:** Required before each PR opening and re-run before Ready-for-Review; specialist realism criteria from `equipment_interaction_model.md` are mandatory evidence inputs.
+
+## Specialist Ownership and Handoff Contracts
+
+- **DJ Hardware Specialist ownership:** deck transport realism, cue/monitor behavior contracts, one-hand live-op keyboard parity, and accidental-trigger prevention for performance controls.
+- **Radio Control Room Specialist ownership:** mixer channel strip semantics, broadcast signal-chain observability requirements, and error-recovery playbook readiness.
+
+### Handoff contracts
+
+1. **UI/UX Agent → DJ Hardware Specialist**
+   - Input: interaction state map + keyboard map draft for decks/cue/headphone controls.
+   - Output: realism acceptance annotations and safety-control gap list.
+2. **UI/UX Agent + PM/Architect Liaison → Radio Control Room Specialist**
+   - Input: mixer/broadcast diagnostics interaction specs and degraded-state designs.
+   - Output: control-room semantics validation and recovery-playbook corrections.
+3. **Specialists → Accessibility Auditor + QA Visual/Regression Support**
+   - Input: finalized realism criteria and failure-state expectations from `equipment_interaction_model.md`.
+   - Output: verifiable pass/fail checks for keyboard parity, latency, and regression harness scenarios.
+4. **QA Visual/Regression Support → PM/Architect Liaison**
+   - Input: specialist acceptance evidence + pre-PR findings.
+   - Output: go/no-go recommendation for implementation handoff.
 
 ## Decision Rights and Escalation Path
 

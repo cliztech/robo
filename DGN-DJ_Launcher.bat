@@ -2,7 +2,7 @@
 setlocal
 
 :: Directory assumptions:
-::   - This launcher sits beside "DGN-DJ Automation.exe".
+::   - This launcher sits beside the primary executable.
 ::   - Runtime config assets live under ".\config" from this launcher directory.
 :: Resolve launcher location (%~dp0) so startup is portable across machines/drives.
 set "SCRIPT_DIR=%~dp0"
@@ -15,14 +15,14 @@ set "SCRIPTS_DIR=%CONFIG_DIR%\scripts"
 set "SAFETY_SCRIPT=%SCRIPTS_DIR%\startup_safety.py"
 
 if not exist "%EXE_PATH%" (
-    echo [DGN-DJ] ERROR: Unable to find DGN-DJ Automation executable.
-    echo [DGN-DJ] Expected path: "%PRIMARY_EXE_PATH%"
+    echo [DGN-DJ Studio] ERROR: Unable to find core executable.
+    echo [DGN-DJ Studio] Expected path: "%PRIMARY_EXE_PATH%"
     exit /b 1
 )
 
 if not exist "%SAFETY_SCRIPT%" (
-    echo [DGN-DJ] ERROR: Missing startup safety script.
-    echo [DGN-DJ] Expected path: "%SAFETY_SCRIPT%"
+    echo [DGN-DJ Studio] ERROR: Missing startup safety script.
+    echo [DGN-DJ Studio] Expected path: "%SAFETY_SCRIPT%"
     exit /b 1
 )
 
@@ -37,24 +37,26 @@ if %ERRORLEVEL%==0 (
 )
 
 if "%PYTHON_CMD%"=="" (
-    echo [DGN-DJ] ERROR: Python runtime was not found.
-    echo [DGN-DJ] Install Python 3.x and rerun this launcher.
+    echo [DGN-DJ Studio] ERROR: Python runtime was not found.
+    echo [DGN-DJ Studio] Install Python 3.x and rerun this launcher.
     exit /b 1
 )
 
 :: Startup diagnostics + config validation + auto-recovery + snapshot gate.
 :: Run from launcher directory so any relative paths inside safety tooling resolve correctly.
 pushd "%SCRIPT_DIR%"
+echo [DGN-DJ Studio] Running pre-flight safety checks...
 call %PYTHON_CMD% "%SAFETY_SCRIPT%" --on-launch
 set "SAFETY_EXIT=%ERRORLEVEL%"
 popd
 
 if not "%SAFETY_EXIT%"=="0" (
-    echo [DGN-DJ] Startup blocked by reliability safety gate.
+    echo [DGN-DJ Studio] Startup blocked by reliability safety gate.
     endlocal & exit /b %SAFETY_EXIT%
 )
 
-:: Launch DGN-DJ Automation as Administrator to handle permission-sensitive operations.
+:: Launch DGN-DJ Studio as Administrator to handle permission-sensitive operations.
+echo [DGN-DJ Studio] Launching Core Engine...
 set "DGNDJ_EXE_PATH=%EXE_PATH%"
 set "DGNDJ_WORK_DIR=%SCRIPT_DIR%"
 powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath $env:DGNDJ_EXE_PATH -WorkingDirectory $env:DGNDJ_WORK_DIR -Verb RunAs"
