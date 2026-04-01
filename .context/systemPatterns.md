@@ -1,43 +1,21 @@
 # System Patterns
 
-## Architecture
-- **Frontend:** Next.js 14 App Router (Server & Client Components)
-- **Data Flow:** Unidirectional (Props/State -> Component -> API -> DB)
-- **State Ownership:** Zustand (Global State), Context (Audio Engine)
-- **Audio Engine:** Web Audio API (Client-Side), FFmpeg (Server-Side)
-- **AI Integration:** Vercel AI SDK (Typed Interfaces), OpenAI (Generative Logic)
+## Execution architecture
+- Stage-gated multi-agent flow: Intake -> Planner -> Executor -> Verifier -> Handoff.
+- Route selection uses BMAD-first policy; fallback to standard planning/execution/verification.
+- Every change must preserve scope boundaries and verification evidence.
 
-## Module Organization
-- `backend/`: Python source (content engine, agents, models)
-- `config/`: Runtime state, JSON configs, SQLite databases (read-only for agents)
-- `contracts/`: API contracts and redaction rules
-- `docs/`: Specifications and documentation
-- `infra/`: Docker and cloud infrastructure definitions
-- `src/`: Frontend source (components, hooks, pages)
+## Repository structure patterns
+- Runtime/product assets: `backend/`, `config/`, launcher artifacts at repo root.
+- Planning/status artifacts: `docs/exec-plans/active/`, `docs/exec-plans/completed/`, `docs/PLANS.md`.
+- Operational controls: `docs/operations/*`, CI scripts in `scripts/ci/`, workflows in `.github/workflows/`.
 
-## Code Laws
-- **Early Returns:** Prefer early returns to deeply nested conditionals.
-- **File Size:** Files should ideally be <200 lines. Break down complex components.
-- **Single Responsibility:** One function/component per logical task.
-- **Naming:** Descriptive names (`load_schedule` not `load`).
-- **Commits:** Conventional Commits (`feat:`, `fix:`, `docs:`, `chore:`).
-- **Backups:** Always backup `.json`, `.py`, `.md`, `.txt` config files before editing.
-- **Testing:** Add tests for all new logic (`npm run test`).
+## Quality and safety patterns
+- Hard gates before release and Ready-for-Review transitions.
+- Configuration and runtime validation are first-class checks, not optional docs guidance.
+- Prefer small scoped commits with Conventional Commit messages.
 
-## Boundaries
-- **Always Do:**
-  - Read-only inspection of any file.
-  - Backup config files before editing.
-  - Run `python -m json.tool` to validate JSON edits.
-- **Ask First:**
-  - Adding new scripts to `config/scripts/`.
-  - Modifying `schedules.json` or `prompt_variables.json` structure.
-  - Changes to `backend/` Python modules.
-  - Adding dependencies.
-- **Never Do:**
-  - Edit `.exe`, `.db`, or `.key` files directly.
-  - Commit secrets or API keys.
-  - Remove files without explicit approval.
-
-## Team Structure (AGENTS.md)
-The system operates with specialized agent teams (DevOps, SecOps, Design, etc.). Refer to `AGENTS.md` for detailed role definitions and handoffs.
+## Source anchors
+- `AGENTS.md`
+- `ARCHITECTURE.md`
+- `docs/operations/agent_execution_commands.md`

@@ -96,6 +96,7 @@ Use command-style prompts that map to entries in `_bmad/_config/bmad-help.csv`, 
 | **Validate runtime versions** | `python scripts/validate_runtime_versions.py` | Ensures docs/manifests are in sync |
 | **Git status** | `git status --short` | Quick changed-file overview |
 | **Diff check** | `git diff --name-only` | List modified files before commit |
+| **Validate context memory files** | `python scripts/ci/check_context_files.py` | Fails if required `.context/*` bootstrap files are missing. |
 | Action                        | Command                                                                                             | Notes                                                                                |
 | ----------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
 | **Run DGN-DJ app**            | `.\RoboDJ_Launcher.bat`                                                                             | Starts DGN-DJ via the legacy launcher filename; resolves paths relative to launcher. |
