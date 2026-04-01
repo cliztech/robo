@@ -1,5 +1,14 @@
 # Progress
 
+## 2026-03-28 Dashboard Mapping Refactor
+- [x] Refactored `src/components/console/dashboard.types.ts` to use typed lookup-table mappings for severity/status conversions, reducing repetitive switch logic while preserving behavior.
+- [x] Added `tests/unit/dashboard-types.test.ts` to validate severity/status mapping contracts end-to-end.
+
+## 2026-03-21 Developer Environment Stabilization
+- [x] Resolved `settings.json` configuration conflict (Studio tool auto-approval error).
+- [x] Added `.gitattributes` to enforce repository-wide line ending normalization and resolve LF/CRLF warnings.
+- [x] Tracked `vitest.config.mts` to ensure consistent test environment configuration.
+
 ## 2026-03-05 API Request Validation Hardening
 - [x] Added shared API error helper (`src/lib/api/error.ts`) returning deterministic `{ error_code, message, details }` envelopes.
 - [x] Added `application/json` content-type enforcement and bounded request-body size checks for AI analyze-track and batch-analyze routes.
@@ -40,6 +49,11 @@
 
 ## Recent Completed Work
 
+- [x] Delivered a dedicated radio-station control room surface for the `studio` workspace with a cinematic operations hero, scheduling lane, smart playlist stack, host tool cluster, and multi-output/compliance overview for online station management.
+- [x] Ran a live browser design review on the DJ console and landed a second refinement pass: compressed the marquee hierarchy, strengthened mixer focal treatment with a reactor summary band, rebalanced deck/mixer proportions, and fixed studio-surface theme leakage so the interface stays dark and cohesive under app theme changes.
+- [x] Continued the AAA-grade DJ interface pass: promoted the shell into a cinematic command bridge with a marquee hero panel, environmental lighting, angular deck-wing staging, and upgraded PlatinumCDJ typography/chrome for a more game-like hardware fantasy.
+- [x] Continued DJ console visual quality pass: made the `decks` view the default operator landing screen, upgraded deck surfaces with full hardware panels and command telemetry, lifted waveform/mixer chrome, and modernized the console topbar for live-performance readability.
+- [x] Consolidated `scripts/codex_env_doctor.sh` to a single shellcheck-clean implementation (strict mode, trap-based cleanup, single explicit exit semantics) and added CI drift detection for mixed PASS output formats in `.github/workflows/codex-env-doctor-check.yml`.
 - [x] Hardened dashboard alert acknowledgement mutation flow to use per-alert rollback snapshots, in-flight dedupe by alert ID, and functional updates for all ack-path state writes.
 - [x] Added targeted dashboard UI tests for concurrent sibling acknowledgements (one success, one failure) and duplicate-click in-flight dedupe behavior.
 - Added Delivery Phase 8 dashboard automated coverage for loading/error/success states, alert acknowledge interaction, threshold boundary rendering, and fallback-metric regression in `tests/ui/dashboard-view.test.tsx`.
@@ -243,6 +257,15 @@
 - [x] Replaced backend operator-facing legacy RoboDJ naming in startup error text and FastAPI title with DGN-DJ branding.
 - [x] Added docs consistency check execution to CI and strengthened `scripts/ci/check_docs_consistency.py` with README title/index validation.
 
+## 2026-03-03 TI-040/TI-041 Dependency Evidence Update
+- [x] Completed TI-040 dependency checkpoint documentation with explicit evidence references for `DEP-TI040-01..03` in `docs/exec-plans/active/tracked-issues/TI-040.md`.
+- [x] Recorded blocker evidence that `DEP-TI040-03` is not currently satisfiable due to missing high-risk key paths in `config/prompt_variables.json` and `config/schedules.json`.
+- [x] Downgraded TI-041 status to Blocked, updated `SMK-AUTHZ-01` and `SMK-PRIV-01` evidence requirements to include TI-040 encrypted-field hash linkage, and mirrored dependency state in sprint/TODO artifacts.
+## 2026-03-03 Cadence Governance Hardening
+- [x] Converted dated Tracking Cadence items in `TODO.md` into explicit checklist rows with owner, due date, defer rationale, and replacement due metadata.
+- [x] Added compact cadence `next run window` table to `docs/operations/execution_index.md` with `status` values (`due`, `deferred`).
+- [x] Extended `scripts/roadmap_autopilot.py` with overdue cadence enforcement that exits non-zero when defer rationale/replacement date requirements are missing.
+- [x] Added cadence governance command gate to `PRE_RELEASE_CHECKLIST.md` to block release closure on unresolved overdue cadence items.
 ## 2026-03-03 Roadmap Autopilot Build Plan Integrity
 - [x] Switched roadmap autopilot build-plan output to atomic temp-file replacement writes.
 - [x] Added task/reminder de-duplication keyed by `(source_file, line_ref, normalized_task_text)` before markdown rendering.
@@ -260,35 +283,95 @@
 - [x] Kept decode compatibility for legacy envelope representations (`nonce/ciphertext/tag` and `enc::` string payloads).
 - [x] Updated and passed crypto test coverage in `backend/tests/test_config_crypto.py` and `backend/tests/test_security_config_crypto.py`.
 
+## 2026-03-04 DJ Console Realism Specialist Enablement
+- [x] Added `_bmad/bmm/agents/dj-hardware-specialist.md` with ownership for deck/cue/headphone realism and accidental-trigger prevention.
+- [x] Added `_bmad/bmm/agents/radio-control-room-specialist.md` with ownership for mixer semantics, broadcast chain integrity, and live recovery patterns.
+- [x] Published `docs/ui/equipment_interaction_model.md` with normative interaction contracts and realism acceptance criteria (latency, trigger safety, one-hand keyboard workflows).
+- [x] Linked both specialists into `docs/ui/dj_console_design_pod.md` ownership/cadence/handoff sections.
+## 2026-03-04 AGENTS.md Instruction Schema Normalization
+
+- [x] Restructured root `AGENTS.md` into strict top-level sections: Bootstrap, Commands, Routing, Boundaries, References, Team Charters.
+- [x] Added normative precedence note to resolve route-level vs generic prose conflicts.
+- [x] Canonicalized launcher commands on `DGN-DJ_*` and moved legacy `RoboDJ_*` commands into a compatibility subsection.
+- [x] Removed duplicate `### Agents produce` heading and preserved a single canonical deliverables list.
+- [x] Added instruction schema version footer note for drift detection.
+
+## 2026-03-04 Governance Planning Update
+- [x] Completed fresh setup rating for agent-instruction ecosystem: **7.8/10 overall**.
+- [x] Documented deficiencies with impact framing (authority overlap, route contradiction, command ambiguity, skill misalignment, non-measurable gate semantics).
+- [x] Created executable hardening plan at `docs/exec-plans/active/2026-03-04-agent-governance-hardening-plan.md` with phased priorities and measurable success criteria.
+## 2026-03-04 MCP Runtime Config Authority
+- [x] Added `scripts/generate_mcp_runtime_config.py` to generate `.mcp.json` from `infra/mcp/servers.json` and referenced server manifests.
+- [x] Added optional `.mcp.local.json` merge behavior (deep merge for objects; local replacement for arrays/scalars).
+- [x] Added CI/PR checks in `.github/workflows/skills-validate.yml` to enforce MCP schema validation and `.mcp.json` parity with generated output.
+- [x] Added explicit CI drift-ignore escape hatch via `MCP_RUNTIME_CONFIG_IGNORE=1`.
+- [x] Updated `infra/mcp/README.md` with exact startup flow commands for MCP validation and generation.
+## 2026-03-04 Route State-Update Policy Clarification
+- Updated bootstrap/state-management policy to make `.context` updates conditional on `Change`/`Proposal` outputs that modify project state.
+- Added explicit QA-route exception requiring a "state update suggestion" in output instead of editing state files.
+- Synced task-route templates and BMAD tie-break policy notes with the same conditional and precedence behavior.
+## 2026-03-04 Workflow quality gate rubric alignment
+- [x] Updated `AGENTS.md` Workflow Quality Gates with measurable required fields and hard pass criteria while preserving strict 100% thresholds.
+- [x] Added canonical rubric at `docs/operations/quality_gate_rubric.md` for scoring definitions and evidence contracts.
+- [x] Linked `AGENTS.md`, `docs/operations/subagent_execution_playbook.md`, and `docs/operations/execution_index.md` to the rubric to avoid duplicated semantics.
+- [x] Added compact minimum evidence schema tables in both `AGENTS.md` (quick-reference) and the canonical rubric (normative contract).
+## 2026-03-04 Roadmap Autopilot TI Status Projection + Sanity Gate
+- [x] Hardened `scripts/roadmap_autopilot.py` status normalization pipeline with markdown-safe parsing and canonical status family mapping before dependency label derivation.
+- [x] Added TI projection enrichment for emitted queue/build-plan rows (`status_projection` + dependency label sourced from tracked-issue docs).
+- [x] Added post-generation sanity gate to fail when emitted TI rows diverge from tracked-issue status authority.
+- [x] Updated TI reconciliation to match only lead TI references and prevent dependency-text cross-contamination.
+- [x] Regenerated `docs/exec-plans/active/unfinished-task-build-plan.md`; verified single generation header and consistent TI-040 status projection markers.
+- [x] Fixed `docs/exec-plans/active/tracked-issues/TI-041.md` to a single `Status` entry for one-issue-per-file integrity.
+## 2026-03-04 Skill spec compliance updates
+- [x] Replaced `scope-resolver` AGENTS discovery command with `rg --files -g '**/AGENTS.md'` in `SKILLS.md`.
+- [x] Replaced `qa-issue-emitter` legacy task-stub bullet format with canonical markdown directive format.
+- [x] Added route-level authority notes to relevant skills, explicitly preserving QA read-only/no-edit constraints.
+- [x] Added one concrete issue + task-stub example under `qa-issue-emitter` to seed future compliant output.
+## 2026-03-04 Continuous Improvement Loop Update
+- [x] Added `docs/operations/continuous_improvement_loop.md` with leading indicators, threshold-to-intervention mapping, execution breach hook, and scorecard path governance.
+- [x] Added monthly Agent Capability Review artifact template to `docs/operations/artifacts.md`.
+- [x] Added breach execution hook to `docs/operations/subagent_execution_playbook.md` requiring `_bmad/*agents*` or `SKILLS.md` updates.
+- [x] Created historical scorecard file at `docs/metrics/agent_capability_scorecard.md`.
+
+
+- Completed TI-040 config-at-rest hardening: unified config read/write encryption envelope handling in `config_crypto`, `ai_service`, and `scheduler_ui_service`; added validator regression tests for plaintext/malformed envelope rejection; published TI-040 evidence artifacts (`ti-040-config-encryption.log`, `ti-040-high-risk-field-inventory.md`, `ti-040-config-before-after.sha256`) and closed dependency checkpoints DEP-TI040-01..03.
+## 2026-03-04 Agent Governance Canonicalization
+- [x] Added canonical governance source (`docs/operations/agent_governance_canonical.md`) covering topology, route policy, completion gates, escalation, communication rules, and changelog ownership metadata.
+- [x] Added derived governance views for `AGENTS.md` and `docs/operations/agent_execution_commands.md` and linked both primary docs to canonical references.
+- [x] Added `scripts/validate_agent_governance_consistency.py` and a targeted PR workflow (`.github/workflows/agent-governance-consistency.yml`) to fail on governance drift when governance-related paths change.
+## 2026-03-04 Subagent Governance Playbook Update
+- [x] Added stage-by-route RACI matrix for Intake/Planner/Executor/Verifier/Handoff across QA/Proposal/Change routes in `docs/operations/subagent_execution_playbook.md`.
+- [x] Added explicit conflict-class tie-break authority and escalation governance (safety, scope, schedule, UX, compliance).
+- [x] Added packet SLA schema fields for escalation response windows and stalled-packet reassignment, plus required packet metadata fields (`decision_owner`, `consulted_roles`, `approval_deadline_utc`).
+- [x] Updated packet examples in `docs/operations/agent_execution_commands.md` to include the new ownership/consultation/deadline fields.
+
 ## 2026-03-04 BMAD deep research runbook evidence governance update
 - Added a mandatory evidence schema for every research claim (source type, publication date, confidence, relevance score, decision impact).
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
 
-## 2026-03-05 Telemetry + Dashboard type enforcement
-- [x] Eliminated `cookies() as any` in server Supabase client by using typed async cookies store and updating dependent call sites.
-- [x] Tightened mixer telemetry channel typing with explicit `TelemetryChannelId` + `MixerChannelTelemetry` contracts.
-- [x] Replaced duplicated/corrupted dashboard telemetry wiring with strict `DashboardTelemetryFallback` parsing and typed API interface.
-- [x] Added dedicated typecheck gate (`npm run typecheck:telemetry-dashboard`) for affected modules.
-- [x] Added targeted unit coverage for malformed telemetry fallback DTOs and fallback rendering behavior.
-## 2026-03-05 AI track-analysis logging hardening
-- [x] Removed analyze-track local stub logger and moved all track-analysis decision persistence to shared `log-decision` facade.
-- [x] Normalized persisted decision payload schema with required observability fields (track/station/model/latency/token-cost/confidence/outcome).
-- [x] Implemented non-fatal decision logging path with structured warning telemetry emission on persistence failure.
-- [x] Added unit tests asserting one persisted decision record per successful call and expected payload fields.
-- [x] Hardened `backend/security/auth.py` key handling with TTL cache refresh + rotation-event invalidation, dual-key grace window validation, source-change audit logging, and regression tests for rotation acceptance/expiry behavior.
+## 2026-03-05 Agent Directory Execution Layer
+- [x] Added `docs/operations/claude_agents_bootstrap.md` with required frontmatter contract and canonical policy references (`AGENTS.md` + operations playbooks).
+- [x] Added copy-ready role packet templates for planner/executor/verifier and secops/qa/devops adapters to support thin, testable role routing without duplicating governance text.
+- [x] Backed up modified context files in `.context/backups/` before updates per repository guardrails.
 
-## 2026-03-05 AI API request controls
-- [x] Added `src/lib/api/request-controls.ts` for sliding-window throttling, standardized 429 payloads, and idempotency fingerprint cache helpers.
-- [x] Enforced route-keyed `{userId, stationId, route}` limits in `src/app/api/ai/analyze-track/route.ts` and `src/app/api/ai/batch-analyze/route.ts` before expensive AI operations.
-- [x] Implemented `Idempotency-Key` replay handling for batch analysis with short-lived fingerprint persistence and mismatch protection.
-- [x] Added integration tests in `tests/integration/ai-rate-limit-idempotency-routes.test.ts` validating repeated call throttling, idempotent replay, and key reuse conflict semantics.
-- Hardened telemetry typing boundaries for Supabase server cookies, DegenMixer channel telemetry coercion, and DashboardView telemetry DTO; added strict-module TypeScript config + telemetry mismatch fallback tests.
-## 2026-03-05 CI runtime contract gate update
-- [x] Added dedicated `runtime-contract` job in `.github/workflows/ci.yml` to run `python config/check_runtime_env.py --context ci` with deterministic CI-safe non-secret env values.
-- [x] Added protected-ref gated runtime secret validation step `python config/check_runtime_secrets.py --require-env-only` in the security job.
-- [x] Documented CI runtime contract validation commands in `docs/DEVELOPMENT_ENV_SETUP.md`.
+## 2026-03-05 Claude Agent Blueprint Hardening
+- [x] Performed post-implementation review and rated the initial blueprint at 7.5/10 (strong architecture fit, weak enforcement).
+- [x] Added `scripts/ci/check_claude_agent_contracts.py` to enforce role frontmatter contract completeness, route enum validity, and duplicate role detection.
+- [x] Updated `docs/operations/claude_agents_bootstrap.md` with review score, gap analysis, and runnable lint command for deterministic adoption.
+
+## 2026-03-05 Claude Agent Contract Validator Productionization
+- [x] Upgraded `scripts/ci/check_claude_agent_contracts.py` with strict frontmatter parsing, unknown-key detection, `--agents-root` path override, and `--fail-on-skip` CI mode.
+- [x] Added automated coverage in `scripts/ci/tests/test_check_claude_agent_contracts.py` for valid contract pass, duplicate role fail, and strict skip-policy fail paths.
+- [x] Elevated bootstrap guidance to explicit post-hardening 10/10 readiness with deterministic CI command (`python scripts/ci/check_claude_agent_contracts.py --fail-on-skip`).
+
+## 2026-03-05 AI Decision Logging Contract Hardening
+- [x] Removed local `logAIDecision` stub from `src/lib/ai/analyze-track.ts` and switched to shared `src/lib/ai/log-decision.ts` import.
+- [x] Updated track analysis logging payload to conform to `AIDecisionLog` (including `stationId`, `decisionData`, `reasoning`, `status`).
+- [x] Added explicit fail-open policy: decision logging failures now emit structured warning telemetry and do not fail successful analysis responses.
+- [x] Eliminated duplicate persistence path by removing route-level AI decision insert and routing all analysis decision writes through `analyzeTrack`.
+- [x] Added tests proving one persisted decision event per successful analysis plus warning telemetry on logging failure.
 ## 2026-03-05 Packaging artifact hygiene guard
 - [x] Added root `.gitignore` rule for `*.egg-info/` and `.artifacts/`.
 - [x] Removed accidental `src/UNKNOWN.egg-info/` artifact directory from the working tree.
@@ -297,3 +380,74 @@
 
 ## 2026-03-06 Request controls pluggable backend
 - [x] Refactored API request-controls for pluggable backends (memory fallback + Upstash shared mode) and added unit/integration tests covering cross-instance rate-limit and idempotency replay semantics.
+- [x] Unified `src/app/api/ai/analyze-track/route.ts` control flow and repaired decision logging branch to compile with deterministic JSON success/error responses; expanded `tests/integration/ai-analyze-track-route.test.ts` for success/short-circuit/non-fatal logging failure/auth cases.
+## 2026-03-06 Supabase server client merge cleanup
+- [x] Replaced merge-corrupted `src/lib/supabase/server.ts` with a single async `createServerClient` implementation.
+- [x] Kept canonical env names with deprecated alias fallback and deterministic missing-env error messages.
+- [x] Implemented one typed cookie adapter (`get`/`set`/`remove`) without `as any` and with server-component-safe mutation guards.
+- [x] Added `tests/unit/supabase-server.test.ts` covering missing env, alias fallback, and non-throwing cookie adapter mutation paths.
+## 2026-03-06 Conductor product-guidelines merge cleanup
+- [x] Replaced merge-conflicted `conductor/product-guidelines.md` with a single canonical document.
+- [x] Preserved governance pointer links to `AGENTS.md`, `SKILLS.md`, and `SECURITY.md`.
+- [x] Preserved product guidance sections with updated **DGN-DJ by DGNradio** naming.
+- [x] Added `npm run check:merge-conflicts:docs` guard to scan `conductor/**/*.md` for merge markers.
+## 2026-03-06 Root maintenance artifact cleanup
+- [x] Classified all root `fix_*.py`, `patch_tests_*.py`, `modify_test.py`, and `*.diff` artifacts and recorded disposition in `scripts/maintenance/root_maintenance_artifact_inventory.md`.
+- [x] Refactored retained utility into `scripts/maintenance/fix_escaped_quotes.py` and documented operational metadata in `scripts/maintenance/README.md`.
+- [x] Archived one-off migration scripts under `scripts/migrations/archive/root-maintenance-2026-03/` with owner/safety/deprecation metadata.
+- [x] Removed obsolete duplicate/truncated root artifacts and empty diff files.
+- [x] Added CI repo-hygiene gate `scripts/ci/check_root_maintenance_artifacts.py` and integrated it into the config job in `.github/workflows/ci.yml`.
+
+## 2026-03-06 Dashboard status proxy upstream resilience
+- [x] Added `AbortController` timeout handling with env-configurable timeout (`DASHBOARD_STATUS_UPSTREAM_TIMEOUT_MS`, default 5000ms) to `src/app/api/v1/status/dashboard/_shared/proxy.ts`.
+- [x] Wrapped dashboard upstream fetch in `try/catch` and normalized transport failures to stable envelopes (`UPSTREAM_TIMEOUT`, `UPSTREAM_UNREACHABLE`).
+- [x] Kept non-2xx backend response normalization unchanged for existing route behavior.
+- [x] Added integration tests for upstream timeout, network exception, and non-JSON upstream error payload fallback in `tests/integration/status-dashboard-routes.test.ts`.
+## 2026-03-06 Batch-analyze route cleanup + regression tests
+- [x] Removed duplicate Supabase client declaration in `src/app/api/ai/batch-analyze/route.ts` while preserving existing auth/session and station ownership flow behavior.
+- [x] Added regression integration tests in `tests/integration/ai-rate-limit-idempotency-routes.test.ts` for authenticated success, unauthenticated 401, idempotency replay after successful initial call, and rate-limit/idempotency branch order.
+## 2026-03-05 AI API abort-timeout hardening
+- [x] Replaced `Promise.race` timeout wrapping in `src/lib/aiApi.ts` with `AbortController` + fetch `signal` wiring.
+- [x] Added typed deterministic client error mapping (`AI_API_TIMEOUT`, `AI_API_ABORTED`, `AI_API_HTTP_ERROR`, `AI_API_NETWORK_ERROR`) with correlation-id retention and abort reason diagnostics.
+- [x] Added/updated `tests/unit/aiApi.test.ts` coverage for timeout cancellation semantics and no-unhandled-rejection behavior under late provider failures.
+## 2026-03-05 Track analysis cache TTL/eviction + version invalidation
+- [x] Added request-level version fields (`model_version`, `prompt_profile_version`, `schema_version`) to the track-analysis contract with safe defaults.
+- [x] Implemented in-memory cache constraints: TTL expiration, max-entry cap, LRU/FIFO eviction policy, and eager stale-entry cleanup on read/write.
+- [x] Added cache metric counters (`size`, `hits`, `misses`, `evictions`, `expirations`) and emitted them in structured cache hit/miss/write logs.
+- [x] Added regression tests covering TTL expiry, max-size eviction, and version-key fingerprint invalidation.
+## 2026-03-05 Env contract parity validation
+- [x] Added `scripts/ci/validate_env_contract.py` to diff required contract vars, `.env.example` keys, and compose `${VAR}` references.
+- [x] Emitted machine-readable report artifact at `.artifacts/ci/env-contract-report.json` plus concise console summary output.
+- [x] Wired PR-scoped CI execution + artifact upload in `.github/workflows/ci.yml` for env/docs/compose/config contract changes.
+- [x] Documented validator usage and remediation paths in `docs/DEVELOPMENT_ENV_SETUP.md`.
+## 2026-03-05 Audio engine cache + preload guardrails
+- [x] Added configurable audio cache limits (`cacheMaxEntries`, `cacheMaxBytes`) and total estimated-byte accounting in `src/lib/audio/engine.ts`.
+- [x] Implemented LRU cache access-order updates and eviction that excludes active `currentTrack`/`nextTrack` buffers.
+- [x] Added `cache-telemetry` runtime events for cache hit/miss/eviction visibility.
+- [x] Added decode concurrency guardrail (`maxConcurrentDecodes`) using a bounded in-engine wait queue.
+- [x] Extended `tests/ui/audio-engine.test.ts` with cache eviction and active-track protection coverage.
+- Hardened status telemetry ingestion with safe field parsers + structured fallback logging, added tolerant service-health enum mapping in status API, and introduced corruption-focused tests (malformed JSON, invalid timestamps/depth, unknown status fallback).
+- [x] Dashboard polling resilience upgrade: decoupled UI clock from API polling cadence, hidden-tab throttling, failure backoff+jitter reset on success, request overlap prevention, and cadence-transition/unmount-abort tests.
+## 2026-03-05 Lint quality gate hardening
+- [x] Removed root Next lint bypass (`eslint.ignoreDuringBuilds`) from `next.config.js`.
+- [x] Added flat-config ESLint stack (`eslint.config.mjs`) and switched scripts to standalone CLI (`npm run lint`) plus CI lint gate (`npm run lint:ci`).
+- [x] Implemented CI lint budget/allowlist enforcement in `scripts/ci/lint_gate.mjs` with explicit owner/expiry validation.
+- [x] Added temporary lint debt allowlist with metadata and budget controls in `config/lint-allowlist.json`.
+- [x] Updated `.github/workflows/ci.yml` to make lint gate a required frontend CI step.
+- [x] Documented local/CI lint workflow and allowlist policy in `CONTRIBUTING.md`.
+## 2026-03-05 CI launcher + Windows smoke enforcement
+- [x] Added a matrix smoke job in `.github/workflows/ci.yml` for `ubuntu-latest` and `windows-latest` to enforce critical runtime contract checks.
+- [x] Added Windows launcher smoke validation for `DGN-DJ_Launcher.bat` and `RoboDJ_Launcher.bat` contract expectations (script presence, executable mapping, relative path resolution).
+- [x] Added Windows environment sanity gates (Node major version, Python version, required CI env vars) aligned to runtime expectations.
+- [x] Kept full lint/build/test suite jobs on Linux while introducing launcher-change-gated Windows smoke job for merge safety.
+- [x] Added launcher diagnostics artifact publishing to support CI regression triage.
+## 2026-03-05 Runtime context env-contract enforcement
+- [x] Added dedicated CI runtime secret contract steps (`--require-env-only`) to backend/config/security jobs.
+- [x] Implemented backend startup runtime context validator with structured diagnostics and safe log summary output.
+- [x] Implemented Next.js server-route runtime context validator and fail-fast route response envelope for invalid/missing env contracts.
+- [x] Added backend runtime contract tests and frontend route/env-contract smoke tests.
+
+## 2026-03-05 Environment Contract Preflight Update
+- [x] Wired `python config/check_runtime_env.py --context <context>` into bootstrap preflight (`desktop_app`, `docker_stack`), codex doctor (`desktop_app`), and CI workflows (`ci`).
+- [x] Added `make env-check-desktop`, `make env-check-docker`, and `make env-check-ci` convenience targets.
+- [x] Consolidated `docs/DEVELOPMENT_ENV_SETUP.md` into one canonical preflight sequence and explicit context mapping.

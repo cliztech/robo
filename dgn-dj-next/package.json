@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "check:conflicts": "node ./scripts/check-conflict-markers.mjs",
+    "prebuild": "npm run check:conflicts"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.4",

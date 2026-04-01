@@ -100,6 +100,22 @@ if [[ "$WITH_PREFLIGHT" -eq 1 ]]; then
     printf '\n== Optional preflight checks ==\n'
     run_preflight_check "Config schema validation passed." python config/validate_config.py
     run_preflight_check "Runtime secret env check passed." python config/check_runtime_secrets.py --require-env-only
+    run_preflight_check \
+        "Runtime env contract check passed (desktop_app context)." \
+        env \
+        ROBODJ_ENV=development \
+        ROBODJ_STATION_ID=dgn_local \
+        ROBODJ_LOG_LEVEL=INFO \
+        ROBODJ_DATA_DIR=./config/cache \
+        python config/check_runtime_env.py --context desktop_app
+    run_preflight_check \
+        "Runtime env contract check passed (docker_stack context)." \
+        env \
+        COMPOSE_PROJECT_NAME=robodj \
+        ROBODJ_ENV=development \
+        ROBODJ_LOG_LEVEL=INFO \
+        ROBODJ_HTTP_PORT=8080 \
+        python config/check_runtime_env.py --context docker_stack
 
     echo "Preflight summary: ${preflight_passed}/${preflight_total} passed, ${preflight_failed} failed."
 
