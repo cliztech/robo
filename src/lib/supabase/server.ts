@@ -1,3 +1,5 @@
+import { createServerClient as createSupabaseServerClient, type CookieOptions } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import { createServerClient as _createServerClient, type CookieOptions } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
@@ -40,11 +42,20 @@ export async function createServerClient() {
   const cookieStore: NextCookieStore = await cookies();
 import { loadEnv } from '@/lib/env';
 
-type CookieStore = ReturnType<typeof cookies>
+const SUPABASE_URL_ENV = 'NEXT_PUBLIC_SUPABASE_URL'
+const SUPABASE_ANON_KEY_ENV = 'NEXT_PUBLIC_SUPABASE_ANON_KEY'
+const SUPABASE_URL_ALIAS_ENV = 'SUPABASE_URL'
+const SUPABASE_ANON_KEY_ALIAS_ENV = 'SUPABASE_ANON_KEY'
 
-export async function createServerClient() {
-  const cookieStore: Awaited<CookieStore> = await cookies()
-const loggedSupabaseAliasWarnings = new Set<string>();
+const loggedSupabaseAliasWarnings = new Set<string>()
+
+type NextCookieStore = Awaited<ReturnType<typeof cookies>>
+
+type SupabaseCookieAdapter = {
+  get(name: string): string | undefined
+  set(name: string, value: string, options: CookieOptions): void
+  remove(name: string, options: CookieOptions): void
+}
 
 function resolveSupabaseEnv(canonicalKey: string, deprecatedAliasKey: string): string {
   const canonicalValue = process.env[canonicalKey]
@@ -57,9 +68,10 @@ function resolveSupabaseEnv(canonicalKey: string, deprecatedAliasKey: string): s
     if (!loggedSupabaseAliasWarnings.has(deprecatedAliasKey)) {
       console.warn(
         `[env-deprecation] ${deprecatedAliasKey} is deprecated; set ${canonicalKey} instead. Alias fallback support is temporary.`
-      );
-      loggedSupabaseAliasWarnings.add(deprecatedAliasKey);
+      )
+      loggedSupabaseAliasWarnings.add(deprecatedAliasKey)
     }
+
     return aliasValue
   }
 
@@ -68,6 +80,26 @@ function resolveSupabaseEnv(canonicalKey: string, deprecatedAliasKey: string): s
   )
 }
 
+function createCookieAdapter(cookieStore: NextCookieStore): SupabaseCookieAdapter {
+  return {
+    get(name: string) {
+      return cookieStore.get(name)?.value
+    },
+    set(name: string, value: string, options: CookieOptions) {
+      try {
+        cookieStore.set({ name, value, ...options })
+      } catch {
+        // Called from a Server Component where response headers are immutable.
+      }
+    },
+    remove(name: string, options: CookieOptions) {
+      try {
+        cookieStore.set({ name, value: '', ...options })
+      } catch {
+        // Called from a Server Component where response headers are immutable.
+      }
+    },
+  }
 export function createServerClient() {
   const cookieStore = cookies() as any;
   const env = loadEnv();
@@ -87,12 +119,15 @@ interface RequestCookiesCompatible {
 }
 
 export async function createServerClient() {
-  const cookieStore: RequestCookiesCompatible = await cookies()
+  const cookieStore = await cookies()
 
-  return _createServerClient(
-    resolveSupabaseEnv('NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_URL'),
-    resolveSupabaseEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'SUPABASE_ANON_KEY'),
+  return createSupabaseServerClient(
+    resolveSupabaseEnv(SUPABASE_URL_ENV, SUPABASE_URL_ALIAS_ENV),
+    resolveSupabaseEnv(SUPABASE_ANON_KEY_ENV, SUPABASE_ANON_KEY_ALIAS_ENV),
     {
+      cookies: createCookieAdapter(cookieStore),
+    }
+  )
       cookies: buildSupabaseCookieAdapter(cookieStore),
     }
   );
