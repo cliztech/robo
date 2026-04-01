@@ -1,4 +1,7 @@
 import PQueue from 'p-queue'
+
+type AnalyzeTrackFn = typeof import('./analyze-track')['analyzeTrack']
+type CreateServerClientFn = typeof import('@/lib/supabase/server')['createServerClient']
 import { createServerClient } from '@/lib/supabase/server'
 
 const DEFAULT_PAGE_SIZE = 250
@@ -61,6 +64,13 @@ interface ProgressPayload {
 export interface BatchAnalysisOptions {
   stationId: string
   concurrency?: number
+  createServerClientFn?: CreateServerClientFn
+  analyzeTrackFn?: AnalyzeTrackFn
+  onProgress?: (progress: {
+    completed: number
+    total: number
+    current?: string
+  }) => void
   pageSize?: number
   onProgress?: (progress: ProgressPayload) => void
   onError?: (trackId: string, error: Error) => void
@@ -72,6 +82,8 @@ export interface BatchAnalysisResult {
   failed: number
   totalCost: number
   totalTokens: number
+}> {
+  const { stationId, concurrency = 3, onProgress, onError, createServerClientFn, analyzeTrackFn } = options
 }
 
 function delay(ms: number): Promise<void> {
@@ -124,6 +136,8 @@ async function updateTrackWithRetry(
 export async function batchAnalyzeTracks(options: BatchAnalysisOptions): Promise<BatchAnalysisResult> {
   const { stationId, concurrency = 3, onProgress, onError, pageSize = DEFAULT_PAGE_SIZE, analyzeTrackFn } = options
 
+  const createServerClient =
+    createServerClientFn ?? (await import('@/lib/supabase/server')).createServerClient
   const supabase = await createServerClient()
 
   const { count, error: countError } = await supabase
@@ -158,6 +172,8 @@ export async function batchAnalyzeTracks(options: BatchAnalysisOptions): Promise
       query = query.gt('id', cursorId)
     }
 
+  const analyzeTrack = analyzeTrackFn ?? (await import('./analyze-track')).analyzeTrack
+
   // Process tracks
   const promises = tracks.map((track) =>
     queue.add(async () => {
@@ -188,7 +204,7 @@ export async function batchAnalyzeTracks(options: BatchAnalysisOptions): Promise
         })
 
         // Update track
-        await supabase
+        const { error: updateError } = await supabase
           .from('tracks')
           .update({
             ai_analyzed: true,
@@ -232,6 +248,30 @@ export async function batchAnalyzeTracks(options: BatchAnalysisOptions): Promise
             total: totalTracks,
             current: track.title,
           })
+          .eq('id', track.id)
+
+        if (updateError) {
+          throw new Error(
+            `Failed to persist AI analysis for track ${track.id}: ${updateError.message}`
+          )
+        }
+
+        successful++
+        totalCost += result.costUSD
+        totalTokens += result.tokensUsed
+      } catch (error: unknown) {
+        failed++
+        const typedError =
+          error instanceof Error
+            ? error
+            : new Error(
+                `Track ${track.id} analysis failed with non-Error value: ${String(error)}`
+              )
+
+        onError?.(track.id, typedError)
+      }
+    })
+  )
 
           const result = await analyzeTrack({
             trackId: track.id,

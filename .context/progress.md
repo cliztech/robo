@@ -396,6 +396,32 @@
 - [x] Added `scripts/ci/build_python_wheels.sh` to keep Python packaging outputs in `.artifacts/python-packaging` instead of app source paths.
 - [x] Added CI guard script `scripts/ci/check_generated_artifacts.py` and wired it into `.github/workflows/ci.yml` config job.
 
+## 2026-03-06 Request controls pluggable backend
+- [x] Refactored API request-controls for pluggable backends (memory fallback + Upstash shared mode) and added unit/integration tests covering cross-instance rate-limit and idempotency replay semantics.
+## 2026-03-06 Batch analyzer persistence failure accounting hardening
+- [x] Captured `{ error: updateError }` from Supabase `update(...).eq('id', track.id)` in batch analyzer flow and throw on write failure with track identifier context for observability.
+- [x] Wrapped non-Error caught values into typed `Error` instances before invoking `onError` to keep persistence failure telemetry contract stable.
+- [x] Added unit tests asserting write-failure increments `failed`, does not increment `successful`, and preserves monotonic progress callback behavior.
+## 2026-03-06 Request controls pluggable backend
+- [x] Refactored API request-controls for pluggable backends (memory fallback + Upstash shared mode) and added unit/integration tests covering cross-instance rate-limit and idempotency replay semantics.
+- [x] Unified `src/app/api/ai/analyze-track/route.ts` control flow and repaired decision logging branch to compile with deterministic JSON success/error responses; expanded `tests/integration/ai-analyze-track-route.test.ts` for success/short-circuit/non-fatal logging failure/auth cases.
+## 2026-03-06 Supabase server client merge cleanup
+- [x] Replaced merge-corrupted `src/lib/supabase/server.ts` with a single async `createServerClient` implementation.
+- [x] Kept canonical env names with deprecated alias fallback and deterministic missing-env error messages.
+- [x] Implemented one typed cookie adapter (`get`/`set`/`remove`) without `as any` and with server-component-safe mutation guards.
+- [x] Added `tests/unit/supabase-server.test.ts` covering missing env, alias fallback, and non-throwing cookie adapter mutation paths.
+## 2026-03-06 Conductor product-guidelines merge cleanup
+- [x] Replaced merge-conflicted `conductor/product-guidelines.md` with a single canonical document.
+- [x] Preserved governance pointer links to `AGENTS.md`, `SKILLS.md`, and `SECURITY.md`.
+- [x] Preserved product guidance sections with updated **DGN-DJ by DGNradio** naming.
+- [x] Added `npm run check:merge-conflicts:docs` guard to scan `conductor/**/*.md` for merge markers.
+## 2026-03-06 Root maintenance artifact cleanup
+- [x] Classified all root `fix_*.py`, `patch_tests_*.py`, `modify_test.py`, and `*.diff` artifacts and recorded disposition in `scripts/maintenance/root_maintenance_artifact_inventory.md`.
+- [x] Refactored retained utility into `scripts/maintenance/fix_escaped_quotes.py` and documented operational metadata in `scripts/maintenance/README.md`.
+- [x] Archived one-off migration scripts under `scripts/migrations/archive/root-maintenance-2026-03/` with owner/safety/deprecation metadata.
+- [x] Removed obsolete duplicate/truncated root artifacts and empty diff files.
+- [x] Added CI repo-hygiene gate `scripts/ci/check_root_maintenance_artifacts.py` and integrated it into the config job in `.github/workflows/ci.yml`.
+
 ## 2026-03-06 Dashboard status proxy upstream resilience
 - [x] Added `AbortController` timeout handling with env-configurable timeout (`DASHBOARD_STATUS_UPSTREAM_TIMEOUT_MS`, default 5000ms) to `src/app/api/v1/status/dashboard/_shared/proxy.ts`.
 - [x] Wrapped dashboard upstream fetch in `try/catch` and normalized transport failures to stable envelopes (`UPSTREAM_TIMEOUT`, `UPSTREAM_UNREACHABLE`).

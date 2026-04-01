@@ -7,10 +7,26 @@ This document is the canonical declaration of runtime entrypoints, owned subproj
 | Entrypoint | Runtime | Command | Deployment target | Owner boundary |
 | --- | --- | --- | --- | --- |
 | Next.js Studio (root app) | Node.js 20.x + Next.js 15.5.10 | `npm run dev` / `npm run build && npm run start` | Vercel (primary), local dev on Windows/macOS/Linux | Root workspace owner (`/`) |
-| Windows desktop launcher | Windows batch + bundled Python runtime | `./RoboDJ_Launcher.bat` | Windows desktop operators (packaged EXE flow) | Root workspace owner (`/`) |
+| Windows desktop launcher | Windows batch + bundled Python runtime | `./DGN-DJ_Launcher.bat` | Windows desktop operators (packaged EXE flow) | Root workspace owner (`/`) |
+| Windows desktop compatibility launcher | Windows batch shim | `./RoboDJ_Launcher.bat` | Legacy shortcuts/scripts compatibility layer | Root workspace owner (`/`) |
+| Next.js fullstack launcher (Windows) | Windows batch + Node.js 20.x | `./DGNDJ_Fullstack_Launcher.bat [dev|prod] [--port N]` | Local fullstack web runtime on Windows | Root workspace owner (`/`) |
+| Legacy desktop+backend fullstack launcher | Windows batch + Python runtime | `./DGN-DJ_Fullstack_Launcher.bat` | Deprecated compatibility path (legacy workflows only) | Root workspace owner (`/`) |
 | DJ Console | Node.js 20.x + Vite 5.4.8 | `npm --prefix apps/dj-console run dev` | Browser UI in local/dev artifacts | `apps/dj-console/` owner |
 | Radio Agentic stack | Node.js 20.x monorepo (pnpm workspace) | `pnpm --dir radio-agentic install && docker compose -f radio-agentic/docker-compose.yml up --build` | Containerized service topology | `radio-agentic/` owner |
 | DGN Airwaves package | Python 3.11-compatible package (`requires-python >=3.10`) | `python -m pip install -e dgn-airwaves` | Python library/runtime extension | `dgn-airwaves/` owner |
+
+
+## Launcher naming policy (canonical vs compatibility)
+
+- Canonical desktop launcher: `DGN-DJ_Launcher.bat`.
+- Canonical Next.js fullstack launcher: `DGNDJ_Fullstack_Launcher.bat`.
+- Compatibility shim: `RoboDJ_Launcher.bat` (delegates to canonical desktop launcher).
+- Deprecated compatibility launcher: `DGN-DJ_Fullstack_Launcher.bat` (legacy desktop+backend flow only).
+
+## Bundled artifact policy
+
+- `.exe` deliverables (`DGN-DJ Automation.exe`, `RoboDJ Automation.exe`) are intentionally excluded from git history and distributed as external/bundled packaging artifacts.
+- Runtime docs and launcher scripts must treat these executables as expected-at-runtime files, not tracked repository assets.
 
 ## Owned subprojects
 

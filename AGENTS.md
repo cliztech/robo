@@ -135,8 +135,11 @@ Canonical product identity is defined in `docs/productization/product_identity.m
 
 ```text
 robo/
-├── DGN-DJ Automation.exe          # Main executable (DO NOT EDIT)
-├── DGN-DJ_Launcher.bat            # Launcher script
+├── DGN-DJ_Launcher.bat            # Canonical desktop launcher script
+├── RoboDJ_Launcher.bat            # Compatibility shim launcher
+├── DGNDJ_Fullstack_Launcher.bat   # Canonical fullstack Next.js launcher
+├── DGN-DJ_Fullstack_Launcher.bat  # Deprecated compatibility fullstack launcher
+├── DGN-DJ Automation.exe          # External/bundled executable (intentionally not tracked in git)
 ├── AGENTS.md                      # This file (repo-wide agent rules)
 ├── ARCHITECTURE.md                # Top-level architecture entry point
 ├── SKILLS.md                      # Reusable skill definitions
@@ -340,6 +343,16 @@ Canonical scoring and evidence definitions live in [`docs/operations/quality_gat
 
 > 📚 These documents extend the agent pipeline with detailed specifications. Load only what's needed for the active task.
 
+Launcher/entrypoint source of truth: `docs/launcher_entrypoints.md` (naming + role policy) and `docs/architecture/canonical_runtime_map.md` (runtime ownership + deployment map).
+
+| Document | Purpose |
+| -------- | ------- |
+| [`SKILLS.md`](SKILLS.md) | Reusable skill definitions with triggers and boundaries |
+| [`docs/operations/artifacts.md`](docs/operations/artifacts.md) | Agent artifact paths, naming, ownership, and retention policy |
+| [`CLAUDE.md`](CLAUDE.md) | Claude Code-specific guidance |
+| [`PERSONA_OPS.md`](PERSONA_OPS.md) | AI host persona schema, versioning, A/B testing, KPIs |
+| [`docs/autonomy_modes.md`](docs/autonomy_modes.md) | 5-level autonomy operating modes (Manual → Lights-Out) |
+| [`docs/conversation_orchestrator_spec.md`](docs/conversation_orchestrator_spec.md) | Conversation orchestration, turn-taking, energy curves |
 | Document                                                                                     | Purpose                                                               |
 | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | [`SKILLS.md`](SKILLS.md)                                                                     | Reusable skill definitions with triggers and boundaries               |

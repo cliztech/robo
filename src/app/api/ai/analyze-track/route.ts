@@ -1,10 +1,12 @@
 import { ZodError, z } from 'zod'
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase/server'
+
 import { analyzeTrack } from '@/lib/ai/analyze-track'
-import { logAIDecision } from '@/lib/ai/log-decision'
-import { consumeSlidingWindowToken, resolveApiLimits, toRateLimitErrorPayload } from '@/lib/api/request-controls'
+import { AI_CONFIG } from '@/lib/ai/config'
+import { logTrackAnalysisDecisionSafely } from '@/lib/ai/log-decision'
 import { apiError } from '@/lib/api/error'
+import { consumeSlidingWindowToken, resolveApiLimits, toRateLimitErrorPayload } from '@/lib/api/request-controls'
+import { createServerClient } from '@/lib/supabase/server'
 
 const MAX_BODY_BYTES = 8 * 1024
 
@@ -56,13 +58,12 @@ async function parseJsonWithLimit(request: NextRequest): Promise<unknown> {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerClient()
     const invalidContentType = ensureJsonContentType(request)
     if (invalidContentType) {
       return invalidContentType
     }
 
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
 
     const {
       data: { session },
@@ -174,19 +175,25 @@ export async function POST(request: NextRequest) {
       })
       .eq('id', trackId)
 
-    if (updateError) throw updateError
+    if (updateError) {
+      throw updateError
+    }
 
-    await logTrackAnalysisDecisionSafely({
-      trackId,
-    await logAIDecision({
-      stationId: track.stations.id,
-      model: AI_CONFIG.models.analysis,
-      latencyMs,
-      tokensUsed,
-      costUSD,
-      latencyMs: 0,
-      status: 'auto_applied',
-    })
+    try {
+      await logTrackAnalysisDecisionSafely({
+        trackId,
+        stationId: track.stations.id,
+        model: AI_CONFIG.models.analysis,
+        latencyMs,
+        tokensUsed,
+        costUSD,
+        confidenceScore: analysis.confidenceScore,
+        outcomeStatus: 'success',
+        analysis,
+      })
+    } catch (decisionError) {
+      console.warn('Non-fatal track analysis decision logging failure:', decisionError)
+    }
 
     return NextResponse.json({
       success: true,

@@ -52,6 +52,7 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 - Added a shared typed env loader (`src/lib/env.ts`) with structured startup validation errors for Supabase and dashboard backend URL inputs; wired it into Supabase server client and dashboard status proxy to eliminate divergent runtime fallback behavior.
 
+- Refactored `src/lib/api/request-controls.ts` to support pluggable request-control storage with an Upstash/Redis shared backend option and in-memory fallback; added cross-instance test coverage for shared rate-limit/idempotency behavior.
 - Standardized Supabase env naming on `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`, documented deprecated alias migration (`SUPABASE_URL`, `SUPABASE_ANON_KEY`), and added temporary server fallback warning logging for transition safety.
 
 - Hardened `src/app/api/ai/analyze-track/route.ts` and `src/app/api/ai/batch-analyze/route.ts` with strict JSON content-type gates, request size checks, and Zod `safeParse` validation, and standardized deterministic API error payloads via new `src/lib/api/error.ts` helper.
@@ -420,6 +421,26 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added protected-ref runtime secret gate in CI using `python config/check_runtime_secrets.py --require-env-only` with explicit fail-fast shell settings and secret-backed env wiring.
 - Documented CI runtime contract gate commands in `docs/DEVELOPMENT_ENV_SETUP.md` for operator/developer parity.
 - Added repository hygiene guardrails for generated Python packaging artifacts: ignore `*.egg-info`, removed accidental `src/UNKNOWN.egg-info/`, added CI scanner (`scripts/ci/check_generated_artifacts.py`), and added isolated wheel-build script outputting to `.artifacts/python-packaging`.
+
+## 2026-03-06 Batch analyzer persistence failure accounting hardening
+- Updated `src/lib/ai/batch-analyzer.ts` to capture Supabase update errors per-track, throw contextualized persistence failures (`track.id` in message), and ensure `onError` always receives a typed `Error` even for non-Error thrown values.
+- Added focused unit coverage in `tests/unit/batch-analyzer.test.ts` for DB write failure accounting (`failed` increments, `successful` not incremented) and progress callback monotonicity under mixed success/failure batch writes.
+- Normalized `POST /api/ai/analyze-track` handler flow (single Supabase client, shared safe decision logging path, fixed malformed block) and expanded integration coverage scenarios (success/already-analyzed/logging-failure/auth+ownership).
+## 2026-03-06 Supabase server client merge cleanup
+- Replaced merge-corrupted `src/lib/supabase/server.ts` with one canonical async `createServerClient` export.
+- Unified env resolution on canonical `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY` with temporary alias fallback warnings.
+- Standardized a single typed cookie adapter with `get`/`set`/`remove` paths compatible with server-component cookie immutability.
+- Added unit coverage for deterministic missing-env errors, alias fallback resolution, and non-throwing cookie adapter mutations.
+## 2026-03-06 Conductor product-guidelines merge cleanup
+- Resolved merge conflict markers in `conductor/product-guidelines.md` by combining mandatory governance pointers with canonical product design guidance.
+- Updated product naming to **DGN-DJ by DGNradio** and normalized section structure for visual identity, UX, components, tone, and accessibility.
+- Added docs conflict-marker prevention command `check:merge-conflicts:docs` in `package.json` targeting `conductor/**/*.md`.
+## 2026-03-06 Root maintenance artifact hygiene
+- Inventoried root maintenance artifacts matching `fix_*.py`, `patch_tests_*.py`, `modify_test.py`, and `*.diff` and classified each into active utility, archive, or obsolete buckets.
+- Promoted `fix_files.py` to maintained utility `scripts/maintenance/fix_escaped_quotes.py` and documented purpose/ownership/safe usage/deprecation in `scripts/maintenance/README.md`.
+- Archived one-off root migration scripts into `scripts/migrations/archive/root-maintenance-2026-03/` with archive metadata README.
+- Removed obsolete artifacts (`fix_approval.py`, `patch_tests_7.py`, `patch_tests_8.py`, `my_changes.diff`, `test.diff`).
+- Added CI hygiene guard `scripts/ci/check_root_maintenance_artifacts.py` and wired it into `.github/workflows/ci.yml`.
 
 ## 2026-03-06 Batch-analyze Supabase client + regression coverage
 - Removed duplicate `supabase` declaration in `/api/ai/batch-analyze` and kept a single awaited `createServerClient()` instance for auth/session + station ownership checks.

@@ -487,6 +487,8 @@ jobs:
 
       - name: Validate required context bootstrap files
         run: python scripts/ci/check_context_files.py
+      - name: Guard root maintenance artifacts
+        run: python scripts/ci/check_root_maintenance_artifacts.py
 
       - name: Validate runtime secret contract (env-only)
         env:
