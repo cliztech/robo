@@ -378,6 +378,9 @@
 - [x] Added `scripts/ci/build_python_wheels.sh` to keep Python packaging outputs in `.artifacts/python-packaging` instead of app source paths.
 - [x] Added CI guard script `scripts/ci/check_generated_artifacts.py` and wired it into `.github/workflows/ci.yml` config job.
 
+## 2026-03-06 Batch-analyze route cleanup + regression tests
+- [x] Removed duplicate Supabase client declaration in `src/app/api/ai/batch-analyze/route.ts` while preserving existing auth/session and station ownership flow behavior.
+- [x] Added regression integration tests in `tests/integration/ai-rate-limit-idempotency-routes.test.ts` for authenticated success, unauthenticated 401, idempotency replay after successful initial call, and rate-limit/idempotency branch order.
 ## 2026-03-05 AI API abort-timeout hardening
 - [x] Replaced `Promise.race` timeout wrapping in `src/lib/aiApi.ts` with `AbortController` + fetch `signal` wiring.
 - [x] Added typed deterministic client error mapping (`AI_API_TIMEOUT`, `AI_API_ABORTED`, `AI_API_HTTP_ERROR`, `AI_API_NETWORK_ERROR`) with correlation-id retention and abort reason diagnostics.
