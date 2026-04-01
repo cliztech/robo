@@ -127,7 +127,21 @@ export function DegenWaveform({
                 </div>
 
                 {resolvedCuePoints.map((cue) => (
-                    <div key={cue.label} className="absolute top-0 bottom-0 w-px opacity-70" style={{ left: `${cue.position * 100}%`, backgroundColor: cue.color ?? '#fff' }} />
+                    <React.Fragment key={cue.label}>
+                        <div
+                            className="absolute top-0 bottom-0 w-px opacity-70"
+                            style={{ left: `${cue.position * 100}%`, backgroundColor: cue.color ?? '#fff' }}
+                        />
+                        <button
+                            type="button"
+                            aria-label={cue.label}
+                            className="absolute bottom-1 -translate-x-1/2 rounded-sm border border-white/20 bg-black/65 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.06em] text-zinc-200 hover:bg-black/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lime-400/70"
+                            style={{ left: `${cue.position * 100}%` }}
+                            onClick={() => seekToPosition(cue.position)}
+                        >
+                            {cue.label}
+                        </button>
+                    </React.Fragment>
                 ))}
             </div>
         </div>
