@@ -51,6 +51,8 @@ def main() -> int:
 
     if not args.write:
         print("Dry-run mode enabled. Re-run with --write to apply changes.")
+        if changed_count > 0:
+            return 1
 
     return 0
 
