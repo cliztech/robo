@@ -7,6 +7,33 @@ Executing "Phase 6: Playlist Generation" hardening and preparing Phase 7 broadca
 Building the next unfinished execution plans from the roadmap queue, starting with P1 Security items (TI-039/TI-040/TI-041).
 
 ## Recent Decisions
+- Completed Claude-agent contract hardening to production readiness: validator now supports configurable agent roots, CI strict mode (`--fail-on-skip`), duplicate/unknown-key detection, and automated tests for pass/fail/skip-policy paths.
+
+- Reviewed and rated the initial Claude-agent blueprint (7.5/10), then hardened it with an executable contract linter (`scripts/ci/check_claude_agent_contracts.py`) and explicit adoption command to convert advisory guardrails into enforceable checks.
+
+- Added a minimal `.claude/agents` execution-layer skeleton (planner/executor/verifier + secops/qa/devops role packets) mapped to canonical `AGENTS.md` governance to reduce role-spec drift while enabling faster local orchestration.
+
+- Added continuous improvement governance docs: new `docs/operations/continuous_improvement_loop.md`, monthly Agent Capability Review template in `docs/operations/artifacts.md`, breach execution hook in `docs/operations/subagent_execution_playbook.md`, and historical scorecard path `docs/metrics/agent_capability_scorecard.md`.
+
+- Re-synced Track A security reconciliation on 2026-03-04: `docs/exec-plans/active/sprint-status.yaml` remains authoritative; TODO/TI-041 were updated to backlog/open with explicit TI-040 deliverable gaps (`TI040-ART-LOG/REPORT/HASH`) and roadmap autopilot queue was regenerated.
+
+- Established canonical agent governance source at `docs/operations/agent_governance_canonical.md`, added derived governance views, and wired PR drift validation via workflow + consistency script.
+
+- Added CI env-contract parity guard (`scripts/ci/validate_env_contract.py`) to compare required contract vars, `.env.example`, and compose `${VAR}` references with JSON artifact output for PR diagnostics.
+- Wired PR-scoped CI execution and artifact upload in `.github/workflows/ci.yml` for env/docs/compose/contract changes and documented remediation flow in `docs/DEVELOPMENT_ENV_SETUP.md`.
+
+- Refactored dashboard status/severity mapping helpers into shared typed lookup tables in `src/components/console/dashboard.types.ts` and added dedicated unit coverage to lock mapping behavior.
+- Redirected the `studio` operator view away from the DJ deck duplicate and into a dedicated radio-station control room surface that combines scheduling, playlists, host tools, compliance timing, and stream health into a single premium operations screen.
+- Stabilized the studio developer environment by resolving a configuration conflict in `settings.json` where `chat.tools.terminal` was inconsistently defined across structured objects and dot-notation keys.
+- Added a designer-review-driven refinement pass to the DJ command bridge: compressed the marquee so hardware appears earlier, rebalanced the deck/mixer grid toward playable equipment, added a mixer reactor header, and locally darkened studio token surfaces to prevent light-theme leakage from breaking the cinematic cockpit mood.
+- Elevated the DJ operator experience into a cinematic "command bridge" shell with Rajdhani/Orbitron typography, a marquee hero banner, framed cockpit chrome, angled deck wings, and richer CDJ hardware surfacing so the app feels like a premium performance destination instead of a utility dashboard.
+- Elevated the `decks` operator view with a denser command rail, richer waveform timing chips, full hardware deck panels, a more physical mixer treatment, and a premium topbar so the virtual DJ equipment reads as intentional hardware rather than placeholder panels.
+- Added bounded status queue-depth telemetry history ingestion (last 60 points), wired dashboard trend responses to real history windows, and introduced dashboard conditional GET validators (ETag/Last-Modified) with 304 handling support in the frontend status client.
+- Consolidated `scripts/codex_env_doctor.sh` into a single `PASS:/WARN:/FAIL:` implementation with strict shell guards (`set -euo pipefail`), centralized cleanup trap, and a single explicit exit path.
+- Added CI guard workflow `.github/workflows/codex-env-doctor-check.yml` that runs the doctor script and fails if mixed `PASS:`/`[PASS]` output formats are detected.
+
+
+- Added a shared typed env loader (`src/lib/env.ts`) with structured startup validation errors for Supabase and dashboard backend URL inputs; wired it into Supabase server client and dashboard status proxy to eliminate divergent runtime fallback behavior.
 
 - Refactored `src/lib/api/request-controls.ts` to support pluggable request-control storage with an Upstash/Redis shared backend option and in-memory fallback; added cross-instance test coverage for shared rate-limit/idempotency behavior.
 - Standardized Supabase env naming on `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`, documented deprecated alias migration (`SUPABASE_URL`, `SUPABASE_ANON_KEY`), and added temporary server fallback warning logging for transition safety.
@@ -55,6 +82,13 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 ## Recent Decisions
 - Hardened `src/app/api/ai/analyze-track/route.ts` and `src/app/api/ai/batch-analyze/route.ts` with strict JSON content-type gates, request size checks, and Zod `safeParse` validation, and standardized deterministic API error payloads via new `src/lib/api/error.ts` helper.
 
+- Added bounded status queue-depth telemetry history ingestion (last 60 points), wired dashboard trend responses to real history windows, and introduced dashboard conditional GET validators (ETag/Last-Modified) with 304 handling support in the frontend status client.
+
+- Completed environment-contract wiring follow-up: bootstrap/codex doctor/CI now invoke `config/check_runtime_env.py` with explicit context mapping (`desktop_app`, `docker_stack`, `ci`); added Makefile env-check targets and consolidated canonical preflight in `docs/DEVELOPMENT_ENV_SETUP.md`.
+
+
+
+
 - Standardized phase naming contracts across planning artifacts: `Delivery Phase N` for delivery context and `Workflow Phase N` for workflow context, plus namespace-required packet/build-plan metadata.
 
 - Completed shared canonical track-analysis contract extraction (`backend/ai/contracts/track_analysis.py`) and aligned service/API/tests with temporary legacy adapter removal criteria for Phase 5 story P5-05.
@@ -83,6 +117,13 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 
 ## Recent Decisions
 - Hardened `src/app/api/ai/analyze-track/route.ts` and `src/app/api/ai/batch-analyze/route.ts` with strict JSON content-type gates, request size checks, and Zod `safeParse` validation, and standardized deterministic API error payloads via new `src/lib/api/error.ts` helper.
+
+- Added bounded status queue-depth telemetry history ingestion (last 60 points), wired dashboard trend responses to real history windows, and introduced dashboard conditional GET validators (ETag/Last-Modified) with 304 handling support in the frontend status client.
+
+- Completed environment-contract wiring follow-up: bootstrap/codex doctor/CI now invoke `config/check_runtime_env.py` with explicit context mapping (`desktop_app`, `docker_stack`, `ci`); added Makefile env-check targets and consolidated canonical preflight in `docs/DEVELOPMENT_ENV_SETUP.md`.
+
+
+
 
 - Standardized phase naming contracts across planning artifacts: `Delivery Phase N` for delivery context and `Workflow Phase N` for workflow context, plus namespace-required packet/build-plan metadata.
 
@@ -229,12 +270,39 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Enforced branch-aware severity gates in `.github/workflows/ci.yml` for `pip-audit`, Python SAST, and `npm audit` without `continue-on-error` bypasses.
 - Preserved always-on security report artifact generation for observability in pass/fail paths.
 - Added policy alignment notes to `PRE_RELEASE_CHECKLIST.md` and `SECURITY.md` to keep release/security docs synchronized with CI behavior.
+
+## 2026-03-03 TI-040/TI-041 Dependency Reconciliation
+
+- Updated TI-040 dependency checkpoints with explicit evidence references; `DEP-TI040-01` and `DEP-TI040-02` are documented complete, while `DEP-TI040-03` is explicitly blocked pending confirmed high-risk keys in runtime config payloads.
+- Downgraded TI-041 from Complete to Blocked and tightened `SMK-AUTHZ-01` / `SMK-PRIV-01` evidence requirements to include TI-040 encrypted-field hash evidence linkage.
+- Reconciled sprint and backlog state (`sprint-status.yaml`, `TODO.md`) so TI-041 remains blocked until TI-040 dependency evidence is fully satisfied.
 ## 2026-02-28 Documentation + Branding Consistency Update
 - Updated README to remove duplicated title/overview lines, corrected documentation index numbering, and aligned architecture ownership language to root Next.js app plus backend services.
 - Updated TECH_STACK.md to reflect current runtime/framework/tooling versions (Node 20.x, Next.js 15.5.10, React 18, Vitest 4.x, FastAPI/Python backend context).
 - Rebranded backend operator-facing startup/title strings from legacy RoboDJ naming to DGN-DJ naming.
 - Expanded CI docs consistency gate by wiring `scripts/ci/check_docs_consistency.py` into `.github/workflows/ci.yml` and adding README structure checks.
+- Reconciled TI-039/TI-040/TI-041 using sprint-status canonical authority + artifact existence: TI-041 confirmed complete via evidence bundle, TI-039 retained in progress, TI-040 set blocked pending artifact delivery; parity guard added to roadmap autopilot.
 
+## 2026-03-03 DJ Console Hardware Realism Update
+- [x] Reworked deck transport surfaces into dual-device layouts: DGJ-3000X media player + DGN Technical-1200SN-inspired turntable visuals for both Deck A/B.
+- [x] Added detailed control affordances (vinyl platter rings, center labels, pitch strip/fader, tonearm assembly) to improve hardware realism without introducing runtime behavior changes.
+- [x] Updated global deck styling rules for responsive side-by-side hardware composition and mobile-safe fallback sizing.
+
+## 2026-03-03 Transport/Test Blocker Fix Update
+- [x] Resolved `src/components/audio/DegenTransport.tsx` merge-corruption (duplicate imports/exports) by restoring a single valid component export with unified props (`currentTrack`, `telemetry`, `onSeek`, transport callbacks).
+- [x] Restored transport test contract support (`data-testid="degen-transport"` and `transport-progress-fill`) to unblock console visual and seek tests.
+- [x] Fixed duplicate `transportSurface` declaration in `tests/ui/console-skin-visual.test.tsx` so targeted visual regression runs execute.
+
+## 2026-03-03 UI Stability + Dashboard/Route Repair Update
+- [x] Repaired compile blockers by rewriting `DashboardView` into a single coherent implementation (removed merge-conflict corruption, duplicated imports/types, and duplicate component exports).
+- [x] Fixed dashboard alerts ack route import traversal to canonical `../../../_shared/proxy`, unblocking integration route test resolution.
+- [x] Restored waveform cue accessibility/interaction by adding labeled cue buttons that seek on click, resolving the failing DJ controls cue test while improving operator UX.
+- [x] Replaced corrupted test files (`dashboard-view`, `analysis-queue`, `degenDataAdapters`) with deterministic, contract-focused suites and aligned status-route auth token expectations.
+## 2026-03-03 Cadence Governance Hardening
+- Added explicit cadence checklist metadata in `TODO.md` for owner, due, status, defer rationale, and replacement due date to support deterministic governance checks.
+- Appended a compact `Next run window` cadence table in `docs/operations/execution_index.md` with status values constrained to `due|deferred` for operator scanning.
+- Hardened `scripts/roadmap_autopilot.py` to fail non-zero when overdue cadence items are not formally deferred with both rationale and replacement due date.
+- Added release gate command in `PRE_RELEASE_CHECKLIST.md` so release/sprint-close sign-off is blocked on unresolved overdue cadence items.
 ## 2026-03-03 Roadmap Autopilot Build-Plan Dedup Hardening
 - Updated `scripts/roadmap_autopilot.py` build-plan writer to perform atomic replacement writes via temp file + `Path.replace()` to prevent accidental append/partial-write artifacts.
 - Added pre-render de-duplication for build-plan tasks and cadence reminders keyed by `(source_file, line_ref, normalized_task_text)`.
@@ -248,11 +316,64 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added backward-compatible decode handling for legacy envelope key names and `enc::` payload strings while keeping decrypt fail-closed behavior.
 - Updated backend crypto tests to assert v1 envelope fields and nonce uniqueness using the new schema.
 
+## 2026-03-04 DJ Console Specialist and Equipment Model Update
+- Added BMAD specialist agent charters for hardware-centric deck/cue workflows and control-room broadcast operations in `_bmad/bmm/agents/`.
+- Added `docs/ui/equipment_interaction_model.md` to formalize deck/cue/headphone behavior, mixer strip semantics, broadcast chain observability, and error recovery playbooks.
+- Expanded `docs/ui/dj_console_design_pod.md` role roster, cadence, and handoff contracts to explicitly require specialist realism review evidence before pre-PR sign-off.
+## 2026-03-04 Agent Governance Assessment
+- Rated current agent-governance setup at 7.8/10 with strongest performance in coverage and enforceability, and primary weakness in cross-document determinism/maintainability.
+- Published a four-phase hardening plan in `docs/exec-plans/active/2026-03-04-agent-governance-hardening-plan.md` targeting authority normalization, route-consistency fixes, measurable gates, and drift prevention.
+- Prioritized immediate actions: canonical governance map, QA/context policy reconciliation, skill-format alignment, and quality-gate rubric definition.
+## 2026-03-04 MCP Runtime Config Authority Update
+- Established `infra/mcp/servers.json` as the authoritative MCP source by adding `scripts/generate_mcp_runtime_config.py` to emit root `.mcp.json` from indexed manifests.
+- Added optional `.mcp.local.json` deep-merge support for local developer overrides without mutating source manifests.
+- Extended PR validation workflow to enforce MCP schema checks and `.mcp.json` generation parity (with explicit `MCP_RUNTIME_CONFIG_IGNORE=1` escape hatch).
+- Updated `infra/mcp/README.md` with exact startup/validation commands for manifest validation, generation, and drift checks.
+## 2026-03-04 Route State-Update Policy Clarification
+- Updated bootstrap/state-management policy to make `.context` updates conditional on `Change`/`Proposal` outputs that modify project state.
+- Added explicit QA-route exception requiring a "state update suggestion" in output instead of editing state files.
+- Synced task-route templates and BMAD tie-break policy notes with the same conditional and precedence behavior.
+## 2026-03-04 Workflow quality-gate rubric consolidation
+- Added measurable workflow-gate semantics in `AGENTS.md` with explicit required checklist keys, command-log evidence requirements, and a compact minimum evidence schema table.
+- Added canonical rubric `docs/operations/quality_gate_rubric.md` to centralize scoring formula, hard-gate pass criteria, required evidence fields, and failure semantics.
+- Linked `AGENTS.md`, `docs/operations/subagent_execution_playbook.md`, `docs/operations/execution_index.md`, and `docs/operations/artifacts.md` to the canonical rubric to prevent semantic drift.
+## 2026-03-04 Skills Registry QA-format alignment
+- Updated `SKILLS.md` to use `rg --files -g '**/AGENTS.md'` for scope discovery guidance in `scope-resolver`.
+- Migrated `qa-issue-emitter` task-stub output from legacy bullets to canonical `:::task-stub{title="..."}` directive format with a concrete compliant example block.
+- Added explicit route-authority notes in `scope-resolver`, `intake-router`, and `qa-issue-emitter` that QA mode is read-only/no-edits.
+- Completed TI-040 config-at-rest hardening: unified config read/write encryption envelope handling in `config_crypto`, `ai_service`, and `scheduler_ui_service`; added validator regression tests for plaintext/malformed envelope rejection; published TI-040 evidence artifacts (`ti-040-config-encryption.log`, `ti-040-high-risk-field-inventory.md`, `ti-040-config-before-after.sha256`) and closed dependency checkpoints DEP-TI040-01..03.
+## 2026-03-04 Communication Mode Contract Hardening
+- Added explicit `communication_mode: persona|ops` activation-step declarations across BMAD marketing agents and core master agent definitions.
+- Standardized per-agent communication mode contract blocks with explicit Ops Mode requirements (concise + non-roleplay + required Assumptions/Risks/Actions/Evidence blocks) and fallback behavior.
+- Updated `docs/operations/agent_execution_commands.md` with automatic Ops Mode switch triggers for incidents, production risk, and release gate failures.
+- Added `scripts/validate_agent_communication_modes.py` lint check to enforce contract, ops behavior, and fallback coverage across all BMAD/core agent markdown definitions.
 ## 2026-03-04 BMAD deep research runbook evidence governance update
 - Added a mandatory evidence schema for every research claim (source type, publication date, confidence, relevance score, decision impact).
 - Added hard source-mix and freshness gates, including a <12 month recency requirement for fast-moving AI/tooling topics.
 - Added required decision-trace table linking findings to PRD, architecture, and epic/story IDs.
 - Added QA packet acceptance checklist for research evidence completeness and sign-off readiness.
+
+## 2026-03-05 Environment hardening implementation
+- Added shared env utilities in `src/lib/env.ts` for required var enforcement, fallback resolution, boolean parsing, and normalized app environment selection.
+- Hardened server-side env usage by migrating Supabase client bootstrap and dashboard status proxy base URL resolution to typed env helpers.
+- Normalized demo-data environment flag evaluation in `src/lib/degenDataAdapters.ts` to avoid brittle string comparisons.
+- Added unit coverage in `tests/unit/env.test.ts` and expanded repo ignore policy for Python package metadata artifacts (`*.egg-info/`).
+## 2026-03-05 Runtime context env-contract enforcement
+- Added runtime context contract enforcement across backend startup and Next.js dashboard server routes via explicit `ROBODJ_RUNTIME_CONTEXT` selection (`desktop_app`, `docker_stack`, `ci`).
+- Added structured non-secret diagnostics and log summaries for invalid/missing env contracts (missing key names only).
+- Extended CI pipeline jobs with env-only runtime secret contract checks using `python config/check_runtime_secrets.py --require-env-only`.
+- Added backend and route-level/env-contract tests to lock pass/fail behavior for runtime context validation.
+## 2026-03-05 Session Update
+- Hardened `src/lib/ai/analyze-track.ts` to use shared `logAIDecision` contract with `stationId`, structured decision payload, and non-blocking warning telemetry when decision logging fails.
+- Removed duplicate route-level decision insert in `src/app/api/ai/analyze-track/route.ts` and passed `stationId` into analyzer calls to enforce one persisted decision event per successful analysis.
+- Added focused unit coverage in `tests/integration/analyze-track-route-logging.test.ts` validating exactly one decision log write on success and fail-open behavior on logging errors.
+## 2026-03-05 Compose profile consolidation update
+- Consolidated root compose topology into `docker-compose.base.yml` plus profile overlays (`docker-compose.dev.yml`, `docker-compose.release.yml`, `docker-compose.prod.yml`).
+- Standardized compose `env_file` usage to `deploy/env/docker.{common,dev,staging,prod}.env` aligned to `config/env_contract.json` required `docker_stack` variables.
+- Added explicit operator command matrix and profile/env requirements in `docs/runtime_deployment_matrix.md`.
+- Added CI compose render validations in `.github/workflows/ci.yml` for `dev`, `staging`, and `prod` profile combinations.
+- Deprecated legacy compose split files by removing redundant `docker-compose.safe.yaml` and `docker-compose.docker-control.yaml`; retained `docker-compose.yaml` as compatibility shim.
+- Hardened dashboard status proxy backend URL configuration: localhost fallback is now development-only, staging/production require `DASHBOARD_STATUS_BACKEND_URL`, malformed URLs fail startup validation, and missing non-dev config returns an explicit 500 configuration envelope.
 
 ## 2026-03-05 Typed Telemetry Contract Hardening
 - Replaced `cookies() as any` with typed async cookie-store handling in `src/lib/supabase/server.ts` and updated call sites to await server client creation.
@@ -283,3 +404,61 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added protected-ref runtime secret gate in CI using `python config/check_runtime_secrets.py --require-env-only` with explicit fail-fast shell settings and secret-backed env wiring.
 - Documented CI runtime contract gate commands in `docs/DEVELOPMENT_ENV_SETUP.md` for operator/developer parity.
 - Added repository hygiene guardrails for generated Python packaging artifacts: ignore `*.egg-info`, removed accidental `src/UNKNOWN.egg-info/`, added CI scanner (`scripts/ci/check_generated_artifacts.py`), and added isolated wheel-build script outputting to `.artifacts/python-packaging`.
+
+## 2026-03-06 Batch analyzer persistence failure accounting hardening
+- Updated `src/lib/ai/batch-analyzer.ts` to capture Supabase update errors per-track, throw contextualized persistence failures (`track.id` in message), and ensure `onError` always receives a typed `Error` even for non-Error thrown values.
+- Added focused unit coverage in `tests/unit/batch-analyzer.test.ts` for DB write failure accounting (`failed` increments, `successful` not incremented) and progress callback monotonicity under mixed success/failure batch writes.
+- Normalized `POST /api/ai/analyze-track` handler flow (single Supabase client, shared safe decision logging path, fixed malformed block) and expanded integration coverage scenarios (success/already-analyzed/logging-failure/auth+ownership).
+## 2026-03-06 Supabase server client merge cleanup
+- Replaced merge-corrupted `src/lib/supabase/server.ts` with one canonical async `createServerClient` export.
+- Unified env resolution on canonical `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY` with temporary alias fallback warnings.
+- Standardized a single typed cookie adapter with `get`/`set`/`remove` paths compatible with server-component cookie immutability.
+- Added unit coverage for deterministic missing-env errors, alias fallback resolution, and non-throwing cookie adapter mutations.
+## 2026-03-06 Conductor product-guidelines merge cleanup
+- Resolved merge conflict markers in `conductor/product-guidelines.md` by combining mandatory governance pointers with canonical product design guidance.
+- Updated product naming to **DGN-DJ by DGNradio** and normalized section structure for visual identity, UX, components, tone, and accessibility.
+- Added docs conflict-marker prevention command `check:merge-conflicts:docs` in `package.json` targeting `conductor/**/*.md`.
+## 2026-03-06 Root maintenance artifact hygiene
+- Inventoried root maintenance artifacts matching `fix_*.py`, `patch_tests_*.py`, `modify_test.py`, and `*.diff` and classified each into active utility, archive, or obsolete buckets.
+- Promoted `fix_files.py` to maintained utility `scripts/maintenance/fix_escaped_quotes.py` and documented purpose/ownership/safe usage/deprecation in `scripts/maintenance/README.md`.
+- Archived one-off root migration scripts into `scripts/migrations/archive/root-maintenance-2026-03/` with archive metadata README.
+- Removed obsolete artifacts (`fix_approval.py`, `patch_tests_7.py`, `patch_tests_8.py`, `my_changes.diff`, `test.diff`).
+- Added CI hygiene guard `scripts/ci/check_root_maintenance_artifacts.py` and wired it into `.github/workflows/ci.yml`.
+
+## 2026-03-06 Batch-analyze Supabase client + regression coverage
+- Removed duplicate `supabase` declaration in `/api/ai/batch-analyze` and kept a single awaited `createServerClient()` instance for auth/session + station ownership checks.
+- Expanded integration coverage for batch-analyze auth success, 401 unauthenticated guard, idempotent replay after first success, and explicit rate-limit-before-idempotency branch ordering.
+## 2026-03-06 dgn-dj-next conflict-marker hardening
+- Resolved merge-conflict artifacts in `dgn-dj-next/src/components/layout/MainLayout.tsx` by keeping a single typed import style, one `MainLayoutProps` declaration, one `libraryRows` definition, and one component export body.
+- Added `dgn-dj-next/scripts/check-conflict-markers.mjs` and wired `npm run check:conflicts` into `prebuild` to fail build/CI on `<<<<<<<`, `=======`, `>>>>>>>` markers under `dgn-dj-next/src`.
+- Cleared blocking TypeScript `useRef` initialization errors in `VUMeter` and `Knob`, and removed an unused React import in `waveform-rail` unit test to restore build pass.
+## 2026-03-05 Track analysis cache hardening
+- Added TTL- and max-entry-bounded `InMemoryAnalysisCacheStore` with configurable LRU/FIFO eviction and stale-entry cleanup on both `get` and `set` paths.
+- Expanded track-analysis fingerprint versioning inputs to include `schema_version` alongside model/prompt versions to force safe cache invalidation on contract changes.
+- Added structured cache telemetry (`size`, `hits`, `misses`, `evictions`, `expirations`) into track-analysis cache hit/miss/write log events.
+- Added backend tests for TTL expiry, max-size LRU eviction behavior, and schema/model-version fingerprint invalidation.
+## 2026-03-05 Audio Engine Cache Hardening (In Progress)
+- Implemented configurable audio-buffer cache controls in `src/lib/audio/engine.ts` with max-entry and max-byte limits plus decode concurrency guardrails.
+- Added LRU semantics with protected active track IDs to prevent eviction of current/next playback buffers.
+- Added `cache-telemetry` events (hit/miss/eviction) for runtime cache tuning and observability.
+- Added/updated unit tests in `tests/ui/audio-engine.test.ts` for LRU eviction correctness and non-eviction of active playback buffers.
+- Hardened status telemetry ingestion with safe field parsers + structured fallback logging, added tolerant service-health enum mapping in status API, and introduced corruption-focused tests (malformed JSON, invalid timestamps/depth, unknown status fallback).
+- Hardened `DashboardView` polling loop with separated 1s UI clock vs configurable API cadence, visibility-aware throttling, exponential backoff + jitter, and in-flight request dedupe/abort guarantees.
+
+## 2026-03-05 Status dashboard route contract hardening
+- Standardized status dashboard proxy handlers on shared route typing contracts (`StatusProxyRouteHandler`, `AppRouteParamsContext`) for Next.js app-route consistency.
+- Hardened `alerts/[alertId]/ack` with early 400 validation for empty/whitespace `alertId` and prevented upstream proxy calls when invalid.
+- Expanded integration coverage for invalid `alertId` rejection and special-character path encoding in acknowledge proxy behavior.
+- Resolved merge-corrupted `DashboardView` by unifying typed API imports/props, collapsing to one polling effect + abort path, and removing undefined dashboard identifiers; added deterministic polling override for testability.
+- Replaced `tests/ui/dashboard-view.test.tsx` with focused UI coverage for initial load, failed load, polling refresh, acknowledge rollback on error, and duplicate request prevention.
+## 2026-03-05 CI gate contract enforcement update
+- Added a new fail-fast `preflight` job in `.github/workflows/ci.yml` to run runtime-version, product-naming, design-token, and env-only secret integrity checks before build/test jobs.
+- Codified branch-aware severity policy: hard-fail on `main`/`release/**`, warning-only on non-release refs.
+- Added machine-readable CI gate summary artifact upload (`ci-reports/ci-gates-summary.json`) for audit evidence.
+- Documented mandatory CI gate contract + local preflight equivalent in `CONTRIBUTING.md`.
+
+## 2026-03-05 Legacy `/analyze-track` sunset enforcement
+- Added runtime-configurable cutoff gate (`ROBODJ_LEGACY_AI_ROUTE_CUTOFF`) for deprecated `POST /api/v1/ai/analyze-track`.
+- Added structured in-process telemetry for deprecated route calls (usage counter + API-key fingerprint + optional tenant ID + phase state).
+- Added migration guidance protocol via `Deprecation`, `Warning`, `Sunset`, and `Link` headers, plus `410 Gone` migration error body after cutoff.
+- Extended API tests to cover pre-cutoff, near-cutoff, and post-cutoff behavior while proving canonical `/track-analysis` remains unaffected.

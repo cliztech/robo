@@ -67,8 +67,6 @@ export async function POST(request: NextRequest) {
       return invalidContentType
     }
 
-    const supabase = createServerClient()
-
     const {
       data: { session },
     } = await supabase.auth.getSession()
