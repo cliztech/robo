@@ -404,6 +404,7 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Documented CI runtime contract gate commands in `docs/DEVELOPMENT_ENV_SETUP.md` for operator/developer parity.
 - Added repository hygiene guardrails for generated Python packaging artifacts: ignore `*.egg-info`, removed accidental `src/UNKNOWN.egg-info/`, added CI scanner (`scripts/ci/check_generated_artifacts.py`), and added isolated wheel-build script outputting to `.artifacts/python-packaging`.
 
+- Normalized `POST /api/ai/analyze-track` handler flow (single Supabase client, shared safe decision logging path, fixed malformed block) and expanded integration coverage scenarios (success/already-analyzed/logging-failure/auth+ownership).
 ## 2026-03-06 Supabase server client merge cleanup
 - Replaced merge-corrupted `src/lib/supabase/server.ts` with one canonical async `createServerClient` export.
 - Unified env resolution on canonical `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY` with temporary alias fallback warnings.

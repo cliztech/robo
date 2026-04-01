@@ -378,6 +378,7 @@
 - [x] Added `scripts/ci/build_python_wheels.sh` to keep Python packaging outputs in `.artifacts/python-packaging` instead of app source paths.
 - [x] Added CI guard script `scripts/ci/check_generated_artifacts.py` and wired it into `.github/workflows/ci.yml` config job.
 
+- [x] Unified `src/app/api/ai/analyze-track/route.ts` control flow and repaired decision logging branch to compile with deterministic JSON success/error responses; expanded `tests/integration/ai-analyze-track-route.test.ts` for success/short-circuit/non-fatal logging failure/auth cases.
 ## 2026-03-06 Supabase server client merge cleanup
 - [x] Replaced merge-corrupted `src/lib/supabase/server.ts` with a single async `createServerClient` implementation.
 - [x] Kept canonical env names with deprecated alias fallback and deterministic missing-env error messages.
