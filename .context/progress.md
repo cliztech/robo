@@ -378,6 +378,8 @@
 - [x] Added `scripts/ci/build_python_wheels.sh` to keep Python packaging outputs in `.artifacts/python-packaging` instead of app source paths.
 - [x] Added CI guard script `scripts/ci/check_generated_artifacts.py` and wired it into `.github/workflows/ci.yml` config job.
 
+## 2026-03-06 Request controls pluggable backend
+- [x] Refactored API request-controls for pluggable backends (memory fallback + Upstash shared mode) and added unit/integration tests covering cross-instance rate-limit and idempotency replay semantics.
 ## 2026-03-06 Batch analyzer persistence failure accounting hardening
 - [x] Captured `{ error: updateError }` from Supabase `update(...).eq('id', track.id)` in batch analyzer flow and throw on write failure with track identifier context for observability.
 - [x] Wrapped non-Error caught values into typed `Error` instances before invoking `onError` to keep persistence failure telemetry contract stable.
