@@ -129,7 +129,7 @@ describe('batchAnalyzeTracks', () => {
     expect(onError).toHaveBeenCalledTimes(1)
     expect(onError.mock.calls[0][0]).toBe('track-1')
     expect(onError.mock.calls[0][1]).toBeInstanceOf(Error)
-    expect(onError.mock.calls[0][1].message).toContain('track track-1')
+    expect(onError.mock.calls[0][1].message).toContain('track-1')
     expect(onError.mock.calls[0][1].message).toContain('write timeout')
   })
 
