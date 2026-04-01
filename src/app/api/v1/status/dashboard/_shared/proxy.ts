@@ -33,7 +33,7 @@ function resolveUpstreamTimeoutMs(): number {
     return DEFAULT_UPSTREAM_TIMEOUT_MS;
   }
 
-  const parsed = Number.parseInt(raw, 10);
+  const parsed = Number(raw);
   if (!Number.isFinite(parsed) || parsed <= 0) {
     return DEFAULT_UPSTREAM_TIMEOUT_MS;
   }
