@@ -403,6 +403,11 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Added protected-ref runtime secret gate in CI using `python config/check_runtime_secrets.py --require-env-only` with explicit fail-fast shell settings and secret-backed env wiring.
 - Documented CI runtime contract gate commands in `docs/DEVELOPMENT_ENV_SETUP.md` for operator/developer parity.
 - Added repository hygiene guardrails for generated Python packaging artifacts: ignore `*.egg-info`, removed accidental `src/UNKNOWN.egg-info/`, added CI scanner (`scripts/ci/check_generated_artifacts.py`), and added isolated wheel-build script outputting to `.artifacts/python-packaging`.
+
+## 2026-03-06 Conductor product-guidelines merge cleanup
+- Resolved merge conflict markers in `conductor/product-guidelines.md` by combining mandatory governance pointers with canonical product design guidance.
+- Updated product naming to **DGN-DJ by DGNradio** and normalized section structure for visual identity, UX, components, tone, and accessibility.
+- Added docs conflict-marker prevention command `check:merge-conflicts:docs` in `package.json` targeting `conductor/**/*.md`.
 ## 2026-03-06 Root maintenance artifact hygiene
 - Inventoried root maintenance artifacts matching `fix_*.py`, `patch_tests_*.py`, `modify_test.py`, and `*.diff` and classified each into active utility, archive, or obsolete buckets.
 - Promoted `fix_files.py` to maintained utility `scripts/maintenance/fix_escaped_quotes.py` and documented purpose/ownership/safe usage/deprecation in `scripts/maintenance/README.md`.
