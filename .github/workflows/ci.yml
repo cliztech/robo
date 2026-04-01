@@ -485,6 +485,9 @@ jobs:
       - name: Validate documentation consistency
         run: python scripts/ci/check_docs_consistency.py
 
+      - name: Guard root maintenance artifacts
+        run: python scripts/ci/check_root_maintenance_artifacts.py
+
       - name: Validate runtime secret contract (env-only)
         env:
           ROBODJ_RUNTIME_CONTEXT: ci

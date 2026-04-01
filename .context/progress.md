@@ -377,6 +377,12 @@
 - [x] Removed accidental `src/UNKNOWN.egg-info/` artifact directory from the working tree.
 - [x] Added `scripts/ci/build_python_wheels.sh` to keep Python packaging outputs in `.artifacts/python-packaging` instead of app source paths.
 - [x] Added CI guard script `scripts/ci/check_generated_artifacts.py` and wired it into `.github/workflows/ci.yml` config job.
+## 2026-03-06 Root maintenance artifact cleanup
+- [x] Classified all root `fix_*.py`, `patch_tests_*.py`, `modify_test.py`, and `*.diff` artifacts and recorded disposition in `scripts/maintenance/root_maintenance_artifact_inventory.md`.
+- [x] Refactored retained utility into `scripts/maintenance/fix_escaped_quotes.py` and documented operational metadata in `scripts/maintenance/README.md`.
+- [x] Archived one-off migration scripts under `scripts/migrations/archive/root-maintenance-2026-03/` with owner/safety/deprecation metadata.
+- [x] Removed obsolete duplicate/truncated root artifacts and empty diff files.
+- [x] Added CI repo-hygiene gate `scripts/ci/check_root_maintenance_artifacts.py` and integrated it into the config job in `.github/workflows/ci.yml`.
 
 ## 2026-03-06 Dashboard status proxy upstream resilience
 - [x] Added `AbortController` timeout handling with env-configurable timeout (`DASHBOARD_STATUS_UPSTREAM_TIMEOUT_MS`, default 5000ms) to `src/app/api/v1/status/dashboard/_shared/proxy.ts`.
