@@ -235,7 +235,7 @@ describe('dashboard status proxy route handlers', () => {
     expect(response.status).toBe(502);
     expect(body).toEqual({
       status: 502,
-      detail: 'Dashboard backend request failed with status 502',
+      detail: '<html><body>gateway error</body></html>'
     });
   });
 });
