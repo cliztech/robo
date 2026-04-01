@@ -188,11 +188,32 @@ describe('dashboard status proxy route handlers', () => {
     );
   });
 
+  it('maps upstream timeout to stable 504 envelope', async () => {
   it('returns 400 when alertId is empty or whitespace', async () => {
     getSessionMock.mockResolvedValue({
       data: {
         session: {
           user: { id: 'user-4' },
+          access_token: 'mock-token-timeout',
+        },
+      },
+    });
+
+    const abortError = new DOMException('The operation was aborted.', 'AbortError');
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(abortError);
+
+    const response = await getDashboard(new NextRequest('http://localhost/api/v1/status/dashboard'));
+    const body = await response.json();
+
+    expect(response.status).toBe(504);
+    expect(body).toEqual({
+      status: 504,
+      detail: 'Dashboard backend request timed out',
+      code: 'UPSTREAM_TIMEOUT',
+    });
+  });
+
+  it('maps network exception to stable 502 envelope', async () => {
           access_token: 'mock-token-jkl',
         },
       },
@@ -224,6 +245,49 @@ describe('dashboard status proxy route handlers', () => {
       data: {
         session: {
           user: { id: 'user-5' },
+          access_token: 'mock-token-network',
+        },
+      },
+    });
+
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('connect ECONNREFUSED'));
+
+    const response = await getDashboard(new NextRequest('http://localhost/api/v1/status/dashboard'));
+    const body = await response.json();
+
+    expect(response.status).toBe(502);
+    expect(body).toEqual({
+      status: 502,
+      detail: 'Dashboard backend is unreachable',
+      code: 'UPSTREAM_UNREACHABLE',
+    });
+  });
+
+  it('falls back to generic detail when upstream error payload is non-json', async () => {
+    getSessionMock.mockResolvedValue({
+      data: {
+        session: {
+          user: { id: 'user-6' },
+          access_token: 'mock-token-html-error',
+        },
+      },
+    });
+
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response('<html><body>gateway error</body></html>', {
+        status: 502,
+        headers: { 'content-type': 'text/html' },
+      })
+    );
+
+    const response = await getDashboard(new NextRequest('http://localhost/api/v1/status/dashboard'));
+    const body = await response.json();
+
+    expect(response.status).toBe(502);
+    expect(body).toEqual({
+      status: 502,
+      detail: '<html><body>gateway error</body></html>'
+    });
           access_token: 'mock-token-mno',
         },
       },
