@@ -3,9 +3,21 @@
 > **DGN-DJ** by DGNradio — AI-powered radio automation platform
 > Node.js 20.x + Next.js 15.5.10 · Python >=3.10 · SQLite · JSON config · Vercel + Docker + Windows desktop
 
-## Scope
+## Bootstrap
+
+### Scope
 
 These instructions apply to the entire repository unless a deeper `AGENTS.md` overrides them.
+
+> **Normative precedence:** Route-level constraints are normative and override generic prose in this document when conflicts exist.
+
+### Project Startup Instruction Block (Codex/Gemini/Jules)
+## Governance canonical references
+
+To avoid governance drift, use canonical + derived views instead of restating policies:
+
+- Canonical governance source: `docs/operations/agent_governance_canonical.md`
+- AGENTS derived governance view: `docs/operations/derived/agents_governance_view.md`
 
 ## Project Startup Instruction Block (Codex/Gemini/Jules)
 
@@ -30,19 +42,19 @@ These instructions apply to the entire repository unless a deeper `AGENTS.md` ov
 >    - `.context/systemPatterns.md` (Architecture & Standards)
 >    - `.context/techStack.md` (Technology Constraints)
 >    - `.context/progress.md` (Status of Work)
->
 > 2. **Reasoning Protocol (Ultrathink):**
 >    - **Critique:** Why is the obvious solution wrong?
 >    - **Architecture:** How does this fit the system patterns?
 >    - **Edge Cases:** What happens at the boundaries?
 >    - **The Twist:** What is the 10% innovation that makes this inevitable?
->    - **Update State:** When a task is completed, update `activeContext.md` and `progress.md`.
+>    - **Update State:** When a task is completed, update `activeContext.md` and `progress.md` only for `Change`/`Proposal` outputs that modify project state.
+>    - **QA Exception:** For `QA` route outputs, do not edit state files; include a "state update suggestion" section in the response instead.
 >
+>    - **Update State:** When a task is completed, update `activeContext.md` and `progress.md`.
 > 3. **Adoption Playbook:**
 >    - **Phase 1 (Obedience):** Enumerate files, follow authority.
 >    - **Phase 2 (Reasoning):** Challenge premises, propose superior alternatives.
 >    - **Phase 3 (Inevitability):** Update context autonomously, design obvious solutions.
->
 > 4. **Workflow Fallback (BMAD):**
 >    - If the request matches a predefined workflow in `_bmad/_config/bmad-help.csv`, use it.
 >    - Otherwise, proceed with "Visionary Architect" reasoning (Deep Planning -> Execution -> Verification).
@@ -56,39 +68,67 @@ Use command-style prompts that map to entries in `_bmad/_config/bmad-help.csv`, 
 - `bmad-bmm-create-prd`
 - `bmad-bmm-create-architecture`
 
-## Tech Stack
+### Tech Stack
 
-| Layer | Technology | Notes |
-| ----- | ---------- | ----- |
-| JS Runtime | Node.js 20.x | Canonical runtime for root app + JS subprojects |
-| Python Runtime | Python >=3.10 | `dgn-airwaves` requires `>=3.10`; desktop bundle may pin its own interpreter |
-| Frameworks | Next.js 15.5.10, React 18, Vite 5.4.8 | See `docs/architecture/canonical_runtime_map.md` for ownership by tree |
-| Service Stack | Express 4.21.2 + NATS 2.29.1 | `radio-agentic/services/*` manifests are canonical |
-| Data | SQLite (`settings.db`, `user_content.db`) | Read-only for agents |
-| Config | JSON (`schedules.json`, `prompt_variables.json`) | Editable with backup |
-| Platform Targets | Vercel, Docker Compose runtime, Windows desktop launcher | Deployment varies by owned subproject |
+| Layer            | Technology                                               | Notes                                                                        |
+| ---------------- | -------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| JS Runtime       | Node.js 20.x                                             | Canonical runtime for root app + JS subprojects                              |
+| Python Runtime   | Python >=3.10                                            | `dgn-airwaves` requires `>=3.10`; desktop bundle may pin its own interpreter |
+| Frameworks       | Next.js 15.5.10, React 18, Vite 5.4.8                    | See `docs/architecture/canonical_runtime_map.md` for ownership by tree       |
+| Service Stack    | Express 4.21.2 + NATS 2.29.1                             | `radio-agentic/services/*` manifests are canonical                           |
+| Data             | SQLite (`settings.db`, `user_content.db`)                | Read-only for agents                                                         |
+| Config           | JSON (`schedules.json`, `prompt_variables.json`)         | Editable with backup                                                         |
+| Platform Targets | Vercel, Docker Compose runtime, Windows desktop launcher | Deployment varies by owned subproject                                        |
 
 ## Commands
->
+
 > ⚡ Put commands early — agents reference these often.
 
 | Action | Command | Notes |
 | ------ | ------- | ----- |
-| **Run DGN-DJ app (canonical desktop launcher)** | `.\DGN-DJ_Launcher.bat` | Canonical packaged desktop startup; resolves paths relative to launcher. |
-| **Run DGN-DJ app (compatibility shim)** | `.\RoboDJ_Launcher.bat` | Legacy launcher alias that delegates to `DGN-DJ_Launcher.bat`. |
-| **Run fullstack web launcher (canonical)** | `.\DGNDJ_Fullstack_Launcher.bat [dev|prod] [--port N]` | Canonical Windows fullstack Next.js launcher. |
-| **Run fullstack desktop+backend launcher (deprecated compatibility)** | `.\DGN-DJ_Fullstack_Launcher.bat` | Legacy compatibility flow for desktop + FastAPI bootstrap. |
+| **Run app (launcher)** | `.\DGN-DJ_Launcher.bat` | Canonical launcher flow; resolves paths relative to launcher and may elevate when needed. |
+| **Run app (direct binary)** | `.\DGN-DJ Automation.exe` | Canonical direct execution path (bypasses launcher wrapper). |
 | **Run root web app** | `npm run dev` | Next.js studio on Node.js 20.x |
 | **Run DJ console** | `npm --prefix apps/dj-console run dev` | Vite app in owned subtree |
 | **Run radio-agentic stack** | `pnpm --dir radio-agentic install && docker compose -f radio-agentic/docker-compose.yml up --build` | Starts owned workspace stack |
-| **Run directly (bundled artifact only)** | `.\DGN-DJ Automation.exe` | External/bundled executable; intentionally not tracked in git. |
 | **Inspect DB** | `cd config && python inspect_db.py` | Read-only schema inspection |
 | **Check JSON** | `python -m json.tool config/schedules.json` | Validate JSON syntax |
 | **Validate runtime versions** | `python scripts/validate_runtime_versions.py` | Ensures docs/manifests are in sync |
 | **Git status** | `git status --short` | Quick changed-file overview |
 | **Diff check** | `git diff --name-only` | List modified files before commit |
+| Action                        | Command                                                                                             | Notes                                                                                |
+| ----------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| **Run DGN-DJ app**            | `.\RoboDJ_Launcher.bat`                                                                             | Starts DGN-DJ via the legacy launcher filename; resolves paths relative to launcher. |
+| **Run binary directly**       | `.\RoboDJ Automation.exe`                                                                           | Starts DGN-DJ via the legacy binary filename (wrapper bypass).                       |
+| **Run root web app**          | `npm run dev`                                                                                       | Next.js studio on Node.js 20.x                                                       |
+| **Run Windows launcher**      | `.\RoboDJ_Launcher.bat`                                                                             | Desktop launcher flow                                                                |
+| **Run DJ console**            | `npm --prefix apps/dj-console run dev`                                                              | Vite app in owned subtree                                                            |
+| **Run radio-agentic stack**   | `pnpm --dir radio-agentic install && docker compose -f radio-agentic/docker-compose.yml up --build` | Starts owned workspace stack                                                         |
+| **Run app**                   | `.\DGN-DJ_Launcher.bat`                                                                             | Resolves paths relative to launcher; elevated when needed                            |
+| **Run directly**              | `.\DGN-DJ Automation.exe`                                                                           | Skips launcher wrapper                                                               |
+| **Inspect DB**                | `cd config && python inspect_db.py`                                                                 | Read-only schema inspection                                                          |
+| **Check JSON**                | `python -m json.tool config/schedules.json`                                                         | Validate JSON syntax                                                                 |
+| **Validate runtime versions** | `python scripts/validate_runtime_versions.py`                                                       | Ensures docs/manifests are in sync                                                   |
+| **Git status**                | `git status --short`                                                                                | Quick changed-file overview                                                          |
+| **Diff check**                | `git diff --name-only`                                                                              | List modified files before commit                                                    |
 
-## Project Structure & Module Organization
+## Build Commands
+
+| Action               | Command                                                                                                | Notes                    |
+| -------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------ |
+| **Build Tauri exe**  | `cd dgn-dj-next && npm run tauri:build`                                                                | Requires Rust installed  |
+| **Build Python exe** | `python -m PyInstaller --onefile --name "DGN-DJ_Automation" --add-data "config;config" backend/app.py` | Legacy PyInstaller build |
+| **Install Rust**     | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh -s -- -y`                             | Required for Tauri       |
+
+### Compatibility aliases (legacy launcher filenames)
+
+Use these only when operating in environments that still depend on legacy naming:
+
+- `.\RoboDJ_Launcher.bat` (legacy alias of `.\DGN-DJ_Launcher.bat`)
+- `.\RoboDJ Automation.exe` (legacy alias of `.\DGN-DJ Automation.exe`)
+
+
+### Project Structure & Module Organization
 
 Canonical product identity is defined in `docs/productization/product_identity.md` (`DGN-DJ by DGNradio`). Legacy `RoboDJ` filenames below are compatibility artifacts and not approved product naming for new docs.
 
@@ -148,7 +188,9 @@ robo/
     └── SECURITY.md                # Security architecture overview
 ```
 
-## Multi-Agent Pipeline
+## Routing
+
+### Multi-Agent Pipeline
 
 Use this stage-gated flow for all requests:
 
@@ -198,14 +240,14 @@ Use this stage-gated flow for all requests:
   - Generate PR body if applicable
 - **Completion gate:** User request explicitly answered
 
-## Agent Output Requirements
+### Agent Output Requirements
 
 All agents operating in this repository should produce and maintain artifacts that support delivery, operations, and traceability.
 
 The following outputs are mandatory deliverable categories for agents:
 
-### Agents produce
 ### Agents produce:
+### Agents produce
 
 - Product code and tests
 - CI configuration and release tooling
@@ -216,27 +258,48 @@ The following outputs are mandatory deliverable categories for agents:
 - Scripts that manage the repository itself
 - Production dashboard definition files
 
-## Workflow Quality Gates
+### Workflow Quality Gates
 
 Use these gates before moving work from planning to execution and from draft PR to Ready-for-Review.
 
+Canonical scoring and evidence definitions live in [`docs/operations/quality_gate_rubric.md`](docs/operations/quality_gate_rubric.md). `AGENTS.md` defines enforcement intent; the rubric defines required fields, scoring math, and pass/fail semantics.
+
 ### Numeric Thresholds (Hard Gates)
 
-1. **Plan completeness score** (scope, constraints, rollback, verification) must be **100%**.
-2. **Subagent evidence completeness** (all required fields present) must be **100%**.
-3. **Draft PR maturity checklist** must be fully passed before marking a PR **Ready-for-Review**.
-4. **Worktree hygiene checks** must pass: no stale branches and no detached worktree merges.
+1. **Plan completeness score** must be **100%** against rubric keys:
+   - `scope_definition`
+   - `constraints_and_boundaries`
+   - `rollback_strategy`
+   - `verification_plan`
+2. **Subagent evidence completeness** must be **100%** against rubric minimum evidence schema and include:
+   - evidence links for declared artifacts
+   - verification command logs (exact command + exit status)
+3. **Draft PR maturity checklist** must be fully passed before marking a PR **Ready-for-Review**, including validation command log linkage.
+4. **Worktree hygiene checks** must pass with explicit evidence of:
+   - no stale branches in active worktree scope
+   - no detached worktree merges
+
+### Minimum evidence schema
+
+| Field name | Required | Example |
+| --- | --- | --- |
+| `packet_id` | Yes | `PKT-20260304-quality-gates` |
+| `owner_role` | Yes | `planner.agent` |
+| `checklist_keys` | Yes | `["scope_definition","rollback_strategy"]` |
+| `evidence_links` | Yes | `[".agent/verification/20260304-0912_PROJ-401_verification.md"]` |
+| `verification_commands` | Yes | `[{"cmd":"npm test","exit_code":0,"output_ref":".agent/verification/npm_test.md"}]` |
+| `result` | Yes | `pass` |
 
 ### Reviewer Checklist Template
 
 > Copy this block into PR reviews for consistent gate validation.
 
 ```md
-## Workflow Quality Gate Checklist
+### Workflow Quality Gate Checklist
 
 - [ ] Plan completeness = 100% (scope + constraints + rollback + verification)
-- [ ] Subagent evidence completeness = 100% (all required fields present)
-- [ ] Draft PR maturity checklist passed before Ready-for-Review
+- [ ] Subagent evidence completeness = 100% (rubric minimum evidence schema + evidence links + command logs)
+- [ ] Draft PR maturity checklist passed before Ready-for-Review (with validation command logs linked)
 - [ ] Worktree hygiene passed (no stale branches, no detached worktree merges)
 - [ ] Validation commands and outputs are documented in the PR
 - [ ] Follow-up actions (if any) are explicitly tracked
@@ -273,7 +336,9 @@ Use these gates before moving work from planning to execution and from draft PR 
 - Modify `DGN-DJ Automation.exe_extracted/` (reference only)
 - Remove files without explicit user approval
 
-## Key Documentation
+## References
+
+### Key Documentation
 
 > 📚 These documents extend the agent pipeline with detailed specifications. Load only what's needed for the active task.
 
@@ -287,23 +352,32 @@ Launcher/entrypoint source of truth: `docs/launcher_entrypoints.md` (naming + ro
 | [`PERSONA_OPS.md`](PERSONA_OPS.md) | AI host persona schema, versioning, A/B testing, KPIs |
 | [`docs/autonomy_modes.md`](docs/autonomy_modes.md) | 5-level autonomy operating modes (Manual → Lights-Out) |
 | [`docs/conversation_orchestrator_spec.md`](docs/conversation_orchestrator_spec.md) | Conversation orchestration, turn-taking, energy curves |
+| Document                                                                                     | Purpose                                                               |
+| -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| [`SKILLS.md`](SKILLS.md)                                                                     | Reusable skill definitions with triggers and boundaries               |
+| [`docs/operations/artifacts.md`](docs/operations/artifacts.md)                               | Agent artifact paths, naming, ownership, and retention policy         |
+| [`CLAUDE.md`](CLAUDE.md)                                                                     | Claude Code-specific guidance                                         |
+| [`PERSONA_OPS.md`](PERSONA_OPS.md)                                                           | AI host persona schema, versioning, A/B testing, KPIs                 |
+| [`docs/autonomy_modes.md`](docs/autonomy_modes.md)                                           | 5-level autonomy operating modes (Manual → Lights-Out)                |
+| [`docs/conversation_orchestrator_spec.md`](docs/conversation_orchestrator_spec.md)           | Conversation orchestration, turn-taking, energy curves                |
 | [`docs/operations/agent_execution_commands.md`](docs/operations/agent_execution_commands.md) | Runnable command playbook for planning, subagents, PRs, and worktrees |
-| [`contracts/redaction_rules.md`](contracts/redaction_rules.md) | Frontend data redaction denylist and enforcement |
-| [`CONFIG_VALIDATION.md`](CONFIG_VALIDATION.md) | JSON schema validation procedures |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Contribution guidelines, CI scope, PR standards |
+| [`contracts/redaction_rules.md`](contracts/redaction_rules.md)                               | Frontend data redaction denylist and enforcement                      |
+| [`CONFIG_VALIDATION.md`](CONFIG_VALIDATION.md)                                               | JSON schema validation procedures                                     |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md)                                                         | Contribution guidelines, CI scope, PR standards                       |
 
-## Route Selection
+### Route Selection
 
 Routing must follow the canonical BMAD startup policy defined in [`docs/operations/agent_execution_commands.md`](docs/operations/agent_execution_commands.md#canonical-bmad-startup-policy-codexgeminijules).
+
 > Canonical BMAD route-to-command mapping (with triggers + tie-breaks): [`docs/operations/agent_execution_commands.md#05-bmad-route-to-command-matrix-canonical-selection-guide`](docs/operations/agent_execution_commands.md#05-bmad-route-to-command-matrix-canonical-selection-guide)
 
-| Route | Purpose | Agent Behavior |
-| ----- | ------- | -------------- |
-| **QA** | Read-only inspection | No file edits; findings + task stubs only |
-| **Change** | Apply scoped edits | Small commits; avoid binaries; backup first |
-| **Proposal** | Design/spec output | Documentation only; no implementation unless asked |
+| Route        | Purpose              | Agent Behavior                                     |
+| ------------ | -------------------- | -------------------------------------------------- |
+| **QA**       | Read-only inspection | No file edits; findings + task stubs only          |
+| **Change**   | Apply scoped edits   | Small commits; avoid binaries; backup first        |
+| **Proposal** | Design/spec output   | Documentation only; no implementation unless asked |
 
-## Coding Style & Naming Conventions
+### Coding Style & Naming Conventions
 
 **Python:**
 
@@ -330,7 +404,7 @@ def load(p):
 - Keep scripts small and task-focused
 - Concise markdown sections with task-focused headings
 
-## Commit & Pull Request Guidelines
+### Commit & Pull Request Guidelines
 
 - Use Conventional Commit style: `chore:`, `docs:`, `fix:`, `feat:`
 - Keep commits scoped to configuration/documentation/scripts
@@ -342,7 +416,9 @@ def load(p):
 
 ---
 
-## Agent Team Organization
+## Team Charters
+
+### Agent Team Organization
 
 > 🏢 DGN-DJ operates a full multi-team AI agent organization. Each team has specialized agents with defined roles, boundaries, and handoff protocols. Teams coordinate through the **Management Team** and exchange artifacts via the stage-gated pipeline above.
 
@@ -357,6 +433,7 @@ graph TB
     MGT --> QA[QA Team]
     MGT --> BUG[Bug Team]
     MGT --> IR[Incident Response]
+    MGT --> SGE[Studio Gear Engineering]
 
     RES --> AI[AI Improvement Team]
     RES --> RTA[Radio Trend & Analysis]
@@ -373,6 +450,10 @@ graph TB
     RBC --> MON[Monetization & Ads]
     RTA --> MON
     AI --> QA
+
+    SGE --> DES
+    SGE --> QA
+    SGE --> DEV
 
     IR --> DEV
     IR --> SEC
@@ -1106,3 +1187,9 @@ Use this charter when work targets DJ console design deliverables; it defines ro
 
 - **Receives from:** All teams (alerts), DevOps (deployment anomalies), Stream Reliability (outages)
 - **Hands off to:** Bug (incident-generated bugs), Management (incident reports), DevOps (emergency deployments)
+
+---
+
+### Instruction schema version
+
+- `AGENTS.md` instruction schema version: `2026.03-v1`
