@@ -1,11 +1,53 @@
 {
   "mcpServers": {
-    "agentvibes": {
+    "time": {
       "command": "npx",
       "args": [
         "-y",
-        "--package=agentvibes",
-        "agentvibes-mcp-server"
+        "@modelcontextprotocol/server-time"
+      ]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/workspace/robo/config",
+        "/workspace/robo/infra",
+        "/workspace/robo/skills"
+      ]
+    },
+    "sqlite": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sqlite",
+        "--db-path",
+        "/workspace/robo/config/settings.db",
+        "--db-path",
+        "/workspace/robo/config/user_content.db"
+      ]
+    },
+    "fetch": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-fetch"
+      ]
+    },
+    "git": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-git",
+        "--repository",
+        "/workspace/robo"
+      ]
+    },
+    "dj-component-generator": {
+      "command": "node",
+      "args": [
+        "scripts/mcp/dj-component-server.js"
       ]
     }
   }

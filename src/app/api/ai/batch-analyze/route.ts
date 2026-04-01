@@ -62,13 +62,10 @@ async function parseJsonWithLimit(request: NextRequest): Promise<unknown> {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerClient()
     const invalidContentType = ensureJsonContentType(request)
     if (invalidContentType) {
       return invalidContentType
     }
-
-    const supabase = createServerClient()
 
     const {
       data: { session },
@@ -108,7 +105,7 @@ export async function POST(request: NextRequest) {
     const routeKey = [session.user.id, stationId, route].join(':')
     const idempotencyScopeKey = [session.user.id, route].join(':')
 
-    const rateLimit = consumeSlidingWindowToken({
+    const rateLimit = await consumeSlidingWindowToken({
       key: routeKey,
       maxHits: limits.batchAnalyze.max,
       windowMs: limits.batchAnalyze.windowMs,
@@ -126,7 +123,7 @@ export async function POST(request: NextRequest) {
     const idempotencyKey = request.headers.get('Idempotency-Key')?.trim()
     const requestFingerprint = fingerprintPayload(body)
     if (idempotencyKey) {
-      const cached = getIdempotencyReplay({
+      const cached = await getIdempotencyReplay({
         scopeKey: idempotencyScopeKey,
         idempotencyKey,
         fingerprint: requestFingerprint,
@@ -161,7 +158,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (idempotencyKey) {
-      storeIdempotencyResult({
+      await storeIdempotencyResult({
         scopeKey: idempotencyScopeKey,
         idempotencyKey,
         fingerprint: requestFingerprint,

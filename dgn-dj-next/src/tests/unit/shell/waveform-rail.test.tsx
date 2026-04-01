@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { WaveformRail } from '../../../components/shell/waveform-rail';
-import React from 'react';
 
 // Mock Canvas and RequestAnimationFrame
 if (typeof window !== 'undefined') {

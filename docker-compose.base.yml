@@ -1,0 +1,72 @@
+name: ${COMPOSE_PROJECT_NAME:-dgn-dj}
+
+x-app-common: &app-common
+  restart: unless-stopped
+  env_file:
+    - deploy/env/docker.common.env
+  environment:
+    ROBODJ_ENV: ${ROBODJ_ENV:?ROBODJ_ENV is required}
+    ROBODJ_LOG_LEVEL: ${ROBODJ_LOG_LEVEL:?ROBODJ_LOG_LEVEL is required}
+    ROBODJ_SECRET_KEY: ${ROBODJ_SECRET_KEY:?ROBODJ_SECRET_KEY is required}
+    ROBODJ_SECRET_V2_KEY: ${ROBODJ_SECRET_V2_KEY:?ROBODJ_SECRET_V2_KEY is required}
+    ROBODJ_IDLE_TIMEOUT_MINUTES: ${ROBODJ_IDLE_TIMEOUT_MINUTES:-}
+    ROBODJ_REAUTH_GRACE_MINUTES: ${ROBODJ_REAUTH_GRACE_MINUTES:-}
+
+services:
+  db:
+    image: postgres:16-alpine
+    profiles: ["dev", "staging"]
+    environment:
+      POSTGRES_DB: robodj
+      POSTGRES_USER: robodj
+      POSTGRES_PASSWORD: ${ROBODJ_DB_PASSWORD:-robodj}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U robodj -d robodj"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    profiles: ["dev", "staging"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    <<: *app-common
+    profiles: ["dev", "staging", "prod"]
+    image: ghcr.io/dgnradio/dgn-dj-backend:${DGN_DJ_BACKEND_TAG:-latest}
+    command:
+      - uvicorn
+      - backend.app:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+    ports:
+      - "127.0.0.1:${ROBODJ_HTTP_PORT:?ROBODJ_HTTP_PORT is required}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+        required: false
+      redis:
+        condition: service_healthy
+        required: false
+
+  frontend:
+    <<: *app-common
+    profiles: ["dev", "staging", "prod"]
+    image: ghcr.io/dgnradio/dgn-dj-frontend:${DGN_DJ_FRONTEND_TAG:-latest}
+    command:
+      - npm
+      - run
+      - start
+    ports:
+      - "127.0.0.1:${ROBODJ_WEB_PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_API_URL: http://localhost:${ROBODJ_HTTP_PORT:?ROBODJ_HTTP_PORT is required}
