@@ -126,6 +126,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Perform AI analysis
+    const { analysis, tokensUsed, costUSD } = await analyzeTrack({
+      stationId: track.stations.id,
     const { analysis, tokensUsed, costUSD, latencyMs } = await analyzeTrack({
       trackId: track.id,
       metadata: {

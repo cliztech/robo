@@ -1,0 +1,567 @@
+/**
+ * /gear page styles — DGN-DJ Studio Gear Builder
+ * Premium dark workspace with depth and polish.
+ */
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap");
+
+.gear-page {
+  min-height: 100vh;
+  background: #060608;
+  color: #ccc;
+  display: flex;
+  flex-direction: column;
+  font-family: "Inter", "Segoe UI", sans-serif;
+}
+
+/* ━━━ Top Bar ━━━ */
+.gear-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 20px;
+  background: linear-gradient(180deg, #0e1014 0%, #0a0c0e 100%);
+  border-bottom: 1px solid #1a1c20;
+  z-index: 100;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-icon {
+  font-size: 22px;
+}
+
+.brand-title {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #667;
+}
+
+.brand-accent {
+  background: linear-gradient(135deg, #00e5ff, #00b8d4);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.topbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.layout-name-field {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #ddd;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 4px;
+  width: 140px;
+  transition: border-color 0.2s;
+}
+
+.layout-name-field:focus {
+  outline: none;
+  border-color: #00e5ff33;
+  background: rgba(0, 229, 255, 0.03);
+}
+
+.topbar-btn {
+  padding: 5px 12px;
+  border: 1px solid #222428;
+  background: linear-gradient(180deg, #161820 0%, #101214 100%);
+  color: #556;
+  font-weight: 700;
+  font-size: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.3px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.topbar-btn:hover {
+  background: linear-gradient(180deg, #1e2228 0%, #161820 100%);
+  color: #aaa;
+  border-color: #333638;
+}
+
+.topbar-btn.save:hover {
+  border-color: #00e5ff33;
+  color: #00e5ff;
+  text-shadow: 0 0 6px rgba(0, 229, 255, 0.3);
+}
+
+.topbar-btn.export:hover {
+  border-color: #7c4dff33;
+  color: #7c4dff;
+}
+
+.topbar-btn.clear:hover {
+  border-color: #ff3d0033;
+  color: #ff3d00;
+}
+
+/* ━━━ Workspace ━━━ */
+.gear-workspace {
+  display: flex;
+  flex-grow: 1;
+  min-height: 0;
+}
+
+.gear-main {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  min-width: 0;
+}
+
+/* ━━━ Sidebar ━━━ */
+.gear-sidebar {
+  width: 200px;
+  background: linear-gradient(180deg, #0c0e10 0%, #080a0c 100%);
+  border-right: 1px solid #161820;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+
+.sidebar-section {
+  padding: 12px 14px;
+  border-bottom: 1px solid #12141a;
+}
+
+.sidebar-title {
+  font-size: 9px;
+  font-weight: 900;
+  color: #334;
+  letter-spacing: 3px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.gear-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid #1a1c22;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-bottom: 4px;
+  transition: all 0.15s;
+  text-align: left;
+}
+
+.gear-add-btn:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: #2a2c32;
+  transform: translateX(2px);
+}
+
+.gear-add-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.gear-add-info {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.gear-add-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: #889;
+}
+
+.gear-add-desc {
+  font-size: 9px;
+  color: #445;
+  margin-top: 1px;
+}
+
+.gear-add-plus {
+  font-size: 13px;
+  font-weight: 900;
+  color: #333;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.gear-add-btn:hover .gear-add-plus {
+  opacity: 1;
+  color: #00e5ff;
+}
+
+.saved-layout-btn {
+  display: block;
+  width: 100%;
+  padding: 6px 10px;
+  background: transparent;
+  border: 1px solid #161820;
+  border-radius: 4px;
+  color: #445;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  margin-bottom: 3px;
+  transition: all 0.15s;
+}
+
+.saved-layout-btn:hover {
+  background: rgba(255, 255, 255, 0.02);
+  color: #889;
+}
+
+.sidebar-footer {
+  padding: 12px 14px;
+  margin-top: auto;
+}
+
+.gear-count {
+  font-size: 10px;
+  color: #223;
+  font-weight: 700;
+}
+
+/* ━━━ Canvas Area ━━━ */
+.gear-canvas-area {
+  flex-grow: 1;
+  padding: 20px;
+  overflow: auto;
+  background:
+    radial-gradient(ellipse at center, #0e1014 0%, #060608 70%),
+    radial-gradient(circle, #161820 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    20px 20px;
+  position: relative;
+}
+
+/* Subtle vignette overlay */
+.gear-canvas-area::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 40%,
+    rgba(0, 0, 0, 0.4) 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.canvas-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 400px;
+  position: relative;
+  z-index: 1;
+}
+
+.empty-icon {
+  font-size: 48px;
+  opacity: 0.06;
+  margin-bottom: 14px;
+}
+
+.empty-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: #223;
+  margin-bottom: 4px;
+}
+
+.empty-desc {
+  font-size: 11px;
+  color: #1a1a22;
+}
+
+.gear-canvas-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+  position: relative;
+  z-index: 1;
+}
+
+.canvas-gear-card {
+  position: relative;
+  animation: _gear-slide-in 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  border-radius: 10px;
+  transition:
+    box-shadow 0.2s,
+    outline 0.15s;
+}
+
+.canvas-gear-card:hover {
+  box-shadow: 0 0 0 1px rgba(0, 229, 255, 0.1);
+}
+
+@keyframes _gear-slide-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.canvas-remove-btn {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff4500, #ff3d00);
+  color: #fff;
+  border: 2px solid #0a0a0c;
+  font-size: 9px;
+  font-weight: 900;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition:
+    opacity 0.15s,
+    transform 0.15s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.canvas-remove-btn:hover {
+  transform: scale(1.15);
+}
+
+.canvas-gear-card:hover .canvas-remove-btn {
+  opacity: 1;
+}
+
+/* ━━━ Toast ━━━ */
+.gear-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 18px;
+  background: #0e1014;
+  border: 1px solid rgba(0, 229, 255, 0.25);
+  color: #00e5ff;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
+  z-index: 200;
+  animation: _toast-in 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.5),
+    0 0 12px rgba(0, 229, 255, 0.1);
+}
+
+@keyframes _toast-in {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* ━━━ Drag Handle ━━━ */
+.drag-handle {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  font-size: 11px;
+  color: #222;
+  cursor: grab;
+  z-index: 11;
+  opacity: 0;
+  transition:
+    opacity 0.15s,
+    color 0.15s;
+  -webkit-user-select: none;
+  user-select: none;
+  line-height: 1;
+}
+
+.canvas-gear-card:hover .drag-handle {
+  opacity: 1;
+  color: #556;
+}
+
+.canvas-gear-card:active .drag-handle {
+  cursor: grabbing;
+  color: #00e5ff;
+}
+
+/* Canvas dragging state */
+.gear-canvas-area.dragging {
+  cursor: grabbing;
+}
+
+/* ━━━ Undo/Redo ━━━ */
+.topbar-btn.undo,
+.topbar-btn.redo {
+  font-size: 10px;
+  letter-spacing: 0.3px;
+}
+
+.topbar-btn.undo:not(:disabled):hover {
+  border-color: #ffeb3b33;
+  color: #ffeb3b;
+}
+
+.topbar-btn.redo:not(:disabled):hover {
+  border-color: #69f0ae33;
+  color: #69f0ae;
+}
+
+.topbar-btn:disabled,
+.topbar-btn.disabled {
+  opacity: 0.2;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ━━━ Keyboard Focus Ring ━━━ */
+.canvas-gear-card.kb-focused {
+  outline: 2px solid #00e5ff;
+  outline-offset: 4px;
+  box-shadow: 0 0 16px rgba(0, 229, 255, 0.2);
+}
+
+.canvas-gear-card:focus-visible {
+  outline: 2px solid #00e5ff;
+  outline-offset: 4px;
+}
+
+/* Import Button */
+.topbar-btn.import:hover {
+  border-color: #b388ff33;
+  color: #b388ff;
+}
+
+/* Focus Indicator */
+.focus-indicator {
+  font-size: 9px;
+  color: #00e5ff;
+  padding: 3px 8px;
+  background: rgba(0, 229, 255, 0.05);
+  border-radius: 4px;
+  margin-top: 4px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Screen-reader only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* ━━━ Touch Overrides ━━━ */
+@media (hover: none) and (pointer: coarse) {
+  .drag-handle {
+    opacity: 0.5;
+    font-size: 16px;
+  }
+
+  .canvas-remove-btn {
+    opacity: 0.7;
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+  }
+
+  .gear-add-btn {
+    padding: 14px 12px;
+  }
+}
+
+/* ─── Layout Mode Toggle ─── */
+.layout-mode-toggle {
+  margin-left: 16px;
+  padding: 4px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #aaa;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.layout-mode-toggle:hover {
+  background: rgba(0, 229, 255, 0.08);
+  color: #00e5ff;
+  border-color: rgba(0, 229, 255, 0.25);
+}
+
+.perf-active {
+  background: rgba(0, 229, 255, 0.12);
+  color: #00e5ff;
+  border-color: rgba(0, 229, 255, 0.3);
+  box-shadow: 0 0 8px rgba(0, 229, 255, 0.15);
+}
+
+/* ─── Performance Layout ─── */
+.perf-layout {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.perf-decks {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  justify-content: center;
+  align-items: flex-start;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  background: radial-gradient(ellipse at center, #0e1014 0%, #060608 100%);
+}
+
+/* In performance mode, hide gear-workspace */
+.hidden {
+  display: none !important;
+}

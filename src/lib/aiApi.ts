@@ -49,6 +49,35 @@ export interface ApiResult<T> {
   correlationId: string;
 }
 
+export type AiApiErrorCode =
+  | 'AI_API_TIMEOUT'
+  | 'AI_API_ABORTED'
+  | 'AI_API_HTTP_ERROR'
+  | 'AI_API_NETWORK_ERROR';
+
+export class AiApiError extends Error {
+  code: AiApiErrorCode;
+  correlationId: string;
+  diagnostics?: {
+    abortReason?: string;
+    timeoutMs?: number;
+    causeMessage?: string;
+  };
+
+  constructor(
+    code: AiApiErrorCode,
+    message: string,
+    correlationId: string,
+    diagnostics?: AiApiError['diagnostics']
+  ) {
+    super(message);
+    this.name = 'AiApiError';
+    this.code = code;
+    this.correlationId = correlationId;
+    this.diagnostics = diagnostics;
+  }
+}
+
 function createCorrelationId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
@@ -56,41 +85,73 @@ function createCorrelationId(): string {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
-async function withTimeout<T>(promise: Promise<T>, timeoutMs = 4000): Promise<T> {
-  let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
-  const timeoutPromise = new Promise<never>((_, reject) => {
-    timeoutHandle = setTimeout(() => reject(new Error('Request timed out')), timeoutMs);
-  });
+function mapFetchError(error: unknown, correlationId: string, timeoutMs: number): AiApiError {
+  const causeMessage = error instanceof Error ? error.message : String(error);
 
-  try {
-    return await Promise.race([promise, timeoutPromise]);
-  } finally {
-    if (timeoutHandle) {
-      clearTimeout(timeoutHandle);
-    }
+  if (error instanceof AiApiError) {
+    return error;
   }
+
+  if (error instanceof DOMException && error.name === 'AbortError') {
+    return new AiApiError('AI_API_ABORTED', 'Request was aborted', correlationId, {
+      abortReason: causeMessage,
+      timeoutMs,
+      causeMessage,
+    });
+  }
+
+  return new AiApiError('AI_API_NETWORK_ERROR', `Network request failed: ${causeMessage}`, correlationId, {
+    timeoutMs,
+    causeMessage,
+  });
 }
 
-async function postJSON<TResponse>(url: string, body: object): Promise<ApiResult<TResponse>> {
+async function postJSON<TResponse>(
+  url: string,
+  body: object,
+  timeoutMs = 4000
+): Promise<ApiResult<TResponse>> {
   const correlationId = createCorrelationId();
-  const response = await withTimeout(
-    fetch(url, {
+  const controller = new AbortController();
+  const timeoutHandle = setTimeout(() => {
+    controller.abort(`timeout:${timeoutMs}ms`);
+  }, timeoutMs);
+
+  try {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-Correlation-ID': correlationId,
       },
       body: JSON.stringify(body),
-    })
-  );
+      signal: controller.signal,
+    });
 
-  if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({ detail: 'Unknown error' }));
-    throw new Error(errorBody.detail ?? `Request failed with status ${response.status}`);
+    if (!response.ok) {
+      const errorBody = await response.json().catch(() => ({ detail: 'Unknown error' }));
+      throw new AiApiError(
+        'AI_API_HTTP_ERROR',
+        errorBody.detail ?? `Request failed with status ${response.status}`,
+        correlationId
+      );
+    }
+
+    const parsed = (await response.json()) as TResponse;
+    return { response: parsed, correlationId };
+  } catch (error: unknown) {
+    if (controller.signal.aborted) {
+      throw new AiApiError('AI_API_TIMEOUT', 'Request timed out', correlationId, {
+        abortReason: String(controller.signal.reason ?? 'unknown'),
+        timeoutMs,
+        causeMessage: error instanceof Error ? error.message : String(error),
+      });
+    }
+
+    throw mapFetchError(error, correlationId, timeoutMs);
+  } finally {
+    clearTimeout(timeoutHandle);
   }
-
-  const parsed = (await response.json()) as TResponse;
-  return { response: parsed, correlationId };
 }
 
 export function generateHostScript(

@@ -18,8 +18,8 @@ import {
 } from "@/lib/layout/types";
 import { DashboardView } from "./DashboardView";
 import { SkinManagerPanel } from '@/components/theme/SkinManagerPanel';
-import { DEFAULT_DASHBOARD_TELEMETRY } from "./dashboard.types";
 import { DJStudioSurface } from "./DJStudioSurface";
+import { RadioStationControlRoom } from "./RadioStationControlRoom";
 import type { ConsoleViewMode } from "./types";
 
 interface ConsoleWorkspaceViewProps {
@@ -448,11 +448,12 @@ export function ConsoleWorkspaceView({
         {currentView === "dashboard" && (
           <DashboardView />
         )}
-        {(currentView === "decks" || currentView === "studio") && <DockWorkspace />}
+        {currentView === "decks" && <DockWorkspace />}
         {currentView === "dashboard" && <DashboardView />}
-        {(currentView === "decks" || currentView === "studio") && (
+        {currentView === "decks" && (
           <DJStudioSurface />
         )}
+        {currentView === "studio" && <RadioStationControlRoom />}
         {currentView === "mixer" && (
           <div className="max-w-4xl mx-auto">
             <DegenMixer />
