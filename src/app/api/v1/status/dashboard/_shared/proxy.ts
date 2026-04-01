@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
+import { getEnv } from '@/lib/env';
+import { logRuntimeEnvValidationSummary, validateServerRuntimeEnv } from '@/lib/runtime/envContract';
+import { loadEnv } from '@/lib/env';
 
 interface ProxySession {
   userId: string;
@@ -13,13 +16,57 @@ interface ProxyErrorEnvelope {
 }
 
 const DEFAULT_BACKEND_BASE_URL = 'http://127.0.0.1:5000';
+const CONFIGURATION_ERROR_CODE = 'CONFIGURATION_ERROR';
 
+interface BackendBaseUrlConfig {
+  baseUrl: string | null;
+  configError: string | null;
+}
+
+const BACKEND_BASE_URL_CONFIG = resolveBackendBaseUrlConfig();
+
+function validateBackendBaseUrl(urlValue: string, envVarName: string): string {
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(urlValue);
+  } catch {
+    throw new Error(`${envVarName} must be a valid absolute URL`);
+  }
+
+  if (!['http:', 'https:'].includes(parsedUrl.protocol) || parsedUrl.hostname.length === 0) {
+    throw new Error(`${envVarName} must include a valid http(s) protocol and host`);
+  }
+
+  return parsedUrl.toString().replace(/\/$/, '');
+}
+
+function resolveBackendBaseUrlConfig(): BackendBaseUrlConfig {
+  const configuredBackendUrl = process.env.DASHBOARD_STATUS_BACKEND_URL ?? process.env.INTERNAL_API_BASE_URL;
+  if (configuredBackendUrl && configuredBackendUrl.trim().length > 0) {
+    return {
+      baseUrl: validateBackendBaseUrl(configuredBackendUrl.trim(), 'DASHBOARD_STATUS_BACKEND_URL/INTERNAL_API_BASE_URL'),
+      configError: null,
+    };
+  }
+
+  if (process.env.NODE_ENV === 'development') {
+    return {
+      baseUrl: DEFAULT_BACKEND_BASE_URL,
+      configError: null,
+    };
+  }
+
+  return {
+    baseUrl: null,
+    configError:
+      'Missing dashboard backend configuration. Set DASHBOARD_STATUS_BACKEND_URL (or INTERNAL_API_BASE_URL fallback) for this environment.',
+  };
 function resolveBackendBaseUrl(): string {
-  return (
-    process.env.DASHBOARD_STATUS_BACKEND_URL ??
-    process.env.INTERNAL_API_BASE_URL ??
-    DEFAULT_BACKEND_BASE_URL
+  return getEnv(
+    'DASHBOARD_STATUS_BACKEND_URL',
+    getEnv('INTERNAL_API_BASE_URL', DEFAULT_BACKEND_BASE_URL),
   ).replace(/\/$/, '');
+  return loadEnv().dashboardStatusBackendUrl;
 }
 
 function buildErrorEnvelope(status: number, detail: string, code?: string): ProxyErrorEnvelope {
@@ -57,12 +104,30 @@ function normalizeBackendError(status: number, payload: unknown): ProxyErrorEnve
 }
 
 export async function proxyDashboardRequest(request: NextRequest, path: string, init?: RequestInit): Promise<NextResponse> {
+  const runtimeDiagnostics = validateServerRuntimeEnv();
+  logRuntimeEnvValidationSummary(runtimeDiagnostics);
+  if (!runtimeDiagnostics.ok) {
+    return NextResponse.json(
+      {
+        status: 500,
+        detail: 'Runtime environment validation failed for server route.',
+        code: 'RUNTIME_ENV_INVALID',
+        diagnostics: runtimeDiagnostics,
+      },
+      { status: 500 }
+  if (BACKEND_BASE_URL_CONFIG.configError) {
+    return NextResponse.json(
+      buildErrorEnvelope(500, BACKEND_BASE_URL_CONFIG.configError, CONFIGURATION_ERROR_CODE),
+      { status: 500 },
+    );
+  }
+
   const session = await requireSession();
   if (session instanceof NextResponse) {
     return session;
   }
 
-  const backendUrl = `${resolveBackendBaseUrl()}${path}`;
+  const backendUrl = `${BACKEND_BASE_URL_CONFIG.baseUrl}${path}`;
   const upstreamResponse = await fetch(backendUrl, {
     method: init?.method ?? request.method,
     headers: {
