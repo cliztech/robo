@@ -185,20 +185,34 @@ def _transform_sensitive_values(
                     if key is None:
                         transformed[k] = v
                     else:
-                        envelope = envelope_encode(v, key=key, aad=key_name)
+                        aad_payload = None
                         if field_ref_base:
-                            envelope["aad"] = {
+                            aad_payload = {
                                 "field_ref": f"{field_ref_base}:{key_name}",
                                 "env": os.getenv("APP_ENV", "dev"),
                                 "issued_at": datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
                             }
+                        aad = (
+                            json.dumps(aad_payload, sort_keys=True, separators=(",", ":"))
+                            if aad_payload is not None
+                            else key_name
+                        )
+                        envelope = envelope_encode(v, key=key, aad=aad)
+                        if aad_payload is not None:
+                            envelope["aad"] = aad_payload
                         transformed[k] = envelope
                 elif not encode:
                     candidate = v
                     if isinstance(candidate, str) and candidate.startswith(LEGACY_ENVELOPE_PREFIX):
                         candidate = json.loads(candidate[len(LEGACY_ENVELOPE_PREFIX) :])
                     if isinstance(candidate, dict) and "enc_v" in candidate:
-                        transformed[k] = envelope_decode(candidate, key_lookup=key_lookup or {}, aad=key_name)
+                        aad_payload = candidate.get("aad")
+                        aad = (
+                            json.dumps(aad_payload, sort_keys=True, separators=(",", ":"))
+                            if isinstance(aad_payload, dict)
+                            else key_name
+                        )
+                        transformed[k] = envelope_decode(candidate, key_lookup=key_lookup or {}, aad=aad)
                     else:
                         transformed[k] = candidate
                 else:
@@ -278,10 +292,22 @@ def decrypt_config_payload(config_path: Path, payload: Any, *, keys: ConfigKeyMa
 
 
 def load_config_json(config_path: Path, *, keys: ConfigKeyMaterial | None = None) -> Any:
+    resolved_keys = keys
+    if resolved_keys is None:
+        try:
+            resolved_keys = load_key_material()
+        except ConfigCryptoKeyError:
+            resolved_keys = None
     payload = json.loads(config_path.read_text(encoding="utf-8"))
-    return decrypt_config_payload(config_path, payload, keys=keys)
+    return decrypt_config_payload(config_path, payload, keys=resolved_keys)
 
 
 def dump_config_json(config_path: Path, payload: Any, *, indent: int = 2, keys: ConfigKeyMaterial | None = None) -> str:
-    encrypted = encrypt_config_payload(config_path, payload, keys=keys)
+    resolved_keys = keys
+    if resolved_keys is None:
+        try:
+            resolved_keys = load_key_material()
+        except ConfigCryptoKeyError:
+            resolved_keys = None
+    encrypted = encrypt_config_payload(config_path, payload, keys=resolved_keys)
     return json.dumps(encrypted, indent=indent)

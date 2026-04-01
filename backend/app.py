@@ -5,6 +5,7 @@ from fastapi.responses import RedirectResponse
 
 from backend.ai_api import router as ai_router
 from backend.playlist_api import router as playlist_router
+from backend.runtime_env_validation import enforce_runtime_environment
 from backend.scheduling.api import router as autonomy_policy_router
 from backend.scheduling.scheduler_ui_api import router as scheduler_ui_router
 from backend.security.secret_integrity import run_secret_integrity_checks
@@ -13,7 +14,10 @@ from backend.status.api import router as status_router
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    result = run_secret_integrity_checks()
+    env_contract = enforce_runtime_environment()
+    allow_file_fallback = env_contract.context == "desktop_app"
+
+    result = run_secret_integrity_checks(allow_file_fallback=allow_file_fallback)
     for alert in result.alerts:
         print(alert, flush=True)
 
@@ -26,7 +30,7 @@ async def lifespan(_: FastAPI):
     yield
 
 
-app = FastAPI(title="DGN-DJ Backend Scheduler Services", lifespan=lifespan)
+app = FastAPI(title="DGN-DJ Studio Backend Scheduler Services", lifespan=lifespan)
 app.include_router(autonomy_policy_router)
 app.include_router(status_router)
 app.include_router(scheduler_ui_router)

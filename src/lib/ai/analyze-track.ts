@@ -2,6 +2,7 @@ import { generateObject } from 'ai'
 import { openai } from '@ai-sdk/openai'
 import { z } from 'zod'
 import { AI_CONFIG } from './config'
+import { logAIDecision } from '@/lib/ai/log-decision'
 
 // Zod schema for track analysis
 const TrackAnalysisSchema = z.object({
@@ -69,6 +70,7 @@ const TrackAnalysisSchema = z.object({
 export type TrackAnalysis = z.infer<typeof TrackAnalysisSchema>
 
 export interface AnalyzeTrackOptions {
+  stationId: string
   trackId: string
   metadata: {
     title?: string
@@ -92,6 +94,7 @@ export async function analyzeTrack(options: AnalyzeTrackOptions): Promise<{
   costUSD: number
   latencyMs: number
 }> {
+  const { stationId, trackId, metadata, audioFeatures } = options
   const { metadata, audioFeatures } = options
 
   try {
@@ -131,6 +134,33 @@ Be precise and confident in your classifications. Use your training on millions 
     // Validate confidence
     if (result.object.confidenceScore < AI_CONFIG.confidence.minimum) {
       throw new Error(`Low confidence score: ${result.object.confidenceScore}`)
+    }
+
+    try {
+      await logAIDecision({
+        stationId,
+        decisionType: 'track_analysis',
+        decisionData: {
+          trackId,
+          analysis: result.object,
+          metadata,
+        },
+        reasoning: result.object.reasoning,
+        confidenceScore: result.object.confidenceScore,
+        modelUsed: AI_CONFIG.models.analysis,
+        tokensUsed,
+        costUSD,
+        latencyMs,
+        status: 'auto_applied',
+      })
+    } catch (error) {
+      console.warn('[ai.track_analysis.log_failure]', {
+        trackId,
+        stationId,
+        decisionType: 'track_analysis',
+        modelUsed: AI_CONFIG.models.analysis,
+        errorMessage: error instanceof Error ? error.message : 'Unknown logging error',
+      })
     }
 
     return {
