@@ -52,18 +52,19 @@ The following architecture reflects current stack ownership: the root Next.js ap
 
 ## 📁 Documentation Files
 
-1. [docs/architecture/canonical_runtime_map.md](docs/architecture/canonical_runtime_map.md) - Canonical runtime entrypoints, ownership boundaries, deployment targets, and reference-only trees
-2. [docs/operations/execution_index.md](docs/operations/execution_index.md) - Active track index, ownership, and status source mapping
-3. [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) - Complete folder structure
-4. [TECH_STACK.md](TECH_STACK.md) - Technologies and dependencies
-5. [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) - Complete database schema
-6. [PHASE_0_SETUP.md](PHASE_0_SETUP.md) - Environment setup (Day 1)
-7. [PHASE_1_DATABASE.md](PHASE_1_DATABASE.md) - Database architecture (Day 2-3)
-8. [PHASE_2_AUTH.md](PHASE_2_AUTH.md) - Authentication system (Day 4)
-9. [PHASE_3_AUDIO_ENGINE.md](PHASE_3_AUDIO_ENGINE.md) - Audio engine (Day 5-7)
-10. [PHASE_4_FILE_UPLOAD.md](PHASE_4_FILE_UPLOAD.md) - File upload system (Day 8-10)
-11. [API_ROUTES.md](API_ROUTES.md) - API endpoints reference
 
+1. [docs/launcher_entrypoints.md](docs/launcher_entrypoints.md) - Canonical launcher and executable entrypoint roles (canonical/shim/deprecated)
+2. [docs/architecture/canonical_runtime_map.md](docs/architecture/canonical_runtime_map.md) - Runtime entrypoints, ownership boundaries, deployment targets, and artifact policy
+3. [docs/operations/execution_index.md](docs/operations/execution_index.md) - Active track index, ownership, and status source mapping
+4. [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) - Complete folder structure
+5. [TECH_STACK.md](TECH_STACK.md) - Technologies and dependencies
+6. [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) - Complete database schema
+7. [PHASE_0_SETUP.md](PHASE_0_SETUP.md) - Environment setup (Day 1)
+8. [PHASE_1_DATABASE.md](PHASE_1_DATABASE.md) - Database architecture (Day 2-3)
+9. [PHASE_2_AUTH.md](PHASE_2_AUTH.md) - Authentication system (Day 4)
+10. [PHASE_3_AUDIO_ENGINE.md](PHASE_3_AUDIO_ENGINE.md) - Audio engine (Day 5-7)
+11. [PHASE_4_FILE_UPLOAD.md](PHASE_4_FILE_UPLOAD.md) - File upload system (Day 8-10)
+12. [API_ROUTES.md](API_ROUTES.md) - API endpoints reference
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -89,7 +90,10 @@ pnpm dev
 ### Runtime commands (canonical)
 
 - Main web studio: `npm run dev` (Node.js 20.x, Next.js 15.5.10).
-- Windows launcher flow: `./DGN-DJ_Launcher.bat` for packaged desktop startup (legacy `RoboDJ_Launcher.bat` remains compatibility alias in some environments).
+- Windows desktop launcher (canonical): `./DGN-DJ_Launcher.bat`.
+- Windows launcher shim (compatibility): `./RoboDJ_Launcher.bat` (delegates to canonical desktop launcher).
+- Windows fullstack launcher (canonical): `./DGNDJ_Fullstack_Launcher.bat [dev|prod] [--port N]`.
+- Windows legacy fullstack launcher (deprecated compatibility only): `./DGN-DJ_Fullstack_Launcher.bat`.
 - DJ Console subproject: `npm --prefix apps/dj-console run dev`.
 - Radio-agentic workspace: `pnpm --dir radio-agentic install && docker compose -f radio-agentic/docker-compose.yml up --build`.
 - Root compose (profile overlays):
@@ -97,6 +101,7 @@ pnpm dev
   - Staging: `docker compose -f docker-compose.base.yml -f docker-compose.staging.yml -f docker-compose.release.yml --profile staging up -d`
   - Prod: `docker compose -f docker-compose.base.yml -f docker-compose.release.yml -f docker-compose.prod.yml --profile prod up -d`
 
+See `docs/launcher_entrypoints.md` for launcher naming policy and `docs/architecture/canonical_runtime_map.md` for ownership/deployment boundaries.
 `docker-compose.yaml` is now a compatibility shim during migration. Legacy `docker-compose.safe.yaml` and `docker-compose.docker-control.yaml` were removed in favor of the base+overlay profile model.
 
 See `docs/architecture/canonical_runtime_map.md` and `docs/runtime_deployment_matrix.md` for ownership boundaries, profile commands, and env requirements.
@@ -155,6 +160,7 @@ npm run lint
 - Primary web deployment target: **Vercel** (root Next.js app).
 - Containerized services deployment target: **Docker Compose / container runtime** (`radio-agentic`).
 - Desktop operator target: **Windows launcher + packaged executable workflow**.
+- Packaged executables (`DGN-DJ Automation.exe`, `RoboDJ Automation.exe`) are intentionally distributed as external/bundled artifacts and are not tracked in git.
 
 ```bash
 npm run build
