@@ -12,7 +12,7 @@ from pathlib import Path
 
 
 def fix_file(path: Path, *, write: bool) -> bool:
-    original = path.read_text(encoding="utf-8", errors="ignore")
+    original = path.read_text(encoding="utf-8")
     normalized = original.replace('\\"', '"')
     changed = normalized != original
 
