@@ -404,6 +404,10 @@ Building the next unfinished execution plans from the roadmap queue, starting wi
 - Documented CI runtime contract gate commands in `docs/DEVELOPMENT_ENV_SETUP.md` for operator/developer parity.
 - Added repository hygiene guardrails for generated Python packaging artifacts: ignore `*.egg-info`, removed accidental `src/UNKNOWN.egg-info/`, added CI scanner (`scripts/ci/check_generated_artifacts.py`), and added isolated wheel-build script outputting to `.artifacts/python-packaging`.
 
+## 2026-03-06 dgn-dj-next conflict-marker hardening
+- Resolved merge-conflict artifacts in `dgn-dj-next/src/components/layout/MainLayout.tsx` by keeping a single typed import style, one `MainLayoutProps` declaration, one `libraryRows` definition, and one component export body.
+- Added `dgn-dj-next/scripts/check-conflict-markers.mjs` and wired `npm run check:conflicts` into `prebuild` to fail build/CI on `<<<<<<<`, `=======`, `>>>>>>>` markers under `dgn-dj-next/src`.
+- Cleared blocking TypeScript `useRef` initialization errors in `VUMeter` and `Knob`, and removed an unused React import in `waveform-rail` unit test to restore build pass.
 ## 2026-03-05 Track analysis cache hardening
 - Added TTL- and max-entry-bounded `InMemoryAnalysisCacheStore` with configurable LRU/FIFO eviction and stale-entry cleanup on both `get` and `set` paths.
 - Expanded track-analysis fingerprint versioning inputs to include `schema_version` alongside model/prompt versions to force safe cache invalidation on contract changes.
