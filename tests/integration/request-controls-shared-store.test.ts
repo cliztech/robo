@@ -35,9 +35,10 @@ function createUpstashFetchMock() {
       result = gc(key)?.value ?? null
     } else if (command === 'set') {
       const [key, value, ttlKind, ttlValue] = args
-      const ttlMs = ttlKind === 'PX' ? Number.parseInt(ttlValue, 10) : null
-      values.set(key, { value, expiresAtMs: ttlMs ? Date.now() + ttlMs : null })
-      result = 'OK'
+      if (!key || !value) {
+        return new Response(JSON.stringify({ error: 'invalid arguments for set' }), { status: 400 })
+      }
+      const ttlMs = ttlKind === 'PX' && ttlValue ? Number.parseInt(ttlValue, 10) : null
     } else if (command === 'del') {
       const key = args[0]
       result = values.delete(key) ? 1 : 0
