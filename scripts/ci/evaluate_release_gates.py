@@ -4,6 +4,7 @@ import json
 import subprocess
 import time
 from pathlib import Path
+import shlex
 
 ROOT = Path(__file__).resolve().parents[2]
 CONFIG_PATH = ROOT / "config" / "schemas" / "release_gates.json"
@@ -12,9 +13,9 @@ CONFIG_PATH = ROOT / "config" / "schemas" / "release_gates.json"
 def run_gate(command: str, artifact_path: Path) -> dict[str, object]:
     started_at = time.time()
     process = subprocess.run(
-        command,
+        shlex.split(command),
         cwd=ROOT,
-        shell=True,
+        shell=False,
         text=True,
         capture_output=True,
         check=False,
@@ -55,7 +56,9 @@ def main() -> int:
         gate_result["name"] = gate["name"]
         results.append(gate_result)
 
-    overall_status = "ready" if all(r["status"] == "pass" for r in results) else "blocked"
+    overall_status = (
+        "ready" if all(r["status"] == "pass" for r in results) else "blocked"
+    )
 
     json_report_path = ROOT / report_cfg["json"]
     markdown_report_path = ROOT / report_cfg["markdown"]
