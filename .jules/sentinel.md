@@ -2,3 +2,7 @@
 **Vulnerability:** Malformed cron strings (e.g., missing fields or invalid tokens) in `schedules.json` caused unhandled `ValueError` in `SchedulerUiService._build_timeline_blocks`, crashing the entire UI state endpoint (DoS).
 **Learning:** Pydantic validation on input models (`ScheduleRecord`) is insufficient if internal logic (like `_cron_day_to_name`) performs stricter validation that raises unhandled exceptions. Input validation must be layered: initial structural validation + robust runtime handling for complex parsing logic.
 **Prevention:** Wrap complex parsing logic (especially for string formats like cron) in try-except blocks to fail gracefully (log and skip) rather than crashing the service.
+## 2026-05-25 - [Command Injection via `bash -lc` and `spawn`]
+**Vulnerability:** Command injection was possible in `radio-agentic/services/audio-engine/src/playout.ts` because `spawn` was used with `bash -lc` and untrusted variables (like `t.filepath` and `this.fifoPath`) interpolated directly into a string executed by the shell.
+**Learning:** Using `spawn("bash", ["-lc", \`... \${untrusted}\`])` completely bypasses the protections of `spawn` by handing string evaluation to the shell. Always pass arguments as a separate array to `spawn` directly to the executable.
+**Prevention:** Avoid invoking a shell (`bash`, `sh`, etc.) with `spawn` unless absolutely necessary, and never interpolate untrusted variables into command strings. Use the direct executable (e.g., `spawn("ffmpeg", [...args])`) and rely on node's array argument passing for safety.
