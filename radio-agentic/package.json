@@ -10,9 +10,5 @@
   "scripts": {
     "dev": "echo 'Start individual services with docker compose up --build'",
     "lint": "echo 'lint placeholder'"
-  },
-  "devDependencies": {
-    "@types/node": "^25.9.1",
-    "typescript": "^5.9.3"
   }
 }
