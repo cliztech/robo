@@ -2,3 +2,7 @@
 **Vulnerability:** Malformed cron strings (e.g., missing fields or invalid tokens) in `schedules.json` caused unhandled `ValueError` in `SchedulerUiService._build_timeline_blocks`, crashing the entire UI state endpoint (DoS).
 **Learning:** Pydantic validation on input models (`ScheduleRecord`) is insufficient if internal logic (like `_cron_day_to_name`) performs stricter validation that raises unhandled exceptions. Input validation must be layered: initial structural validation + robust runtime handling for complex parsing logic.
 **Prevention:** Wrap complex parsing logic (especially for string formats like cron) in try-except blocks to fail gracefully (log and skip) rather than crashing the service.
+## 2026-05-26 - [Node.js Command Injection via shell invocation]
+**Vulnerability:** Invoking processes via `spawn("bash", ["-lc", cmd])` where `cmd` incorporates unescaped user-controlled or external data (like `t.filepath`) allows for command injection.
+**Learning:** The use of intermediate shells for convenience (e.g., to evaluate `>` redirections or string interpolation) subverts the safety guarantees of Node's `spawn` array signature. `fs.openSync` or similar blocking I/O should also be avoided for FIFO writes; instead, native application arguments (like `ffmpeg` taking a file path directly) should be used.
+**Prevention:** Never use a shell to wrap a command execution if it can be avoided. Always pass arguments as a clean array directly to the executable, and use native tool capabilities for output direction instead of shell pipes/redirections.
