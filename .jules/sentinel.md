@@ -2,3 +2,7 @@
 **Vulnerability:** Malformed cron strings (e.g., missing fields or invalid tokens) in `schedules.json` caused unhandled `ValueError` in `SchedulerUiService._build_timeline_blocks`, crashing the entire UI state endpoint (DoS).
 **Learning:** Pydantic validation on input models (`ScheduleRecord`) is insufficient if internal logic (like `_cron_day_to_name`) performs stricter validation that raises unhandled exceptions. Input validation must be layered: initial structural validation + robust runtime handling for complex parsing logic.
 **Prevention:** Wrap complex parsing logic (especially for string formats like cron) in try-except blocks to fail gracefully (log and skip) rather than crashing the service.
+## 2025-02-28 - [CRITICAL] Fix command injection in audio-engine playout loop
+**Vulnerability:** The `audio-engine` service constructed dynamic bash commands for `mkfifo` and `ffmpeg`, interpolating `fifoPath` and `track.filepath` directly into a shell context (`spawn("bash", ["-lc", ...])`). If an attacker controlled either path, they could execute arbitrary commands.
+**Learning:** Shell redirection (like `>`) often leads developers to wrap commands in `bash -c`, which opens up command injection vulnerabilities when interpolating variables.
+**Prevention:** Always spawn binaries directly with arguments array. When writing to a named pipe (FIFO) with `ffmpeg`, provide the pipe path directly as an output file argument, and use the `-y` flag to prevent `ffmpeg` from hanging on interactive prompts when it detects the FIFO already exists.

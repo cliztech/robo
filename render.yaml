@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: dgn-dj
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
