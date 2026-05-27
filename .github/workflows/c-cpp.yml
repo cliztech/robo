@@ -14,7 +14,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: configure
-      run: ./configure
+      run: |
+        chmod +x configure
+        ./configure
       working-directory: make-4.3
     - name: make
       run: make
