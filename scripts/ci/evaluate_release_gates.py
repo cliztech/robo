@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shlex
 import subprocess
 import time
 from pathlib import Path
@@ -12,9 +13,9 @@ CONFIG_PATH = ROOT / "config" / "schemas" / "release_gates.json"
 def run_gate(command: str, artifact_path: Path) -> dict[str, object]:
     started_at = time.time()
     process = subprocess.run(
-        command,
+        shlex.split(command),
         cwd=ROOT,
-        shell=True,
+        shell=False,
         text=True,
         capture_output=True,
         check=False,
