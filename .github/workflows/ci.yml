@@ -140,7 +140,7 @@ jobs:
           cache: npm
 
       - name: Install Node.js dependencies
-        run: npm ci
+        run: npm install
 
       - name: Run mandatory CI gate checks (fail-fast)
         id: gates
@@ -303,7 +303,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Lint gate (ESLint flat config + budget)
         run: npm run lint:ci
@@ -334,7 +334,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Run Sharded Tests
         run: npm run test -- --shard=${{ matrix.shard }}/${{ strategy.job-total }}
@@ -369,7 +369,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Run Burn-in loop (3 iterations for quick PR feedback)
         run: |
@@ -585,7 +585,7 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Install Node.js dependencies
-        run: npm ci
+        run: npm install
 
       - name: Validate runtime secret contract (env-only)
         env:
