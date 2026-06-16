@@ -1,9 +1,0 @@
-[submodule "documentation"]
-	url = https://github.com/cliztech/documentation.git
-	path = documentation
-[submodule "mixxx"]
-	url = https://github.com/mixxxdj/mixxx.git
-	path = mixxx
-[submodule "mixxx-reference"]
-	url = https://github.com/mixxxdj/mixxx.git
-	path = mixxx-reference
