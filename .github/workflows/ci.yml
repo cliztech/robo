@@ -90,6 +90,11 @@ jobs:
       - name: Skip message
         if: steps.changed.outputs.env_contract_scope != 'true'
         run: echo "No env/docs/compose/config contract changes detected; skipping parity check."
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -137,10 +142,10 @@ jobs:
           }
 
           Write-Host '✅ Windows runtime contract sanity checks passed.'
-          cache: npm
+          cache: pnpm
 
       - name: Install Node.js dependencies
-        run: npm ci
+        run: pnpm install --no-frozen-lockfile
 
       - name: Run mandatory CI gate checks (fail-fast)
         id: gates
@@ -296,14 +301,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
+          cache: pnpm
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --no-frozen-lockfile
 
       - name: Lint gate (ESLint flat config + budget)
         run: npm run lint:ci
@@ -327,14 +337,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
+          cache: pnpm
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --no-frozen-lockfile
 
       - name: Run Sharded Tests
         run: npm run test -- --shard=${{ matrix.shard }}/${{ strategy.job-total }}
@@ -362,14 +377,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
+          cache: pnpm
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --no-frozen-lockfile
 
       - name: Run Burn-in loop (3 iterations for quick PR feedback)
         run: |
@@ -559,11 +579,16 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
+          cache: pnpm
 
       - name: Enforce runtime secret contract (protected refs only)
         if: steps.policy.outputs.enforce == 'true'
@@ -585,7 +610,7 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Install Node.js dependencies
-        run: npm ci
+        run: pnpm install --no-frozen-lockfile
 
       - name: Validate runtime secret contract (env-only)
         env:

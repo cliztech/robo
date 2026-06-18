@@ -8,7 +8,7 @@
     {
       "id": "tests",
       "name": "Unit and integration tests",
-      "command": "npm test",
+      "command": "pnpm test",
       "artifact": "artifacts/release-readiness/tests.log"
     },
     {
