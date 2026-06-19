@@ -2361,8 +2361,8 @@ msgstr "chờ tín hiệu hay tiến trình con: (Lỗi %ld: %s)"
 
 #~ msgid "process_easy() failed failed to launch process (e=%ld)\n"
 #~ msgstr ""
-#~ "Việc process_easy() (tiến trình dễ) bị lỗi khi cố khởi chạy tiến trình (e="
-#~ "%ld)\n"
+#~ "Việc process_easy() (tiến trình dễ) bị lỗi khi cố khởi chạy tiến trình "
+#~ "(e=%ld)\n"
 
 #~ msgid ""
 #~ "%sThis is free software; see the source for copying conditions.\n"
