@@ -14,7 +14,7 @@
     {
       "id": "config_validation",
       "name": "Configuration schema validation",
-      "command": "python config/validate_config.py",
+      "command": "pip install cryptography pydantic pydantic-settings && python config/validate_config.py",
       "artifact": "artifacts/release-readiness/config-validation.log"
     },
     {
