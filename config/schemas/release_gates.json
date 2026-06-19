@@ -8,13 +8,13 @@
     {
       "id": "tests",
       "name": "Unit and integration tests",
-      "command": "npm test",
+      "command": "pnpm test",
       "artifact": "artifacts/release-readiness/tests.log"
     },
     {
       "id": "config_validation",
       "name": "Configuration schema validation",
-      "command": "python config/validate_config.py",
+      "command": "pip install cryptography pydantic pydantic-settings && python config/validate_config.py",
       "artifact": "artifacts/release-readiness/config-validation.log"
     },
     {

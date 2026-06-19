@@ -29,4 +29,6 @@ jobs:
           python-version: '3.11'
 
       - name: Validate configuration files
-        run: python config/validate_config.py
+        run: |
+          pip install cryptography pydantic pydantic-settings
+          python config/validate_config.py
