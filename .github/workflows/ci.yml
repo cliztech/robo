@@ -137,7 +137,6 @@ jobs:
           }
 
           Write-Host '✅ Windows runtime contract sanity checks passed.'
-          cache: npm
 
       - name: Install Node.js dependencies
         run: npm ci
