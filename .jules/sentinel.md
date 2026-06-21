@@ -2,3 +2,8 @@
 **Vulnerability:** Malformed cron strings (e.g., missing fields or invalid tokens) in `schedules.json` caused unhandled `ValueError` in `SchedulerUiService._build_timeline_blocks`, crashing the entire UI state endpoint (DoS).
 **Learning:** Pydantic validation on input models (`ScheduleRecord`) is insufficient if internal logic (like `_cron_day_to_name`) performs stricter validation that raises unhandled exceptions. Input validation must be layered: initial structural validation + robust runtime handling for complex parsing logic.
 **Prevention:** Wrap complex parsing logic (especially for string formats like cron) in try-except blocks to fail gracefully (log and skip) rather than crashing the service.
+
+## 2026-06-21 - [Command Injection via shell=True]
+**Vulnerability:** The `evaluate_release_gates.py` script used `subprocess.run(command, shell=True)`, creating a command injection vulnerability if the command was dynamically constructed with unsanitized inputs.
+**Learning:** Using `shell=True` forces the command to be run through a shell, allowing evaluation of shell operators like `&&` or `|`. In contexts where external scripts are invoked, this poses a risk even if currently hardcoded configurations are considered safe, as new dynamic usages may arise.
+**Prevention:** Always use `shell=False` and convert the string command to a list of arguments using `shlex.split(command)` when invoking standard sub-processes.
