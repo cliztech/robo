@@ -1,12 +1,8 @@
 # AI Analysis Latency Verification
 
-- Generated At: 2026-03-01T09:02:46.572Z
+- Generated At: 2026-06-21T22:50:46.828Z
 - Samples: 12
-- p50 Latency (ms): 5.53
-- p95 Latency (ms): 8.15
-- Generated At: 2026-03-01T09:03:01.397Z
-- Samples: 12
-- p50 Latency (ms): 5.39
-- p95 Latency (ms): 9.06
+- p50 Latency (ms): 5.51
+- p95 Latency (ms): 8.06
 - Cache Hit/Miss: 3/9
 - Thresholds (ms): p50<=10, p95<=14
