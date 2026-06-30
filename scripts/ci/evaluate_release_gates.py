@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shlex
 import subprocess
 import time
 from pathlib import Path
@@ -11,25 +12,34 @@ CONFIG_PATH = ROOT / "config" / "schemas" / "release_gates.json"
 
 def run_gate(command: str, artifact_path: Path) -> dict[str, object]:
     started_at = time.time()
-    process = subprocess.run(
-        command,
-        cwd=ROOT,
-        shell=True,
-        text=True,
-        capture_output=True,
-        check=False,
-    )
+    try:
+        process = subprocess.run(
+            shlex.split(command),
+            cwd=ROOT,
+            shell=False,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        returncode = process.returncode
+        stdout = process.stdout
+        stderr = process.stderr
+    except FileNotFoundError as e:
+        returncode = 127
+        stdout = ""
+        stderr = f"Command not found: {e}"
+
     duration = round(time.time() - started_at, 2)
     artifact_path.parent.mkdir(parents=True, exist_ok=True)
     artifact_path.write_text(
         (
             f"$ {command}\n"
-            f"exit_code={process.returncode}\n"
+            f"exit_code={returncode}\n"
             f"duration_seconds={duration}\n\n"
             "--- stdout ---\n"
-            f"{process.stdout}\n"
+            f"{stdout}\n"
             "--- stderr ---\n"
-            f"{process.stderr}\n"
+            f"{stderr}\n"
         ),
         encoding="utf-8",
     )
@@ -37,9 +47,9 @@ def run_gate(command: str, artifact_path: Path) -> dict[str, object]:
     return {
         "command": command,
         "artifact": str(artifact_path.relative_to(ROOT)),
-        "exit_code": process.returncode,
+        "exit_code": returncode,
         "duration_seconds": duration,
-        "status": "pass" if process.returncode == 0 else "fail",
+        "status": "pass" if returncode == 0 else "fail",
     }
 
 
