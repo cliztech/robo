@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: radio-agentic-audio-engine
+    env: docker
+    dockerfilePath: ./radio-agentic/services/audio-engine/Dockerfile
+  - type: web
+    name: radio-agentic-streaming-gateway
+    env: docker
+    dockerfilePath: ./radio-agentic/services/streaming-gateway/Dockerfile
+  - type: web
+    name: radio-agentic-automation
+    env: docker
+    dockerfilePath: ./radio-agentic/services/automation/Dockerfile
+  - type: web
+    name: radio-agentic-requests
+    env: docker
+    dockerfilePath: ./radio-agentic/services/requests/Dockerfile
+  - type: web
+    name: radio-agentic-library
+    env: docker
+    dockerfilePath: ./radio-agentic/services/library/Dockerfile
+  - type: web
+    name: radio-agentic-agent-dj
+    env: docker
+    dockerfilePath: ./radio-agentic/services/agent-dj/Dockerfile
