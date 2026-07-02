@@ -153,11 +153,6 @@ class AIInferenceService:
         self._max_cache_size = 1000
 
     def _resolve_prompt_profile(self) -> tuple[str, str]:
-        config_path = Path(__file__).parent.parent / "config" / "prompt_variables.json"
-        try:
-            payload = load_config_json(config_path)
-        except (OSError, json.JSONDecodeError, ConfigCryptoError):
-            return "default", "{}"
         payload = self._load_prompt_variables()
         if payload is None:
             config_path = Path(__file__).parent.parent / "config" / "prompt_variables.json"
