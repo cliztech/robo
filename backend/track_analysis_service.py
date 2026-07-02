@@ -102,7 +102,7 @@ class InMemoryAnalysisCacheStore(AnalysisCacheStore):
 
     def _purge_expired(self, now: datetime) -> None:
         # Create a list of keys to avoid RuntimeError during iteration
-        expired_keys = [key for key, entry in list(self._cache.items()) if entry.expires_at <= now]
+        expired_keys = [key for key, entry in self._cache.items() if entry.expires_at <= now]
         for key in expired_keys:
             # Use pop with a default value to avoid KeyError if already deleted
             self._cache.pop(key, None)
