@@ -342,6 +342,8 @@ export class AnalysisService {
                 this.onCacheEvent?.({ type: 'expire', key, size: this.byIdempotencyKey.size });
             } else {
                 cached.lastAccessAt = nowMs;
+                this.byIdempotencyKey.delete(key);
+                this.byIdempotencyKey.set(key, cached);
                 this.cacheHitCount += 1;
                 this.onCacheEvent?.({ type: 'hit', key, size: this.byIdempotencyKey.size });
                 return {
@@ -474,15 +476,8 @@ export class AnalysisService {
         this.onCacheEvent?.({ type: 'set', key, size: this.byIdempotencyKey.size });
 
         while (this.byIdempotencyKey.size > this.maxCacheEntries) {
-            let oldestKey: string | null = null;
-            let oldestAccess = Number.POSITIVE_INFINITY;
-            for (const [entryKey, entry] of this.byIdempotencyKey.entries()) {
-                if (entry.lastAccessAt < oldestAccess) {
-                    oldestAccess = entry.lastAccessAt;
-                    oldestKey = entryKey;
-                }
-            }
-            if (!oldestKey) break;
+            const oldestKey = this.byIdempotencyKey.keys().next().value;
+            if (oldestKey === undefined) break;
             this.byIdempotencyKey.delete(oldestKey);
             this.evictionCount += 1;
             this.onCacheEvent?.({ type: 'evict', key: oldestKey, size: this.byIdempotencyKey.size });
