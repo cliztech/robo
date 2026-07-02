@@ -216,19 +216,29 @@ export function DegenScheduleTimeline({
     // Calculate conflicts
     const conflicts = useMemo(() => {
         const conflictSet = new Set<string>();
-        // Simple O(N^2) check is fine for small N
-        for (let i = 0; i < segments.length; i++) {
-            const startA = segments[i].startHour;
-            const endA = startA + segments[i].durationMinutes / 60;
 
-            for (let j = i + 1; j < segments.length; j++) {
-                const startB = segments[j].startHour;
-                const endB = startB + segments[j].durationMinutes / 60;
+        // Sort segments by start time to reduce average complexity to O(N log N)
+        const sorted = [...segments].map(s => ({
+            id: s.id,
+            start: s.startHour,
+            end: s.startHour + s.durationMinutes / 60
+        })).sort((a, b) => a.start - b.start);
 
-                if (startA < endB && endA > startB) {
-                    conflictSet.add(segments[i].id);
-                    conflictSet.add(segments[j].id);
+        for (let i = 0; i < sorted.length; i++) {
+            const current = sorted[i];
+
+            for (let j = i + 1; j < sorted.length; j++) {
+                const next = sorted[j];
+
+                // Since array is sorted by start time, if the next segment starts
+                // after or at the current segment's end, no further segments will conflict
+                if (next.start >= current.end) {
+                    break;
                 }
+
+                // If it starts before current ends, it's a conflict
+                conflictSet.add(current.id);
+                conflictSet.add(next.id);
             }
         }
         return conflictSet;
