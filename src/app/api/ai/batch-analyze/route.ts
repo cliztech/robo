@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
     if (invalidContentType) {
       return invalidContentType
     }
+    const supabase = await createServerClient()
 
     const {
       data: { session },
