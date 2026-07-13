@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import type { Track } from "../../../shared/src/types";
 import type { NatsBus } from "../../../shared/src/nats";
@@ -20,7 +20,7 @@ export class PlayoutEngine {
 
   async startLoop() {
     if (!fs.existsSync(this.fifoPath)) {
-      spawn("bash", ["-lc", `mkfifo ${this.fifoPath}`]);
+      spawnSync("mkfifo", [this.fifoPath]);
     }
 
     setInterval(async () => {
@@ -46,8 +46,17 @@ export class PlayoutEngine {
       })
     );
 
-    const cmd = `ffmpeg -hide_banner -loglevel error -re -i "${t.filepath}" -f s16le -ac 2 -ar 44100 pipe:1 > "${this.fifoPath}"`;
-    const p = spawn("bash", ["-lc", cmd], { stdio: "ignore" });
+    const p = spawn("ffmpeg", [
+      "-y",
+      "-hide_banner",
+      "-loglevel", "error",
+      "-re",
+      "-i", t.filepath,
+      "-f", "s16le",
+      "-ac", "2",
+      "-ar", "44100",
+      this.fifoPath
+    ], { stdio: "ignore" });
 
     p.on("exit", () => {
       this.playing = false;
