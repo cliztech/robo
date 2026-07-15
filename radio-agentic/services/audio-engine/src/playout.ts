@@ -20,7 +20,8 @@ export class PlayoutEngine {
 
   async startLoop() {
     if (!fs.existsSync(this.fifoPath)) {
-      spawn("bash", ["-lc", `mkfifo ${this.fifoPath}`]);
+      // SECURITY: Avoid shell invocation to ensure safe argument passing
+      spawn("mkfifo", [this.fifoPath]);
     }
 
     setInterval(async () => {
@@ -46,8 +47,20 @@ export class PlayoutEngine {
       })
     );
 
-    const cmd = `ffmpeg -hide_banner -loglevel error -re -i "${t.filepath}" -f s16le -ac 2 -ar 44100 pipe:1 > "${this.fifoPath}"`;
-    const p = spawn("bash", ["-lc", cmd], { stdio: "ignore" });
+    // SECURITY: Ensure safe argument passing by using spawn with a direct executable
+    // and argument array instead of bash shell invocation.
+    // -y flag allows overwriting the named pipe without hanging.
+    const p = spawn("ffmpeg", [
+      "-y",
+      "-hide_banner",
+      "-loglevel", "error",
+      "-re",
+      "-i", t.filepath,
+      "-f", "s16le",
+      "-ac", "2",
+      "-ar", "44100",
+      this.fifoPath
+    ], { stdio: "ignore" });
 
     p.on("exit", () => {
       this.playing = false;
