@@ -196,6 +196,7 @@ def analyze_track_compat(
 def generate_host_script(
     request: HostScriptRequest,
     response: Response,
+    _: str = Depends(verify_api_key),
     x_correlation_id: str | None = Header(default=None, alias="X-Correlation-ID"),
 ) -> AIResponseEnvelope:
     correlation_id = _resolve_correlation_id(x_correlation_id)
