@@ -7,3 +7,8 @@
 **Vulnerability:** Unsanitized user input passed to bash -lc inside spawn() can lead to arbitrary code execution (Command Injection).
 **Learning:** Using string interpolation with user input in shell subshells is unsafe.
 **Prevention:** Always use spawn with an executable string and an array of arguments directly, avoiding shell invocation and string-based commands.
+
+## 2026-08-10 - [Missing Auth on Host Script Endpoint]
+**Vulnerability:** The `/api/v1/ai/host-script` endpoint was missing the `Depends(verify_api_key)` dependency, making it completely unauthenticated.
+**Learning:** Developers can easily forget to include the auth dependency on new routes if it's not applied at the router level.
+**Prevention:** Apply `dependencies=[Depends(verify_api_key)]` at the `APIRouter` level when all routes in the file require the same authentication, rather than on each individual route.
