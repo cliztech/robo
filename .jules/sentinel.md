@@ -7,3 +7,8 @@
 **Vulnerability:** Unsanitized user input passed to bash -lc inside spawn() can lead to arbitrary code execution (Command Injection).
 **Learning:** Using string interpolation with user input in shell subshells is unsafe.
 **Prevention:** Always use spawn with an executable string and an array of arguments directly, avoiding shell invocation and string-based commands.
+
+## 2024-05-28 - [Case-Sensitivity in Credential Blacklists]
+**Vulnerability:** `INVALID_CREDENTIAL_PLACEHOLDERS` set contained uppercase `"__SET_IN_ENV__"`, but the validation checked against `value.trim().toLowerCase()`. The mismatch bypassed the security check, allowing the service to boot with default placeholder credentials.
+**Learning:** Javascript Sets are strictly case-sensitive. When normalizing input to lowercase before checking against a denylist Set, all elements in the Set must also be explicitly lowercase.
+**Prevention:** Always ensure denylists used with normalized input match the expected normalization format (e.g., lowercase).
