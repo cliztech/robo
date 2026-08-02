@@ -26,8 +26,6 @@ const BASE_BACKOFF_MS = Number(process.env.FFMPEG_BACKOFF_BASE_MS ?? 1_000);
 const MAX_BACKOFF_MS = Number(process.env.FFMPEG_BACKOFF_MAX_MS ?? 30_000);
 const BACKOFF_JITTER_RATIO = Number(process.env.FFMPEG_BACKOFF_JITTER_RATIO ?? 0.25);
 
-const INVALID_CREDENTIAL_PLACEHOLDERS = new Set(["", "__SET_IN_ENV__", "hackme", "changeme"]);
-
 function log(event: string, payload: Record<string, unknown> = {}): void {
   console.log(
     JSON.stringify({
@@ -40,9 +38,11 @@ function log(event: string, payload: Record<string, unknown> = {}): void {
 }
 const statsConfig = resolveListenerPollingConfigFromEnv();
 
+// 🛡️ Sentinel: Enforce lowercase in the set so .toLowerCase() checks work,
+// preventing bypass of the default/invalid credentials check.
 const INVALID_CREDENTIAL_PLACEHOLDERS = new Set([
   "",
-  "__SET_IN_ENV__",
+  "__set_in_env__",
   "hackme",
   "changeme",
 ]);
