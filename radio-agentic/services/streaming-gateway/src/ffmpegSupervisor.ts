@@ -122,9 +122,14 @@ export class FfmpegSupervisor {
     }
 
     const nowIso = new Date().toISOString();
+    const safeArgs = this.ffmpegArgs.map(a =>
+      typeof a === "string" && a.startsWith("icecast://")
+        ? a.replace(/icecast:\/\/[^:]+:([^@]+)@/, "icecast://***:***@")
+        : a
+    );
     this.logger("ffmpeg_start", {
       attempt: this.health.restartCount + 1,
-      args: this.ffmpegArgs,
+      args: safeArgs,
     });
 
     const child = spawn("ffmpeg", this.ffmpegArgs, {
