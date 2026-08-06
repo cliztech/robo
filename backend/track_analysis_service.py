@@ -213,24 +213,20 @@ class TrackAnalysisService:
 
     def _log_cache_event(self, *, event: str, fingerprint: str, request: TrackAnalysisRequest) -> None:
         cache_metrics = self._cache_store.metrics()
-        logger.info(
-            json.dumps(
-                {
-                    "event": event,
-                    "track_id": request.track_id,
-                    "fingerprint": fingerprint,
-                    "model_version": request.model_version,
-                    "prompt_profile_version": request.prompt_profile_version,
-                    "schema_version": request.schema_version,
-                    "cache_size": cache_metrics["size"],
-                    "cache_hits": cache_metrics["hits"],
-                    "cache_misses": cache_metrics["misses"],
-                    "cache_evictions": cache_metrics["evictions"],
-                    "cache_expirations": cache_metrics["expirations"],
-                },
-                sort_keys=True,
-            )
-        )
+        log_payload = {
+            "event": event,
+            "track_id": request.track_id,
+            "fingerprint": fingerprint,
+            "model_version": request.model_version,
+            "prompt_profile_version": request.prompt_profile_version,
+            "schema_version": request.schema_version,
+            "cache_size": cache_metrics["size"],
+            "cache_hits": cache_metrics["hits"],
+            "cache_misses": cache_metrics["misses"],
+            "cache_evictions": cache_metrics["evictions"],
+            "cache_expirations": cache_metrics["expirations"],
+        }
+        logger.info(json.dumps(log_payload, sort_keys=True))
 
 
     @staticmethod
