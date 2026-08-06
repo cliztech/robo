@@ -63,6 +63,8 @@ class ReliabilityController:
     def __init__(self, config: ReliabilityConfig):
         self.config = config
         self.config.postmortem_log_path.parent.mkdir(parents=True, exist_ok=True)
+        pattern = rf"\b({'|'.join(re.escape(term) for term in self.config.profanity_terms)})\b"
+        self._profanity_regex = re.compile(pattern, flags=re.IGNORECASE)
 
     def score_script_confidence(self, text: str) -> float:
         if not text.strip():
@@ -88,10 +90,9 @@ class ReliabilityController:
         return any(f" {term} " in lowered for term in self.config.profanity_terms)
 
     def filter_script(self, text: str) -> str:
-        filtered = text
-        for term in self.config.profanity_terms:
-            filtered = re.sub(rf"\b{re.escape(term)}\b", "[redacted]", filtered, flags=re.IGNORECASE)
-        return filtered
+        if not self.config.profanity_terms:
+            return text
+        return self._profanity_regex.sub("[redacted]", text)
 
     def call_with_retries(self, prompt: str, providers: List[Provider], stage: str) -> Optional[ProviderResult]:
         for provider in providers:
