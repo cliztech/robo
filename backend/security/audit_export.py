@@ -8,10 +8,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 from uuid import uuid4
-from typing import Any
-from typing import Mapping, Sequence
-from uuid import uuid4
-import string
 
 REQUIRED_AUDIT_FIELDS = (
     "event_id",
@@ -23,14 +19,12 @@ REQUIRED_AUDIT_FIELDS = (
     "after_sha256",
     "approvals",
 )
-from typing import Mapping, Sequence
-from uuid import uuid4
-import string
-
 
 
 def deterministic_sha256(payload: Mapping[str, object]) -> str:
-    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    canonical = json.dumps(
+        payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
+    )
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 
@@ -161,7 +155,10 @@ def export_audit_events_ndjson(
     sha256_path = day_dir / f"{safe_batch_id}.sha256"
     manifest_path = day_dir / f"{safe_batch_id}.manifest.json"
 
-    lines = [json.dumps(event, sort_keys=True, separators=(",", ":"), ensure_ascii=False) for event in events]
+    lines = [
+        json.dumps(event, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+        for event in events
+    ]
     ndjson_payload = "\n".join(lines)
     if lines:
         ndjson_payload += "\n"
