@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import json
 import re
 from datetime import datetime
 from pathlib import Path
@@ -399,10 +398,19 @@ class SchedulerUiService:
                     if parsed_time is None:
                         continue
                     time_val = f"{parsed_time[0]:02d}:{parsed_time[1]:02d}"
+                    try:
+                        day_of_week_name = self._cron_day_to_name(day_of_week)
+                    except ValueError as error:
+                        logger.warning(
+                            "Skipping timeline block for schedule_id=%s: %s",
+                            schedule.id,
+                            error,
+                        )
+                        continue
                     blocks.append(
                         TimelineBlock(
                             schedule_id=schedule.id,
-                            day_of_week=self._cron_day_to_name(day_of_week),
+                            day_of_week=day_of_week_name,
                             start_time=time_val,
                             end_time=time_val,
                             overnight=False,
