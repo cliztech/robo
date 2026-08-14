@@ -21,7 +21,7 @@ from backend.track_analysis_api import (
     LEGACY_TRACK_ANALYSIS_WARNING,
 )
 
-router = APIRouter(prefix="/api/v1/ai", tags=["ai"])
+router = APIRouter(prefix="/api/v1/ai", tags=["ai"], dependencies=[Depends(verify_api_key)])
 _service = AIInferenceService()
 
 _LEGACY_ROUTE_SUNSET_WINDOW = timedelta(days=30)
@@ -147,7 +147,6 @@ def _run_track_analysis(request: TrackAnalysisRequest, correlation_id: str) -> A
 def analyze_track(
     request: TrackAnalysisRequest,
     response: Response,
-    _: str = Depends(verify_api_key),
     x_correlation_id: str | None = Header(default=None, alias="X-Correlation-ID"),
 ) -> AIResponseEnvelope:
     correlation_id = _resolve_correlation_id(x_correlation_id)
@@ -196,7 +195,6 @@ def analyze_track_compat(
 def generate_host_script(
     request: HostScriptRequest,
     response: Response,
-    _: str = Depends(verify_api_key),
     x_correlation_id: str | None = Header(default=None, alias="X-Correlation-ID"),
 ) -> AIResponseEnvelope:
     correlation_id = _resolve_correlation_id(x_correlation_id)
