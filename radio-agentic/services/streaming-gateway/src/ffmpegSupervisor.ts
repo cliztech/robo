@@ -123,8 +123,8 @@ export class FfmpegSupervisor {
 
     const nowIso = new Date().toISOString();
     const safeArgs = this.ffmpegArgs.map(a =>
-      typeof a === "string" && a.startsWith("icecast://")
-        ? a.replace(/icecast:\/\/[^:]+:([^@]+)@/, "icecast://***:***@")
+      typeof a === "string" && (a.startsWith("icecast://") || a.startsWith("redis://"))
+        ? a.replace(/(icecast|redis):\/\/[^:]+:([^@]+)@/, "$1://***:***@")
         : a
     );
     this.logger("ffmpeg_start", {
