@@ -21,7 +21,9 @@ from backend.track_analysis_api import (
     LEGACY_TRACK_ANALYSIS_WARNING,
 )
 
-router = APIRouter(prefix="/api/v1/ai", tags=["ai"])
+router = APIRouter(
+    prefix="/api/v1/ai", tags=["ai"], dependencies=[Depends(verify_api_key)]
+)
 _service = AIInferenceService()
 
 _LEGACY_ROUTE_SUNSET_WINDOW = timedelta(days=30)
@@ -49,12 +51,16 @@ class LegacyAnalyzeTrackTelemetry:
     def snapshot(self) -> dict[str, str | int | None]:
         with self._lock:
             if self._last_event is None:
-                return {"count": self._usage_count, "caller": None, "tenant_id": None, "phase": None}
+                return {
+                    "count": self._usage_count,
+                    "caller": None,
+                    "tenant_id": None,
+                    "phase": None,
+                }
             return dict(self._last_event)
 
 
 _legacy_route_telemetry = LegacyAnalyzeTrackTelemetry()
-
 
 
 def _resolve_correlation_id(x_correlation_id: str | None) -> str:
@@ -119,16 +125,29 @@ def get_legacy_analyze_track_telemetry() -> dict[str, str | int | None]:
     return _legacy_route_telemetry.snapshot()
 
 
-def _run_track_analysis(request: TrackAnalysisRequest, correlation_id: str) -> AIResponseEnvelope:
+def _run_track_analysis(
+    request: TrackAnalysisRequest, correlation_id: str
+) -> AIResponseEnvelope:
     try:
-        result, latency_ms, cost_usd, cache_hit, status_value, prompt_profile_version = _service.analyze_track(
+        (
+            result,
+            latency_ms,
+            cost_usd,
+            cache_hit,
+            status_value,
+            prompt_profile_version,
+        ) = _service.analyze_track(
             request,
             correlation_id,
         )
     except AICircuitOpenError as exc:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)
+        ) from exc
     except AIServiceError as exc:
-        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)
+        ) from exc
 
     return AIResponseEnvelope(
         success=True,
@@ -147,7 +166,6 @@ def _run_track_analysis(request: TrackAnalysisRequest, correlation_id: str) -> A
 def analyze_track(
     request: TrackAnalysisRequest,
     response: Response,
-    _: str = Depends(verify_api_key),
     x_correlation_id: str | None = Header(default=None, alias="X-Correlation-ID"),
 ) -> AIResponseEnvelope:
     correlation_id = _resolve_correlation_id(x_correlation_id)
@@ -196,20 +214,25 @@ def analyze_track_compat(
 def generate_host_script(
     request: HostScriptRequest,
     response: Response,
-    _: str = Depends(verify_api_key),
     x_correlation_id: str | None = Header(default=None, alias="X-Correlation-ID"),
 ) -> AIResponseEnvelope:
     correlation_id = _resolve_correlation_id(x_correlation_id)
     response.headers["X-Correlation-ID"] = correlation_id
     try:
-        result, latency_ms, cost_usd, status_value, prompt_profile_version = _service.generate_host_script(
-            request,
-            correlation_id,
+        result, latency_ms, cost_usd, status_value, prompt_profile_version = (
+            _service.generate_host_script(
+                request,
+                correlation_id,
+            )
         )
     except AICircuitOpenError as exc:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)
+        ) from exc
     except AIServiceError as exc:
-        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)
+        ) from exc
 
     return AIResponseEnvelope(
         success=True,
