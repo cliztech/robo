@@ -14,7 +14,7 @@ from backend.ai_service import AICircuitOpenError, AIServiceError, AITimeoutErro
 from backend.security.auth import verify_api_key
 from backend.track_analysis_service import TrackAnalysisService
 
-router = APIRouter(prefix="/api/v1/ai", tags=["track-analysis"])
+router = APIRouter(prefix="/api/v1/ai", tags=["track-analysis"], dependencies=[Depends(verify_api_key)])
 
 
 class TrackAnalysisEnvelope(BaseModel):
@@ -39,7 +39,6 @@ def get_track_analysis_service() -> TrackAnalysisService:
 @router.post("/analyze-track", response_model=TrackAnalysisEnvelope)
 def analyze_track(
     request: TrackAnalysisRequest,
-    _: str = Depends(verify_api_key),
     service: TrackAnalysisService = Depends(get_track_analysis_service),
 ) -> TrackAnalysisEnvelope | JSONResponse:
     """Deterministic mapping:
