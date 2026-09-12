@@ -14,7 +14,7 @@ from backend.ai_service import AICircuitOpenError, AIServiceError, AITimeoutErro
 from backend.security.auth import verify_api_key
 from backend.track_analysis_service import TrackAnalysisService
 
-router = APIRouter(prefix="/api/v1/ai", tags=["track-analysis"])
+router = APIRouter(prefix="/api/v1/ai", tags=["track-analysis"], dependencies=[Depends(verify_api_key)])
 
 
 class TrackAnalysisEnvelope(BaseModel):

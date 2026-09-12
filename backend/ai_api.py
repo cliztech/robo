@@ -21,7 +21,7 @@ from backend.track_analysis_api import (
     LEGACY_TRACK_ANALYSIS_WARNING,
 )
 
-router = APIRouter(prefix="/api/v1/ai", tags=["ai"])
+router = APIRouter(prefix="/api/v1/ai", tags=["ai"], dependencies=[Depends(verify_api_key)])
 _service = AIInferenceService()
 
 _LEGACY_ROUTE_SUNSET_WINDOW = timedelta(days=30)
