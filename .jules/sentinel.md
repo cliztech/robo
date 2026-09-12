@@ -12,3 +12,7 @@
 **Vulnerability:** Passing a credentials URI (e.g. `icecast://user:pass@host`) as a command-line argument (to `ffmpeg`) exposed the password in plaintext when the application logged the entire arguments array.
 **Learning:** Application logs that dump internal process configurations or spawned command arguments are common sources of credential leaks if the arguments include authenticated URIs.
 **Prevention:** Sanitize or selectively redact command line arguments that contain credential URIs (such as those starting with `icecast://` or `redis://`) before emitting them to the logging system.
+## 2024-05-31 - Enforce API Key verification at APIRouter level
+**Vulnerability:** Endpoints in FastAPI lack a top-level security dependency, relying on individual route function signatures which could lead to accidental omission.
+**Learning:** FastAPI allows enforcing `verify_api_key` at the `APIRouter` level using `dependencies=[Depends(verify_api_key)]`. It is safe to retain identical `Depends` declarations in individual routes because FastAPI caches dependency results by default (`use_cache=True`).
+**Prevention:** Always enforce shared dependencies at the `APIRouter` level to ensure all endpoints are securely protected by default.
