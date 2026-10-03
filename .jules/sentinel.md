@@ -12,3 +12,8 @@
 **Vulnerability:** Passing a credentials URI (e.g. `icecast://user:pass@host`) as a command-line argument (to `ffmpeg`) exposed the password in plaintext when the application logged the entire arguments array.
 **Learning:** Application logs that dump internal process configurations or spawned command arguments are common sources of credential leaks if the arguments include authenticated URIs.
 **Prevention:** Sanitize or selectively redact command line arguments that contain credential URIs (such as those starting with `icecast://` or `redis://`) before emitting them to the logging system.
+
+## 2026-07-28 - [FastAPI API Router Global Dependency vs Route Dependency]
+**Vulnerability:** New API endpoints in AI routers could accidentally omit authentication.
+**Learning:** Relying on route-level manual injection of `verify_api_key` creates a risk of new routes accidentally omitting this authorization check and exposing sensitive data or models to unauthenticated users.
+**Prevention:** Enforce `verify_api_key` globally on the `APIRouter` declaration to ensure all current and future endpoints within these routers are authenticated by default.
