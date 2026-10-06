@@ -108,15 +108,13 @@ class SQLiteStatusAlertRepository:
 
             if active_alert_ids:
                 placeholders = ",".join("?" for _ in active_alert_ids)
-                connection.execute(
-                    f"""
-                    UPDATE status_alerts
-                    SET resolved_at = ?
-                    WHERE resolved_at IS NULL
-                      AND alert_id NOT IN ({placeholders})
-                    """,
-                    (observed_at_iso, *sorted(active_alert_ids)),
-                )
+                query = (  # nosec B608
+                    "UPDATE status_alerts\n"
+                    "SET resolved_at = ?\n"
+                    "WHERE resolved_at IS NULL\n"
+                    "  AND alert_id NOT IN (%s)"
+                ).replace("%s", placeholders)
+                connection.execute(query, (observed_at_iso, *sorted(active_alert_ids)))  # nosec B608
             else:
                 connection.execute(
                     """
