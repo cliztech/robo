@@ -12,3 +12,7 @@
 **Vulnerability:** Passing a credentials URI (e.g. `icecast://user:pass@host`) as a command-line argument (to `ffmpeg`) exposed the password in plaintext when the application logged the entire arguments array.
 **Learning:** Application logs that dump internal process configurations or spawned command arguments are common sources of credential leaks if the arguments include authenticated URIs.
 **Prevention:** Sanitize or selectively redact command line arguments that contain credential URIs (such as those starting with `icecast://` or `redis://`) before emitting them to the logging system.
+## 2026-10-06 - False Positive SQL construction in SQLite
+**Vulnerability:** Bandit B608 flagged `f""` strings used with `connection.execute` as potential SQL construction warning.
+**Learning:** Even when securely parameterized with `?` placeholders, Bandit flags the `f""` syntax.
+**Prevention:** Use string replacement (e.g., `.replace("%s", placeholders)`) for dynamic IN clause sizes instead of f-strings.
