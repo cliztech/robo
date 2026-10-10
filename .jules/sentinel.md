@@ -12,3 +12,8 @@
 **Vulnerability:** Passing a credentials URI (e.g. `icecast://user:pass@host`) as a command-line argument (to `ffmpeg`) exposed the password in plaintext when the application logged the entire arguments array.
 **Learning:** Application logs that dump internal process configurations or spawned command arguments are common sources of credential leaks if the arguments include authenticated URIs.
 **Prevention:** Sanitize or selectively redact command line arguments that contain credential URIs (such as those starting with `icecast://` or `redis://`) before emitting them to the logging system.
+
+## 2026-10-10 - [SAST bypass on False Positive SQLi]
+**Vulnerability:** SAST tool Bandit flagged a false positive SQL injection risk (B608) on `connection.execute` when using an f-string to construct a parameterized `IN` clause for sqlite3.
+**Learning:** String interpolation inside `execute` method triggers Bandit B608, even if the interpolated string contains only safe placeholders `?`.
+**Prevention:** Construct the query string beforehand and use `.replace("%s", placeholders)` to insert the placeholders dynamically, and apply `# nosec B608` on the execute line.
