@@ -12,3 +12,8 @@
 **Vulnerability:** Passing a credentials URI (e.g. `icecast://user:pass@host`) as a command-line argument (to `ffmpeg`) exposed the password in plaintext when the application logged the entire arguments array.
 **Learning:** Application logs that dump internal process configurations or spawned command arguments are common sources of credential leaks if the arguments include authenticated URIs.
 **Prevention:** Sanitize or selectively redact command line arguments that contain credential URIs (such as those starting with `icecast://` or `redis://`) before emitting them to the logging system.
+
+## 2026-10-15 - [SAST False Positive on Dynamic IN Clauses]
+**Vulnerability:** Bandit SAST flags f-strings inside connection.execute as B608 (hardcoded_sql_expressions) even when properly parameterized with `?` for dynamic IN clauses.
+**Learning:** Static analysis tools struggle to differentiate between safe f-string usage for query structure (like variable number of `?` placeholders) and unsafe f-string usage for value interpolation.
+**Prevention:** Format the query string using `.replace("%s", placeholders)` rather than an f-string, and append a `# nosec B608` comment to the execution line to suppress the false positive while accommodating dynamic IN clauses safely.
