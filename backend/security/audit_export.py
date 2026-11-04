@@ -8,10 +8,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 from uuid import uuid4
-from typing import Any
-from typing import Mapping, Sequence
-from uuid import uuid4
-import string
 
 REQUIRED_AUDIT_FIELDS = (
     "event_id",
@@ -23,9 +19,6 @@ REQUIRED_AUDIT_FIELDS = (
     "after_sha256",
     "approvals",
 )
-from typing import Mapping, Sequence
-from uuid import uuid4
-import string
 
 
 
