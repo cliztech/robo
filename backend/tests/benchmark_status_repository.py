@@ -2,8 +2,6 @@ import time
 from datetime import datetime, timezone
 import tempfile
 from pathlib import Path
-import sqlite3
-import random
 
 from backend.status.repository import SQLiteStatusAlertRepository
 from backend.status.models import AlertCenterItem, AlertSeverity
