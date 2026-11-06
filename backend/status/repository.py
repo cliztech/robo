@@ -114,7 +114,8 @@ class SQLiteStatusAlertRepository:
                     SET resolved_at = ?
                     WHERE resolved_at IS NULL
                       AND alert_id NOT IN ({placeholders})
-                    """,
+                    """  # nosec B608
+                    ,
                     (observed_at_iso, *sorted(active_alert_ids)),
                 )
             else:
