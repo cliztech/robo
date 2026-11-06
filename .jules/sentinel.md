@@ -12,3 +12,8 @@
 **Vulnerability:** Passing a credentials URI (e.g. `icecast://user:pass@host`) as a command-line argument (to `ffmpeg`) exposed the password in plaintext when the application logged the entire arguments array.
 **Learning:** Application logs that dump internal process configurations or spawned command arguments are common sources of credential leaks if the arguments include authenticated URIs.
 **Prevention:** Sanitize or selectively redact command line arguments that contain credential URIs (such as those starting with `icecast://` or `redis://`) before emitting them to the logging system.
+
+## 2026-11-06 - [Bandit B608 False Positive Resolution]
+**Vulnerability:** Bandit SAST flagged `f""` strings inside `connection.execute` as B608 (hardcoded_sql_expressions) even when properly parameterized with `?`.
+**Learning:** Resolving this false positive on a multi-line f-string without obfuscating the code requires appending the `# nosec B608` comment directly to the line containing the closing quotes (e.g., `"""  # nosec B608`), as placing it on the opening `f"""` line fails to suppress the warning.
+**Prevention:** Be aware of how Bandit parses multiline f-strings for SQL query suppression to effectively reduce SAST noise on safely parameterized queries.
